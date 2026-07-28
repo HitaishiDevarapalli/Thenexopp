@@ -518,7 +518,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     askPropertyTypeStep();
   };
 
-  // Free-form User Chat Submit
+  // Free-form User Chat Submit (ChatGPT-Style Conversational Engine)
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -565,19 +565,60 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // 2. Handle Roman Telugu Input Parsing (e.g., "naku 50 lakhs properties chupinchu")
-    const lang = detectQueryLanguage(userQuery);
+    // 2. Parse Natural Language Entities (City, Property Type, Budget Range, Loan/EMI, Site Visit)
     const lower = userQuery.toLowerCase();
+    const lang = detectQueryLanguage(userQuery);
 
-    if (lang === 'te_roman' && (lower.includes('50 lakhs') || lower.includes('50 lakh') || lower.includes('50l'))) {
-      setUserMemory(prev => ({ ...prev, budget: '50 Lakhs' }));
+    // Parse City
+    let detectedCity = lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : (lower.includes('vijayawada') ? 'Vijayawada' : undefined)));
+    
+    // Parse Property Type
+    let detectedType = lower.includes('villa') ? 'Villa' : (lower.includes('plot') || lower.includes('land') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : (lower.includes('house') ? 'House' : (lower.includes('commercial') ? 'Commercial' : undefined))));
+
+    // Parse Intent Queries (Loans, Site Visit, Comparison, Franchise, Business)
+    if (lower.includes('loan') || lower.includes('finance') || lower.includes('interest')) {
+      setTimeout(() => {
+        appendAiResponse("We offer competitive **Home Loans starting at 8.5% p.a.** with flexible repayment tenures up to 30 years and zero processing fees for select properties. Would you like to calculate your monthly EMI or speak with our finance expert?");
+        appendEmiCalculator();
+      }, 400);
+      return;
+    }
+
+    if (lower.includes('visit') || lower.includes('book site') || lower.includes('site visit')) {
+      setTimeout(() => {
+        appendAiResponse("📅 I can help you schedule a verified site visit! Please select a property or provide your preferred date and time, and our local consultant will pick you up.");
+      }, 400);
+      return;
+    }
+
+    if (lower.includes('compare') || lower.includes('comparison')) {
+      openComparisonDrawer();
+      return;
+    }
+
+    if (lower.includes('franchise')) {
+      onNavigate?.('franchisePage');
+      appendAiResponse(`We have **${franchiseDb.length}+ Verified Franchise Opportunities** across Food, Retail, and Healthcare! Navigating you to the Franchise section.`);
+      return;
+    }
+
+    if (lower.includes('business')) {
+      onNavigate?.('businessPage');
+      appendAiResponse(`We have **${businessDb.length}+ Commercial Businesses** available for takeover or partnership.`);
+      return;
+    }
+
+    // 3. Conversational Parameter Extraction & Follow-up Question Flow (like ChatGPT!)
+    // Example: "I need a villa under ₹80 lakh." -> Type & Budget detected, City missing!
+    if (detectedType && !detectedCity && !userMemory.city) {
+      setUserMemory(prev => ({ ...prev, type: detectedType }));
       setTimeout(() => {
         setMessages(prev => [
           ...prev,
           {
-            id: `ai-te-${Date.now()}`,
+            id: `ai-askcity-${Date.now()}`,
             sender: 'ai',
-            text: "సరే 😊 మీకు ₹50 లక్షల లోపు ప్రాపర్టీలు కావాలా? ఏ నగరంలో చూడాలనుకుంటున్నారు?",
+            text: lang === 'te' || lang === 'te_roman' ? `సరే! ${detectedType}ల కోసం ఏ నగరంలో చూడాలనుకుంటున్నారు?` : `Sure! Which city are you looking for a **${detectedType}** in?`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             type: 'options',
             options: [
@@ -593,8 +634,34 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // 3. Execute Property Search Pipeline
-    executePropertySearchPipeline(userQuery);
+    // Example: "naku 50 lakhs properties chupinchu" -> Budget detected, City missing!
+    if ((lower.includes('lakh') || lower.includes('crore') || lower.includes('budget') || lower.includes('50 lakhs')) && !detectedCity && !userMemory.city) {
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `ai-askcity-${Date.now()}`,
+            sender: 'ai',
+            text: lang === 'te' || lang === 'te_roman' ? "సరే 😊 ఏ నగరంలో చూడాలనుకుంటున్నారు?" : "Sure! Which city are you looking in?",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'options',
+            options: [
+              { label: 'Guntur', value: 'Guntur' },
+              { label: 'Vizag', value: 'Vizag' },
+              { label: 'Hyderabad', value: 'Hyderabad' },
+              { label: 'Others', value: 'Others' }
+            ]
+          }
+        ]);
+        setGuidedStep('city');
+      }, 400);
+      return;
+    }
+
+    // 4. All info present or specific city detected -> Execute Search Pipeline immediately!
+    const effectiveCity = detectedCity || userMemory.city;
+    const effectiveType = detectedType || userMemory.type;
+    executePropertySearchPipeline(userQuery, effectiveCity, effectiveType);
   };
 
   const appendAiResponse = (text: string) => {
