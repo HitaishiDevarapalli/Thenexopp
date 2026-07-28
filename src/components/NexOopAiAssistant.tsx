@@ -333,7 +333,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return {
         confidence: 100,
         category: 'greeting',
-        response: "Hi! 👋 I'm NexOop AI. How can I help you today?"
+        response: "Hi! 👋 I'm NexOop AI, your personal property consultant. How can I help you today?"
       };
     }
 
@@ -344,6 +344,33 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
         confidence: 100,
         category: 'appreciation',
         response: "You're welcome! Let me know if you'd like help finding a property or answering any real estate questions."
+      };
+    }
+
+    // Small Talk / How are you
+    if (lower.includes('how are you') || lower.includes('how r u')) {
+      return {
+        confidence: 100,
+        category: 'small_talk',
+        response: "I'm doing great, thank you for asking! 😊 How can I help you find your dream property, business, or calculate a home loan today?"
+      };
+    }
+
+    // Jokes
+    if (lower.includes('joke') || lower.includes('funny')) {
+      return {
+        confidence: 100,
+        category: 'joke',
+        response: "Why did the house go to the doctor? Because it had a window pain! 😄 How can I assist you with real estate today?"
+      };
+    }
+
+    // Capability Summary ("What can you do?")
+    if (lower.includes('what can you do') || lower.includes('help me with') || lower.includes('your features')) {
+      return {
+        confidence: 100,
+        category: 'help',
+        response: "I'm NexOop AI, your senior property consultant. I can help you:\n• Search & filter verified properties in AP & Telangana\n• Compare up to 4 listings side-by-side\n• Calculate instant Home Loan EMIs\n• Explore commercial businesses & franchises\n• Schedule verified site visits"
       };
     }
 
