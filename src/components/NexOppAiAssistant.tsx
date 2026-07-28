@@ -509,7 +509,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
             {
               id: `ai-${Date.now()}`,
               sender: 'ai',
-              text: "Please enter your city:",
+              text: "Please tell me the city name:",
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               type: 'city_input'
             }
@@ -523,12 +523,61 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // Step 4: Type selected -> Execute Search
+    // Step 4: Type selected -> Ask Purpose
     if (guidedStep === 'type') {
-      const updatedMem = { ...userMemory, type: opt.value };
+      setUserMemory(prev => ({ ...prev, type: opt.value }));
+      askPurposeStep();
+      return;
+    }
+
+    // Step 5: Purpose selected -> Execute Search
+    if (guidedStep === 'purpose') {
+      const updatedMem = { ...userMemory, purpose: opt.value };
       setUserMemory(updatedMem);
       setGuidedStep('complete');
-      executePropertySearchPipeline('', updatedMem.city, opt.value, updatedMem.maxPrice);
+      executePropertySearchPipeline('', updatedMem.city, updatedMem.type, updatedMem.maxPrice);
+      return;
+    }
+
+  const triggerSiteVisitBooking = (propertyTitle?: string) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: `ai-visit-${Date.now()}`,
+        sender: 'ai',
+        text: `Great! Let's book your site visit${propertyTitle ? ` for **${propertyTitle}**` : ''}. Please select your preferred date & time:`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'options',
+        options: [
+          { label: '📅 Today (10:30 AM)', value: 'Today 10:30 AM', action: 'confirm_visit' },
+          { label: '📅 Tomorrow (11:00 AM)', value: 'Tomorrow 11:00 AM', action: 'confirm_visit' },
+          { label: '📅 Friday (03:00 PM)', value: 'Friday 03:00 PM', action: 'confirm_visit' },
+          { label: '📅 Saturday (05:00 PM)', value: 'Saturday 05:00 PM', action: 'confirm_visit' }
+        ]
+      }
+    ]);
+  };
+
+    if (opt.action === 'book_visit') {
+      triggerSiteVisitBooking();
+      return;
+    }
+
+    if (opt.action === 'confirm_visit') {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `ai-conf-${Date.now()}`,
+          sender: 'ai',
+          text: `✓ **Site visit booked successfully for ${opt.value}!**\n\nA confirmation details badge has been dispatched to your WhatsApp and Email.\n\nWould you like me to recommend similar properties while you wait?`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: 'options',
+          options: [
+            { label: 'Yes, please', value: 'yes_similar', action: 'view_all' },
+            { label: 'No, thanks', value: 'no_thanks' }
+          ]
+        }
+      ]);
       return;
     }
 
@@ -547,11 +596,10 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'options',
           options: [
-            { label: 'Hyderabad', value: 'Hyderabad' },
-            { label: 'Visakhapatnam', value: 'Vizag' },
             { label: 'Guntur', value: 'Guntur' },
-            { label: 'Vijayawada', value: 'Vijayawada' },
-            { label: 'Other', value: 'Others' }
+            { label: 'Vizag (Visakhapatnam)', value: 'Vizag' },
+            { label: 'Hyderabad', value: 'Hyderabad' },
+            { label: 'Others', value: 'Others' }
           ]
         }
       ]);
@@ -566,15 +614,35 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
         {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: "What property type are you looking for?",
+          text: "What type of property are you looking for?",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'options',
           options: [
             { label: 'Apartment', value: 'Apartment' },
-            { label: 'Independent House', value: 'House' },
             { label: 'Villa', value: 'Villa' },
-            { label: 'Plot', value: 'Plot' },
-            { label: 'Commercial', value: 'Commercial' }
+            { label: 'Independent House', value: 'House' },
+            { label: 'Plot / Land', value: 'Plot' }
+          ]
+        }
+      ]);
+    }, 400);
+  };
+
+  const askPurposeStep = () => {
+    setGuidedStep('purpose');
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: 'ai',
+          text: "What is the purpose of buying?",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: 'options',
+          options: [
+            { label: 'Living', value: 'Living' },
+            { label: 'Investment', value: 'Investment' },
+            { label: 'Rental Income', value: 'Rental Income' }
           ]
         }
       ]);
