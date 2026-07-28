@@ -1170,6 +1170,12 @@ export const calculateDemandScore = (region: DemandRegion): { score: number; lev
   const totalActive = activeProps + activeFrans + activeBuses;
   
   let score = 25 + (totalSales * 15) + (totalActive * 3);
+  
+  // Custom logic: If a person buys (sales > 0) from that area, that region should be high demand
+  if (totalSales > 0) {
+    score = Math.max(score, 75); // Force score into High Demand threshold (>70)
+  }
+
   if (score > 100) score = 100;
   if (score < 0) score = 0;
 
