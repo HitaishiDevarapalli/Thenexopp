@@ -83,6 +83,7 @@ import { Logo } from '../components/common/Logo';
 import { PropertyManagementSystem } from '../components/PropertyManagementSystem';
 import { FranchiseManagementSystem } from '../components/FranchiseManagementSystem';
 import { AiAssistantAdminPanel } from '../components/AiAssistantAdminPanel';
+import { SellerAiIntelligencePanel } from '../components/SellerAiIntelligencePanel';
 import type {
   PropertyListing,
   FranchiseListing,
@@ -115,7 +116,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newTagInput, setNewTagInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant' | 'sellerAi'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -2659,6 +2660,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         {/* ================= CATEGORY 4.5: BROKER MANAGEMENT SYSTEM ================= */}
         {activeTab === 'brokers' && (
           <BrokerManagementSystem showNotification={showNotification} activeSubTab={brokerSubTab} onSubTabChange={setBrokerSubTab} />
+        )}
+
+        {/* ================= SELLER AI INTELLIGENCE PLATFORM ================= */}
+        {activeTab === 'sellerAi' && (
+          <SellerAiIntelligencePanel />
         )}
 
         {/* ================= CATEGORY 5: CONTACT INQUIRIES ================= */}
