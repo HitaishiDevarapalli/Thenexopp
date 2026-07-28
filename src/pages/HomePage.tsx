@@ -158,9 +158,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#DCFCE7', color: '#16A34A', page: 'financePage' },
   ];
 
-  // Recently Sold properties
+  // Recently Sold properties (Latest 8 ordered by soldDate descending)
   const recentlySoldListings = propertiesDb
-    .filter((p) => p.showSoldOnHomepage && (p.approvalStatus === 'Sold' || p.listingStatus === 'Sold'))
+    .filter((p) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold')
+    .sort((a, b) => {
+      const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
+      const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
+      return dateB - dateA;
+    })
+    .slice(0, 8)
     .map((p) => {
       return {
         id: p.id,
@@ -170,6 +176,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
         bhk: `${p.bedrooms || 3} BHK`,
         area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
+        soldDate: p.soldDate
       };
     });
 
@@ -1009,13 +1016,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
       </div>
 
-      {/* 5. RECENTLY SOLD PROPERTIES */}
+      {/* 5. RECENTLY SOLD PROPERTIES SECTION */}
       {recentlySoldListings.length > 0 && (
         <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '40px 24px 60px 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-              Recently Sold Out
+              Recently Sold
             </h2>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>
+              Explore properties successfully sold through NexOpp.
+            </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
             {recentlySoldListings.map((prop, idx) => (
@@ -1042,8 +1052,23 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               >
                 <div style={{ position: 'relative', height: '200px' }}>
                   <img src={prop.image} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', top: '12px', left: '12px', padding: '4px 10px', backgroundColor: '#EF4444', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 800, borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <FaCheckCircle /> SOLD OUT
+                  {/* Red SOLD Badge */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    backgroundColor: '#DC2626',
+                    color: '#FFFFFF',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.05em',
+                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
+                    zIndex: 10,
+                    fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+                  }}>
+                    SOLD
                   </div>
                 </div>
                 <div style={{ padding: '16px' }}>

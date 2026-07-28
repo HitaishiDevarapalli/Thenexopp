@@ -60,36 +60,26 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
                   onClick={() => onPropertyClick?.(prop.id)}
                 />
                 
-                {(prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
-                  <>
-                    <style>{`
-                      @keyframes soldBadgeFadeIn {
-                        from { opacity: 0; transform: scale(0.9) rotate(-10deg); }
-                        to { opacity: 1; transform: scale(1) rotate(-10deg); }
-                      }
-                    `}</style>
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '12px',
-                        left: '12px',
-                        backgroundColor: '#E53935',
-                        color: '#FFFFFF',
-                        padding: '6px 14px',
-                        borderRadius: '9999px',
-                        fontSize: '12px',
-                        fontWeight: 900,
-                        letterSpacing: '0.05em',
-                        boxShadow: '0 4px 10px rgba(229, 57, 53, 0.4)',
-                        zIndex: 10,
-                        transform: 'rotate(-10deg)',
-                        animation: 'soldBadgeFadeIn 0.4s ease-out forwards',
-                        fontFamily: "'Outfit', 'Inter', sans-serif"
-                      }}
-                    >
-                      SOLD
-                    </div>
-                  </>
+                {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      backgroundColor: '#DC2626',
+                      color: '#FFFFFF',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
+                      zIndex: 10,
+                      fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+                    }}
+                  >
+                    SOLD
+                  </div>
                 )}
 
                 <button 
@@ -101,7 +91,7 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
                 >
                   {isWishlisted(prop.id) ? <FaHeart className="heart-icon filled" /> : <FaRegHeart className="heart-icon outline" />}
                 </button>
-                {prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' ? (
+                {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? (
                   <button 
                     className="buy-now-badge"
                     style={{ backgroundColor: '#DC2626', cursor: 'not-allowed' }}
@@ -122,7 +112,7 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
                     <FaShoppingCart /> Buy
                   </button>
                 )}
-                {!(prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
+                {!(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
                   <span className={`status-badge ${prop.status.toLowerCase()}`}>
                     For {prop.status}
                   </span>

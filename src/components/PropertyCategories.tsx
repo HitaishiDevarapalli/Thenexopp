@@ -73,6 +73,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [selectedBhks, setSelectedBhks] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedMoreFilters, setSelectedMoreFilters] = useState<string[]>([]);
+  const [availabilityFilter, setAvailabilityFilter] = useState<'All' | 'Available' | 'Sold'>('All');
 
   useEffect(() => {
     if (!_initialCategory) {
@@ -325,11 +326,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         trending: p.trending || false,
         approvalStatus: p.approvalStatus,
         listingStatus: p.listingStatus,
+        sold: p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || false,
+        soldDate: p.soldDate,
         viewsCount: p.viewsCount || 0,
       };
     });
 
-    return baseList.filter((item) => {
+    let filtered = baseList.filter((item) => {
+      // Availability Filter
+      if (availabilityFilter === 'Available' && item.sold) return false;
+      if (availabilityFilter === 'Sold' && !item.sold) return false;
+
       // 0.5 Demand Region Filter
       if (demandFilter !== 'All') {
         const matchingRegions = demandRegionsDb.filter(r => r.demandLevel === demandFilter);
@@ -433,7 +440,34 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
       return true;
     });
-  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter]);
+
+    // Sorting (Default: Available properties listed first, followed by sold properties)
+    if (sortBy === 'Relevance' || !sortBy) {
+      filtered.sort((a, b) => {
+        if (!a.sold && b.sold) return -1;
+        if (a.sold && !b.sold) return 1;
+        return 0;
+      });
+    } else if (sortBy === 'Price: Low to High') {
+      filtered.sort((a, b) => a.rawPrice - b.rawPrice);
+    } else if (sortBy === 'Price: High to Low') {
+      filtered.sort((a, b) => b.rawPrice - a.rawPrice);
+    } else if (sortBy === 'Newest First' || sortBy === 'Newest') {
+      filtered.sort((a, b) => b.id.localeCompare(a.id));
+    } else if (sortBy === 'Oldest') {
+      filtered.sort((a, b) => a.id.localeCompare(b.id));
+    } else if (sortBy === 'Recently Sold') {
+      filtered.sort((a, b) => {
+        if (a.sold && !b.sold) return -1;
+        if (!a.sold && b.sold) return 1;
+        const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
+        const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
+        return dateB - dateA;
+      });
+    }
+
+    return filtered;
+  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
 
   const totalPages = Math.ceil(displayProperties.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -1044,6 +1078,20 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                   Showing <strong style={{ color: '#0F172A' }}>{displayProperties.length} properties</strong>
                 </span>
 
+                {/* Availability Filter Dropdown */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '6px 12px' }}>
+                  <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Availability:</span>
+                  <select
+                    value={availabilityFilter}
+                    onChange={(e) => setAvailabilityFilter(e.target.value as any)}
+                    style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', fontWeight: 800, color: '#0F172A', cursor: 'pointer' }}
+                  >
+                    <option value="All">All</option>
+                    <option value="Available">Available</option>
+                    <option value="Sold">Sold</option>
+                  </select>
+                </div>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '6px 12px' }}>
                   <span style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Sort by:</span>
                   <select
@@ -1052,10 +1100,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', fontWeight: 800, color: '#0F172A', cursor: 'pointer' }}
                   >
                     <option value="Relevance">Relevance</option>
-                    <option value="Price: Low to High">Price: Low to High</option>
-                    <option value="Price: High to Low">Price: High to Low</option>
-                    <option value="Newest First">Newest First</option>
-                    <option value="Distance">Distance</option>
+                    <option value="Newest First">Newest</option>
+                    <option value="Oldest">Oldest</option>
+                    <option value="Price: Low to High">Price Low to High</option>
+                    <option value="Price: High to Low">Price High to Low</option>
+                    <option value="Recently Sold">Recently Sold</option>
                   </select>
                 </div>
               </div>
@@ -1188,36 +1237,26 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       />
 
                       {/* Top Left Badge */}
-                      {prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' ? (
-                        <>
-                          <style>{`
-                            @keyframes soldBadgeFadeIn {
-                              from { opacity: 0; transform: scale(0.9) rotate(-10deg); }
-                              to { opacity: 1; transform: scale(1) rotate(-10deg); }
-                            }
-                          `}</style>
-                          <div
-                            style={{
-                              position: 'absolute',
-                              top: '12px',
-                              left: '12px',
-                              backgroundColor: '#E53935',
-                              color: '#FFFFFF',
-                              padding: '6px 14px',
-                              borderRadius: '9999px',
-                              fontSize: '12px',
-                              fontWeight: 900,
-                              letterSpacing: '0.05em',
-                              boxShadow: '0 4px 10px rgba(229, 57, 53, 0.4)',
-                              zIndex: 10,
-                              transform: 'rotate(-10deg)',
-                              animation: 'soldBadgeFadeIn 0.4s ease-out forwards',
-                              fontFamily: "'Outfit', 'Inter', sans-serif"
-                            }}
-                          >
-                            SOLD
-                          </div>
-                        </>
+                      {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            backgroundColor: '#DC2626',
+                            color: '#FFFFFF',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.05em',
+                            boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
+                            zIndex: 10,
+                            fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+                          }}
+                        >
+                          SOLD
+                        </div>
                       ) : (
                         <div
                           style={{

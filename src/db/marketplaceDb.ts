@@ -114,6 +114,8 @@ export interface PropertyListing {
   availabilityCount: number;
   trustScore: number;
   createdDate: string;
+  sold?: boolean;
+  soldDate?: string;
   listingStatus?: 'Draft' | 'Pending' | 'Published' | 'Hidden' | 'Reserved' | 'Sold' | 'Expired' | 'Archived';
   urgent?: boolean;
   luxury?: boolean;

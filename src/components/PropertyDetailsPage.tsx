@@ -624,36 +624,26 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   alt={`${property.title} - View ${activeImageIndex + 1}`} 
                   className="prop-gallery-img" 
                 />
-                {(property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') && (
-                  <>
-                    <style>{`
-                      @keyframes soldBadgeFadeIn {
-                        from { opacity: 0; transform: scale(0.9) rotate(-10deg); }
-                        to { opacity: 1; transform: scale(1) rotate(-10deg); }
-                      }
-                    `}</style>
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '20px',
-                        left: '20px',
-                        backgroundColor: '#E53935',
-                        color: '#FFFFFF',
-                        padding: '8px 18px',
-                        borderRadius: '9999px',
-                        fontSize: '14px',
-                        fontWeight: 900,
-                        letterSpacing: '0.05em',
-                        boxShadow: '0 4px 12px rgba(229, 57, 53, 0.5)',
-                        zIndex: 10,
-                        transform: 'rotate(-10deg)',
-                        animation: 'soldBadgeFadeIn 0.4s ease-out forwards',
-                        fontFamily: "'Outfit', 'Inter', sans-serif"
-                      }}
-                    >
-                      SOLD
-                    </div>
-                  </>
+                {(property.sold || property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '16px',
+                      left: '16px',
+                      backgroundColor: '#DC2626',
+                      color: '#FFFFFF',
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
+                      zIndex: 10,
+                      fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+                    }}
+                  >
+                    SOLD
+                  </div>
                 )}
                 <button className="gallery-arrow arrow-right" onClick={handleNextImage}>
                   <FaChevronRight />
@@ -868,7 +858,30 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               <h4 className="price-specs-subtitle">
                 {property.specs ? property.specs.Type || property.areaSqFt : `${isPlot ? 'Plot / Land' : '3 BHK - 2 Bathroom'} - ${superArea} sqft`}
               </h4>
-              <p className="price-title-sub">{property.title}</p>
+              <p className="price-title-sub" style={{ marginBottom: (property.sold || property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') ? '6px' : undefined }}>{property.title}</p>
+              
+              {(property.sold || property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') && (
+                <div style={{ marginTop: '8px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span
+                    style={{
+                      backgroundColor: '#DC2626',
+                      color: '#FFFFFF',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
+                      fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+                    }}
+                  >
+                    SOLD
+                  </span>
+                  <span style={{ color: '#DC2626', fontWeight: 800, fontSize: '0.88rem' }}>
+                    Recently Sold
+                  </span>
+                </div>
+              )}
               
               <div className="price-box-footer">
                 <span className="price-loc"><FaMapMarkerAlt /> {property.area}, {property.city}</span>

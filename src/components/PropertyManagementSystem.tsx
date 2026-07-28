@@ -252,13 +252,27 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const total = propertiesDb.length;
     const published = propertiesDb.filter(p => p.approvalStatus === 'Published' || p.listingStatus === 'Published').length;
     const pending = propertiesDb.filter(p => p.approvalStatus === 'Pending Approval').length;
-    const sold = propertiesDb.filter(p => p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length;
+    const sold = propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length;
     const reserved = propertiesDb.filter(p => p.approvalStatus === 'Reserved' || p.listingStatus === 'Reserved').length;
     const featuredCount = propertiesDb.filter(p => p.featured || p.highlightPropertyCard).length;
     const totalValue = propertiesDb.reduce((acc, curr) => acc + (curr.price || 0), 0);
     const avgPrice = total > 0 ? (totalValue / total).toFixed(2) : '0.00';
     const sponsoredCount = propertiesDb.filter(p => p.premium || p.luxury).length;
-    return { total, totalProperties: total, published, activeListings: published, pending, pendingCount: pending, sold, reserved, featuredCount, sponsoredCount, totalValue: totalValue.toFixed(2), avgPrice };
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentlySold30Days = propertiesDb.filter(p => {
+      const isSold = p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold';
+      if (!isSold) return false;
+      if (!p.soldDate) return true;
+      return new Date(p.soldDate) >= thirtyDaysAgo;
+    }).length;
+
+    return { 
+      total, totalProperties: total, published, activeListings: published, 
+      pending, pendingCount: pending, sold, totalSold: sold, 
+      recentlySold30Days, reserved, featuredCount, sponsoredCount, 
+      totalValue: totalValue.toFixed(2), avgPrice 
+    };
   }, [propertiesDb]);
 
   const openAddModal = () => {
@@ -437,8 +451,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       urlSlug: formData.urlSlug || formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '',
       google_place_id: formData.google_place_id || `ChIJ_verified_${Date.now()}`,
       country: formData.country || 'India',
-      service_radius: formData.service_radius || 10
+      service_radius: formData.service_radius || 10,
+      sold: formData.sold || formData.approvalStatus === 'Sold' || formData.listingStatus === 'Sold' || false,
+      soldDate: (formData.sold || formData.approvalStatus === 'Sold') ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined
     };
+
+    if (preparedProperty.sold) {
+      preparedProperty.listingStatus = 'Sold';
+      preparedProperty.approvalStatus = 'Sold';
+    }
 
     if (modalMode === 'edit' && editingId) {
       updateProperty(editingId, preparedProperty);
@@ -517,68 +538,88 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         )}
       </div>
 
-      {/* 6-Card KPI Summary Strip matching screenshot exactly */}
+      {/* 8-Card KPI Summary Strip with Sold Statistics */}
       {activeModuleTab === 'listings' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '14px' }}>
           
           {/* Total Properties */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', marginBottom: '12px' }}>
-              <FaBuilding style={{ fontSize: '1.2rem' }} />
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', marginBottom: '10px' }}>
+              <FaBuilding style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Total Properties</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.totalProperties}</div>
-            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 12.5% this month</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total Properties</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.totalProperties}</div>
+            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 12.5% this month</div>
           </div>
 
           {/* Active Listings */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', marginBottom: '12px' }}>
-              <FaCheckCircle style={{ fontSize: '1.2rem' }} />
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', marginBottom: '10px' }}>
+              <FaCheckCircle style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Active Listings</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.activeListings}</div>
-            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 8.2% this month</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Active Listings</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.activeListings}</div>
+            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 8.2% this month</div>
+          </div>
+
+          {/* Total Sold Properties */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #FEF2F2', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626', marginBottom: '10px' }}>
+              <FaCheckCircle style={{ fontSize: '1.1rem' }} />
+            </div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#DC2626' }}>Total Sold Properties</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#991B1B', margin: '2px 0 4px 0' }}>{stats.totalSold}</div>
+            <div style={{ fontSize: '0.7rem', color: '#DC2626', fontWeight: 600 }}>Marked as Sold</div>
+          </div>
+
+          {/* Recently Sold (30 Days) */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #FFEDD5', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2410C', marginBottom: '10px' }}>
+              <FaChartBar style={{ fontSize: '1.1rem' }} />
+            </div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#C2410C' }}>Recently Sold (30 Days)</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#9A3412', margin: '2px 0 4px 0' }}>{stats.recentlySold30Days}</div>
+            <div style={{ fontSize: '0.7rem', color: '#C2410C', fontWeight: 600 }}>Last 30 days</div>
           </div>
 
           {/* Pending Approval */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', marginBottom: '12px' }}>
-              <FaChartBar style={{ fontSize: '1.2rem' }} />
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', marginBottom: '10px' }}>
+              <FaChartBar style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Pending Approval</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.pendingCount}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>Needs your review</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Pending Approval</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.pendingCount}</div>
+            <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 500 }}>Needs review</div>
           </div>
 
           {/* Featured */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FCE7F3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EC4899', marginBottom: '12px' }}>
-              <FaCrown style={{ fontSize: '1.2rem' }} />
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FCE7F3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EC4899', marginBottom: '10px' }}>
+              <FaCrown style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Featured</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.featuredCount}</div>
-            <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>Homepage priority</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Featured</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.featuredCount}</div>
+            <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 500 }}>Homepage priority</div>
           </div>
 
           {/* Premium */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333EA', marginBottom: '12px' }}>
-              <FaCrown style={{ fontSize: '1.2rem' }} />
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333EA', marginBottom: '10px' }}>
+              <FaCrown style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Premium</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.sponsoredCount || 156}</div>
-            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 15.3% this month</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Premium</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.sponsoredCount || 156}</div>
+            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 15.3% this month</div>
           </div>
 
           {/* Total Value */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D9488', marginBottom: '12px' }}>
-              <FaChartBar style={{ fontSize: '1.2rem' }} />
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D9488', marginBottom: '10px' }}>
+              <FaChartBar style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Total Value</div>
-            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>₹{stats.totalValue} Cr</div>
-            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 18.7% this month</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total Value</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>₹{stats.totalValue} Cr</div>
+            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 18.7% this month</div>
           </div>
 
         </div>
@@ -1579,7 +1620,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </div>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>APPROVAL PIPELINE</label>
-                      <select value={formData.approvalStatus || 'Published'} onChange={e => setFormData({ ...formData, approvalStatus: e.target.value as any, listingStatus: e.target.value as any })} style={{ width: '100%', padding: '14px', border: '1.5px solid #2563EB', borderRadius: '12px', fontWeight: 700, color: '#1E40AF', backgroundColor: '#FFFFFF' }}>
+                      <select value={formData.approvalStatus || 'Published'} onChange={e => setFormData({ ...formData, approvalStatus: e.target.value as any, listingStatus: e.target.value as any, sold: e.target.value === 'Sold', soldDate: e.target.value === 'Sold' ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined })} style={{ width: '100%', padding: '14px', border: '1.5px solid #2563EB', borderRadius: '12px', fontWeight: 700, color: '#1E40AF', backgroundColor: '#FFFFFF' }}>
                         <option value="Published">Published Immediately</option>
                         <option value="Pending Approval">Pending Approval</option>
                         <option value="Draft">Save as Draft</option>
@@ -1587,6 +1628,39 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <option value="Reserved">Mark as Reserved</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* Mark as Sold Toggle Switch Component */}
+                  <div style={{ backgroundColor: formData.sold ? '#FEF2F2' : '#F8FAFC', border: `1.5px solid ${formData.sold ? '#EF4444' : '#CBD5E1'}`, borderRadius: '14px', padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '1rem', fontWeight: 800, color: formData.sold ? '#DC2626' : '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span>Mark Property as Sold</span>
+                        {formData.sold && <span style={{ backgroundColor: '#DC2626', color: '#FFF', fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, letterSpacing: '0.5px' }}>SOLD ACTIVE</span>}
+                      </div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '4px' }}>
+                        When enabled, a prominent red <strong>SOLD</strong> badge will appear on all property cards, search listings, and detail pages.
+                      </div>
+                    </div>
+                    <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.sold || formData.approvalStatus === 'Sold' || formData.listingStatus === 'Sold' || false}
+                        onChange={e => {
+                          const isSold = e.target.checked;
+                          setFormData({
+                            ...formData,
+                            sold: isSold,
+                            soldDate: isSold ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined,
+                            approvalStatus: isSold ? 'Sold' : 'Published',
+                            listingStatus: isSold ? 'Sold' : 'Published'
+                          });
+                        }}
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: (formData.sold || formData.approvalStatus === 'Sold') ? '#DC2626' : '#CBD5E1', transition: '0.3s', borderRadius: '34px' }}>
+                        <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: (formData.sold || formData.approvalStatus === 'Sold') ? '30px' : '4px', bottom: '4px', backgroundColor: 'white', transition: '0.3s', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                      </span>
+                    </label>
                   </div>
 
                   <div>

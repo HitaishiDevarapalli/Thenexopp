@@ -12,7 +12,7 @@ import type { PropertyListing } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 
 interface NexOppAiAssistantProps {
-  onNavigate?: (page: string) => void;
+  onNavigate?: (page: string, queryParams?: string) => void;
   onPropertyClick?: (id: string) => void;
 }
 
@@ -24,6 +24,7 @@ interface Message {
   type?: 'welcome' | 'text' | 'options' | 'city_input' | 'searching' | 'results' | 'no_results' | 'emi_calc' | 'comparison';
   options?: { label: string; value: string; action?: string }[];
   properties?: (PropertyListing & { aiMatchScore: number })[];
+  totalCount?: number;
 }
 
 interface UserMemoryState {
@@ -243,36 +244,76 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
     setTimeout(() => {
       setIsSearching(false);
 
+      // Exclude sold properties by default unless explicitly requested
+      const isSoldRequested = lower.includes('sold') || lower.includes('recently sold');
+
       let matches = propertiesDb.filter(p => {
+        if (!isSoldRequested && (p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold')) {
+          return false;
+        }
         if (targetCity) {
-          const matchCity = p.city.toLowerCase().includes(targetCity.toLowerCase()) || p.state.toLowerCase().includes(targetCity.toLowerCase());
+          const matchCity = p.city.toLowerCase().includes(targetCity.toLowerCase()) || 
+                            p.state.toLowerCase().includes(targetCity.toLowerCase()) ||
+                            (p.area && p.area.toLowerCase().includes(targetCity.toLowerCase())) ||
+                            (p.fullAddress && p.fullAddress.toLowerCase().includes(targetCity.toLowerCase()));
           if (!matchCity) return false;
         }
         if (targetType) {
-          const matchCat = p.category.toLowerCase().includes(targetType.toLowerCase());
-          if (!matchCat) return false;
+          const t = targetType.toLowerCase();
+          const cat = p.category ? p.category.toLowerCase() : '';
+          if (t.includes('villa') && !cat.includes('villa')) return false;
+          if ((t.includes('apartment') || t.includes('flat')) && !cat.includes('apartment') && !cat.includes('flat')) return false;
+          if (t.includes('house') && !t.includes('villa') && !cat.includes('house')) return false;
+          if (t.includes('plot') && !cat.includes('plot') && !cat.includes('land')) return false;
+          if (t.includes('commercial') && !cat.includes('commercial')) return false;
         }
         if (isVerifiedOnly && !p.verified) return false;
         
         // Price parsing check
         if (updatedMem.maxPrice) {
-          const numericPrice = parseFloat(p.priceDisplay.replace(/[^0-9.]/g, ''));
-          const priceInLakhs = p.priceDisplay.toLowerCase().includes('cr') ? numericPrice * 100 : numericPrice;
+          const numericPrice = parseFloat(p.priceDisplay.replace(/[^0-9.]/g, '')) || p.price || 0;
+          const priceInLakhs = p.priceDisplay.toLowerCase().includes('cr') ? numericPrice * 100 : (numericPrice < 10 ? numericPrice * 100 : numericPrice);
           if (priceInLakhs > updatedMem.maxPrice) return false;
         }
         return true;
       });
 
-      // Sort if requested
-      if (sortOrder === 'asc') {
-        matches.sort((a, b) => {
-          const pA = parseFloat(a.priceDisplay.replace(/[^0-9.]/g, '')) * (a.priceDisplay.toLowerCase().includes('cr') ? 100 : 1);
-          const pB = parseFloat(b.priceDisplay.replace(/[^0-9.]/g, '')) * (b.priceDisplay.toLowerCase().includes('cr') ? 100 : 1);
-          return pA - pB;
-        });
+      const totalCount = matches.length;
+
+      if (totalCount === 0) {
+        // Fallback check for recently sold properties in area as reference
+        const soldAlternatives = propertiesDb.filter(p => {
+          if (!(p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold')) return false;
+          if (targetCity) {
+            const matchCity = p.city.toLowerCase().includes(targetCity.toLowerCase()) || p.state.toLowerCase().includes(targetCity.toLowerCase());
+            if (!matchCity) return false;
+          }
+          return true;
+        }).slice(0, 2);
+
+        setMessages(prev => [
+          ...prev.filter(m => m.type !== 'searching'),
+          {
+            id: `ai-nores-${Date.now()}`,
+            sender: 'ai',
+            text: soldAlternatives.length > 0
+              ? `I searched our active inventory and found 0 available properties matching your exact criteria, but here are recently sold properties in ${targetCity || 'this area'} for reference:`
+              : "I searched our latest property listings and found 0 matching properties.",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'no_results',
+            properties: soldAlternatives.length > 0 ? soldAlternatives.map(p => ({ ...p, aiMatchScore: 80 })) : undefined,
+            options: [
+              { label: '📈 Increase Budget', value: 'increase_budget', action: 'start_buy' },
+              { label: '🌆 Change City', value: 'change_city', action: 'ask_city' },
+              { label: '🏠 View Similar Properties', value: 'view_similar', action: 'view_all' },
+              { label: '🔔 Notify Me When Available', value: 'notify_me', action: 'notify_me' }
+            ]
+          }
+        ]);
+        return;
       }
 
-      // Score & Rank items (Ranking Algorithm: verified + premium + demand score)
+      // Sort & Rank items
       const scored = matches.map(p => {
         let score = 85;
         if (p.verified) score += 8;
@@ -280,33 +321,12 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
         if (targetCity && p.city.toLowerCase() === targetCity.toLowerCase()) score += 2;
         if (score > 99) score = 99;
         return { ...p, aiMatchScore: score };
-      }).sort((a, b) => sortOrder ? 0 : b.aiMatchScore - a.aiMatchScore).slice(0, 5); // Limit to top 5
+      }).sort((a, b) => sortOrder ? (sortOrder === 'asc' ? a.price - b.price : b.price - a.price) : b.aiMatchScore - a.aiMatchScore);
 
-      if (scored.length === 0) {
-        setMessages(prev => [
-          ...prev.filter(m => m.type !== 'searching'),
-          {
-            id: `ai-nores-${Date.now()}`,
-            sender: 'ai',
-            text: "Sorry, I couldn't find properties matching your exact search requirements.",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: 'no_results',
-            options: [
-              { label: '📈 Increase Budget', value: 'increase_budget', action: 'start_buy' },
-              { label: '🌆 Change City', value: 'change_city', action: 'ask_city' },
-              { label: '🏠 View Similar Properties', value: 'view_similar', action: 'view_all' }
-            ]
-          }
-        ]);
-        return;
-      }
+      // Display first 3 properties inside chat
+      const top3 = scored.slice(0, 3);
 
-      // Explainability text generation
-      let explainText = `I found **${scored.length} verified properties** matching your criteria`;
-      if (targetCity) explainText += ` in **${targetCity}**`;
-      if (targetType) explainText += ` (${targetType}s)`;
-      if (updatedMem.maxPrice) explainText += ` under ₹${updatedMem.maxPrice} Lakhs`;
-      explainText += `. Recommending top-ranked matches based on verified credentials, location demand, and price match:`;
+      const explainText = `I found ${totalCount} properties matching your requirements. Here are the best matches:`;
 
       setMessages(prev => [
         ...prev.filter(m => m.type !== 'searching'),
@@ -316,10 +336,11 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           text: explainText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'results',
-          properties: scored
+          properties: top3,
+          totalCount: totalCount
         }
       ]);
-    }, 1000);
+    }, 600);
   };
 
   // Intent Detection & Confidence Engine (<70% threshold guardrail)
@@ -578,6 +599,11 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           ]
         }
       ]);
+      return;
+    }
+
+    if (opt.action === 'notify_me') {
+      appendAiResponse(`✓ **Property Alert Created!**\n\nWe'll notify you via WhatsApp and Email as soon as new properties matching your criteria are listed in ${userMemory.city || 'your area'}.`);
       return;
     }
 
@@ -1251,8 +1277,28 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
                               ⚡ {prop.aiMatchScore}% Match
                             </div>
 
+                            {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: '8px',
+                                  left: '8px',
+                                  backgroundColor: '#DC2626',
+                                  color: '#FFFFFF',
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.65rem',
+                                  fontWeight: 800,
+                                  boxShadow: '0 2px 6px rgba(220, 38, 38, 0.4)',
+                                  zIndex: 10
+                                }}
+                              >
+                                SOLD
+                              </div>
+                            )}
+
                             {/* Verified Badge */}
-                            {prop.verified && (
+                            {prop.verified && !(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
                               <div
                                 style={{
                                   position: 'absolute',
@@ -1372,6 +1418,39 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
                       ))}
                     </div>
                   )}
+
+                  {msg.totalCount && msg.totalCount > 3 && (
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        if (userMemory.city) params.set('location', userMemory.city);
+                        if (userMemory.type) params.set('type', userMemory.type);
+                        if (userMemory.maxPrice) params.set('budget', String(userMemory.maxPrice));
+                        onNavigate?.('propertiesPage', `?${params.toString()}`);
+                        setIsOpen(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        marginTop: '12px',
+                        backgroundColor: '#10B981',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '10px 16px',
+                        fontSize: '0.82rem',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      View All {msg.totalCount} Properties →
+                    </button>
+                  )}
                 </div>
 
                 <div style={{ fontSize: '0.65rem', color: '#9CA3AF', marginTop: '4px', padding: '0 4px' }}>
@@ -1384,7 +1463,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
             {isSearching && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', padding: '10px 14px', borderRadius: '18px', width: 'fit-content' }}>
                 <FemaleAiAvatar size={24} />
-                <span style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>Searching verified properties...</span>
+                <span style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>Searching our latest property listings...</span>
               </div>
             )}
 

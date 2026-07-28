@@ -637,6 +637,9 @@ export const MarketplaceExplorer: React.FC<MarketplaceExplorerProps> = ({ onProp
                                   <FaShoppingCart /> Buy
                                 </button>
                                 <div className="card-badges">
+                                  {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
+                                    <span style={{ backgroundColor: '#DC2626', color: '#FFFFFF', padding: '6px 12px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)', zIndex: 10, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>SOLD</span>
+                                  )}
                                   {prop.verified && <span className="badge verified">Verified</span>}
                                   {prop.premium && <span className="badge premium">Premium</span>}
                                   {prop.trending && <span className="badge trending">Trending</span>}
