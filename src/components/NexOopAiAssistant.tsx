@@ -21,7 +21,7 @@ interface Message {
   sender: 'ai' | 'user';
   text: string;
   timestamp: string;
-  type?: 'welcome' | 'text' | 'options' | 'city_input' | 'searching' | 'results' | 'emi_calc' | 'comparison';
+  type?: 'welcome' | 'text' | 'options' | 'city_input' | 'searching' | 'results' | 'no_results' | 'emi_calc' | 'comparison';
   options?: { label: string; value: string; action?: string }[];
   properties?: (PropertyListing & { aiMatchScore: number })[];
 }
@@ -35,23 +35,33 @@ interface UserMemoryState {
   recentSearches: string[];
 }
 
-// Language Types supported by RAG Engine
-type DetectedLanguage = 'en' | 'te' | 'hi';
+// Supported Language Types
+type DetectedLanguage = 'en' | 'te' | 'hi' | 'te_roman' | 'hi_roman';
 
-// Multilingual Auto-Detection Helper
+// Language & Script Detector
 const detectQueryLanguage = (text: string): DetectedLanguage => {
-  // Telugu Unicode Range check (\u0C00-\u0C7F)
-  if (/[\u0C00-\u0C7F]/.test(text) || /\b(నమస్కారం|ఇల్లు|ప్లాట్|కొనాలి|అద్దె|ధర|హైదరాబాద్|గుంటూరు|వైజాగ్)\b/i.test(text)) {
-    return 'te';
+  // Telugu Script (\u0C00-\u0C7F)
+  if (/[\u0C00-\u0C7F]/.test(text)) return 'te';
+  
+  // Hindi / Devanagari Script (\u0900-\u097F)
+  if (/[\u0900-\u097F]/.test(text)) return 'hi';
+
+  const lower = text.toLowerCase();
+  
+  // Roman Telugu Keywords (e.g. "naku 50 lakhs properties chupinchu", "kavali", "unnaya", "kosam")
+  if (/\b(naku|chupinchu|kavali|unnaya|kosam|chupinchey|enti|ekada|lo)\b/i.test(lower)) {
+    return 'te_roman';
   }
-  // Hindi / Devanagari Unicode Range check (\u0900-\u097F)
-  if (/[\u0900-\u097F]/.test(text) || /\b(नमस्ते|घर|प्लॉट|खरीदना|किराया|कीमत|हैदराबाद|गुंटूर|वैजाग)\b/i.test(text)) {
-    return 'hi';
+
+  // Roman Hindi Keywords (e.g. "chahiye", "hai", "kaise", "dikhaye", "me", "ke liye")
+  if (/\b(chahiye|dikhaye|hai|batao|kya|ke liye|chahiye|mein)\b/i.test(lower)) {
+    return 'hi_roman';
   }
+
   return 'en';
 };
 
-// 3D Realistic Professional Female AI Avatar (Blue Blazer, White Shirt, Friendly Smile, Green Online Dot)
+// 3D Professional Female AI Avatar (Blue Blazer, White Shirt, Friendly Smile, Green Online Dot)
 const FemaleAiAvatar: React.FC<{ size?: number; className?: string }> = ({ size = 48, className = '' }) => (
   <div 
     style={{ 
@@ -76,12 +86,12 @@ const FemaleAiAvatar: React.FC<{ size?: number; className?: string }> = ({ size 
         boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
       }}
       onError={(e) => {
-        // Fallback to SVG if image loading fails
+        // Fallback styling if image is missing
         e.currentTarget.style.display = 'none';
       }}
     />
 
-    {/* Green Online Status Dot */}
+    {/* Green Online Status Indicator Dot */}
     <span 
       style={{ 
         position: 'absolute', 
@@ -108,7 +118,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
   const [inputText, setInputText] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // User Session Memory State (Persisted in localStorage)
+  // User Memory State (Persisted in localStorage)
   const [userMemory, setUserMemory] = useState<UserMemoryState>(() => {
     try {
       const saved = localStorage.getItem('nexopp_ai_user_memory');
@@ -122,7 +132,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     localStorage.setItem('nexopp_ai_user_memory', JSON.stringify(userMemory));
   }, [userMemory]);
 
-  // Guided Questionnaire State Flow
+  // Guided Flow State
   const [guidedStep, setGuidedStep] = useState<'idle' | 'intent' | 'budget' | 'city' | 'custom_city' | 'type' | 'purpose' | 'complete'>('idle');
   const [customCityInput, setCustomCityInput] = useState('');
 
@@ -142,7 +152,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     {
       id: 'm-1',
       sender: 'ai',
-      text: "Hi 👋 I'm **NexOop AI**, Your Retrieval-Augmented Property Consultant. I can help you with Buy Property, Rent Property, Investment, Business, Franchise, Finance, Insurance, Commercial, Plots, Property Comparison, EMI, Site Visits, Navigation, and General Questions.",
+      text: "Hi 👋 I'm **NexOop AI**, your personal property consultant. I can help you find verified properties, franchises, businesses, home loans, and calculate EMIs across Andhra Pradesh & Telangana.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'welcome',
       options: [
@@ -158,13 +168,9 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     }
   ]);
 
-  // Floating Speech Bubble Timers
+  // Timers for floating speech bubble
   useEffect(() => {
-    // Auto hides bubble after 5 seconds
-    const hideTimer = setTimeout(() => {
-      setShowBubble(false);
-    }, 5000);
-
+    const hideTimer = setTimeout(() => setShowBubble(false), 5000);
     return () => clearTimeout(hideTimer);
   }, []);
 
@@ -173,14 +179,9 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       setShowBubble(false);
       return;
     }
-
-    // Returns bubble after 30 seconds of inactivity if closed
     const returnTimer = setTimeout(() => {
-      if (!isOpen) {
-        setShowBubble(true);
-      }
+      if (!isOpen) setShowBubble(true);
     }, 30000);
-
     return () => clearTimeout(returnTimer);
   }, [isOpen]);
 
@@ -191,7 +192,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     }
   }, [messages, isOpen, isSearching]);
 
-  // Calculate monthly EMI
+  // Monthly EMI Calculation
   const calculatedEmiVal = useMemo(() => {
     const P = emiAmount * 100000;
     const r = emiRate / (12 * 100);
@@ -201,124 +202,151 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     return Math.round(emi);
   }, [emiAmount, emiRate, emiTenure]);
 
-  // RAG RETRIEVAL ENGINE (Queries website databases & rules strictly without hallucination)
-  const performRAGRetrieval = (userQuery: string): { text: string; properties?: (PropertyListing & { aiMatchScore: number })[]; type?: string } => {
-    const lang = detectQueryLanguage(userQuery);
+  // Database Property Retrieval Pipeline
+  const executePropertySearchPipeline = (userQuery: string, searchCity?: string, searchType?: string, searchBudget?: string) => {
+    setIsSearching(true);
+
     const lower = userQuery.toLowerCase();
+    const targetCity = searchCity || userMemory.city || (lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : undefined)));
+    const targetType = searchType || userMemory.type || (lower.includes('villa') ? 'Villa' : (lower.includes('plot') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : undefined)));
 
-    // Store query in user memory
-    setUserMemory(prev => ({
-      ...prev,
-      recentSearches: Array.from(new Set([userQuery, ...(prev.recentSearches || [])])).slice(0, 5)
-    }));
+    // Search Database
+    setTimeout(() => {
+      setIsSearching(false);
 
-    // 1. EMI / Loan / Finance RAG Lookup
-    if (lower.includes('emi') || lower.includes('loan') || lower.includes('interest') || lower.includes('बैंक') || lower.includes('రుణం')) {
-      if (lang === 'te') {
-        return { text: "💰 **NexOop హోమ్ లోన్ ఇఎమ్‌ఐ క్యాలిక్యులేటర్**: మీ గృహ రుణం నెలకు ఎంత అవుతుందో ఇక్కడ గణించండి:" };
+      let matches = propertiesDb.filter(p => {
+        if (targetCity) {
+          const matchCity = p.city.toLowerCase().includes(targetCity.toLowerCase()) || p.state.toLowerCase().includes(targetCity.toLowerCase());
+          if (!matchCity) return false;
+        }
+        if (targetType) {
+          const matchCat = p.category.toLowerCase().includes(targetType.toLowerCase());
+          if (!matchCat) return false;
+        }
+        return true;
+      });
+
+      // Score matching items
+      const scored = matches.map(p => {
+        let score = 85;
+        if (p.verified) score += 8;
+        if (p.premium) score += 4;
+        if (score > 99) score = 99;
+        return { ...p, aiMatchScore: score };
+      }).sort((a, b) => b.aiMatchScore - a.aiMatchScore).slice(0, 4);
+
+      if (scored.length === 0) {
+        // No results found
+        setMessages(prev => [
+          ...prev.filter(m => m.type !== 'searching'),
+          {
+            id: `ai-nores-${Date.now()}`,
+            sender: 'ai',
+            text: "Sorry, I couldn't find properties matching your exact search.",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'no_results',
+            options: [
+              { label: '📈 Increase Budget', value: 'increase_budget', action: 'start_buy' },
+              { label: '🌆 Change City', value: 'change_city', action: 'ask_city' },
+              { label: '🏠 View Similar Properties', value: 'view_similar', action: 'view_all' }
+            ]
+          }
+        ]);
+        return;
       }
-      if (lang === 'hi') {
-        return { text: "💰 **NexOop होम लोन ईएमआई कैलकुलेटर**: अपनी मासिक ईएमआई की गणना यहाँ करें:" };
-      }
-      return { text: "💰 **NexOop Instant Home Loan EMI Calculator**: Adjust your loan parameters below:" };
-    }
 
-    // 2. Franchise RAG Search
-    if (lower.includes('franchise') || lower.includes('ఫ్రాంచైజ్') || lower.includes('फ्रेंचाइजी')) {
-      const activeFranchises = franchiseDb;
-      const count = activeFranchises.length;
-      if (lang === 'te') {
-        return { text: `🏢 మా వద్ద **${count} పరిశీలించిన ఫ్రాంచైజ్ బ్రాండ్లు** (ఆహారం, రిటైల్, ఆరోగ్య రక్షణ) అందుబాటులో ఉన్నాయి. ఫ్రాంచైజ్ మార్కెట్‌ప్లేస్‌ను పరిశీలించడానికి దిగువ బటన్ క్లిక్ చేయండి.` };
-      }
-      if (lang === 'hi') {
-        return { text: `🏢 हमारे पास **${count} सत्यापित फ्रेंचाइजी ब्रांड** उपलब्ध हैं। फ्रेंचाइजी देखने के लिए नीचे दिए गए विकल्प पर क्लिक करें।` };
-      }
-      return { text: `🏢 We have **${count} Verified Franchise Brands** across Food, Retail, and Healthcare available in AP & Telangana.` };
-    }
+      // Results found
+      setMessages(prev => [
+        ...prev.filter(m => m.type !== 'searching'),
+        {
+          id: `ai-res-${Date.now()}`,
+          sender: 'ai',
+          text: `I found **${scored.length} verified properties** matching your requirements:`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: 'results',
+          properties: scored
+        }
+      ]);
+    }, 1200);
+  };
 
-    // 3. Business Acquisition RAG Search
-    if (lower.includes('business') || lower.includes('వ్యాపారం') || lower.includes('व्यापार')) {
-      const count = businessDb.length;
-      if (lang === 'te') {
-        return { text: `💼 మా డేటాబేస్‌లో **${count} నడుస్తున్న వ్యాపార అవకాశాలు** అందుబాటులో ఉన్నాయి.` };
-      }
-      if (lang === 'hi') {
-        return { text: `💼 हमारे डेटाबेस में **${count} चालू व्यवसाय अधिग्रहण अवसर** उपलब्ध हैं।` };
-      }
-      return { text: `💼 Found **${count} Operational Business Opportunities** available for acquisition/partnership.` };
-    }
+  // Intent Detection & Confidence Engine (<70% threshold guardrail)
+  const classifyIntentAndConfidence = (query: string) => {
+    const trimmed = query.trim();
+    const lower = trimmed.toLowerCase();
 
-    // 4. Contact / Support Info RAG Lookup
-    if (lower.includes('contact') || lower.includes('phone') || lower.includes('email') || lower.includes('support') || lower.includes('సంప్రదించండి') || lower.includes('संपर्क')) {
-      const phone = '+91 98765 43210';
-      const email = 'support@nexoop.in';
-      if (lang === 'te') {
-        return { text: `📞 **NexOop కస్టమర్ కేర్**: \n- ఫోన్: **${phone}**\n- ఈమెయిల్: **${email}**\n- పని వేళలు: ఉదయం 9:00 - రాత్రి 8:00 (సోమ - శని)` };
-      }
-      if (lang === 'hi') {
-        return { text: `📞 **NexOop कस्टमर केयर**: \n- फोन: **${phone}**\n- ईमेल: **${email}**\n- कार्य समय: सुबह 9:00 - रात 8:00` };
-      }
-      return { text: `📞 **NexOop Customer Support**: \n- Phone: **${phone}**\n- Email: **${email}**\n- Working Hours: 9:00 AM - 8:00 PM (Mon-Sat)` };
-    }
-
-    // 5. Property RAG Retrieval Search across Database
-    let matchedProps = propertiesDb.filter(p => {
-      // Check City / Area match
-      if (userMemory.city && !p.city.toLowerCase().includes(userMemory.city.toLowerCase()) && !p.state.toLowerCase().includes(userMemory.city.toLowerCase())) {
-        return false;
-      }
-      // Check Query Location matches
-      if (lower.includes('hyderabad') && !p.city.toLowerCase().includes('hyderabad')) return false;
-      if (lower.includes('guntur') && !p.city.toLowerCase().includes('guntur')) return false;
-      if (lower.includes('vizag') && !p.city.toLowerCase().includes('visakhapatnam') && !p.city.toLowerCase().includes('vizag')) return false;
-
-      // Category match
-      if (lower.includes('villa') && !p.category.toLowerCase().includes('villa')) return false;
-      if (lower.includes('plot') && !p.category.toLowerCase().includes('plot') && !p.category.toLowerCase().includes('land')) return false;
-      if (lower.includes('house') && !p.category.toLowerCase().includes('house') && !p.category.toLowerCase().includes('villa')) return false;
-      if (lower.includes('flat') && !p.category.toLowerCase().includes('apartment')) return false;
-
-      return true;
-    });
-
-    if (matchedProps.length === 0) {
-      matchedProps = propertiesDb.slice(0, 3); // Fallback to top database listings
-    }
-
-    // RAG AI Match Scoring
-    const scored = matchedProps.map(p => {
-      let score = 80;
-      if (p.verified) score += 10;
-      if (p.premium) score += 5;
-      if (p.readyToMove) score += 4;
-      if (score > 99) score = 99;
-      return { ...p, aiMatchScore: score };
-    }).sort((a, b) => b.aiMatchScore - a.aiMatchScore).slice(0, 3);
-
-    if (lang === 'te') {
+    // Greetings
+    const greetingKeywords = ['hello', 'hi', 'hey', 'namaste', 'నమస్కారం', 'नमस्ते', 'good morning'];
+    if (greetingKeywords.some(g => lower === g || lower === g + '!' || lower.startsWith(g + ' '))) {
       return {
-        text: `🎉 మా స్థిరాస్తి డేటాబేస్ నుండి పొందిన **ముఖ్యమైన ప్రాపర్టీలు**:`,
-        properties: scored,
-        type: 'results'
+        confidence: 100,
+        category: 'greeting',
+        response: "Hi! 👋 I'm NexOop AI. How can I help you today?"
       };
     }
 
-    if (lang === 'hi') {
+    // Appreciation
+    const thanksKeywords = ['thanks', 'thank you', 'thx', 'ధన్యవాదాలు', 'धन्यवाद'];
+    if (thanksKeywords.some(t => lower.includes(t))) {
       return {
-        text: `🎉 हमारे डेटाबेस से प्राप्त **शीर्ष संपत्तियां**:`,
-        properties: scored,
-        type: 'results'
+        confidence: 100,
+        category: 'appreciation',
+        response: "You're welcome! Let me know if you'd like help finding a property or answering any real estate questions."
+      };
+    }
+
+    // Real Estate Query Signal Words
+    const realEstateKeywords = [
+      'bhk', 'flat', 'flats', 'apartment', 'villa', 'house', 'plot', 'land', 'commercial',
+      'buy', 'sell', 'rent', 'price', 'lakh', 'lakhs', 'cr', 'crore', 'guntur', 'hyderabad',
+      'vizag', 'vijayawada', 'emi', 'loan', 'franchise', 'business', 'invest', 'investment',
+      'contact', 'phone', 'support', 'compare', 'comparison', 'builder', 'rera', 'location',
+      'కొనాలి', 'అద్దె', 'ధర', 'ఇల్లు', 'ప్లాట్', 'హైదరాబాద్', 'గుంటూరు', 'చూపించు', 'కావాలి', 'ఉన్నాయా',
+      'खरीदना', 'किराया', 'घर', 'प्लॉट', 'चाहिए'
+    ];
+
+    const hasRealEstateWord = realEstateKeywords.some(k => lower.includes(k));
+
+    // Gibberish / Random Strings (e.g. "rgr", "asdf", "qwerty")
+    const gibberishPattern = /^[a-z]{1,4}$|^[0-9]+$|^(asdf|qwerty|zxcv|rgr|abcd|test|1234|aaaa|zzzz)$/i;
+
+    if (gibberishPattern.test(lower) && !hasRealEstateWord) {
+      return {
+        confidence: 20, // Confidence < 70%
+        category: 'unknown',
+        response: "Sorry, I couldn't understand that. Can you tell me what you're looking for?",
+        options: [
+          { label: '🏠 Buy Property', value: 'I want to buy a property', action: 'start_buy' },
+          { label: '🔑 Rent Property', value: 'I want to rent a property', action: 'start_rent' },
+          { label: '📈 Investment', value: 'Looking for investment opportunities', action: 'start_invest' },
+          { label: '💰 EMI Calculator', value: 'Calculate loan EMI', action: 'open_emi' },
+          { label: '⚖️ Compare Properties', value: 'Compare saved properties', action: 'open_compare' }
+        ]
+      };
+    }
+
+    if (!hasRealEstateWord && trimmed.length < 8) {
+      return {
+        confidence: 30, // Confidence < 70%
+        category: 'unknown',
+        response: "Sorry, I couldn't understand that. Can you tell me what you're looking for?",
+        options: [
+          { label: '🏠 Buy Property', value: 'I want to buy a property', action: 'start_buy' },
+          { label: '🔑 Rent Property', value: 'I want to rent a property', action: 'start_rent' },
+          { label: '📈 Investment', value: 'Looking for investment opportunities', action: 'start_invest' },
+          { label: '💰 EMI Calculator', value: 'Calculate loan EMI', action: 'open_emi' },
+          { label: '⚖️ Compare Properties', value: 'Compare saved properties', action: 'open_compare' }
+        ]
       };
     }
 
     return {
-      text: `🎉 **Top RAG Retrieved Verified Properties** matching your profile:`,
-      properties: scored,
-      type: 'results'
+      confidence: 95,
+      category: 'real_estate'
     };
   };
 
-  // Handle Option Clicks from Guided Questionnaire
+  // Option Click Handler
   const handleOptionClick = (opt: { label: string; value: string; action?: string }) => {
     const userMsg: Message = {
       id: `u-${Date.now()}`,
@@ -345,7 +373,17 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // Step 1: Start Buy / Rent Flow -> Ask Budget
+    if (opt.action === 'ask_city') {
+      askCityStep();
+      return;
+    }
+
+    if (opt.action === 'view_all') {
+      executePropertySearchPipeline('', undefined, undefined);
+      return;
+    }
+
+    // Start Buy / Rent flow
     if (opt.action === 'start_buy' || opt.action === 'start_rent' || opt.action === 'start_invest' || opt.action === 'start_commercial' || opt.action === 'start_plot') {
       setUserMemory(prev => ({ ...prev, intent: opt.label }));
       setGuidedStep('budget');
@@ -367,37 +405,18 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
             ]
           }
         ]);
-      }, 500);
+      }, 400);
       return;
     }
 
     // Step 2: Budget selected -> Ask City
     if (guidedStep === 'budget') {
       setUserMemory(prev => ({ ...prev, budget: opt.label }));
-      setGuidedStep('city');
-
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `ai-${Date.now()}`,
-            sender: 'ai',
-            text: "Select your preferred **City / Region**:",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: 'options',
-            options: [
-              { label: 'Guntur', value: 'Guntur' },
-              { label: 'Vizag', value: 'Vizag' },
-              { label: 'Hyderabad', value: 'Hyderabad' },
-              { label: 'Others', value: 'Others' }
-            ]
-          }
-        ]);
-      }, 500);
+      askCityStep();
       return;
     }
 
-    // Step 3: City selected
+    // Step 3: City selected -> Ask Type
     if (guidedStep === 'city') {
       if (opt.value === 'Others') {
         setGuidedStep('custom_city');
@@ -412,7 +431,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
               type: 'city_input'
             }
           ]);
-        }, 500);
+        }, 400);
         return;
       }
 
@@ -421,41 +440,38 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // Step 4: Property Type selected -> Ask Purpose
+    // Step 4: Type selected -> Execute Search
     if (guidedStep === 'type') {
-      setUserMemory(prev => ({ ...prev, type: opt.value }));
-      setGuidedStep('purpose');
-
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `ai-${Date.now()}`,
-            sender: 'ai',
-            text: "What is your main **Purpose** for this property?",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: 'options',
-            options: [
-              { label: 'Living', value: 'Living' },
-              { label: 'Investment', value: 'Investment' },
-              { label: 'Rental Income', value: 'Rental Income' },
-              { label: 'Business', value: 'Business' }
-            ]
-          }
-        ]);
-      }, 500);
-      return;
-    }
-
-    // Step 5: Purpose selected -> RAG Database Search
-    if (guidedStep === 'purpose') {
-      const updatedMem = { ...userMemory, purpose: opt.value };
+      const updatedMem = { ...userMemory, type: opt.value };
       setUserMemory(updatedMem);
-      executeRAGSearch(updatedMem);
+      setGuidedStep('complete');
+      executePropertySearchPipeline('', updatedMem.city, opt.value, updatedMem.budget);
       return;
     }
 
-    appendAiResponse(`I understand you're interested in ${opt.label}. Let me search our verified database...`);
+    appendAiResponse(`I understand you're interested in ${opt.label}. Let me search verified listings for you...`);
+  };
+
+  const askCityStep = () => {
+    setGuidedStep('city');
+    setTimeout(() => {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: 'ai',
+          text: "Select your preferred **City / Region**:",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: 'options',
+          options: [
+            { label: 'Guntur', value: 'Guntur' },
+            { label: 'Vizag', value: 'Vizag' },
+            { label: 'Hyderabad', value: 'Hyderabad' },
+            { label: 'Others', value: 'Others' }
+          ]
+        }
+      ]);
+    }, 400);
   };
 
   const askPropertyTypeStep = () => {
@@ -473,13 +489,13 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
             { label: 'Apartment', value: 'Apartment' },
             { label: 'Villa', value: 'Villa' },
             { label: 'Independent House', value: 'House' },
-            { label: 'Commercial', value: 'Commercial' },
             { label: 'Plot', value: 'Plot' },
+            { label: 'Commercial', value: 'Commercial' },
             { label: 'Farm Land', value: 'Plot' }
           ]
         }
       ]);
-    }, 500);
+    }, 400);
   };
 
   const handleCustomCitySubmit = (e: React.FormEvent) => {
@@ -502,141 +518,6 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     askPropertyTypeStep();
   };
 
-  const executeRAGSearch = (memory: UserMemoryState) => {
-    setIsSearching(true);
-    setGuidedStep('complete');
-
-    setMessages(prev => [
-      ...prev,
-      {
-        id: `ai-search-${Date.now()}`,
-        sender: 'ai',
-        text: "⚡ RAG Engine: Retrieving verified listings from database...",
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        type: 'searching'
-      }
-    ]);
-
-    setTimeout(() => {
-      setIsSearching(false);
-
-      const scoredProperties = propertiesDb.map(p => {
-        let score = 78;
-
-        if (memory.city && (p.city.toLowerCase().includes(memory.city.toLowerCase()) || p.state.toLowerCase().includes(memory.city.toLowerCase()))) {
-          score += 14;
-        }
-
-        if (memory.type && p.category.toLowerCase().includes(memory.type.toLowerCase())) {
-          score += 6;
-        }
-
-        if (p.verified) score += 1;
-        if (p.premium) score += 1;
-        if (score > 99) score = 99;
-
-        return { ...p, aiMatchScore: score };
-      }).sort((a, b) => b.aiMatchScore - a.aiMatchScore).slice(0, 4);
-
-      setMessages(prev => [
-        ...prev.filter(m => m.type !== 'searching'),
-        {
-          id: `ai-res-${Date.now()}`,
-          sender: 'ai',
-          text: `🎉 Top **${scoredProperties.length} RAG Verified Matches** retrieved for your criteria:`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          type: 'results',
-          properties: scoredProperties
-        }
-      ]);
-    }, 1200);
-  };
-
-interface IntentValidationResult {
-  confidenceScore: number;
-  intentCategory: 'greeting' | 'appreciation' | 'gibberish' | 'real_estate_query' | 'help';
-  customResponse?: string;
-}
-
-// Intent Confidence & Validation Engine
-const validateIntentConfidence = (query: string): IntentValidationResult => {
-  const trimmed = query.trim();
-  const lower = trimmed.toLowerCase();
-
-  // Greetings Detection
-  const greetingKeywords = ['hello', 'hi', 'hey', 'namaste', 'నమస్కారం', 'नमस्ते', 'good morning', 'good afternoon', 'good evening'];
-  if (greetingKeywords.some(g => lower === g || lower === g + '!' || lower.startsWith(g + ' ') || lower.endsWith(' ' + g))) {
-    return {
-      confidenceScore: 100,
-      intentCategory: 'greeting',
-      customResponse: "Hi! 👋 I'm NexOop AI. How can I help you today?"
-    };
-  }
-
-  // Appreciation / Thanks Detection
-  const thanksKeywords = ['thanks', 'thank you', 'thx', 'ధన్యవాదాలు', 'धन्यवाद', 'thanku'];
-  if (thanksKeywords.some(t => lower.includes(t))) {
-    return {
-      confidenceScore: 100,
-      intentCategory: 'appreciation',
-      customResponse: "You're welcome! Let me know if you'd like help finding a property or answering any real estate questions."
-    };
-  }
-
-  // Real Estate Keywords & Intent Signals
-  const realEstateKeywords = [
-    'bhk', 'flat', 'flats', 'apartment', 'villa', 'house', 'plot', 'land', 'commercial',
-    'buy', 'sell', 'rent', 'price', 'lakh', 'lakhs', 'cr', 'crore', 'guntur', 'hyderabad',
-    'vizag', 'vijayawada', 'emi', 'loan', 'franchise', 'business', 'invest', 'investment',
-    'contact', 'phone', 'support', 'compare', 'comparison', 'builder', 'rera', 'location',
-    'కొనాలి', 'అద్దె', 'ధర', 'ఇల్లు', 'ప్లాట్', 'హైదరాబాద్', 'గుంటూరు', 'खरीदना', 'किराया', 'घर', 'प्लॉट'
-  ];
-
-  const hasRealEstateKeyword = realEstateKeywords.some(k => lower.includes(k));
-
-  // Specific Gibberish Detection (e.g. "rgr", "asdf", "qwerty", random single word < 5 chars without real estate keywords)
-  const gibberishPattern = /^[a-z]{1,4}$|^[0-9]+$|^(asdf|qwerty|zxcv|rgr|abcd|test|1234|aaaa|zzzz|xxxx)$/i;
-  
-  if (gibberishPattern.test(lower) && !hasRealEstateKeyword) {
-    if (lower === 'rgr') {
-      return {
-        confidenceScore: 20, // Confidence < 70%
-        intentCategory: 'gibberish',
-        customResponse: "I'm sorry, I couldn't understand your request. Could you tell me what you're looking for?"
-      };
-    }
-    return {
-      confidenceScore: 20, // Confidence < 70%
-      intentCategory: 'gibberish',
-      customResponse: "I didn't quite catch that. Are you looking to buy, rent, invest, compare properties, or calculate an EMI?"
-    };
-  }
-
-  // Vague / Random Input without Real Estate signals
-  if (!hasRealEstateKeyword && trimmed.length < 8) {
-    return {
-      confidenceScore: 35, // Confidence < 70%
-      intentCategory: 'gibberish',
-      customResponse: "I didn't quite catch that. Are you looking to buy, rent, invest, compare properties, or calculate an EMI?"
-    };
-  }
-
-  // Valid Real Estate Intent detected
-  if (hasRealEstateKeyword || trimmed.length >= 10) {
-    return {
-      confidenceScore: 95, // Confidence >= 70%
-      intentCategory: 'real_estate_query'
-    };
-  }
-
-  // Low confidence default (<70%)
-  return {
-    confidenceScore: 40,
-    intentCategory: 'help',
-    customResponse: "I'm sorry, I couldn't understand your request. Could you tell me what you're looking for?"
-  };
-};
-
   // Free-form User Chat Submit
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -654,50 +535,66 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
 
     setMessages(prev => [...prev, userMsg]);
 
-    // 1. Validate Intent & Confidence Score
-    const intentValidation = validateIntentConfidence(userQuery);
+    // 1. Intent & Confidence Check (<70% threshold guardrail)
+    const intentResult = classifyIntentAndConfidence(userQuery);
 
-    // 2. If Confidence < 70%: Do NOT search DB, do NOT call RAG, do NOT return property recommendations
-    if (intentValidation.confidenceScore < 70) {
+    if (intentResult.confidence < 70) {
       setTimeout(() => {
-        appendAiResponse(intentValidation.customResponse || "I didn't quite catch that. Are you looking to buy, rent, invest, compare properties, or calculate an EMI?");
-      }, 400);
-      return;
-    }
-
-    // 3. Special Conversational Intents (Greetings / Appreciation)
-    if (intentValidation.customResponse && intentValidation.intentCategory !== 'real_estate_query') {
-      setTimeout(() => {
-        appendAiResponse(intentValidation.customResponse!);
-      }, 400);
-      return;
-    }
-
-    // 4. Real Estate Intent Detected (Confidence >= 70%) -> Run RAG Search Workflow
-    setIsSearching(true);
-
-    setTimeout(() => {
-      setIsSearching(false);
-      const ragResult = performRAGRetrieval(userQuery);
-
-      if (ragResult.type === 'results' && ragResult.properties) {
         setMessages(prev => [
           ...prev,
           {
-            id: `ai-rag-${Date.now()}`,
+            id: `ai-err-${Date.now()}`,
             sender: 'ai',
-            text: ragResult.text,
+            text: intentResult.response || "Sorry, I couldn't understand that. Can you tell me what you're looking for?",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: 'results',
-            properties: ragResult.properties
+            type: 'options',
+            options: intentResult.options || [
+              { label: '🏠 Buy Property', value: 'I want to buy a property', action: 'start_buy' },
+              { label: '🔑 Rent Property', value: 'I want to rent a property', action: 'start_rent' },
+              { label: '📈 Investment', value: 'Looking for investment opportunities', action: 'start_invest' },
+              { label: '💰 EMI Calculator', value: 'Calculate loan EMI', action: 'open_emi' }
+            ]
           }
         ]);
-      } else if (userQuery.toLowerCase().includes('emi') || userQuery.toLowerCase().includes('loan')) {
-        appendEmiCalculator();
-      } else {
-        appendAiResponse(ragResult.text);
-      }
-    }, 700);
+      }, 400);
+      return;
+    }
+
+    if (intentResult.response && intentResult.category !== 'real_estate') {
+      setTimeout(() => appendAiResponse(intentResult.response!), 400);
+      return;
+    }
+
+    // 2. Handle Roman Telugu Input Parsing (e.g., "naku 50 lakhs properties chupinchu")
+    const lang = detectQueryLanguage(userQuery);
+    const lower = userQuery.toLowerCase();
+
+    if (lang === 'te_roman' && (lower.includes('50 lakhs') || lower.includes('50 lakh') || lower.includes('50l'))) {
+      setUserMemory(prev => ({ ...prev, budget: '50 Lakhs' }));
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `ai-te-${Date.now()}`,
+            sender: 'ai',
+            text: "సరే 😊 మీకు ₹50 లక్షల లోపు ప్రాపర్టీలు కావాలా? ఏ నగరంలో చూడాలనుకుంటున్నారు?",
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'options',
+            options: [
+              { label: 'Guntur', value: 'Guntur' },
+              { label: 'Vizag', value: 'Vizag' },
+              { label: 'Hyderabad', value: 'Hyderabad' },
+              { label: 'Others', value: 'Others' }
+            ]
+          }
+        ]);
+        setGuidedStep('city');
+      }, 400);
+      return;
+    }
+
+    // 3. Execute Property Search Pipeline
+    executePropertySearchPipeline(userQuery);
   };
 
   const appendAiResponse = (text: string) => {
@@ -718,7 +615,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
       {
         id: `ai-emi-${Date.now()}`,
         sender: 'ai',
-        text: "💰 **NexOop Home Loan EMI Calculator**",
+        text: "💰 **NexOop Instant Home Loan EMI Calculator**",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'emi_calc'
       }
@@ -735,9 +632,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
   const toggleCompareItem = (prop: PropertyListing) => {
     setCompareItems(prev => {
       const exists = prev.some(p => p.id === prop.id);
-      if (exists) {
-        return prev.filter(p => p.id !== prop.id);
-      }
+      if (exists) return prev.filter(p => p.id !== prop.id);
       if (prev.length >= 3) {
         alert("You can compare up to 3 properties at a time.");
         return prev;
@@ -753,7 +648,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
       {
         id: `m-reset-${Date.now()}`,
         sender: 'ai',
-        text: "Hi 👋 I'm **NexOop AI**, Your Property Consultant. How can I assist you today?",
+        text: "Hi 👋 I'm **NexOop AI**, your personal property consultant. How can I assist you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'welcome',
         options: [
@@ -921,14 +816,14 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
                   <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.01em' }}>
                     NexOop AI
                   </span>
-                  <FaCheckCircle style={{ color: '#10B981', fontSize: '0.85rem' }} title="Verified RAG Assistant" />
+                  <FaCheckCircle style={{ color: '#10B981', fontSize: '0.85rem' }} title="Verified Property Consultant" />
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 500 }}>
                   Your Property Consultant
                 </div>
                 <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700, marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ width: '6px', height: '6px', backgroundColor: '#10B981', borderRadius: '50%', display: 'inline-block' }} />
-                  Online Status • RAG Engine
+                  Online
                 </div>
               </div>
             </div>
@@ -1106,7 +1001,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
                     </div>
                   )}
 
-                  {/* Ranked Properties Results Cards */}
+                  {/* Property Cards */}
                   {msg.type === 'results' && msg.properties && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                       {msg.properties.map((prop) => (
@@ -1122,7 +1017,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
                             flexDirection: 'column'
                           }}
                         >
-                          {/* Image & Match Badge */}
+                          {/* Image & Badges */}
                           <div style={{ position: 'relative', height: '110px' }}>
                             <img src={prop.image} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             
@@ -1159,7 +1054,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
                                   fontWeight: 800
                                 }}
                               >
-                                Verified Badge
+                                Verified
                               </div>
                             )}
 
@@ -1178,7 +1073,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
                                   fontWeight: 800
                                 }}
                               >
-                                Premium Badge
+                                Premium
                               </div>
                             )}
                           </div>
@@ -1273,11 +1168,11 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
               </div>
             ))}
 
-            {/* Searching Skeleton / Typing Indicator */}
+            {/* Searching Indicator */}
             {isSearching && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', padding: '10px 14px', borderRadius: '18px', width: 'fit-content' }}>
                 <FemaleAiAvatar size={24} />
-                <span style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>NexOop RAG AI is searching verified databases...</span>
+                <span style={{ fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>Searching verified properties...</span>
               </div>
             )}
 
@@ -1298,7 +1193,7 @@ const validateIntentConfidence = (query: string): IntentValidationResult => {
           >
             <input
               type="text"
-              placeholder="Ask NexOop AI in English, Telugu, or Hindi..."
+              placeholder="Ask about properties, investments, businesses or finance..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               style={{
