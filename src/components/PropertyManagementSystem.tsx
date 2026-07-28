@@ -258,7 +258,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const totalValue = propertiesDb.reduce((acc, curr) => acc + (curr.price || 0), 0);
     const avgPrice = total > 0 ? (totalValue / total).toFixed(2) : '0.00';
     const sponsoredCount = propertiesDb.filter(p => p.premium || p.luxury).length;
-    return { total, published, pending, sold, reserved, featuredCount, sponsoredCount, totalValue: totalValue.toFixed(2), avgPrice };
+    return { total, totalProperties: total, published, activeListings: published, pending, pendingCount: pending, sold, reserved, featuredCount, sponsoredCount, totalValue: totalValue.toFixed(2), avgPrice };
   }, [propertiesDb]);
 
   const openAddModal = () => {

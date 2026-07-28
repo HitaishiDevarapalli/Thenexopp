@@ -121,6 +121,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [franchiseSubTab, setFranchiseSubTab] = useState<string>('listings');
   const [businessSubTab, setBusinessSubTab] = useState<string>('listings');
   const [brokerSubTab, setBrokerSubTab] = useState<string>('directory');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   const SUB_MENU_ITEMS: Record<string, { id: string; label: string; icon: any }[]> = {
     properties: [

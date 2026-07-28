@@ -912,7 +912,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   <button 
                     className="btn btn-gold w-100 mt-4" 
                     style={{ width: '100%', marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', backgroundColor: '#16A34A', borderColor: '#16A34A', color: '#FFFFFF' }}
-                    onClick={handleOpenContactModal}
+                    onClick={() => handleOpenContactModal('contact')}
                   >
                     <FaPhone /> Contact Us
                   </button>
