@@ -347,13 +347,15 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       };
     }
 
-    // Real Estate Query Signal Words
+    // Real Estate Query Signal Words & Property Intelligence Terms
     const realEstateKeywords = [
       'bhk', 'flat', 'flats', 'apartment', 'villa', 'house', 'plot', 'land', 'commercial',
-      'buy', 'sell', 'rent', 'price', 'lakh', 'lakhs', 'cr', 'crore', 'guntur', 'hyderabad',
+      'duplex', 'farm house', 'farm land', 'agricultural', 'warehouse', 'industrial', 'shop',
+      'office', 'coworking', 'hostel', 'pg', 'rental', 'luxury', 'premium', 'gated',
+      'buy', 'sell', 'rent', 'lease', 'price', 'lakh', 'lakhs', 'cr', 'crore', 'guntur', 'hyderabad',
       'vizag', 'vijayawada', 'emi', 'loan', 'franchise', 'business', 'invest', 'investment',
       'contact', 'phone', 'support', 'compare', 'comparison', 'builder', 'rera', 'location',
-      'verified', 'lowest', 'sort', 'only', 'under', 'below', 'near',
+      'verified', 'lowest', 'sort', 'only', 'under', 'below', 'near', 'beach', 'airport',
       'కొనాలి', 'అద్దె', 'ధర', 'ఇల్లు', 'ప్లాట్', 'హైదరాబాద్', 'గుంటూరు', 'చూపించు', 'కావాలి', 'ఉన్నాయా',
       'खरीदना', 'किराया', 'घर', 'प्लॉट', 'चाहिए'
     ];
