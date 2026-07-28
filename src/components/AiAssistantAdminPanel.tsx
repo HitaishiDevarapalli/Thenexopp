@@ -54,7 +54,7 @@ interface ConversationRecord {
 }
 
 export const AiAssistantAdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'approval' | 'appearance' | 'knowledge' | 'training' | 'logic' | 'analytics' | 'conversations' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'appearance' | 'knowledge' | 'training' | 'logic' | 'analytics' | 'conversations' | 'settings'>('dashboard');
 
   // AI Settings State (Persisted in localStorage)
   const [settings, setSettings] = useState<AiSettings>(() => {
@@ -245,7 +245,6 @@ export const AiAssistantAdminPanel: React.FC = () => {
       <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E5E7EB', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
         {[
           { id: 'dashboard', label: '📊 Dashboard' },
-          { id: 'approval', label: '🛡️ Approval Workflow & Versions' },
           { id: 'appearance', label: '🎨 Appearance' },
           { id: 'knowledge', label: '🧠 Knowledge Base' },
           { id: 'training', label: '🎓 Training & Docs' },
@@ -336,74 +335,6 @@ export const AiAssistantAdminPanel: React.FC = () => {
                 </button>
                 <button onClick={() => setActiveTab('conversations')} style={{ width: '100%', padding: '10px', backgroundColor: '#F3F4F6', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
                   💬 View User Conversations
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= APPROVAL WORKFLOW & VERSIONS TAB ================= */}
-      {activeTab === 'approval' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Draft Approval Banner */}
-          <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '16px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#92400E', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaExclamationTriangle /> Configuration Draft Saved
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#B45309', marginTop: '4px' }}>
-                Changes to System Prompts, Knowledge Base, and Business Logic are stored as a Draft. Publish to go Live.
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => alert("Previewing Draft AI Configuration: All tools and prompts operating in sandbox mode.")}
-                style={{ backgroundColor: '#FFFFFF', border: '1px solid #D97706', color: '#D97706', borderRadius: '10px', padding: '8px 16px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
-              >
-                Preview Draft
-              </button>
-              <button
-                onClick={() => {
-                  alert("Live Publication Approved! Created Version v1.3.0.");
-                }}
-                style={{ backgroundColor: '#D97706', color: '#FFFFFF', border: 'none', borderRadius: '10px', padding: '8px 18px', fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer' }}
-              >
-                Publish to Production
-              </button>
-            </div>
-          </div>
-
-          {/* Published Version History */}
-          <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '16px', padding: '24px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', fontWeight: 800, color: '#111827' }}>Published Version History & Audit Trail</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '12px' }}>
-                <div>
-                  <span style={{ fontWeight: 900, color: '#10B981', marginRight: '10px' }}>v1.2.0 (Live Production)</span>
-                  <span style={{ fontSize: '0.78rem', color: '#4B5563' }}>Published by Admin (Hitaishi) on 2026-07-28 14:30</span>
-                  <div style={{ fontSize: '0.8rem', color: '#111827', marginTop: '4px' }}>
-                    Summary: Integrated NexOpp Recommendation Engine & 4-Property Comparison Modal.
-                  </div>
-                </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981', backgroundColor: '#FFFFFF', padding: '4px 10px', borderRadius: '20px', border: '1px solid #10B981' }}>Active</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px', backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '12px' }}>
-                <div>
-                  <span style={{ fontWeight: 900, color: '#4B5563', marginRight: '10px' }}>v1.1.0</span>
-                  <span style={{ fontSize: '0.78rem', color: '#6B7280' }}>Published by Admin (Hitaishi) on 2026-07-25 10:15</span>
-                  <div style={{ fontSize: '0.8rem', color: '#4B5563', marginTop: '4px' }}>
-                    Summary: Added Multilingual Telugu & Hindi intent detection guardrails.
-                  </div>
-                </div>
-                <button
-                  onClick={() => alert("Rolled back AI configuration to Version v1.1.0 successfully!")}
-                  style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', color: '#475569', borderRadius: '8px', padding: '6px 12px', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}
-                >
-                  Rollback to v1.1.0
                 </button>
               </div>
             </div>

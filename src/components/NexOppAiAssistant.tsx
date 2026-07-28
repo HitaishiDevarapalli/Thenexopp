@@ -972,33 +972,6 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {/* Language Selector Dropdown */}
-              <select
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === 'te') appendAiResponse("సరే! నేను తెలుగులో సమాధానం ఇస్తాను. మీకు ఎలా సహాయపడగలను?");
-                  else if (val === 'hi') appendAiResponse("ठीक है! मैं हिंदी में उत्तर दूँगा। आज मैं आपकी क्या सहायता कर सकता हूँ?");
-                  else if (val === 'en') appendAiResponse("Sure! I will assist you in English. How can I help you today?");
-                }}
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                  color: '#FFFFFF',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '4px 8px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  outline: 'none',
-                  cursor: 'pointer'
-                }}
-                title="Select Conversation Language"
-              >
-                <option value="auto" style={{ color: '#111827' }}>🌐 Auto Detect</option>
-                <option value="en" style={{ color: '#111827' }}>English</option>
-                <option value="te" style={{ color: '#111827' }}>తెలుగు</option>
-                <option value="hi" style={{ color: '#111827' }}>हिन्दी</option>
-              </select>
-
               <button
                 onClick={resetChat}
                 style={{
@@ -1013,7 +986,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
                   alignItems: 'center',
                   gap: '4px'
                 }}
-                title="Clear Conversation"
+                title="Restart Chat"
               >
                 <FaRedo />
               </button>
@@ -1363,7 +1336,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           >
             <input
               type="text"
-              placeholder="Ask anything about properties, businesses, finance, insurance or investments..."
+              placeholder="Ask about properties, investments, businesses or finance..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               style={{
