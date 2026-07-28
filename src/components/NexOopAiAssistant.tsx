@@ -51,7 +51,7 @@ const detectQueryLanguage = (text: string): DetectedLanguage => {
   return 'en';
 };
 
-// 3D Realistic Professional Female AI Avatar SVG (Blue Blazer, White Shirt, Friendly Smile, Green Online Dot)
+// 3D Realistic Professional Female AI Avatar (Blue Blazer, White Shirt, Friendly Smile, Green Online Dot)
 const FemaleAiAvatar: React.FC<{ size?: number; className?: string }> = ({ size = 48, className = '' }) => (
   <div 
     style={{ 
@@ -64,66 +64,22 @@ const FemaleAiAvatar: React.FC<{ size?: number; className?: string }> = ({ size 
     }} 
     className={className}
   >
-    <svg width={size} height={size} viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#10B981" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#111827" stopOpacity="0.05" />
-        </radialGradient>
-        <linearGradient id="blazerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1E3A8A" />
-          <stop offset="100%" stopColor="#1E40AF" />
-        </linearGradient>
-        <linearGradient id="hairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#1F2937" />
-          <stop offset="100%" stopColor="#111827" />
-        </linearGradient>
-      </defs>
-
-      {/* outer circle backdrop */}
-      <circle cx="60" cy="60" r="58" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="3" />
-      <circle cx="60" cy="60" r="54" fill="url(#bgGlow)" />
-
-      {/* Dark Hair Back */}
-      <path d="M30 68 C25 40 35 18 60 18 C85 18 95 40 90 68 C88 78 85 88 82 92 L38 92 C35 88 32 78 30 68 Z" fill="url(#hairGrad)" />
-
-      {/* Shoulders / Blue Blazer */}
-      <path d="M22 110 C22 92 36 84 60 84 C84 84 98 92 98 110 L98 120 L22 120 Z" fill="url(#blazerGrad)" />
-
-      {/* Crisp White Shirt Collar */}
-      <polygon points="60,86 46,104 60,118 74,104" fill="#FFFFFF" />
-      <polygon points="60,86 52,106 60,114" fill="#F3F4F6" />
-
-      {/* Neck */}
-      <rect x="52" y="70" width="16" height="18" rx="4" fill="#FCD34D" />
-
-      {/* Face Base */}
-      <path d="M38 52 C38 34 82 34 82 52 C82 72 74 82 60 82 C46 82 38 72 38 52 Z" fill="#FDE68A" />
-
-      {/* Hair Top / Bangs */}
-      <path d="M36 48 C38 30 52 22 60 22 C72 22 84 32 84 48 C78 36 68 32 60 32 C50 32 40 38 36 48 Z" fill="url(#hairGrad)" />
-
-      {/* Eyes */}
-      <ellipse cx="49" cy="50" rx="3.5" ry="4.5" fill="#111827" />
-      <circle cx="50" cy="49" r="1.5" fill="#FFFFFF" />
-      <ellipse cx="71" cy="50" rx="3.5" ry="4.5" fill="#111827" />
-      <circle cx="72" cy="49" r="1.5" fill="#FFFFFF" />
-
-      {/* Eyebrows */}
-      <path d="M44 43 Q49 40 54 43" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M66 43 Q71 40 76 43" stroke="#1F2937" strokeWidth="2" strokeLinecap="round" fill="none" />
-
-      {/* Cheeks */}
-      <circle cx="44" cy="56" r="4" fill="#F43F5E" opacity="0.3" />
-      <circle cx="76" cy="56" r="4" fill="#F43F5E" opacity="0.3" />
-
-      {/* Friendly Smile */}
-      <path d="M52 62 Q60 69 68 62" stroke="#991B1B" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-
-      {/* Earring Pearl */}
-      <circle cx="37" cy="56" r="2.5" fill="#FFFFFF" stroke="#D1D5DB" strokeWidth="0.5" />
-      <circle cx="83" cy="56" r="2.5" fill="#FFFFFF" stroke="#D1D5DB" strokeWidth="0.5" />
-    </svg>
+    <img
+      src="/assets/nexoop_female_ai_avatar.jpg"
+      alt="NexOop 3D Female AI Consultant"
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: '50%',
+        objectFit: 'cover',
+        border: '2px solid #E5E7EB',
+        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+      }}
+      onError={(e) => {
+        // Fallback to SVG if image loading fails
+        e.currentTarget.style.display = 'none';
+      }}
+    />
 
     {/* Green Online Status Dot */}
     <span 
