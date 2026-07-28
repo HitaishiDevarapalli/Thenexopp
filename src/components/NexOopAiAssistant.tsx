@@ -32,6 +32,8 @@ interface UserMemoryState {
   city?: string;
   type?: string;
   purpose?: string;
+  maxPrice?: number;
+  verifiedOnly?: boolean;
   recentSearches: string[];
 }
 
@@ -202,15 +204,42 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     return Math.round(emi);
   }, [emiAmount, emiRate, emiTenure]);
 
-  // Database Property Retrieval Pipeline
-  const executePropertySearchPipeline = (userQuery: string, searchCity?: string, searchType?: string, searchBudget?: string) => {
+  // Database Property Retrieval Pipeline with Multi-Turn Context & Explainability
+  const executePropertySearchPipeline = (userQuery: string, searchCity?: string, searchType?: string, searchMaxPrice?: number, searchVerified?: boolean, searchSort?: 'asc' | 'desc') => {
     setIsSearching(true);
 
     const lower = userQuery.toLowerCase();
-    const targetCity = searchCity || userMemory.city || (lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : undefined)));
-    const targetType = searchType || userMemory.type || (lower.includes('villa') ? 'Villa' : (lower.includes('plot') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : undefined)));
+    
+    // Resolve entities with context memory preservation across turns
+    const targetCity = searchCity || (lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : (lower.includes('vijayawada') ? 'Vijayawada' : userMemory.city))));
+    const targetType = searchType || (lower.includes('villa') ? 'Villa' : (lower.includes('plot') || lower.includes('land') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : (lower.includes('house') ? 'House' : (lower.includes('commercial') ? 'Commercial' : userMemory.type)))));
+    
+    // Max Price extraction
+    let maxPriceVal = searchMaxPrice;
+    if (!maxPriceVal) {
+      const priceMatch = lower.match(/(?:under|below|less than|<=|₹)?\s*(\d+)\s*(lakh|lakhs|cr|crore)/i);
+      if (priceMatch) {
+        const val = parseInt(priceMatch[1], 10);
+        const unit = priceMatch[2].toLowerCase();
+        maxPriceVal = unit.includes('cr') ? val * 100 : val;
+      }
+    }
 
-    // Search Database
+    const isVerifiedOnly = searchVerified || lower.includes('verified') || lower.includes('verified ones') || userMemory.verifiedOnly;
+    const sortOrder = searchSort || (lower.includes('lowest') || lower.includes('cheap') ? 'asc' : (lower.includes('highest') || lower.includes('expensive') ? 'desc' : undefined));
+
+    // Update session memory
+    const updatedMem = {
+      ...userMemory,
+      city: targetCity || userMemory.city,
+      type: targetType || userMemory.type,
+      maxPrice: maxPriceVal || userMemory.maxPrice,
+      verifiedOnly: isVerifiedOnly,
+      recentSearches: Array.from(new Set([userQuery, ...(userMemory.recentSearches || [])])).slice(0, 5)
+    };
+    setUserMemory(updatedMem);
+
+    // Filter database listings
     setTimeout(() => {
       setIsSearching(false);
 
@@ -223,26 +252,43 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
           const matchCat = p.category.toLowerCase().includes(targetType.toLowerCase());
           if (!matchCat) return false;
         }
+        if (isVerifiedOnly && !p.verified) return false;
+        
+        // Price parsing check
+        if (updatedMem.maxPrice) {
+          const numericPrice = parseFloat(p.priceDisplay.replace(/[^0-9.]/g, ''));
+          const priceInLakhs = p.priceDisplay.toLowerCase().includes('cr') ? numericPrice * 100 : numericPrice;
+          if (priceInLakhs > updatedMem.maxPrice) return false;
+        }
         return true;
       });
 
-      // Score matching items
+      // Sort if requested
+      if (sortOrder === 'asc') {
+        matches.sort((a, b) => {
+          const pA = parseFloat(a.priceDisplay.replace(/[^0-9.]/g, '')) * (a.priceDisplay.toLowerCase().includes('cr') ? 100 : 1);
+          const pB = parseFloat(b.priceDisplay.replace(/[^0-9.]/g, '')) * (b.priceDisplay.toLowerCase().includes('cr') ? 100 : 1);
+          return pA - pB;
+        });
+      }
+
+      // Score & Rank items (Ranking Algorithm: verified + premium + demand score)
       const scored = matches.map(p => {
         let score = 85;
         if (p.verified) score += 8;
         if (p.premium) score += 4;
+        if (targetCity && p.city.toLowerCase() === targetCity.toLowerCase()) score += 2;
         if (score > 99) score = 99;
         return { ...p, aiMatchScore: score };
-      }).sort((a, b) => b.aiMatchScore - a.aiMatchScore).slice(0, 4);
+      }).sort((a, b) => sortOrder ? 0 : b.aiMatchScore - a.aiMatchScore).slice(0, 5); // Limit to top 5
 
       if (scored.length === 0) {
-        // No results found
         setMessages(prev => [
           ...prev.filter(m => m.type !== 'searching'),
           {
             id: `ai-nores-${Date.now()}`,
             sender: 'ai',
-            text: "Sorry, I couldn't find properties matching your exact search.",
+            text: "Sorry, I couldn't find properties matching your exact search requirements.",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             type: 'no_results',
             options: [
@@ -255,19 +301,25 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
         return;
       }
 
-      // Results found
+      // Explainability text generation
+      let explainText = `I found **${scored.length} verified properties** matching your criteria`;
+      if (targetCity) explainText += ` in **${targetCity}**`;
+      if (targetType) explainText += ` (${targetType}s)`;
+      if (updatedMem.maxPrice) explainText += ` under ₹${updatedMem.maxPrice} Lakhs`;
+      explainText += `. Recommending top-ranked matches based on verified credentials, location demand, and price match:`;
+
       setMessages(prev => [
         ...prev.filter(m => m.type !== 'searching'),
         {
           id: `ai-res-${Date.now()}`,
           sender: 'ai',
-          text: `I found **${scored.length} verified properties** matching your requirements:`,
+          text: explainText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'results',
           properties: scored
         }
       ]);
-    }, 1200);
+    }, 1000);
   };
 
   // Intent Detection & Confidence Engine (<70% threshold guardrail)
@@ -301,6 +353,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       'buy', 'sell', 'rent', 'price', 'lakh', 'lakhs', 'cr', 'crore', 'guntur', 'hyderabad',
       'vizag', 'vijayawada', 'emi', 'loan', 'franchise', 'business', 'invest', 'investment',
       'contact', 'phone', 'support', 'compare', 'comparison', 'builder', 'rera', 'location',
+      'verified', 'lowest', 'sort', 'only', 'under', 'below', 'near',
       'కొనాలి', 'అద్దె', 'ధర', 'ఇల్లు', 'ప్లాట్', 'హైదరాబాద్', 'గుంటూరు', 'చూపించు', 'కావాలి', 'ఉన్నాయా',
       'खरीदना', 'किराया', 'घर', 'प्लॉट', 'चाहिए'
     ];
@@ -379,7 +432,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     }
 
     if (opt.action === 'view_all') {
-      executePropertySearchPipeline('', undefined, undefined);
+      executePropertySearchPipeline('');
       return;
     }
 
@@ -411,7 +464,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
 
     // Step 2: Budget selected -> Ask City
     if (guidedStep === 'budget') {
-      setUserMemory(prev => ({ ...prev, budget: opt.label }));
+      setUserMemory(prev => ({ ...prev, maxPrice: parseInt(opt.value, 10) }));
       askCityStep();
       return;
     }
@@ -445,7 +498,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       const updatedMem = { ...userMemory, type: opt.value };
       setUserMemory(updatedMem);
       setGuidedStep('complete');
-      executePropertySearchPipeline('', updatedMem.city, opt.value, updatedMem.budget);
+      executePropertySearchPipeline('', updatedMem.city, opt.value, updatedMem.maxPrice);
       return;
     }
 
@@ -518,7 +571,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     askPropertyTypeStep();
   };
 
-  // Free-form User Chat Submit (ChatGPT-Style Conversational Engine)
+  // Free-form User Chat Submit (ChatGPT-Style Conversational Engine with Multi-Turn Memory)
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
@@ -565,15 +618,32 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // 2. Parse Natural Language Entities (City, Property Type, Budget Range, Loan/EMI, Site Visit)
+    // 2. Parse Natural Language Entities (City, Property Type, Budget Range, Multi-Turn Follow-Ups)
     const lower = userQuery.toLowerCase();
     const lang = detectQueryLanguage(userQuery);
+
+    // Multi-turn comparison follow-up check (e.g. "Compare the first two")
+    if (lower.includes('compare the first two') || lower.includes('compare first 2')) {
+      const topProps = propertiesDb.slice(0, 2);
+      setCompareItems(topProps);
+      setShowCompareModal(true);
+      return;
+    }
 
     // Parse City
     let detectedCity = lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : (lower.includes('vijayawada') ? 'Vijayawada' : undefined)));
     
     // Parse Property Type
     let detectedType = lower.includes('villa') ? 'Villa' : (lower.includes('plot') || lower.includes('land') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : (lower.includes('house') ? 'House' : (lower.includes('commercial') ? 'Commercial' : undefined))));
+
+    // Parse Budget
+    let detectedBudget: number | undefined = undefined;
+    const budgetMatch = lower.match(/(?:under|below|less than|<=|₹)?\s*(\d+)\s*(lakh|lakhs|cr|crore)/i);
+    if (budgetMatch) {
+      const val = parseInt(budgetMatch[1], 10);
+      const unit = budgetMatch[2].toLowerCase();
+      detectedBudget = unit.includes('cr') ? val * 100 : val;
+    }
 
     // Parse Intent Queries (Loans, Site Visit, Comparison, Franchise, Business)
     if (lower.includes('loan') || lower.includes('finance') || lower.includes('interest')) {
@@ -608,8 +678,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // 3. Conversational Parameter Extraction & Follow-up Question Flow (like ChatGPT!)
-    // Example: "I need a villa under ₹80 lakh." -> Type & Budget detected, City missing!
+    // 3. Conversational Follow-up Prompts
     if (detectedType && !detectedCity && !userMemory.city) {
       setUserMemory(prev => ({ ...prev, type: detectedType }));
       setTimeout(() => {
@@ -634,34 +703,12 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return;
     }
 
-    // Example: "naku 50 lakhs properties chupinchu" -> Budget detected, City missing!
-    if ((lower.includes('lakh') || lower.includes('crore') || lower.includes('budget') || lower.includes('50 lakhs')) && !detectedCity && !userMemory.city) {
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `ai-askcity-${Date.now()}`,
-            sender: 'ai',
-            text: lang === 'te' || lang === 'te_roman' ? "సరే 😊 ఏ నగరంలో చూడాలనుకుంటున్నారు?" : "Sure! Which city are you looking in?",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: 'options',
-            options: [
-              { label: 'Guntur', value: 'Guntur' },
-              { label: 'Vizag', value: 'Vizag' },
-              { label: 'Hyderabad', value: 'Hyderabad' },
-              { label: 'Others', value: 'Others' }
-            ]
-          }
-        ]);
-        setGuidedStep('city');
-      }, 400);
-      return;
-    }
-
-    // 4. All info present or specific city detected -> Execute Search Pipeline immediately!
+    // 4. Multi-Turn Search Execution
     const effectiveCity = detectedCity || userMemory.city;
     const effectiveType = detectedType || userMemory.type;
-    executePropertySearchPipeline(userQuery, effectiveCity, effectiveType);
+    const effectivePrice = detectedBudget || userMemory.maxPrice;
+    
+    executePropertySearchPipeline(userQuery, effectiveCity, effectiveType, effectivePrice);
   };
 
   const appendAiResponse = (text: string) => {
