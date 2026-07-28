@@ -476,13 +476,13 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           {
             id: `ai-${Date.now()}`,
             sender: 'ai',
-            text: "Great choice! What is your target **Budget Range**?",
+            text: "Sure! I'll help you find the perfect property. **What is your budget?**",
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             type: 'options',
             options: [
               { label: 'Under ₹ 25 Lakhs', value: '25' },
               { label: '₹ 25L - ₹ 50 Lakhs', value: '50' },
-              { label: '₹ 50L - ₹ 1 Crore', value: '100' },
+              { label: '₹ 50L - ₹ 80 Lakhs', value: '80' },
               { label: 'Above ₹ 1 Crore+', value: '200' }
             ]
           }
@@ -493,7 +493,8 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
 
     // Step 2: Budget selected -> Ask City
     if (guidedStep === 'budget') {
-      setUserMemory(prev => ({ ...prev, maxPrice: parseInt(opt.value, 10) }));
+      const priceVal = parseInt(opt.value, 10);
+      setUserMemory(prev => ({ ...prev, maxPrice: priceVal, budget: opt.label }));
       askCityStep();
       return;
     }
@@ -542,14 +543,15 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
         {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: "Select your preferred **City / Region**:",
+          text: "Which city are you looking in?",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'options',
           options: [
-            { label: 'Guntur', value: 'Guntur' },
-            { label: 'Vizag', value: 'Vizag' },
             { label: 'Hyderabad', value: 'Hyderabad' },
-            { label: 'Others', value: 'Others' }
+            { label: 'Visakhapatnam', value: 'Vizag' },
+            { label: 'Guntur', value: 'Guntur' },
+            { label: 'Vijayawada', value: 'Vijayawada' },
+            { label: 'Other', value: 'Others' }
           ]
         }
       ]);
@@ -564,16 +566,15 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
         {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: "Select preferred **Property Type**:",
+          text: "What property type are you looking for?",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'options',
           options: [
             { label: 'Apartment', value: 'Apartment' },
-            { label: 'Villa', value: 'Villa' },
             { label: 'Independent House', value: 'House' },
+            { label: 'Villa', value: 'Villa' },
             { label: 'Plot', value: 'Plot' },
-            { label: 'Commercial', value: 'Commercial' },
-            { label: 'Farm Land', value: 'Plot' }
+            { label: 'Commercial', value: 'Commercial' }
           ]
         }
       ]);
