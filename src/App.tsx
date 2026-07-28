@@ -26,6 +26,7 @@ import { siteSettingsDb, propertiesDb, franchiseDb, businessDb, updateSiteSettin
 import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { LoginModal } from './components/forms/LoginModal';
+import NexOopAiAssistant from './components/NexOopAiAssistant';
 
 type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage';
 
@@ -482,6 +483,15 @@ export const App: React.FC = () => {
                 el.scrollIntoView({ behavior: 'smooth' });
               }
             }, 150);
+          }}
+        />
+      )}
+      {currentPage !== 'adminPortal' && (
+        <NexOopAiAssistant 
+          onNavigate={(page) => navigateTo(page as PageType)}
+          onPropertyClick={(id) => {
+            setSelectedPropertyId(id);
+            navigateTo('propertyDetails', { propertyId: id });
           }}
         />
       )}
