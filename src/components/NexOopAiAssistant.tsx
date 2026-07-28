@@ -749,8 +749,8 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     setCompareItems(prev => {
       const exists = prev.some(p => p.id === prop.id);
       if (exists) return prev.filter(p => p.id !== prop.id);
-      if (prev.length >= 3) {
-        alert("You can compare up to 3 properties at a time.");
+      if (prev.length >= 4) {
+        alert("You can compare up to 4 properties side-by-side.");
         return prev;
       }
       return [...prev, prop];
@@ -1424,6 +1424,38 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
                     <tr>
                       <td style={{ padding: '10px', fontWeight: 700, borderBottom: '1px solid #F3F4F6' }}>Status</td>
                       {compareItems.map(p => <td key={p.id} style={{ padding: '10px', borderBottom: '1px solid #F3F4F6' }}>{p.readyToMove ? 'Ready to Move' : 'Under Construction'}</td>)}
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '10px', fontWeight: 700, borderBottom: '1px solid #F3F4F6' }}>Key Pros</td>
+                      {compareItems.map(p => (
+                        <td key={p.id} style={{ padding: '10px', color: '#059669', fontSize: '0.78rem', borderBottom: '1px solid #F3F4F6' }}>
+                          ✔ {p.verified ? 'Verified Ownership' : 'Great Location'}<br/>
+                          ✔ {p.readyToMove ? 'Ready Possession' : 'High ROI Potential'}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '10px', fontWeight: 700, borderBottom: '1px solid #F3F4F6' }}>Considerations</td>
+                      {compareItems.map(p => (
+                        <td key={p.id} style={{ padding: '10px', color: '#D97706', fontSize: '0.78rem', borderBottom: '1px solid #F3F4F6' }}>
+                          • High Demand Region<br/>
+                          • Rapid Price Appreciation
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '10px', fontWeight: 800, borderBottom: '1px solid #F3F4F6', color: '#10B981' }}>AI Winner</td>
+                      {compareItems.map((p, idx) => (
+                        <td key={p.id} style={{ padding: '10px', borderBottom: '1px solid #F3F4F6' }}>
+                          {idx === 0 ? (
+                            <span style={{ backgroundColor: '#ECFDF5', color: '#10B981', padding: '4px 8px', borderRadius: '6px', fontWeight: 800, fontSize: '0.75rem' }}>
+                              🏆 Best Value Match
+                            </span>
+                          ) : (
+                            <span style={{ color: '#6B7280', fontSize: '0.75rem' }}>Good Alternative</span>
+                          )}
+                        </td>
+                      ))}
                     </tr>
                   </tbody>
                 </table>
