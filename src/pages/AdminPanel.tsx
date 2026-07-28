@@ -38,7 +38,8 @@ import {
   FaClock,
   FaImage,
   FaTrophy,
-  FaCompass
+  FaCompass,
+  FaRobot
 } from 'react-icons/fa';
 import { 
   propertiesDb, 
