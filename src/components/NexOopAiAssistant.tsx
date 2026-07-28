@@ -552,6 +552,91 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     }, 1200);
   };
 
+interface IntentValidationResult {
+  confidenceScore: number;
+  intentCategory: 'greeting' | 'appreciation' | 'gibberish' | 'real_estate_query' | 'help';
+  customResponse?: string;
+}
+
+// Intent Confidence & Validation Engine
+const validateIntentConfidence = (query: string): IntentValidationResult => {
+  const trimmed = query.trim();
+  const lower = trimmed.toLowerCase();
+
+  // Greetings Detection
+  const greetingKeywords = ['hello', 'hi', 'hey', 'namaste', 'నమస్కారం', 'नमस्ते', 'good morning', 'good afternoon', 'good evening'];
+  if (greetingKeywords.some(g => lower === g || lower === g + '!' || lower.startsWith(g + ' ') || lower.endsWith(' ' + g))) {
+    return {
+      confidenceScore: 100,
+      intentCategory: 'greeting',
+      customResponse: "Hi! 👋 I'm NexOop AI. How can I help you today?"
+    };
+  }
+
+  // Appreciation / Thanks Detection
+  const thanksKeywords = ['thanks', 'thank you', 'thx', 'ధన్యవాదాలు', 'धन्यवाद', 'thanku'];
+  if (thanksKeywords.some(t => lower.includes(t))) {
+    return {
+      confidenceScore: 100,
+      intentCategory: 'appreciation',
+      customResponse: "You're welcome! Let me know if you'd like help finding a property or answering any real estate questions."
+    };
+  }
+
+  // Real Estate Keywords & Intent Signals
+  const realEstateKeywords = [
+    'bhk', 'flat', 'flats', 'apartment', 'villa', 'house', 'plot', 'land', 'commercial',
+    'buy', 'sell', 'rent', 'price', 'lakh', 'lakhs', 'cr', 'crore', 'guntur', 'hyderabad',
+    'vizag', 'vijayawada', 'emi', 'loan', 'franchise', 'business', 'invest', 'investment',
+    'contact', 'phone', 'support', 'compare', 'comparison', 'builder', 'rera', 'location',
+    'కొనాలి', 'అద్దె', 'ధర', 'ఇల్లు', 'ప్లాట్', 'హైదరాబాద్', 'గుంటూరు', 'खरीदना', 'किराया', 'घर', 'प्लॉट'
+  ];
+
+  const hasRealEstateKeyword = realEstateKeywords.some(k => lower.includes(k));
+
+  // Specific Gibberish Detection (e.g. "rgr", "asdf", "qwerty", random single word < 5 chars without real estate keywords)
+  const gibberishPattern = /^[a-z]{1,4}$|^[0-9]+$|^(asdf|qwerty|zxcv|rgr|abcd|test|1234|aaaa|zzzz|xxxx)$/i;
+  
+  if (gibberishPattern.test(lower) && !hasRealEstateKeyword) {
+    if (lower === 'rgr') {
+      return {
+        confidenceScore: 20, // Confidence < 70%
+        intentCategory: 'gibberish',
+        customResponse: "I'm sorry, I couldn't understand your request. Could you tell me what you're looking for?"
+      };
+    }
+    return {
+      confidenceScore: 20, // Confidence < 70%
+      intentCategory: 'gibberish',
+      customResponse: "I didn't quite catch that. Are you looking to buy, rent, invest, compare properties, or calculate an EMI?"
+    };
+  }
+
+  // Vague / Random Input without Real Estate signals
+  if (!hasRealEstateKeyword && trimmed.length < 8) {
+    return {
+      confidenceScore: 35, // Confidence < 70%
+      intentCategory: 'gibberish',
+      customResponse: "I didn't quite catch that. Are you looking to buy, rent, invest, compare properties, or calculate an EMI?"
+    };
+  }
+
+  // Valid Real Estate Intent detected
+  if (hasRealEstateKeyword || trimmed.length >= 10) {
+    return {
+      confidenceScore: 95, // Confidence >= 70%
+      intentCategory: 'real_estate_query'
+    };
+  }
+
+  // Low confidence default (<70%)
+  return {
+    confidenceScore: 40,
+    intentCategory: 'help',
+    customResponse: "I'm sorry, I couldn't understand your request. Could you tell me what you're looking for?"
+  };
+};
+
   // Free-form User Chat Submit
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -568,6 +653,27 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     };
 
     setMessages(prev => [...prev, userMsg]);
+
+    // 1. Validate Intent & Confidence Score
+    const intentValidation = validateIntentConfidence(userQuery);
+
+    // 2. If Confidence < 70%: Do NOT search DB, do NOT call RAG, do NOT return property recommendations
+    if (intentValidation.confidenceScore < 70) {
+      setTimeout(() => {
+        appendAiResponse(intentValidation.customResponse || "I didn't quite catch that. Are you looking to buy, rent, invest, compare properties, or calculate an EMI?");
+      }, 400);
+      return;
+    }
+
+    // 3. Special Conversational Intents (Greetings / Appreciation)
+    if (intentValidation.customResponse && intentValidation.intentCategory !== 'real_estate_query') {
+      setTimeout(() => {
+        appendAiResponse(intentValidation.customResponse!);
+      }, 400);
+      return;
+    }
+
+    // 4. Real Estate Intent Detected (Confidence >= 70%) -> Run RAG Search Workflow
     setIsSearching(true);
 
     setTimeout(() => {
