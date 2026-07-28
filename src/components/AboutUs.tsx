@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { teamMembersDb } from '../db/marketplaceDb';
 import type { TeamMember } from '../db/marketplaceDb';
-import { FaLinkedinIn, FaPhoneAlt, FaUserTie } from 'react-icons/fa';
+import { FaLinkedinIn, FaPhoneAlt, FaUserTie, FaEnvelope } from 'react-icons/fa';
 
 export const AboutUs: React.FC = () => {
   const [team, setTeam] = useState<TeamMember[]>(teamMembersDb);
@@ -93,17 +93,28 @@ export const AboutUs: React.FC = () => {
                       </a>
                     ) : <div />}
 
-                    {member.linkedin ? (
-                      <a
-                        href={member.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="LinkedIn Profile"
-                        style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', textDecoration: 'none', transition: 'all 0.2s', flexShrink: 0 }}
-                      >
-                        <FaLinkedinIn />
-                      </a>
-                    ) : null}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {member.email ? (
+                        <a
+                          href={`mailto:${member.email}`}
+                          aria-label="Email Profile"
+                          style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FEF2F2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', textDecoration: 'none', transition: 'all 0.2s', flexShrink: 0 }}
+                        >
+                          <FaEnvelope />
+                        </a>
+                      ) : null}
+                      {member.linkedin ? (
+                        <a
+                          href={member.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="LinkedIn Profile"
+                          style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', textDecoration: 'none', transition: 'all 0.2s', flexShrink: 0 }}
+                        >
+                          <FaLinkedinIn />
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </div>

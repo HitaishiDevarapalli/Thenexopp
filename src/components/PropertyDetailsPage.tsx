@@ -130,15 +130,21 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [loadingAmenities, setLoadingAmenities] = useState(false);
 
   const [showContactModal, setShowContactModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'contact' | 'book'>('contact');
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [contactPrice, setContactPrice] = useState('');
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
-  const handleOpenContactModal = () => {
+  const handleOpenContactModal = (mode: 'contact' | 'book' = 'contact') => {
+    setModalMode(mode);
     setContactName('');
     setContactPhone('');
     setContactPrice(property ? property.priceDisplay : '');
+    setBookingDate('');
+    setBookingTime('');
     setContactSubmitted(false);
     setShowContactModal(true);
   };
@@ -147,6 +153,11 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     e.preventDefault();
     if (!contactName.trim() || !contactPhone.trim()) {
       alert('Please fill in your Name and Phone Number.');
+      return;
+    }
+    
+    if (modalMode === 'book' && (!bookingDate || !bookingTime)) {
+      alert('Please select a date and time for your visit.');
       return;
     }
     
@@ -166,7 +177,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         year: 'numeric'
       }),
       name: contactName,
-      interest: `Offered Price: ${contactPrice}`
+      interest: modalMode === 'book' 
+        ? `Requested Visit: ${bookingDate} at ${bookingTime}`
+        : `Offered Price: ${contactPrice}`
     };
 
     enquiriesDb.push(newEnquiry);
@@ -906,9 +919,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   <button 
                     className="btn btn-outline w-100 mt-2" 
                     style={{ width: '100%', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: '1px solid #CBD5E1', color: '#0F172A' }}
-                    onClick={handleOpenContactModal}
+                    onClick={() => handleOpenContactModal('book')}
                   >
-                    Book Visit
+                    Book Slot
                   </button>
                 </>
               )}
@@ -1236,11 +1249,16 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       {/* Contact Enquiry Modal */}
       {showContactModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 11000 }}>
-          <div style={{ backgroundColor: '#FFFFFF', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '460px', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', margin: 'auto', textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>📬 Send Enquiry Details</h3>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '0', borderRadius: '24px', width: '90%', maxWidth: '460px', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', margin: 'auto', textAlign: 'left', overflow: 'hidden' }}>
+            <div style={{ padding: '24px 32px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+              <div>
+                <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  {modalMode === 'book' ? 'Book Visit Slot' : 'Contact Broker'}
+                </h3>
+                <p style={{ margin: '4px 0 0 0', color: '#64748B', fontSize: '0.85rem' }}>{property?.title}</p>
+              </div>
               <button 
-                onClick={() => setShowContactModal(false)}
+                onClick={() => setShowContactModal(false)} 
                 style={{ background: 'none', border: 'none', fontSize: '1.5rem', fontWeight: 'bold', color: '#64748B', cursor: 'pointer' }}
               >
                 &times;
@@ -1279,22 +1297,47 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Offered Price (Lakhs/Crores)</label>
-                  <input 
-                    type="text" 
-                    value={contactPrice} 
-                    onChange={e => setContactPrice(e.target.value)} 
-                    placeholder="e.g. ₹ 75 Lakh" 
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} 
-                  />
-                </div>
+                {modalMode === 'contact' ? (
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Offered Price (Lakhs/Crores)</label>
+                    <input 
+                      type="text" 
+                      value={contactPrice} 
+                      onChange={e => setContactPrice(e.target.value)} 
+                      placeholder="e.g. ₹ 75 Lakh" 
+                      style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} 
+                    />
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Select Date *</label>
+                      <input 
+                        type="date" 
+                        required 
+                        value={bookingDate} 
+                        onChange={e => setBookingDate(e.target.value)} 
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Select Time *</label>
+                      <input 
+                        type="time" 
+                        required 
+                        value={bookingTime} 
+                        onChange={e => setBookingTime(e.target.value)} 
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <button 
                   type="submit" 
                   style={{ width: '100%', padding: '14px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', marginTop: '8px', boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)' }}
                 >
-                  ✉ Submit Details to Broker
+                  {modalMode === 'book' ? '📅 Confirm Booking Slot' : '✉ Submit Details to Broker'}
                 </button>
               </form>
             )}

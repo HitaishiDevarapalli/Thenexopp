@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { businessDb } from '../db/marketplaceDb';
 import {
   FaSearch,
@@ -52,6 +52,24 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [industry, setIndustry] = useState('All Industries');
   const [valuation, setValuation] = useState('₹ 20L - 10Cr+');
   const [revenue, setRevenue] = useState('Any Revenue');
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const loc = searchParams.get('location');
+    const type = searchParams.get('type');
+    const bgt = searchParams.get('budget');
+    
+    if (loc) {
+      setLocationText(loc);
+    }
+    if (type && type !== 'Any') {
+      setIndustry(type);
+      setSelectedInds([type]);
+    }
+    if (bgt && bgt !== 'Any') {
+      setValuation(bgt);
+    }
+  }, []);
 
   // Left Sidebar Filters State
   const [valOpen, setValOpen] = useState(true);

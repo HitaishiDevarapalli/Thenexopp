@@ -206,6 +206,9 @@ export interface PropertyListing {
     emailCampaign?: boolean;
     socialMediaShare?: boolean;
   };
+
+  // Main Page display flags
+  showSoldOnHomepage?: boolean;
 }
 
 export interface FranchiseListing {
@@ -410,7 +413,25 @@ export interface TeamMember {
   designation: string;
   photo: string;
   phone?: string;
+  email?: string;
   linkedin?: string;
+}
+
+export interface EmployeeUser {
+  id: string;
+  fullName: string;
+  email: string;
+  password: string;
+  role: string;
+  status: 'Active' | 'Suspended';
+  createdAt: string;
+  customPermissions?: string[];
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
 }
 
 export interface MainPageStats {
@@ -469,71 +490,7 @@ export interface DemandRegion {
   manualOverrideLevel?: 'High' | 'Medium' | 'Low' | null;
 }
 
-const defaultDealers: Dealer[] = [
-  {
-    id: 'd1',
-    companyName: 'Apex Realty Advisors',
-    fullName: 'Rajesh Kumar',
-    logo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80',
-    photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80',
-    rating: 4.9,
-    reviewCount: 38,
-    verified: true,
-    premiumPartner: true,
-    bestSeller: true,
-    yearsExperience: 12,
-    responseTime: '< 15 mins',
-    inventoryCount: 45,
-    coverage: { 'Hyderabad': 25, 'Guntur': 20 },
-    latitude: 17.3850,
-    longitude: 78.4867,
-    phone: '+91 98765 43210',
-    email: 'rajesh@apexrealty.in',
-    specialization: 'Luxury Residential & Commercial'
-  },
-  {
-    id: 'd2',
-    companyName: 'UrbanSpace Realty',
-    fullName: 'Priya Sharma',
-    logo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
-    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
-    rating: 4.8,
-    reviewCount: 24,
-    verified: true,
-    premiumPartner: false,
-    bestSeller: true,
-    yearsExperience: 8,
-    responseTime: '< 30 mins',
-    inventoryCount: 28,
-    coverage: { 'Hyderabad': 18, 'Vijayawada': 10 },
-    latitude: 17.4401,
-    longitude: 78.3489,
-    phone: '+91 98765 43211',
-    email: 'priya@urbanspace.in',
-    specialization: 'Villas & Gated Communities'
-  },
-  {
-    id: 'd3',
-    companyName: 'PrimeLand Properties',
-    fullName: 'Srinivas Rao',
-    logo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80',
-    photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&q=80',
-    rating: 4.7,
-    reviewCount: 19,
-    verified: true,
-    premiumPartner: true,
-    bestSeller: false,
-    yearsExperience: 15,
-    responseTime: '< 1 hour',
-    inventoryCount: 60,
-    coverage: { 'Guntur': 35, 'Vijayawada': 25 },
-    latitude: 16.3067,
-    longitude: 80.4365,
-    phone: '+91 98765 43212',
-    email: 'srinivas@primeland.in',
-    specialization: 'Commercial & Open Plots'
-  }
-];
+const defaultDealers: Dealer[] = [];
 
 const sampleTeamMembers: TeamMember[] = [];
 const sampleDealers: Dealer[] = defaultDealers;
@@ -589,6 +546,8 @@ export let enquiriesDb: CustomerEnquiry[] = [];
 export let franchiseEnquiriesDb: FranchiseEnquiry[] = [];
 export let siteSettingsDb: SiteSettings = defaultSettings;
 export let teamMembersDb: TeamMember[] = [];
+export let employeeUsersDb: EmployeeUser[] = [];
+export let rolesDb: Role[] = [];
 export let demandRegionsDb: DemandRegion[] = [];
 
 export interface ShowcaseVideo {
@@ -761,7 +720,7 @@ export const setSelectedCity = (city: string) => {
 // Load from LocalStorage
 const loadData = () => {
   try {
-    if (localStorage.getItem('nexopp_wiped_fake_data_v10_all') !== 'true') {
+    if (localStorage.getItem('nexopp_wiped_fake_data_v11_all') !== 'true') {
       localStorage.removeItem('nexopp_properties');
       localStorage.removeItem('nexopp_franchises');
       localStorage.removeItem('nexopp_dealers');
@@ -769,7 +728,8 @@ const loadData = () => {
       localStorage.removeItem('nexopp_franchise_enquiries');
       localStorage.removeItem('nexopp_team_members');
       localStorage.removeItem('nexopp_businesses');
-      localStorage.setItem('nexopp_wiped_fake_data_v10_all', 'true');
+      localStorage.removeItem('nexopp_employee_users');
+      localStorage.setItem('nexopp_wiped_fake_data_v11_all', 'true');
     }
 
     const p = localStorage.getItem('nexopp_properties');
@@ -783,6 +743,8 @@ const loadData = () => {
     const dr = localStorage.getItem('nexopp_demand_regions');
     const sv = localStorage.getItem('nexopp_showcase_videos');
     const ss = localStorage.getItem('nexopp_showcase_settings');
+    const eu = localStorage.getItem('nexopp_employee_users');
+    const rd = localStorage.getItem('nexopp_roles');
 
     propertiesDb = p ? JSON.parse(p) : [];
     franchiseDb = f ? JSON.parse(f) : [];
@@ -795,6 +757,17 @@ const loadData = () => {
     franchiseEnquiriesDb = fe ? JSON.parse(fe) : [];
     siteSettingsDb = s ? JSON.parse(s) : defaultSettings;
     teamMembersDb = t ? JSON.parse(t) : [];
+    employeeUsersDb = eu ? JSON.parse(eu) : [];
+    
+    // Default roles if none exist
+    rolesDb = rd ? JSON.parse(rd) : [
+      { id: 'r1', name: 'Super Admin', permissions: ['all'] },
+      { id: 'r2', name: 'Property Editor', permissions: ['properties'] },
+      { id: 'r3', name: 'Franchise Editor', permissions: ['franchises'] },
+      { id: 'r4', name: 'Data Manager', permissions: ['properties', 'franchises', 'businesses', 'demand_regions', 'brokers'] },
+      { id: 'r5', name: 'Photo Manager', permissions: ['media_manager'] }
+    ];
+
     demandRegionsDb = dr ? JSON.parse(dr) : defaultDemandRegions;
     showcaseVideosDb = sv ? JSON.parse(sv) : defaultShowcaseVideos;
     showcaseSettingsDb = ss ? JSON.parse(ss) : {
@@ -864,6 +837,8 @@ export const notifyDataChanged = () => {
     localStorage.setItem('nexopp_franchise_enquiries', JSON.stringify(franchiseEnquiriesDb));
     localStorage.setItem('nexopp_settings', JSON.stringify(siteSettingsDb));
     localStorage.setItem('nexopp_team_members', JSON.stringify(teamMembersDb));
+    localStorage.setItem('nexopp_employee_users', JSON.stringify(employeeUsersDb));
+    localStorage.setItem('nexopp_roles', JSON.stringify(rolesDb));
     localStorage.setItem('nexopp_demand_regions', JSON.stringify(demandRegionsDb));
     localStorage.setItem('nexopp_showcase_videos', JSON.stringify(showcaseVideosDb));
     localStorage.setItem('nexopp_showcase_settings', JSON.stringify(showcaseSettingsDb));
@@ -1067,6 +1042,36 @@ export const updateTeamMember = (id: string, updated: Partial<TeamMember>) => {
 
 export const deleteTeamMember = (id: string) => {
   teamMembersDb = teamMembersDb.filter(m => m.id !== id);
+  notifyDataChanged();
+};
+
+export const addEmployeeUser = (item: EmployeeUser) => {
+  employeeUsersDb = [item, ...employeeUsersDb];
+  notifyDataChanged();
+};
+
+export const updateEmployeeUser = (id: string, updated: Partial<EmployeeUser>) => {
+  employeeUsersDb = employeeUsersDb.map(u => u.id === id ? { ...u, ...updated } : u);
+  notifyDataChanged();
+};
+
+export const deleteEmployeeUser = (id: string) => {
+  employeeUsersDb = employeeUsersDb.filter(u => u.id !== id);
+  notifyDataChanged();
+};
+
+export const updateRole = (id: string, permissions: string[]) => {
+  rolesDb = rolesDb.map(r => r.id === id ? { ...r, permissions } : r);
+  notifyDataChanged();
+};
+
+export const addRole = (role: Role) => {
+  rolesDb = [...rolesDb, role];
+  notifyDataChanged();
+};
+
+export const deleteRole = (id: string) => {
+  rolesDb = rolesDb.filter(r => r.id !== id);
   notifyDataChanged();
 };
 

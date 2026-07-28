@@ -141,26 +141,34 @@ export const App: React.FC = () => {
     }
   };
 
-  const navigateTo = (page: PageType, params?: { propertyId?: string, franchiseId?: string, industry?: string }) => {
+  const navigateTo = (page: PageType, params?: { propertyId?: string, franchiseId?: string, industry?: string } | string) => {
     let url = getPathForPage(page);
+    let queryParams = '';
+
+    if (typeof params === 'string') {
+      queryParams = params;
+    } else {
+      if (page === 'propertyDetails') {
+        const pid = params?.propertyId || selectedPropertyId;
+        if (pid) url = `/property/${pid}`;
+      }
+      if (page === 'closeDeal') {
+        const bid = params?.propertyId || selectedBuyPropertyId;
+        if (bid) url = `/buy/${bid}`;
+      }
+      if (page === 'franchiseDetails') {
+        const fid = params?.franchiseId || selectedFranchiseId;
+        if (fid) url = `/franchise/details/${fid}`;
+      }
+      if (page === 'businessListings') {
+        const ind = params?.industry || selectedBusinessIndustry;
+        if (ind) url = `/business/listings/${encodeURIComponent(ind)}`;
+      }
+    }
     
-    if (page === 'propertyDetails') {
-      const pid = params?.propertyId || selectedPropertyId;
-      if (pid) url = `/property/${pid}`;
+    if (queryParams && !url.includes('?')) {
+       url += queryParams.startsWith('?') ? queryParams : `?${queryParams}`;
     }
-    if (page === 'closeDeal') {
-      const bid = params?.propertyId || selectedBuyPropertyId;
-      if (bid) url = `/buy/${bid}`;
-    }
-    if (page === 'franchiseDetails') {
-      const fid = params?.franchiseId || selectedFranchiseId;
-      if (fid) url = `/franchise/details/${fid}`;
-    }
-    if (page === 'businessListings') {
-      const ind = params?.industry || selectedBusinessIndustry;
-      if (ind) url = `/business/listings/${encodeURIComponent(ind)}`;
-    }
-    
     navigateToUrl(url);
   };
 

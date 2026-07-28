@@ -33,7 +33,7 @@ import {
 } from 'react-icons/fa';
 
 interface HomePageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, queryParams?: string) => void;
   onPropertyClick?: (id: string) => void;
 }
 
@@ -115,6 +115,29 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchLocation) params.set('location', searchLocation);
+    if (propertyTypeFilter && propertyTypeFilter !== 'Any' && propertyTypeFilter !== 'BHK') params.set('type', propertyTypeFilter);
+    if (budgetFilter && budgetFilter !== 'Any') params.set('budget', budgetFilter);
+    if (priceRangeFilter && priceRangeFilter !== 'Any') params.set('priceRange', priceRangeFilter);
+
+    const query = params.toString() ? `?${params.toString()}` : '';
+
+    if (activeSearchTab === 'Property') {
+      onNavigate('propertiesPage', query);
+    } else if (activeSearchTab === 'Franchise') {
+      onNavigate('franchisePage', query);
+    } else if (activeSearchTab === 'Business') {
+      onNavigate('businessPage', query);
+    } else if (activeSearchTab === 'Plots/Land') {
+      onNavigate('landPage', query);
+    } else if (activeSearchTab === 'Commercial') {
+      params.set('type', 'Commercial Property');
+      onNavigate('propertiesPage', `?${params.toString()}`);
+    }
+  };
+
   const handleNextSlide = () => {
     setCurrentSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
   };
@@ -134,6 +157,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#E0F2FE', color: '#0284C7', page: 'businessPage' },
     { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#DCFCE7', color: '#16A34A', page: 'financePage' },
   ];
+
+  // Recently Sold properties
+  const recentlySoldListings = propertiesDb
+    .filter((p) => p.showSoldOnHomepage && (p.approvalStatus === 'Sold' || p.listingStatus === 'Sold'))
+    .map((p) => {
+      return {
+        id: p.id,
+        title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
+        price: p.priceDisplay || (`₹${p.price || 1} L`),
+        image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
+        location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
+        bhk: `${p.bedrooms || 3} BHK`,
+        area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
+      };
+    });
 
   // Featured Listings from marketplaceDb
   const featuredListings = propertiesDb.slice(0, 4).map((p) => {
@@ -546,7 +584,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               </select>
             </div>
 
-            {/* 2. Property Type */}
+            {/* 2. Dynamic Type/Category Field */}
             <div style={{
               backgroundColor: '#F8FAFC',
               border: '1.5px solid #E2E8F0',
@@ -557,7 +595,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               justifyContent: 'center'
             }}>
               <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                Property Type
+                {activeSearchTab === 'Franchise' ? 'Industry' : 
+                 activeSearchTab === 'Business' ? 'Category' : 
+                 activeSearchTab === 'Plots/Land' ? 'Land Type' : 'Property Type'}
               </span>
               <select
                 value={propertyTypeFilter}
@@ -573,15 +613,54 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   paddingTop: '2px'
                 }}
               >
-                <option value="BHK">BHK</option>
-                <option value="1 BHK">1 BHK</option>
-                <option value="2 BHK">2 BHK</option>
-                <option value="3 BHK">3 BHK</option>
-                <option value="4 BHK">4 BHK / Villa</option>
+                {activeSearchTab === 'Property' && (
+                  <>
+                    <option value="BHK">BHK</option>
+                    <option value="1 BHK">1 BHK</option>
+                    <option value="2 BHK">2 BHK</option>
+                    <option value="3 BHK">3 BHK</option>
+                    <option value="4 BHK">4 BHK / Villa</option>
+                  </>
+                )}
+                {activeSearchTab === 'Franchise' && (
+                  <>
+                    <option value="Any">Any</option>
+                    <option value="Food & Beverage">Food & Beverage</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Education">Education</option>
+                    <option value="Healthcare">Healthcare</option>
+                  </>
+                )}
+                {activeSearchTab === 'Business' && (
+                  <>
+                    <option value="Any">Any</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Services">Services</option>
+                  </>
+                )}
+                {activeSearchTab === 'Plots/Land' && (
+                  <>
+                    <option value="Any">Any</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Agricultural">Agricultural</option>
+                    <option value="Industrial">Industrial</option>
+                  </>
+                )}
+                {activeSearchTab === 'Commercial' && (
+                  <>
+                    <option value="Any">Any</option>
+                    <option value="Office Space">Office Space</option>
+                    <option value="Retail Shop">Retail Shop</option>
+                    <option value="Warehouse">Warehouse</option>
+                  </>
+                )}
               </select>
             </div>
 
-            {/* 3. Budget */}
+            {/* 3. Budget / Investment */}
             <div style={{
               backgroundColor: '#F8FAFC',
               border: '1.5px solid #E2E8F0',
@@ -592,7 +671,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               justifyContent: 'center'
             }}>
               <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                Budget
+                {(activeSearchTab === 'Franchise' || activeSearchTab === 'Business') ? 'Investment Size' : 'Budget'}
               </span>
               <select
                 value={budgetFilter}
@@ -672,7 +751,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
             {/* 6. Search Button */}
             <button
-              onClick={() => onNavigate('propertiesPage')}
+              onClick={handleSearch}
               style={{
                 padding: '16px 28px',
                 borderRadius: '14px',
@@ -929,6 +1008,64 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
         <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
       </div>
+
+      {/* 5. RECENTLY SOLD PROPERTIES */}
+      {recentlySoldListings.length > 0 && (
+        <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '40px 24px 60px 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Recently Sold Out
+            </h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+            {recentlySoldListings.map((prop, idx) => (
+              <div
+                key={idx}
+                onClick={() => onPropertyClick ? onPropertyClick(prop.id) : onNavigate(`propertyDetails_${prop.id}`)}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '16px',
+                  border: '1px solid #E2E8F0',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
+                }}
+              >
+                <div style={{ position: 'relative', height: '200px' }}>
+                  <img src={prop.image} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ position: 'absolute', top: '12px', left: '12px', padding: '4px 10px', backgroundColor: '#EF4444', color: '#FFFFFF', fontSize: '0.75rem', fontWeight: 800, borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FaCheckCircle /> SOLD OUT
+                  </div>
+                </div>
+                <div style={{ padding: '16px' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>{prop.price}</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.title}</div>
+                  <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
+                    <FaMapMarkerAlt /> {prop.location}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#475569', fontSize: '0.85rem', fontWeight: 600 }}>
+                      <FaBed style={{ color: '#94A3B8' }} /> {prop.bhk}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#475569', fontSize: '0.85rem', fontWeight: 600 }}>
+                      <FaRulerCombined style={{ color: '#94A3B8' }} /> {prop.area}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -78,37 +78,60 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     if (!_initialCategory) {
       setSelectedTypes([]);
       setPropertyType('All Types');
-      return;
+      // Do not return here, allow the search params effect below to run
+    } else {
+      if (_initialCategory === 'BuyApartment') {
+        setSelectedTypes(['Apartment']);
+        setPropertyType('Apartment');
+        setActiveTab('Buy');
+      } else if (_initialCategory === 'BuyHouse') {
+        setSelectedTypes(['Independent House']);
+        setPropertyType('Independent House');
+        setActiveTab('Buy');
+      } else if (_initialCategory === 'BuyVilla') {
+        setSelectedTypes(['Villa']);
+        setPropertyType('Villa');
+        setActiveTab('Buy');
+      } else if (_initialCategory === 'BuyLand') {
+        setSelectedTypes(['Plot / Land']);
+        setPropertyType('Plot / Land');
+        setActiveTab('Plots');
+      } else if (_initialCategory === 'Commercial') {
+        setSelectedTypes(['Commercial Property']);
+        setPropertyType('Commercial Property');
+        setActiveTab('Commercial');
+      } else if (_initialCategory === 'Industrial') {
+        setSelectedTypes(['Industrial Property']);
+        setPropertyType('Industrial Property');
+        setActiveTab('Commercial');
+      } else if (_initialCategory === 'FarmLand') {
+        setSelectedTypes(['Farm Land']);
+        setPropertyType('Farm Land');
+        setActiveTab('Plots');
+      }
     }
+
+    // Read from URL params if available
+    const searchParams = new URLSearchParams(window.location.search);
+    const loc = searchParams.get('location');
+    const type = searchParams.get('type');
+    const bgt = searchParams.get('budget');
     
-    if (_initialCategory === 'BuyApartment') {
-      setSelectedTypes(['Apartment']);
-      setPropertyType('Apartment');
-      setActiveTab('Buy');
-    } else if (_initialCategory === 'BuyHouse') {
-      setSelectedTypes(['Independent House']);
-      setPropertyType('Independent House');
-      setActiveTab('Buy');
-    } else if (_initialCategory === 'BuyVilla') {
-      setSelectedTypes(['Villa']);
-      setPropertyType('Villa');
-      setActiveTab('Buy');
-    } else if (_initialCategory === 'BuyLand') {
-      setSelectedTypes(['Plot / Land']);
-      setPropertyType('Plot / Land');
-      setActiveTab('Plots');
-    } else if (_initialCategory === 'Commercial') {
-      setSelectedTypes(['Commercial Property']);
-      setPropertyType('Commercial Property');
-      setActiveTab('Commercial');
-    } else if (_initialCategory === 'Industrial') {
-      setSelectedTypes(['Industrial Property']);
-      setPropertyType('Industrial Property');
-      setActiveTab('Commercial');
-    } else if (_initialCategory === 'FarmLand') {
-      setSelectedTypes(['Farm Land']);
-      setPropertyType('Farm Land');
-      setActiveTab('Plots');
+    if (loc) {
+      setLocationText(loc);
+    }
+    if (type) {
+      if (type.includes('BHK')) {
+        setBhkFilter(type);
+        setSelectedBhks([type]);
+      } else {
+        setPropertyType(type);
+        setSelectedTypes([type]);
+      }
+    }
+    if (bgt) {
+      setBudget(bgt);
+      // Synchronize slider bounds manually based on budget if needed, but the effect will pick it up
     }
   }, [_initialCategory]);
 

@@ -41,7 +41,7 @@ const GOOGLE_PLACES_SUGGESTIONS = COMPREHENSIVE_INDIA_PLACES_DB;
 
 export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange }) => {
   // Main Navigation Tabs
-  const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'featured' | 'analytics' | 'categories' | 'locations' | 'reports'>('listings');
+  const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports'>('listings');
 
   React.useEffect(() => {
     if (activeSubTab) {
@@ -507,81 +507,85 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         >
           <FaFileExport /> Export CSV
         </button>
-        <button
-          onClick={openAddModal}
-          style={{ padding: '10px 22px', backgroundColor: '#4F46E5', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)' }}
-        >
-          <FaPlus /> + Add New Property
-        </button>
+        {activeModuleTab === 'listings' && (
+          <button
+            onClick={openAddModal}
+            style={{ padding: '10px 22px', backgroundColor: '#4F46E5', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)' }}
+          >
+            <FaPlus /> + Add New Property
+          </button>
+        )}
       </div>
 
       {/* 6-Card KPI Summary Strip matching screenshot exactly */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
-        
-        {/* Total Properties */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB', marginBottom: '12px' }}>
-            <FaBuilding style={{ fontSize: '1.2rem' }} />
+      {activeModuleTab === 'listings' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+          
+          {/* Total Properties */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', marginBottom: '12px' }}>
+              <FaBuilding style={{ fontSize: '1.2rem' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Total Properties</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.totalProperties}</div>
+            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 12.5% this month</div>
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Total Properties</div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{propertiesDb.length}</div>
-          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 12.5% this month</div>
-        </div>
 
-        {/* Active Listings */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A', marginBottom: '12px' }}>
-            <FaCheck style={{ fontSize: '1.2rem' }} />
+          {/* Active Listings */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', marginBottom: '12px' }}>
+              <FaCheckCircle style={{ fontSize: '1.2rem' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Active Listings</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.activeListings}</div>
+            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 8.2% this month</div>
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Active Listings</div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.published}</div>
-          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 8.2% this month</div>
-        </div>
 
-        {/* Pending Approval */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', marginBottom: '12px' }}>
-            <FaChartBar style={{ fontSize: '1.2rem' }} />
+          {/* Pending Approval */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', marginBottom: '12px' }}>
+              <FaChartBar style={{ fontSize: '1.2rem' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Pending Approval</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.pendingCount}</div>
+            <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>Needs your review</div>
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Pending Approval</div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.pending}</div>
-          <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>Needs your review</div>
-        </div>
 
-        {/* Featured */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FCE7F3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EC4899', marginBottom: '12px' }}>
-            <FaCrown style={{ fontSize: '1.2rem' }} />
+          {/* Featured */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FCE7F3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EC4899', marginBottom: '12px' }}>
+              <FaCrown style={{ fontSize: '1.2rem' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Featured</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.featuredCount}</div>
+            <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>Homepage priority</div>
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Featured</div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.featuredCount}</div>
-          <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>Homepage priority</div>
-        </div>
 
-        {/* Premium */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333EA', marginBottom: '12px' }}>
-            <FaCrown style={{ fontSize: '1.2rem' }} />
+          {/* Premium */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333EA', marginBottom: '12px' }}>
+              <FaCrown style={{ fontSize: '1.2rem' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Premium</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.sponsoredCount || 156}</div>
+            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 15.3% this month</div>
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Premium</div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>{stats.sponsoredCount || 156}</div>
-          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 15.3% this month</div>
-        </div>
 
-        {/* Total Value */}
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D9488', marginBottom: '12px' }}>
-            <FaChartBar style={{ fontSize: '1.2rem' }} />
+          {/* Total Value */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '18px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D9488', marginBottom: '12px' }}>
+              <FaChartBar style={{ fontSize: '1.2rem' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Total Value</div>
+            <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>₹{stats.totalValue} Cr</div>
+            <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 18.7% this month</div>
           </div>
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Total Value</div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: '4px 0 6px 0' }}>₹{stats.totalValue} Cr</div>
-          <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600 }}>↑ 18.7% this month</div>
-        </div>
 
-      </div>
+        </div>
+      )}
 
       {/* ================= MODULE 1: LISTINGS & APPROVAL PIPELINE ================= */}
-      {activeModuleTab === 'listings' && (
+      {(activeModuleTab === 'listings' || activeModuleTab === 'editProperty') && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Search & Filter Card matching screenshot exactly */}
@@ -713,7 +717,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <tr>
                     <td colSpan={8} style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
                       <p style={{ fontSize: '1.05rem', fontWeight: 600, margin: '0 0 12px 0' }}>No property listings matched your filters.</p>
-                      <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#4F46E5', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}>+ Add New Property</button>
+                      {activeModuleTab === 'listings' && (
+                        <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#4F46E5', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}>+ Add New Property</button>
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -802,41 +808,19 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '4px' }}>Recently updated</div>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                            <button
-                              onClick={() => setViewAnalyticsProperty(prop)}
-                              title="View Property Analytics (Admin Only)"
-                              style={{ padding: '6px 10px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                            >
-                              <FaEye style={{ fontSize: '0.85rem' }} /> {prop.viewsCount || 0}
-                            </button>
-                            <button
-                              onClick={() => openEditModal(prop)}
-                              title="Edit Property"
-                              style={{ padding: '6px 10px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              onClick={() => openDuplicateModal(prop)}
-                              title="Duplicate Listing"
-                              style={{ padding: '6px 10px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              <FaCopy />
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (window.confirm(`Permanently delete '${prop.title}'?`)) {
-                                  deleteProperty(prop.id);
-                                  showNotification?.("Property deleted.", "warning");
-                                }
-                              }}
-                              title="Delete Property"
-                              style={{ padding: '6px 10px', backgroundColor: '#FEF2F2', color: '#EF4444', border: '1px solid #FECACA', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
+                          {activeModuleTab === 'editProperty' ? (
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                              <button
+                                onClick={() => openEditModal(prop)}
+                                title="Edit Property"
+                                style={{ padding: '8px 14px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                              >
+                                <FaEdit /> Edit
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>View Only</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -1094,6 +1078,94 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         </div>
       )}
 
+      {/* ================= MODULE: SOLD OUT PROPERTIES ================= */}
+      {activeModuleTab === 'soldOut' && (
+        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>Sold Out Properties</h2>
+              <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>Manage properties that have been marked as sold out and push them to the main page.</p>
+            </div>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <th style={{ padding: '12px 16px' }}>Property Details</th>
+                  <th style={{ padding: '12px 16px' }}>Price & Area</th>
+                  <th style={{ padding: '12px 16px' }}>Status</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {propertiesDb.filter(p => p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').map(prop => (
+                  <tr key={prop.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '60px', height: '45px', backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
+                          <img src={prop.image || 'https://via.placeholder.com/60x45'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.95rem' }}>{prop.title}</div>
+                          <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                            <FaMapMarkerAlt style={{ color: '#CBD5E1' }} /> {prop.area}, {prop.city}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ fontWeight: 700, color: '#0F172A' }}>{prop.priceDisplay}</div>
+                      <div style={{ color: '#64748B', fontSize: '0.85rem' }}>{prop.areaSqFt}</div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <span style={{ padding: '4px 8px', backgroundColor: '#FEE2E2', color: '#EF4444', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        Sold
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px', textAlign: 'right' }}>
+                      <button
+                        onClick={() => {
+                          updateProperty(prop.id, { showSoldOnHomepage: !prop.showSoldOnHomepage });
+                          showNotification && showNotification(
+                            prop.showSoldOnHomepage 
+                              ? 'Removed from Main Page' 
+                              : 'Pushed to Main Page',
+                            'success'
+                          );
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: prop.showSoldOnHomepage ? '#F1F5F9' : '#10B981',
+                          color: prop.showSoldOnHomepage ? '#475569' : '#FFFFFF',
+                          border: prop.showSoldOnHomepage ? '1px solid #CBD5E1' : 'none',
+                          borderRadius: '6px',
+                          fontWeight: 700,
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        {prop.showSoldOnHomepage ? 'Remove from Main Page' : 'Push to Main Page'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {propertiesDb.filter(p => p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length === 0 && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '32px', textAlign: 'center', color: '#64748B' }}>
+                      No sold out properties found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* ================= MODULE 6: REPORTS & EXPORTS ================= */}
       {activeModuleTab === 'reports' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1114,23 +1186,23 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           <div style={{ backgroundColor: '#F8FAFC', width: '100%', maxWidth: '1280px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', border: '1px solid #E2E8F0' }}>
             
             {/* Modal Header */}
-            <div style={{ backgroundColor: '#1E3A8A', color: '#FFFFFF', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px 32px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#FFFFFF', flexShrink: 0 }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#2563EB', flexShrink: 0 }}>
                   <FaBuilding />
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
                       {modalMode === 'add' ? 'Add New Property' : modalMode === 'edit' ? 'Edit Property' : 'Duplicate Property'}
                     </h3>
-                    <span style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                    <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
                       {formData.id || 'P-NEW'}
                     </span>
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.6rem', cursor: 'pointer', transition: 'opacity 0.2s', padding: '4px' }} title="Close">×</button>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', cursor: 'pointer', transition: 'all 0.2s' }} title="Close">×</button>
             </div>
 
             {/* Horizontal Stepper Bar */}
@@ -1265,49 +1337,71 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <span>Location verified successfully from Google Maps</span>
                         </div>
 
-                        {/* Verified Location Details Section */}
-                        <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Verified Location Details</h5>
+                        {/* Location Details (Auto-Geocoded) */}
+                        <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Country</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.country || 'India'}</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.country || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaMap style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>State</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.state || 'Telangana'}</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.state || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>District</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.district || 'Hyderabad'}</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.district || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaCity style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.city || 'Hyderabad'}</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.city || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaCompass style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Area / Locality</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.area || 'Jubilee Hills'}</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.area || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaEnvelope style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
-                            <div>
-                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Postal Code</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.postal_code || formData.pincode || '500033'}</div>
+                            <div style={{ width: '100%' }}>
+                              <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Postal Code (Manual Entry)</label>
+                              <input 
+                                type="text" 
+                                value={formData.postal_code || formData.pincode || ''} 
+                                onChange={e => {
+                                  const newPin = e.target.value;
+                                  const oldPin = formData.postal_code || formData.pincode;
+                                  let newAddress = formData.formatted_address || formData.fullAddress || '';
+                                  if (oldPin && newAddress.includes(oldPin)) {
+                                    newAddress = newAddress.replace(oldPin, newPin);
+                                  } else {
+                                    newAddress = newAddress.replace(/\b\d{6}\b/, newPin);
+                                  }
+                                  setFormData({ 
+                                    ...formData, 
+                                    postal_code: newPin, 
+                                    pincode: newPin,
+                                    formatted_address: newAddress,
+                                    fullAddress: newAddress
+                                  });
+                                }} 
+                                placeholder="Enter Pincode" 
+                                style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1px solid #CBD5E1', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, outline: 'none' }} 
+                              />
                             </div>
                           </div>
                         </div>
@@ -1318,21 +1412,21 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             <FaCrosshairs style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Latitude</div>
-                              <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{formData.latitude?.toFixed(6) || '17.447400'}</div>
+                              <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{formData.latitude?.toFixed(6) || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <FaCompass style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                             <div>
                               <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Longitude</div>
-                              <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{formData.longitude?.toFixed(6) || '78.376200'}</div>
+                              <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{formData.longitude?.toFixed(6) || '-'}</div>
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <FaList style={{ color: '#2563EB', fontSize: '1rem', flexShrink: 0 }} />
                             <div style={{ overflow: 'hidden' }}>
                               <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Google Place ID</div>
-                              <div style={{ fontSize: '0.82rem', color: '#2563EB', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.google_place_id || 'ChIJ_hitec_hyd_7'}</div>
+                              <div style={{ fontSize: '0.82rem', color: '#2563EB', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.google_place_id || '-'}</div>
                             </div>
                           </div>
                         </div>
@@ -1342,7 +1436,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                           <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Full Formatted Address</span>
-                          <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{formData.formatted_address || formData.fullAddress || 'Plot 45, HITEC City Phase 2, Hyderabad, Telangana 500081, India'}</span>
+                          <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{formData.formatted_address || formData.fullAddress || '-'}</span>
                         </div>
                         <button
                           type="button"
@@ -1873,13 +1967,55 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
             {/* Modal Footer Bar */}
             <div style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E2E8F0', padding: '18px 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                style={{ padding: '12px 28px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#475569', cursor: 'pointer', transition: 'all 0.2s' }}
-              >
-                Cancel
-              </button>
+              <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  style={{ padding: '12px 28px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#475569', cursor: 'pointer', transition: 'all 0.2s' }}
+                >
+                  Cancel
+                </button>
+                {modalMode === 'edit' && formData.id && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setTimeout(() => setViewAnalyticsProperty(formData as any), 100);
+                      }}
+                      style={{ padding: '10px 16px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      title="View Property Analytics"
+                    >
+                      <FaEye /> Views
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setTimeout(() => openDuplicateModal(formData as any), 100);
+                      }}
+                      style={{ padding: '10px 16px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      title="Duplicate Listing"
+                    >
+                      <FaCopy /> Duplicate
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(`Permanently delete '${formData.title}'?`)) {
+                          deleteProperty(formData.id!);
+                          showNotification?.("Property deleted.", "warning");
+                          setIsModalOpen(false);
+                        }
+                      }}
+                      style={{ padding: '10px 16px', backgroundColor: '#FEF2F2', color: '#EF4444', border: '1px solid #FECACA', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      title="Delete Property"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                  </>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: '14px' }}>
                 <button
                   type="button"

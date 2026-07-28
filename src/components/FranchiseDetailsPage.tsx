@@ -28,6 +28,10 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
   const franchise = franchiseDb.find(f => f.id === franchiseId);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isEnquiryModalOpen, setIsEnquiryModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'contact' | 'book'>('contact');
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
+
 
   // Form states
   const [custName, setCustName] = useState('');
@@ -70,16 +74,23 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
       email: email || 'not-provided@example.com',
       interestedFranchise: franchise.brand,
       investmentBudget: budget,
-      preferredLocation: locationPref,
+      preferredLocation: modalMode === 'book' ? `${locationPref} (Slot: ${bookingDate} at ${bookingTime})` : locationPref,
       status: 'New',
       createdDate: new Date().toISOString().split('T')[0],
       assignedBrokerId: assignedBroker?.id || 'D1',
       assignedBrokerName: assignedBroker?.name || 'RealtyPlus Advisors'
     });
-    showNotification?.(`Enquiry submitted successfully for ${franchise.brand}! An advisor will contact you within 24 hours.`, 'success');
+    showNotification?.(modalMode === 'book' ? `Booking slot submitted for ${franchise.brand}!` : `Enquiry submitted successfully for ${franchise.brand}! An advisor will contact you within 24 hours.`, 'success');
     setIsEnquiryModalOpen(false);
     setCustName('');
     setMobile('');
+    setBookingDate('');
+    setBookingTime('');
+  };
+
+  const handleOpenModal = (mode: 'contact' | 'book' = 'contact') => {
+    setModalMode(mode);
+    setIsEnquiryModalOpen(true);
   };
 
   const demandBadge = React.useMemo(() => {
@@ -319,10 +330,17 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
               </p>
 
               <button
-                onClick={() => setIsEnquiryModalOpen(true)}
+                onClick={() => handleOpenModal('contact')}
                 style={{ width: '100%', padding: '16px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', borderRadius: '8px', marginBottom: '12px', fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif", letterSpacing: '0.04em', boxShadow: '0 4px 12px rgba(30, 64, 175, 0.25)' }}
               >
                 REQUEST PROSPECTUS & MEETING
+              </button>
+
+              <button
+                onClick={() => handleOpenModal('book')}
+                style={{ width: '100%', padding: '16px', backgroundColor: '#FFFFFF', color: '#1E40AF', border: '2px solid #1E40AF', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', borderRadius: '8px', marginBottom: '12px', fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif", letterSpacing: '0.04em' }}
+              >
+                BOOK SLOT & DATE
               </button>
 
               <button
@@ -382,7 +400,7 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '520px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             <div style={{ padding: '20px 24px', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif", fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
-                Request Prospectus: {franchise.brand}
+                {modalMode === 'book' ? `Book Visit Slot: ${franchise.brand}` : `Request Prospectus: ${franchise.brand}`}
               </h3>
               <button onClick={() => setIsEnquiryModalOpen(false)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.5rem', cursor: 'pointer', fontWeight: 700 }}>×</button>
             </div>
@@ -414,8 +432,21 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
                 <input type="text" placeholder="Hyderabad / Bengaluru / Mumbai..." value={locationPref} onChange={e => setLocationPref(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
               </div>
 
+              {modalMode === 'book' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>SELECT DATE *</label>
+                    <input type="date" required value={bookingDate} onChange={e => setBookingDate(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>SELECT TIME *</label>
+                    <input type="time" required value={bookingTime} onChange={e => setBookingTime(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+              )}
+
               <button type="submit" style={{ marginTop: '10px', padding: '14px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', borderRadius: '6px', fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif" }}>
-                SUBMIT & SCHEDULE CONSULTATION
+                {modalMode === 'book' ? 'CONFIRM BOOKING SLOT' : 'SUBMIT & SCHEDULE CONSULTATION'}
               </button>
             </form>
           </div>

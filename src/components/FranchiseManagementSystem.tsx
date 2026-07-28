@@ -65,7 +65,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange, mode = 'franchise' }) => {
-  const [activeTab, setActiveTab] = useState<'listings' | 'approvals' | 'featured_premium' | 'analytics' | 'categories_locations' | 'enquiries' | 'gallery' | 'reports'>('listings');
+  const [activeTab, setActiveTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'approvals' | 'enquiries' | 'gallery'>('listings');
 
   React.useEffect(() => {
     if (activeSubTab) {
@@ -407,8 +407,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
         </button>
       </div>
 
-      {/* ================= TAB 1: LISTINGS & INVENTORY MANAGER ================= */}
-      {activeTab === 'listings' && (
+      {/* ================= MODULE 1: FRANCHISE LISTINGS (Also handles Edit Franchise) ================= */}
+      {(activeTab === 'listings' || activeTab === 'editProperty') && (
         <div>
           {/* Advanced Search & Filter Bar */}
           <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -564,34 +564,38 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           </span>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                            <button
-                              onClick={() => openEditModal(fran)}
-                              title="Edit Franchise"
-                              style={{ padding: '8px 12px', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              <FaEdit /> Edit
-                            </button>
-                            <button
-                              onClick={() => handleDuplicate(fran)}
-                              title="Duplicate Listing"
-                              style={{ padding: '8px 12px', backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              <FaCopy /> Copy
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (window.confirm(`Delete franchise '${fran.brand}'?`)) {
-                                  deleteFranchise(fran.id);
-                                  showNotification('Franchise deleted.', 'warning');
-                                }
-                              }}
-                              title="Delete"
-                              style={{ padding: '8px 12px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
+                          {activeTab === 'editProperty' ? (
+                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => openEditModal(fran)}
+                                title="Edit Franchise"
+                                style={{ padding: '8px 12px', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                              >
+                                <FaEdit /> Edit
+                              </button>
+                              <button
+                                onClick={() => handleDuplicate(fran)}
+                                title="Duplicate Listing"
+                                style={{ padding: '8px 12px', backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                              >
+                                <FaCopy /> Copy
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Delete franchise '${fran.brand}'?`)) {
+                                    deleteFranchise(fran.id);
+                                    showNotification('Franchise deleted.', 'warning');
+                                  }
+                                }}
+                                title="Delete"
+                                style={{ padding: '8px 12px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>View Only</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -674,7 +678,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
       )}
 
       {/* ================= TAB 3: FEATURED & PREMIUM CONTROL HUB ================= */}
-      {activeTab === 'featured_premium' && (
+      {activeTab === 'featured' && (
         <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
           <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
             FEATURED & PREMIUM SPONSORSHIP CONTROL HUB
@@ -822,8 +826,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
         </div>
       )}
 
-      {/* ================= TAB 5: CATEGORIES & LOCATIONS MASTER ================= */}
-      {activeTab === 'categories_locations' && (
+      {/* ================= TAB 5: CATEGORIES & LOCATIONS ================= */}
+      {(activeTab === 'categories' || activeTab === 'locations') && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           {/* Categories Manager */}
           <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
@@ -935,6 +939,19 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ================= MODULE: SOLD OUT ================= */}
+      {activeTab === 'soldOut' && (
+        <div style={{ backgroundColor: '#FFFFFF', padding: '40px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+          <FaCheckCircle style={{ fontSize: '3rem', color: '#94A3B8', marginBottom: '16px' }} />
+          <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
+            Sold Out & Closed Deals
+          </h3>
+          <p style={{ margin: 0, color: '#64748B' }}>
+            No historically closed deals found. When opportunities are marked as sold out, they will appear here.
+          </p>
         </div>
       )}
 
@@ -1157,25 +1174,25 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
           <div style={{ backgroundColor: '#F8FAFC', width: '100%', maxWidth: '1280px', height: '92vh', display: 'flex', flexDirection: 'column', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', border: '1px solid #E2E8F0' }}>
             
             {/* Modal Header */}
-            <div style={{ backgroundColor: '#1E3A8A', color: '#FFFFFF', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px 32px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#FFFFFF', flexShrink: 0 }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#2563EB', flexShrink: 0 }}>
                   <FaBuilding />
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                    <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
                       {modalMode === 'add' 
                         ? (mode === 'business' ? 'Add New Business' : 'Add New Franchise Opportunity') 
                         : (mode === 'business' ? 'Edit Business Listing' : 'Edit Franchise Opportunity')}
                     </h3>
-                    <span style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                    <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
                       {editingFranchise.id || 'NEW'}
                     </span>
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.6rem', cursor: 'pointer', transition: 'opacity 0.2s', padding: '4px' }} title="Close">×</button>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: '#F1F5F9', border: 'none', color: '#64748B', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', cursor: 'pointer', transition: 'all 0.2s' }} title="Close">×</button>
             </div>
 
             {/* Horizontal Stepper Bar */}
@@ -1595,49 +1612,71 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <span>Location verified successfully</span>
                           </div>
 
-                          {/* Verified Location Details */}
-                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Verified Location Details</h5>
+                          {/* Location Details (Auto-Geocoded) */}
+                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Country</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.country || 'India'}</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.country || '-'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaMap style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>State</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.state || 'Telangana'}</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.state || '-'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>District</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.district || 'Hyderabad'}</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.district || '-'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaCity style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.city || 'Hyderabad'}</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.city || '-'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaCompass style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Area / Locality</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.area || 'Jubilee Hills'}</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.area || '-'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaEnvelope style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
-                              <div>
-                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Postal Code</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.pincode || editingFranchise.postal_code || '500033'}</div>
+                              <div style={{ width: '100%' }}>
+                                <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Postal Code (Manual Entry)</label>
+                                <input 
+                                  type="text" 
+                                  value={editingFranchise.pincode || editingFranchise.postal_code || ''} 
+                                  onChange={e => {
+                                    const newPin = e.target.value;
+                                    const oldPin = editingFranchise.pincode || editingFranchise.postal_code;
+                                    let newAddress = editingFranchise.formatted_address || editingFranchise.fullAddress || '';
+                                    if (oldPin && newAddress.includes(oldPin)) {
+                                      newAddress = newAddress.replace(oldPin, newPin);
+                                    } else {
+                                      newAddress = newAddress.replace(/\b\d{6}\b/, newPin);
+                                    }
+                                    setEditingFranchise({ 
+                                      ...editingFranchise, 
+                                      postal_code: newPin, 
+                                      pincode: newPin,
+                                      formatted_address: newAddress,
+                                      fullAddress: newAddress
+                                    });
+                                  }} 
+                                  placeholder="Enter Pincode" 
+                                  style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1px solid #CBD5E1', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, outline: 'none' }} 
+                                />
                               </div>
                             </div>
                           </div>
@@ -1648,36 +1687,36 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               <FaCrosshairs style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Latitude</div>
-                                <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.latitude?.toFixed(6) || '17.406500'}</div>
+                                <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.latitude?.toFixed(6) || '-'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <FaCompass style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Longitude</div>
-                                <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.longitude?.toFixed(6) || '78.477200'}</div>
+                                <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.longitude?.toFixed(6) || '-'}</div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Formatted Address Box */}
-                        <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Full Formatted Address</span>
-                            <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{editingFranchise.formatted_address || editingFranchise.fullAddress || 'Jubilee Hills, Hyderabad, Telangana, India'}</span>
+                          {/* Formatted Address Box */}
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Full Formatted Address</span>
+                              <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{editingFranchise.formatted_address || editingFranchise.fullAddress || '-'}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(editingFranchise.formatted_address || editingFranchise.fullAddress || 'Jubilee Hills, Hyderabad');
+                                showNotification?.('Address copied to clipboard!', 'success');
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.2rem', padding: '4px', display: 'flex', alignItems: 'center' }}
+                              title="Copy Address"
+                            >
+                              <FaCopy />
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(editingFranchise.formatted_address || editingFranchise.fullAddress || 'Jubilee Hills, Hyderabad');
-                              showNotification?.('Address copied to clipboard!', 'success');
-                            }}
-                            style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.2rem', padding: '4px', display: 'flex', alignItems: 'center' }}
-                            title="Copy Address"
-                          >
-                            <FaCopy />
-                          </button>
                         </div>
                       </div>
 

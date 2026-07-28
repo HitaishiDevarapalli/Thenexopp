@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { franchiseDb } from '../db/marketplaceDb';
 import {
   FaSearch,
@@ -52,6 +52,24 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
   const [brandCategory, setBrandCategory] = useState('All Brands');
   const [investment, setInvestment] = useState('₹ 10L - 2Cr+');
   const [spaceReq, setSpaceReq] = useState('Any Size');
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const loc = searchParams.get('location');
+    const type = searchParams.get('type');
+    const bgt = searchParams.get('budget');
+    
+    if (loc) {
+      setLocationText(loc);
+    }
+    if (type && type !== 'Any') {
+      setBrandCategory(type);
+      setSelectedCats([type]);
+    }
+    if (bgt && bgt !== 'Any') {
+      setInvestment(bgt);
+    }
+  }, []);
 
   // Left Sidebar Filters State
   const [budgetOpen, setBudgetOpen] = useState(true);

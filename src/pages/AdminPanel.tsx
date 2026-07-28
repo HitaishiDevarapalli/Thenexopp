@@ -57,6 +57,14 @@ import {
   updateFranchise,
   updateDealer,
   clearAllStaticData,
+  employeeUsersDb,
+  addEmployeeUser,
+  updateEmployeeUser,
+  deleteEmployeeUser,
+  rolesDb,
+  updateRole,
+  addRole,
+  deleteRole,
   demandRegionsDb,
   addDemandRegion,
   updateDemandRegion,
@@ -80,7 +88,9 @@ import type {
   SiteSettings,
   TeamMember,
   ShowcaseVideo,
-  ShowcaseSettings
+  ShowcaseSettings,
+  EmployeeUser,
+  Role
 } from '../db/marketplaceDb';
 
 interface AdminPanelProps {
@@ -93,6 +103,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem('nexopp_admin_auth') === 'true';
   });
+  const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
+    return sessionStorage.getItem('nexopp_admin_role') || 'Super Admin';
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +113,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newTagInput, setNewTagInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'inquiries' | 'team' | 'media_manager'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'team' | 'roles' | 'inquiries' | 'media_manager'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -112,30 +125,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const SUB_MENU_ITEMS: Record<string, { id: string; label: string; icon: any }[]> = {
     properties: [
       { id: 'listings', label: 'All Properties', icon: <FaListAlt /> },
+      { id: 'editProperty', label: 'Edit Property', icon: <FaEdit /> },
       { id: 'featured', label: 'Featured & Premium', icon: <FaStar /> },
       { id: 'analytics', label: 'Analytics & Stats', icon: <FaChartBar /> },
       { id: 'categories', label: 'Categories & Subtypes', icon: <FaFolder /> },
       { id: 'locations', label: 'Location Intelligence', icon: <FaMapMarkerAlt /> },
+      { id: 'soldOut', label: 'Sold Out Properties', icon: <FaCheckCircle /> },
       { id: 'reports', label: 'Reports & Export', icon: <FaFileAlt /> },
     ],
     franchises: [
-      { id: 'listings', label: 'Franchise Directory', icon: <FaListAlt /> },
-      { id: 'approvals', label: 'Pending Approvals', icon: <FaClock /> },
-      { id: 'featured_premium', label: 'Featured & Premium', icon: <FaStar /> },
-      { id: 'analytics', label: 'Franchise Analytics', icon: <FaChartBar /> },
-      { id: 'categories_locations', label: 'Categories & Locations', icon: <FaMapMarkerAlt /> },
-      { id: 'enquiries', label: 'Franchise Enquiries', icon: <FaEnvelope /> },
-      { id: 'gallery', label: 'Media & Gallery', icon: <FaImage /> },
+      { id: 'listings', label: 'All Franchises', icon: <FaListAlt /> },
+      { id: 'editProperty', label: 'Edit Franchise', icon: <FaEdit /> },
+      { id: 'featured', label: 'Featured & Premium', icon: <FaStar /> },
+      { id: 'analytics', label: 'Analytics & Stats', icon: <FaChartBar /> },
+      { id: 'categories', label: 'Categories & Sectors', icon: <FaFolder /> },
+      { id: 'locations', label: 'Location Intelligence', icon: <FaMapMarkerAlt /> },
+      { id: 'soldOut', label: 'Sold Out Franchises', icon: <FaCheckCircle /> },
       { id: 'reports', label: 'Reports & Export', icon: <FaFileAlt /> },
     ],
     businesses: [
-      { id: 'listings', label: 'Business Directory', icon: <FaListAlt /> },
-      { id: 'approvals', label: 'Pending Approvals', icon: <FaClock /> },
-      { id: 'featured_premium', label: 'Featured & Premium', icon: <FaStar /> },
-      { id: 'analytics', label: 'Business Analytics', icon: <FaChartBar /> },
-      { id: 'categories_locations', label: 'Categories & Locations', icon: <FaMapMarkerAlt /> },
-      { id: 'enquiries', label: 'Business Enquiries', icon: <FaEnvelope /> },
-      { id: 'gallery', label: 'Media & Gallery', icon: <FaImage /> },
+      { id: 'listings', label: 'All Businesses', icon: <FaListAlt /> },
+      { id: 'editProperty', label: 'Edit Business', icon: <FaEdit /> },
+      { id: 'featured', label: 'Featured & Premium', icon: <FaStar /> },
+      { id: 'analytics', label: 'Analytics & Stats', icon: <FaChartBar /> },
+      { id: 'categories', label: 'Categories & Industries', icon: <FaFolder /> },
+      { id: 'locations', label: 'Location Intelligence', icon: <FaMapMarkerAlt /> },
+      { id: 'soldOut', label: 'Sold Out Businesses', icon: <FaCheckCircle /> },
       { id: 'reports', label: 'Reports & Export', icon: <FaFileAlt /> },
     ],
     brokers: [
@@ -149,7 +164,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   };
   
   // New Team Member Form State
-  const [newTeamMember, setNewTeamMember] = useState<Omit<TeamMember, 'id'>>({ name: '', designation: '', photo: '', phone: '', linkedin: '' });
+  const [newTeamMember, setNewTeamMember] = useState<Omit<TeamMember, 'id'>>({ name: '', designation: '', photo: '', phone: '', linkedin: '', email: '' });
+  
+  // New Employee User Form State
+  const [newEmployee, setNewEmployee] = useState<Omit<EmployeeUser, 'id' | 'createdAt'>>({
+    fullName: '',
+    email: '',
+    password: '',
+    role: 'Property Editor',
+    status: 'Active'
+  });
+
+  // Custom Role Form State
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRolePermissions, setNewRolePermissions] = useState<string[]>(['properties']);
+
+  // User Specific Permissions State
+  const [selectedUserForPerms, setSelectedUserForPerms] = useState<string>('');
+  const [userCustomPerms, setUserCustomPerms] = useState<string[]>([]);
+  const [isSavingUserPerms, setIsSavingUserPerms] = useState<boolean>(false);
+  const [savedUserSuccess, setSavedUserSuccess] = useState<string | null>(null);
 
   
   // State for reactive refresh
@@ -190,14 +224,73 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const validEmail = email.toLowerCase().includes('admin') || email === 'admin@thenexoop.in';
-    if (validEmail && (password === 'admin123' || password === 'nexopp2026')) {
+    
+    // Master Super Admin bypass
+    if (email === 'admin@thenexoop.in' && (password === 'admin123' || password === 'nexopp2026')) {
       sessionStorage.setItem('nexopp_admin_auth', 'true');
+      sessionStorage.setItem('nexopp_admin_role', 'Super Admin');
+      sessionStorage.setItem('nexopp_admin_user_name', 'Super Admin');
+      sessionStorage.setItem('nexopp_admin_user_email', 'admin@thenexoop.in');
       setIsAuthenticated(true);
+      setCurrentUserRole('Super Admin');
       setError(null);
-    } else {
-      setError('Invalid Admin credentials. Please try again.');
+      return;
     }
+
+    // Check Employee Users DB
+    const employee = employeeUsersDb.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+    if (employee) {
+      if (employee.status !== 'Active') {
+        setError('Your account is currently suspended. Please contact the administrator.');
+        return;
+      }
+      sessionStorage.setItem('nexopp_admin_auth', 'true');
+      sessionStorage.setItem('nexopp_admin_role', employee.role);
+      sessionStorage.setItem('nexopp_admin_user_name', employee.fullName);
+      sessionStorage.setItem('nexopp_admin_user_email', employee.email);
+      setIsAuthenticated(true);
+      setCurrentUserRole(employee.role);
+      setError(null);
+
+      // Evaluate permissions to set active tab
+      const empPerms = employee.customPermissions !== undefined
+        ? employee.customPermissions
+        : (rolesDb.find(r => r.name === employee.role)?.permissions || []);
+
+      const can = (k: string) => empPerms.includes('all') || empPerms.includes(k) || empPerms.some(p => p.startsWith(k + ':'));
+
+      if (can('properties')) {
+        setActiveTab('properties');
+        setExpandedMenu('properties');
+      } else if (can('franchises')) {
+        setActiveTab('franchises');
+        setExpandedMenu('franchises');
+      } else if (can('businesses')) {
+        setActiveTab('businesses');
+        setExpandedMenu('businesses');
+      } else if (can('demand_regions')) {
+        setActiveTab('demand_regions');
+        setExpandedMenu(null);
+      } else if (can('brokers')) {
+        setActiveTab('brokers');
+        setExpandedMenu('brokers');
+      } else {
+        setActiveTab('overview');
+        setExpandedMenu(null);
+      }
+      return;
+    }
+
+    setError('Invalid Admin credentials. Please try again.');
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('nexopp_admin_auth');
+    sessionStorage.removeItem('nexopp_admin_role');
+    sessionStorage.removeItem('nexopp_admin_user_name');
+    sessionStorage.removeItem('nexopp_admin_user_email');
+    setIsAuthenticated(false);
+    setActiveTab('overview');
   };
 
   const handleAddTeamMember = (e: React.FormEvent) => {
@@ -207,29 +300,128 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       return;
     }
     const id = 'TM_' + Date.now();
-    addTeamMember({
+    const newMember = {
       id,
       name: newTeamMember.name,
       designation: newTeamMember.designation,
       photo: newTeamMember.photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
       phone: newTeamMember.phone,
-      linkedin: newTeamMember.linkedin
-    });
+      linkedin: newTeamMember.linkedin,
+      email: newTeamMember.email
+    };
+    addTeamMember(newMember);
     showNotification(`Added ${newTeamMember.name} to Executive Leadership!`);
-    setNewTeamMember({ name: '', designation: '', photo: '', phone: '', linkedin: '' });
+    setNewTeamMember({ name: '', designation: '', photo: '', phone: '', linkedin: '', email: '' });
   };
 
   const handleDeleteTeamMember = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to remove ${name} from Leadership profiles?`)) {
+    if (window.confirm(`Are you sure you want to remove ${name} from the leadership team?`)) {
       deleteTeamMember(id);
-      showNotification(`Removed ${name} from Leadership profiles.`);
+      showNotification(`Removed ${name} from Executive Leadership`, 'warning');
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('nexopp_admin_auth');
-    setIsAuthenticated(false);
+  const handleAddEmployee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmployee.fullName || !newEmployee.email || !newEmployee.password) {
+      showNotification('Please fill all required employee fields', 'warning');
+      return;
+    }
+    const id = 'EMP_' + Date.now();
+    const newEmp: EmployeeUser = {
+      ...newEmployee,
+      id,
+      createdAt: new Date().toISOString()
+    };
+    addEmployeeUser(newEmp);
+    showNotification(`Created credentials for ${newEmployee.fullName}!`);
+    setNewEmployee({ fullName: '', email: '', password: '', role: 'Property Editor', status: 'Active' });
   };
+
+  const handleDeleteEmployee = (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete credentials for ${name}?`)) {
+      deleteEmployeeUser(id);
+      showNotification(`Deleted employee: ${name}`, 'warning');
+    }
+  };
+
+  const handleAddRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) {
+      showNotification('Please enter a role name', 'warning');
+      return;
+    }
+    const id = 'role_' + Date.now();
+    const role: Role = {
+      id,
+      name: newRoleName.trim(),
+      permissions: newRolePermissions.length === 0 ? ['properties'] : newRolePermissions
+    };
+    addRole(role);
+    showNotification(`Created role: ${newRoleName.trim()}!`);
+    setNewRoleName('');
+    setNewRolePermissions(['properties']);
+  };
+
+  const handleToggleRolePermission = (roleId: string, currentPerms: string[], perm: string) => {
+    let updated: string[];
+    if (currentPerms.includes('all')) {
+      const allModules = ['properties', 'franchises', 'businesses', 'demand_regions', 'brokers', 'users', 'media_manager', 'site_settings'];
+      updated = allModules.filter(p => p !== perm);
+    } else if (currentPerms.includes(perm)) {
+      updated = currentPerms.filter(p => p !== perm);
+    } else {
+      updated = [...currentPerms, perm];
+    }
+    updateRole(roleId, updated);
+    showNotification('Updated role permissions!');
+  };
+
+  const handleDeleteRole = (roleId: string, roleName: string) => {
+    if (roleName === 'Super Admin') {
+      showNotification('Cannot delete Super Admin role', 'error');
+      return;
+    }
+    if (window.confirm(`Are you sure you want to delete the role "${roleName}"?`)) {
+      deleteRole(roleId);
+      showNotification(`Deleted role: ${roleName}`, 'warning');
+    }
+  };
+
+  const handleSelectUserForPerms = (userId: string) => {
+    setSelectedUserForPerms(userId);
+    const user = employeeUsersDb.find(u => u.id === userId);
+    if (user) {
+      setUserCustomPerms(user.customPermissions || []);
+    } else {
+      setUserCustomPerms([]);
+    }
+  };
+
+  const handleSaveUserPermissions = () => {
+    if (!selectedUserForPerms) {
+      showNotification('Please select an employee user first', 'warning');
+      return;
+    }
+    const user = employeeUsersDb.find(u => u.id === selectedUserForPerms);
+    if (!user) return;
+
+    setIsSavingUserPerms(true);
+    setSavedUserSuccess(null);
+
+    setTimeout(() => {
+      updateEmployeeUser(selectedUserForPerms, { customPermissions: [...userCustomPerms] });
+      triggerRefresh();
+      setIsSavingUserPerms(false);
+      setSavedUserSuccess(`Permissions successfully saved & live-synced for ${user.fullName}!`);
+      showNotification(`Custom permissions saved for ${user.fullName}!`);
+
+      setTimeout(() => {
+        setSavedUserSuccess(null);
+      }, 5000);
+    }, 450);
+  };
+
 
   // Helper for multiple photo file uploads (Base64 conversion)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64List: string[]) => void) => {
@@ -327,10 +519,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           </div>
 
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A', margin: '0 0 6px 0' }}>
-            Super Admin Portal
+            Secure Admin Login
           </h1>
           <p style={{ color: '#64748B', fontSize: '0.85rem', margin: '0 0 32px 0', fontWeight: 500 }}>
-            Enterprise Management & Control Center
+            Enter your employee credentials to access the marketplace control center.
           </p>
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -357,7 +549,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             
             {error && (
               <span style={{ color: '#EF4444', fontSize: '0.85rem', fontWeight: 600 }}>
-                Invalid Admin credentials. Please try again.
+                {error}
               </span>
             )}
 
@@ -382,6 +574,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     );
   }
 
+  // Granular Permission Checking Logic
+  const loggedInEmail = sessionStorage.getItem('nexopp_admin_user_email') || '';
+  const currentEmpUser = employeeUsersDb.find(u => u.email.toLowerCase() === loggedInEmail.toLowerCase());
+  const userRoleData = rolesDb.find(r => r.name === currentUserRole);
+
+  // If user has customPermissions explicitly defined (even if empty or custom), use it! Otherwise fallback to role permissions
+  const activePermissions = (currentEmpUser && currentEmpUser.customPermissions !== undefined)
+    ? currentEmpUser.customPermissions
+    : (userRoleData ? userRoleData.permissions : []);
+
+  const hasPermission = (permKey: string) => {
+    if (currentUserRole === 'Super Admin' || activePermissions.includes('all')) return true;
+    if (activePermissions.includes(permKey)) return true;
+
+    // Check category prefix (e.g. 'properties' for 'properties:editProperty')
+    const category = permKey.split(':')[0];
+    if (activePermissions.includes(category)) return true;
+
+    // If checking a category (e.g. 'properties' or 'site_settings'), check if any granted permission starts with category + ':' or matches
+    if (!permKey.includes(':')) {
+      return activePermissions.some(p => p === category || p.startsWith(`${category}:`) || (category === 'site_settings' && p.startsWith('site:')) || (category === 'media_manager' && p.includes('media')));
+    }
+
+    return false;
+  };
+
   const getHeaderInfo = () => {
     switch (activeTab) {
       case 'properties': return { title: 'Property Management System', sub: 'Manage, Publish & Grow Your Property Listings' };
@@ -394,7 +612,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'inquiries': return { title: 'Orders & Leads Enquiries', sub: 'Track Customer Leads, Consultation Requests & Inquiries' };
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
       case 'media_manager': return { title: '🎬 Featured Showcase Videos', sub: 'Manage videos displayed on the homepage carousel' };
-      default: return { title: 'Welcome back, Super Admin! 👋', sub: "Here's what's happening with your marketplace today." };
+      default: return { title: 'Welcome back, Super Admin', sub: "Here's what's happening with your marketplace today." };
     }
   };
 
@@ -449,201 +667,279 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           </button>
 
           {/* Section: CONTENT MANAGEMENT */}
-          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            CONTENT MANAGEMENT
-          </div>
+          {(hasPermission('properties') || hasPermission('franchises') || hasPermission('businesses') || hasPermission('demand_regions')) && (
+            <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              CONTENT MANAGEMENT
+            </div>
+          )}
 
-          {[
-            { id: 'properties', label: 'Property Management', icon: <FaBuilding />, hasArrow: true },
-            { id: 'franchises', label: 'Franchise Management', icon: <FaStore />, hasArrow: true },
-            { id: 'businesses', label: 'Business Management', icon: <FaBriefcase />, hasArrow: true },
-            { id: 'demand_regions', label: '📍 Demand Regions', icon: null },
-            { id: 'inquiries', label: 'Lead & Enquiries', icon: <FaEnvelope /> },
-            { id: 'orders', label: 'Orders & Bookings', icon: <FaListAlt /> },
-          ].map((item) => {
-            const isActive = activeTab === item.id || (item.id === 'orders' && activeTab === 'inquiries');
-            const subItems = SUB_MENU_ITEMS[item.id];
-            const currentSubTab = item.id === 'properties' ? propertySubTab : item.id === 'franchises' ? franchiseSubTab : item.id === 'businesses' ? businessSubTab : '';
-            return (
-              <div key={item.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                <button
-                  onClick={() => {
-                    if (item.id === 'orders') {
-                      setActiveTab('inquiries');
-                      setExpandedMenu(null);
-                    } else {
-                      setActiveTab(item.id as any);
-                      if (subItems) {
-                        setExpandedMenu(expandedMenu === item.id ? null : item.id);
-                      } else {
-                        setExpandedMenu(null);
-                      }
-                    }
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
-                    fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                    backgroundColor: isActive ? '#DCFCE7' : 'transparent',
-                    color: isActive ? '#16A34A' : '#475569',
-                    transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
-                  }}
-                >
-                  <span style={{ fontSize: '1rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                  <span style={{ flexGrow: 1 }}>{item.label}</span>
-                  {item.hasArrow && (
-                    <span style={{ fontSize: '0.75rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center', transition: 'transform 0.2s', transform: expandedMenu === item.id ? 'rotate(90deg)' : 'none' }}>
-                      <FaChevronRight />
-                    </span>
-                  )}
-                </button>
-
-                {expandedMenu === item.id && subItems && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', marginTop: '4px', marginBottom: '6px', borderLeft: '2px solid #E2E8F0', marginLeft: '22px' }}>
-                    {subItems.map(sub => {
-                      const isSubActive = activeTab === item.id && currentSubTab === sub.id;
-                      return (
-                        <button
-                          key={sub.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveTab(item.id as any);
-                            if (item.id === 'properties') setPropertySubTab(sub.id);
-                            else if (item.id === 'franchises') setFranchiseSubTab(sub.id);
-                            else if (item.id === 'businesses') setBusinessSubTab(sub.id);
-                          }}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer',
-                            fontSize: '0.82rem', fontWeight: isSubActive ? 700 : 500,
-                            backgroundColor: isSubActive ? '#F0FDF4' : 'transparent',
-                            color: isSubActive ? '#16A34A' : '#64748B',
-                            transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
-                          }}
-                        >
-                          <span style={{ fontSize: '0.85rem', opacity: isSubActive ? 1 : 0.7 }}>{sub.icon}</span>
-                          <span style={{ flexGrow: 1 }}>{sub.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Section: USER MANAGEMENT */}
-          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            USER MANAGEMENT
-          </div>
-
-          {[
-            { id: 'brokers', label: 'Broker Management', icon: <FaUserTie />, hasArrow: true },
-            { id: 'users', label: 'User Management', icon: <FaUsers /> },
-            { id: 'team', label: 'Team Members', icon: <FaUserShield /> },
-            { id: 'roles', label: 'Roles & Permissions', icon: <FaCog /> },
-          ].map((item) => {
-            const isActive = activeTab === item.id || ((item.id === 'users' || item.id === 'roles') && activeTab === 'team');
-            const subItems = SUB_MENU_ITEMS[item.id];
-            const currentSubTab = item.id === 'brokers' ? brokerSubTab : '';
-            return (
-              <div key={item.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                <button
-                  onClick={() => {
-                    if (item.id === 'users' || item.id === 'roles') {
-                      setActiveTab('team');
-                      setExpandedMenu(null);
-                    } else {
-                      setActiveTab(item.id as any);
-                      if (subItems) {
-                        setExpandedMenu(expandedMenu === item.id ? null : item.id);
-                      } else {
-                        setExpandedMenu(null);
-                      }
-                    }
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
-                    fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                    backgroundColor: isActive ? '#DCFCE7' : 'transparent',
-                    color: isActive ? '#16A34A' : '#475569',
-                    transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
-                  }}
-                >
-                  <span style={{ fontSize: '1rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                  <span style={{ flexGrow: 1 }}>{item.label}</span>
-                  {item.hasArrow && (
-                    <span style={{ fontSize: '0.75rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center', transition: 'transform 0.2s', transform: expandedMenu === item.id ? 'rotate(90deg)' : 'none' }}>
-                      <FaChevronRight />
-                    </span>
-                  )}
-                </button>
-
-                {expandedMenu === item.id && subItems && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '12px', marginTop: '4px', marginBottom: '6px', borderLeft: '2px solid #E2E8F0', marginLeft: '22px' }}>
-                    {subItems.map(sub => {
-                      const isSubActive = activeTab === item.id && currentSubTab === sub.id;
-                      return (
-                        <button
-                          key={sub.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveTab(item.id as any);
-                            if (item.id === 'brokers') setBrokerSubTab(sub.id);
-                          }}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer',
-                            fontSize: '0.82rem', fontWeight: isSubActive ? 700 : 500,
-                            backgroundColor: isSubActive ? '#F0FDF4' : 'transparent',
-                            color: isSubActive ? '#16A34A' : '#64748B',
-                            transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
-                          }}
-                        >
-                          <span style={{ fontSize: '0.85rem', opacity: isSubActive ? 1 : 0.7 }}>{sub.icon}</span>
-                          <span style={{ flexGrow: 1 }}>{sub.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Section: SITE MANAGEMENT */}
-          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            SITE MANAGEMENT
-          </div>
-
-          {[
-            { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo /> },
-            { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine /> },
-            { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop /> },
-            { id: 'customization', label: 'Website Settings', icon: <FaPalette /> },
-            { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine /> },
-            { id: 'newsletter', label: 'Newsletter', icon: <FaEnvelope /> },
-          ].map((item) => {
-            const isActive = activeTab === item.id || (item.id === 'seo' && activeTab === 'customization') || (item.id === 'newsletter' && activeTab === 'inquiries');
-            return (
+          {hasPermission('properties') && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               <button
-                key={item.id}
                 onClick={() => {
-                  if (item.id === 'seo') setActiveTab('customization');
-                  else if (item.id === 'newsletter') setActiveTab('inquiries');
-                  else setActiveTab(item.id as any);
-                  setExpandedMenu(null);
+                  setActiveTab('properties');
+                  setExpandedMenu(expandedMenu === 'properties' ? null : 'properties');
                 }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
-                  fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                  backgroundColor: isActive ? '#DCFCE7' : 'transparent',
-                  color: isActive ? '#16A34A' : '#475569',
-                  transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+                  padding: '12px 16px', backgroundColor: activeTab === 'properties' ? '#DCFCE7' : 'transparent', color: activeTab === 'properties' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
                 }}
               >
-                <span style={{ fontSize: '1rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                <span style={{ flexGrow: 1 }}>{item.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBuilding /> Property Management</div>
+                <FaChevronDown style={{ transform: expandedMenu === 'properties' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
               </button>
-            );
-          })}
+              
+              {expandedMenu === 'properties' && (
+                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
+                  {SUB_MENU_ITEMS['properties']
+                    .filter(sub => hasPermission(`properties:${sub.id}`))
+                    .map(sub => (
+                      <button
+                        key={sub.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPropertySubTab(sub.id);
+                          setActiveTab('properties');
+                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                        }}
+                        style={{
+                          padding: '8px 12px', backgroundColor: propertySubTab === sub.id && activeTab === 'properties' ? '#F1F5F9' : 'transparent', color: propertySubTab === sub.id && activeTab === 'properties' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: propertySubTab === sub.id && activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                        }}
+                      >
+                        {sub.icon} {sub.label}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+            
+          {hasPermission('franchises') && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button
+                onClick={() => {
+                  setActiveTab('franchises');
+                  setExpandedMenu(expandedMenu === 'franchises' ? null : 'franchises');
+                }}
+                style={{
+                  padding: '12px 16px', backgroundColor: activeTab === 'franchises' ? '#DCFCE7' : 'transparent', color: activeTab === 'franchises' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaStore /> Franchise Management</div>
+                <FaChevronDown style={{ transform: expandedMenu === 'franchises' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
+              </button>
+
+              {expandedMenu === 'franchises' && (
+                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
+                  {SUB_MENU_ITEMS['franchises']
+                    .filter(sub => hasPermission(`franchises:${sub.id}`))
+                    .map(sub => (
+                      <button
+                        key={sub.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFranchiseSubTab(sub.id);
+                          setActiveTab('franchises');
+                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                        }}
+                        style={{
+                          padding: '8px 12px', backgroundColor: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#F1F5F9' : 'transparent', color: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: franchiseSubTab === sub.id && activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                        }}
+                      >
+                        {sub.icon} {sub.label}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasPermission('businesses') && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button
+                onClick={() => {
+                  setActiveTab('businesses');
+                  setExpandedMenu(expandedMenu === 'businesses' ? null : 'businesses');
+                }}
+                style={{
+                  padding: '12px 16px', backgroundColor: activeTab === 'businesses' ? '#DCFCE7' : 'transparent', color: activeTab === 'businesses' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBriefcase /> Business Management</div>
+                <FaChevronDown style={{ transform: expandedMenu === 'businesses' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
+              </button>
+
+              {expandedMenu === 'businesses' && (
+                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
+                  {SUB_MENU_ITEMS['businesses']
+                    .filter(sub => hasPermission(`businesses:${sub.id}`))
+                    .map(sub => (
+                      <button
+                        key={sub.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBusinessSubTab(sub.id);
+                          setActiveTab('businesses');
+                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                        }}
+                        style={{
+                          padding: '8px 12px', backgroundColor: businessSubTab === sub.id && activeTab === 'businesses' ? '#F1F5F9' : 'transparent', color: businessSubTab === sub.id && activeTab === 'businesses' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: businessSubTab === sub.id && activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                        }}
+                      >
+                        {sub.icon} {sub.label}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasPermission('demand_regions') && (
+            <button
+              onClick={() => {
+                setActiveTab('demand_regions');
+                setExpandedMenu(null);
+              }}
+              style={{
+                padding: '12px 16px', backgroundColor: activeTab === 'demand_regions' ? '#DCFCE7' : 'transparent', color: activeTab === 'demand_regions' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'demand_regions' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+              }}
+            >
+              <FaMapMarkerAlt /> Demand Regions
+            </button>
+          )}
+
+          {/* Section: USER MANAGEMENT */}
+          {(hasPermission('brokers') || hasPermission('users')) && (
+            <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              USER MANAGEMENT
+            </div>
+          )}
+
+          {hasPermission('brokers') && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button
+                onClick={() => {
+                  setActiveTab('brokers');
+                  setExpandedMenu(expandedMenu === 'brokers' ? null : 'brokers');
+                }}
+                style={{
+                  padding: '12px 16px', backgroundColor: activeTab === 'brokers' ? '#DCFCE7' : 'transparent', color: activeTab === 'brokers' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaUserTie /> Broker Management</div>
+                <FaChevronDown style={{ transform: expandedMenu === 'brokers' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
+              </button>
+              
+              {expandedMenu === 'brokers' && (
+                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
+                  {SUB_MENU_ITEMS['brokers']
+                    .filter(sub => hasPermission(`brokers:${sub.id}`))
+                    .map(sub => (
+                      <button
+                        key={sub.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBrokerSubTab(sub.id);
+                          setActiveTab('brokers');
+                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                        }}
+                        style={{
+                          padding: '10px 12px', backgroundColor: brokerSubTab === sub.id && activeTab === 'brokers' ? '#F1F5F9' : 'transparent', color: brokerSubTab === sub.id && activeTab === 'brokers' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.85rem', fontWeight: brokerSubTab === sub.id && activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                        }}
+                      >
+                        {sub.icon} {sub.label}
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+            
+            {hasPermission('users') && (
+              <>
+                <button
+                  onClick={() => {
+                    setActiveTab('users');
+                    setExpandedMenu(null);
+                  }}
+                  style={{
+                    padding: '12px 16px', backgroundColor: activeTab === 'users' ? '#DCFCE7' : 'transparent', color: activeTab === 'users' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'users' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  }}
+                >
+                  <FaUsers /> User Management
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('team');
+                    setExpandedMenu(null);
+                  }}
+                  style={{
+                    padding: '12px 16px', backgroundColor: activeTab === 'team' ? '#DCFCE7' : 'transparent', color: activeTab === 'team' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'team' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  }}
+                >
+                  <FaUserShield /> Team Members
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('roles');
+                    setExpandedMenu(null);
+                  }}
+                  style={{
+                    padding: '12px 16px', backgroundColor: activeTab === 'roles' ? '#DCFCE7' : 'transparent', color: activeTab === 'roles' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'roles' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  }}
+                >
+                  <FaCog /> Roles & Permissions
+                </button>
+              </>
+            )}
+
+          {/* Section: SITE MANAGEMENT */}
+          {[
+            { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo />, perm: 'media_manager' },
+            { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
+            { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
+            { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
+            { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine />, perm: 'site:seo' },
+            { id: 'newsletter', label: 'Newsletter', icon: <FaEnvelope />, perm: 'site:newsletter' },
+          ].filter(item => hasPermission('site_settings') || hasPermission(item.perm) || hasPermission(item.id)).length > 0 && (
+            <>
+              <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                SITE MANAGEMENT
+              </div>
+              {[
+                { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo />, perm: 'media_manager' },
+                { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
+                { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
+                { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
+                { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine />, perm: 'site:seo' },
+                { id: 'newsletter', label: 'Newsletter', icon: <FaEnvelope />, perm: 'site:newsletter' },
+              ]
+                .filter(item => hasPermission('site_settings') || hasPermission(item.perm) || hasPermission(item.id))
+                .map((item) => {
+                  const isActive = activeTab === item.id || (item.id === 'seo' && activeTab === 'customization') || (item.id === 'newsletter' && activeTab === 'inquiries');
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if (item.id === 'seo') setActiveTab('customization');
+                        else if (item.id === 'newsletter') setActiveTab('inquiries');
+                        else setActiveTab(item.id as any);
+                        setExpandedMenu(null);
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
+                        fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
+                        backgroundColor: isActive ? '#DCFCE7' : 'transparent',
+                        color: isActive ? '#16A34A' : '#475569',
+                        transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+                      }}
+                    >
+                      <span style={{ fontSize: '1rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+                      <span style={{ flexGrow: 1 }}>{item.label}</span>
+                    </button>
+                  );
+                })}
+            </>
+          )}
 
           {/* Section: SYSTEM */}
           <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -683,7 +979,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         
         {/* Top Navbar */}
-        <div style={{ height: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div style={{ height: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
               {getHeaderInfo().title}
@@ -708,14 +1004,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid #E2E8F0' }}>
               <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#059669', fontSize: '0.85rem', letterSpacing: '0.5px' }}>
-                SA
+                {currentUserRole === 'Super Admin' ? 'SA' : currentUserRole.substring(0, 2).toUpperCase()}
               </div>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>
-                  Super Admin
+                  {sessionStorage.getItem('nexopp_admin_user_name') || 'Administrator'}
                 </div>
-                <div style={{ fontWeight: 600, fontSize: '0.72rem', color: '#059669' }}>Administrator</div>
+                <div style={{ fontWeight: 600, fontSize: '0.72rem', color: '#059669' }}>{currentUserRole}</div>
               </div>
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                style={{ backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}
+              >
+                <FaSignOutAlt /> Logout
+              </button>
             </div>
           </div>
         </div>
@@ -727,26 +1030,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif" }}>
               
-              {/* Quick Banner: Edit Main Page Stats */}
-              <div style={{ backgroundColor: '#EFF6FF', border: '2px solid #3B82F6', borderRadius: '16px', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.1)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: '#3B82F6', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 800 }}>
-                    <FaChartBar />
-                  </div>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#1E3A8A' }}>Live Main Page Stats & Trust Metrics Control</h3>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#334155' }}>Want to edit the stats shown on the homepage? (e.g. 18,500+ Properties, 950+ Franchises, 2,400+ Brokers, ₹850 Cr+ Value)</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('main_stats')}
-                  style={{ padding: '12px 24px', backgroundColor: '#1E3A8A', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', transition: 'all 0.2s', boxShadow: '0 2px 8px rgba(30, 58, 138, 0.3)' }}
-                >
-                  <span>Edit Main Page Stats Now →</span>
-                </button>
-              </div>
-
               {/* ROW 1: Top 6 Stat Cards with SVG Sparkline Graphs */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
                 
@@ -2417,6 +2700,655 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           </div>
         )}
 
+        {activeTab === 'users' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0' }}>
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>CREATE EMPLOYEE CREDENTIALS</h3>
+              <p style={{ margin: '0 0 20px 0', color: '#64748B', fontSize: '0.85rem' }}>Set up admin portal access for staff members (Property Editors, Data Managers, etc.)</p>
+              
+              <form onSubmit={handleAddEmployee} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>FULL NAME *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Sarah Jenkins"
+                    value={newEmployee.fullName}
+                    onChange={e => setNewEmployee({ ...newEmployee, fullName: e.target.value })}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>USERNAME (EMAIL) *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="sarah@nexopp.com"
+                    value={newEmployee.email}
+                    onChange={e => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>PASSWORD *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Secure password"
+                    value={newEmployee.password}
+                    onChange={e => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN ROLE *</label>
+                  <select
+                    value={newEmployee.role}
+                    onChange={e => setNewEmployee({ ...newEmployee, role: e.target.value })}
+                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', backgroundColor: '#FFFFFF', borderRadius: '8px', fontWeight: 600 }}
+                  >
+                    {rolesDb.map(role => (
+                      <option key={role.id} value={role.name}>{role.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button
+                    type="submit"
+                    style={{ padding: '14px 28px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.04em', borderRadius: '8px' }}
+                  >
+                    <FaCheckCircle /> GENERATE CREDENTIALS
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+              <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 20px 0', fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>REGISTERED EMPLOYEES & CREDENTIALS ({employeeUsersDb.length})</h3>
+              
+              {employeeUsersDb.length === 0 ? (
+                <p style={{ color: '#64748B', fontStyle: 'italic' }}>No employee accounts created yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {employeeUsersDb.map((emp) => (
+                    <div key={emp.id} style={{ border: '1px solid #E2E8F0', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC', borderRadius: '10px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <h4 style={{ margin: 0, color: '#0F172A', fontSize: '1.1rem', fontWeight: 800 }}>{emp.fullName}</h4>
+                          <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.78rem' }}>{emp.role}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#475569', fontSize: '0.85rem', fontWeight: 500 }}>
+                          <span><strong>Username:</strong> {emp.email}</span>
+                          <span>•</span>
+                          <span><strong>Password:</strong> <code style={{ backgroundColor: '#E2E8F0', padding: '2px 8px', borderRadius: '4px', color: '#0F172A', fontFamily: 'monospace' }}>{emp.password}</code></span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteEmployee(emp.id, emp.fullName)}
+                        style={{ backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.85rem' }}
+                      >
+                        <FaTrash /> REVOKE ACCESS
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'roles' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            
+            {/* Neat & Classy White Header Card */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', padding: '28px 32px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px -4px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{ backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', color: '#0F172A', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  ROLE & PERMISSION CONTROL
+                </span>
+                <span style={{ backgroundColor: '#DCFCE7', color: '#15803D', padding: '4px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '0.75rem' }}>
+                  REAL-TIME PORTAL SYNC
+                </span>
+              </div>
+
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A' }}>
+                User Access Control & Sub-Option Manager
+              </h2>
+              <p style={{ margin: 0, color: '#64748B', fontSize: '0.92rem', maxWidth: '750px', lineHeight: 1.5 }}>
+                Configure exact module visibility and granular feature sub-options per employee user. When saved, only selected options will appear in their portal.
+              </p>
+            </div>
+
+            {/* Direct User Permission Assignment Suite */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '14px', boxShadow: '0 4px 16px -4px rgba(0,0,0,0.03)' }}>
+              
+              {/* Step 1: Select Employee Header */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
+                <div style={{ maxWidth: '520px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '0.82rem', marginBottom: '8px', color: '#0F172A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+                    <FaUserShield style={{ color: '#2563EB' }} /> SELECT EMPLOYEE USER *
+                  </label>
+                  <select
+                    value={selectedUserForPerms}
+                    onChange={(e) => handleSelectUserForPerms(e.target.value)}
+                    style={{ width: '100%', padding: '14px 16px', border: '1.5px solid #CBD5E1', borderRadius: '10px', outline: 'none', backgroundColor: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', transition: 'all 0.2s', cursor: 'pointer' }}
+                  >
+                    <option value="">-- Choose an Employee User --</option>
+                    {employeeUsersDb.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.fullName} ({emp.email}) - {emp.role}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedUserForPerms && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '20px 24px', borderRadius: '12px' }}>
+                    
+                    {/* Active Employee Header Bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '10px', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem' }}>
+                          {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.fullName.substring(0, 1).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+                              {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.fullName}
+                            </h3>
+                            <span style={{ backgroundColor: '#E0F2FE', color: '#0369A1', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.78rem' }}>
+                              {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.role}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 500, marginTop: '2px' }}>
+                            {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Floating Save Action Button */}
+                      <button
+                        type="button"
+                        onClick={handleSaveUserPermissions}
+                        disabled={isSavingUserPerms}
+                        style={{
+                          padding: '12px 28px',
+                          backgroundColor: savedUserSuccess ? '#059669' : (isSavingUserPerms ? '#6EE7B7' : '#10B981'),
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 800,
+                          fontSize: '0.9rem',
+                          cursor: isSavingUserPerms ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: isSavingUserPerms ? 'scale(0.96)' : (savedUserSuccess ? 'scale(1.02)' : 'scale(1)'),
+                          letterSpacing: '0.02em'
+                        }}
+                      >
+                        {isSavingUserPerms ? (
+                          <>SAVING PERMISSIONS...</>
+                        ) : savedUserSuccess ? (
+                          <><FaCheckCircle /> SAVED & SYNCED TO PORTAL!</>
+                        ) : (
+                          <><FaCheckCircle /> SAVE PERMISSIONS FOR THIS USER</>
+                        )}
+                      </button>
+                    </div>
+
+                    {savedUserSuccess && (
+                      <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #10B981', color: '#065F46', padding: '12px 18px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <FaCheckCircle style={{ color: '#10B981', fontSize: '1.2rem' }} />
+                        {savedUserSuccess}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {selectedUserForPerms && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', borderTop: '1px solid #E2E8F0', paddingTop: '24px' }}>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      MODULE ACCESSIBILITY & FEATURE SUB-OPTIONS
+                    </div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#15803D', backgroundColor: '#DCFCE7', padding: '4px 12px', borderRadius: '6px', border: '1px solid #A7F3D0' }}>
+                      {userCustomPerms.length} Sub-Options Selected
+                    </div>
+                  </div>
+
+                  {/* Sub-Permission Modules Premium Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(330px, 1fr))', gap: '20px' }}>
+                    
+                    {/* Module 1: Property Management */}
+                    <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid #F1F5F9' }}>
+                        <FaBuilding style={{ color: '#0D9488' }} /> Property Management
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[
+                          { id: 'properties:listings', label: 'All Properties List' },
+                          { id: 'properties:editProperty', label: 'Add & Edit Property' },
+                          { id: 'properties:featured', label: 'Featured & Premium Properties' },
+                          { id: 'properties:analytics', label: 'Property Analytics & Stats' },
+                          { id: 'properties:categories', label: 'Categories & Subtypes' },
+                          { id: 'properties:locations', label: 'Location Intelligence' },
+                          { id: 'properties:soldOut', label: 'Sold Out Properties' },
+                          { id: 'properties:reports', label: 'Reports & Export' },
+                        ].map(item => {
+                          const isChecked = userCustomPerms.includes('properties') || userCustomPerms.includes('all') || userCustomPerms.includes(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setUserCustomPerms(userCustomPerms.filter(p => p !== item.id && p !== 'properties' && p !== 'all'));
+                                } else {
+                                  setUserCustomPerms([...userCustomPerms, item.id]);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                border: isChecked ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                                backgroundColor: isChecked ? '#F0FDF4' : '#FFFFFF',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
+                                  {isChecked && '✓'}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
+                                  {item.label}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: isChecked ? '#DCFCE7' : '#F1F5F9', color: isChecked ? '#15803D' : '#64748B' }}>
+                                {isChecked ? 'Granted' : 'Restricted'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Module 2: Franchise Management */}
+                    <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid #F1F5F9' }}>
+                        <FaStore style={{ color: '#2563EB' }} /> Franchise Management
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[
+                          { id: 'franchises:listings', label: 'All Franchises List' },
+                          { id: 'franchises:editProperty', label: 'Add & Edit Franchise' },
+                          { id: 'franchises:featured', label: 'Featured & Premium Franchises' },
+                          { id: 'franchises:analytics', label: 'Franchise Analytics' },
+                          { id: 'franchises:categories', label: 'Categories & Sectors' },
+                          { id: 'franchises:locations', label: 'Location Intelligence' },
+                          { id: 'franchises:soldOut', label: 'Sold Out Franchises' },
+                          { id: 'franchises:reports', label: 'Reports & Export' },
+                        ].map(item => {
+                          const isChecked = userCustomPerms.includes('franchises') || userCustomPerms.includes('all') || userCustomPerms.includes(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setUserCustomPerms(userCustomPerms.filter(p => p !== item.id && p !== 'franchises' && p !== 'all'));
+                                } else {
+                                  setUserCustomPerms([...userCustomPerms, item.id]);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                border: isChecked ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                                backgroundColor: isChecked ? '#F0FDF4' : '#FFFFFF',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
+                                  {isChecked && '✓'}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
+                                  {item.label}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: isChecked ? '#DCFCE7' : '#F1F5F9', color: isChecked ? '#15803D' : '#64748B' }}>
+                                {isChecked ? 'Granted' : 'Restricted'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Module 3: Business Management */}
+                    <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid #F1F5F9' }}>
+                        <FaBriefcase style={{ color: '#7C3AED' }} /> Business Management
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[
+                          { id: 'businesses:listings', label: 'All Businesses List' },
+                          { id: 'businesses:editProperty', label: 'Add & Edit Business' },
+                          { id: 'businesses:featured', label: 'Featured & Premium Businesses' },
+                          { id: 'businesses:analytics', label: 'Business Analytics' },
+                          { id: 'businesses:categories', label: 'Categories & Industries' },
+                          { id: 'businesses:locations', label: 'Location Intelligence' },
+                          { id: 'businesses:soldOut', label: 'Sold Out Businesses' },
+                          { id: 'businesses:reports', label: 'Reports & Export' },
+                        ].map(item => {
+                          const isChecked = userCustomPerms.includes('businesses') || userCustomPerms.includes('all') || userCustomPerms.includes(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setUserCustomPerms(userCustomPerms.filter(p => p !== item.id && p !== 'businesses' && p !== 'all'));
+                                } else {
+                                  setUserCustomPerms([...userCustomPerms, item.id]);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                border: isChecked ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                                backgroundColor: isChecked ? '#F0FDF4' : '#FFFFFF',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
+                                  {isChecked && '✓'}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
+                                  {item.label}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: isChecked ? '#DCFCE7' : '#F1F5F9', color: isChecked ? '#15803D' : '#64748B' }}>
+                                {isChecked ? 'Granted' : 'Restricted'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Module 4: Broker Management */}
+                    <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid #F1F5F9' }}>
+                        <FaUsers style={{ color: '#D97706' }} /> Broker Management
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[
+                          { id: 'brokers:directory', label: 'Broker Directory' },
+                          { id: 'brokers:leaderboard', label: 'Top Leaderboard' },
+                          { id: 'brokers:premium', label: 'Premium Brokers' },
+                          { id: 'brokers:category_rank', label: 'Category Rankings' },
+                          { id: 'brokers:location_rank', label: 'Location Rankings' },
+                          { id: 'brokers:analytics', label: 'Broker Analytics' },
+                        ].map(item => {
+                          const isChecked = userCustomPerms.includes('brokers') || userCustomPerms.includes('all') || userCustomPerms.includes(item.id);
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setUserCustomPerms(userCustomPerms.filter(p => p !== item.id && p !== 'brokers' && p !== 'all'));
+                                } else {
+                                  setUserCustomPerms([...userCustomPerms, item.id]);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                border: isChecked ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                                backgroundColor: isChecked ? '#F0FDF4' : '#FFFFFF',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
+                                  {isChecked && '✓'}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
+                                  {item.label}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: isChecked ? '#DCFCE7' : '#F1F5F9', color: isChecked ? '#15803D' : '#64748B' }}>
+                                {isChecked ? 'Granted' : 'Restricted'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Module 5: Site Management & CMS */}
+                    <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', padding: '20px', backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '10px', borderBottom: '1px solid #F1F5F9' }}>
+                        <FaCog style={{ color: '#475569' }} /> Site Settings & CMS
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[
+                          { id: 'demand_regions', label: 'Demand Regions' },
+                          { id: 'users', label: 'User & Staff Management' },
+                          { id: 'media_manager', label: 'Media Manager & Videos' },
+                          { id: 'site_settings', label: 'Website Settings & CMS' },
+                        ].map(item => {
+                          const isChecked = userCustomPerms.includes(item.id) || userCustomPerms.includes('all');
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setUserCustomPerms(userCustomPerms.filter(p => p !== item.id && p !== 'all'));
+                                } else {
+                                  setUserCustomPerms([...userCustomPerms, item.id]);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 14px',
+                                border: isChecked ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                                backgroundColor: isChecked ? '#F0FDF4' : '#FFFFFF',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
+                                  {isChecked && '✓'}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
+                                  {item.label}
+                                </span>
+                              </div>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', backgroundColor: isChecked ? '#DCFCE7' : '#F1F5F9', color: isChecked ? '#15803D' : '#64748B' }}>
+                                {isChecked ? 'Granted' : 'Restricted'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Permitted Employees Directory Card */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '14px', boxShadow: '0 4px 16px -4px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaUserShield style={{ color: '#059669' }} /> EMPLOYEE PERMISSIONS SUMMARY ({employeeUsersDb.length})
+                </h3>
+              </div>
+              <p style={{ margin: '0 0 20px 0', color: '#64748B', fontSize: '0.88rem' }}>
+                Overview of all registered staff accounts and their configured access permissions across the system.
+              </p>
+
+              {employeeUsersDb.length === 0 ? (
+                <div style={{ padding: '24px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', textAlign: 'center', color: '#64748B', fontStyle: 'italic' }}>
+                  No employee accounts added yet. Create employees in the <strong style={{ color: '#0F172A' }}>User Management</strong> tab first!
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {employeeUsersDb.map(emp => {
+                    const customPerms = emp.customPermissions || [];
+                    const roleData = rolesDb.find(r => r.name === emp.role);
+                    const activePerms = customPerms.length > 0 ? customPerms : (roleData ? roleData.permissions : []);
+                    const isSelected = selectedUserForPerms === emp.id;
+
+                    return (
+                      <div
+                        key={emp.id}
+                        style={{
+                          border: isSelected ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                          backgroundColor: isSelected ? '#F0FDF4' : '#F8FAFC',
+                          borderRadius: '10px',
+                          padding: '18px 22px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '12px',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem' }}>
+                              {emp.fullName.substring(0, 1).toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <h4 style={{ margin: 0, color: '#0F172A', fontSize: '1.05rem', fontWeight: 800 }}>{emp.fullName}</h4>
+                                <span style={{ backgroundColor: '#E0F2FE', color: '#0369A1', padding: '2px 10px', borderRadius: '4px', fontWeight: 800, fontSize: '0.75rem' }}>{emp.role}</span>
+                              </div>
+                              <div style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 500, marginTop: '2px' }}>
+                                {emp.email}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleSelectUserForPerms(emp.id);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            style={{
+                              padding: '10px 18px',
+                              backgroundColor: isSelected ? '#10B981' : '#FFFFFF',
+                              color: isSelected ? '#FFFFFF' : '#0F172A',
+                              border: isSelected ? 'none' : '1px solid #CBD5E1',
+                              borderRadius: '6px',
+                              fontWeight: 800,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <FaEdit /> {isSelected ? 'CONFIGURING NOW' : 'EDIT ACCESS'}
+                          </button>
+                        </div>
+
+                        {/* Permission Badges Summary */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', display: 'flex', alignItems: 'center', marginRight: '4px' }}>
+                            Granted Sub-Permissions:
+                          </span>
+                          {activePerms.length === 0 ? (
+                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontStyle: 'italic' }}>No active permissions assigned</span>
+                          ) : (
+                            activePerms.map(p => {
+                              const labelMap: Record<string, string> = {
+                                'all': 'Full System Access',
+                                'properties': 'All Property Modules',
+                                'properties:listings': 'Property List',
+                                'properties:editProperty': 'Add & Edit Property',
+                                'properties:featured': 'Featured Properties',
+                                'properties:analytics': 'Property Analytics',
+                                'properties:categories': 'Property Categories',
+                                'properties:locations': 'Property Locations',
+                                'properties:soldOut': 'Sold Out Properties',
+                                'properties:reports': 'Property Reports',
+                                'franchises': 'All Franchise Modules',
+                                'franchises:listings': 'Franchise List',
+                                'franchises:editProperty': 'Add & Edit Franchise',
+                                'franchises:featured': 'Featured Franchises',
+                                'franchises:analytics': 'Franchise Analytics',
+                                'franchises:categories': 'Franchise Categories',
+                                'franchises:locations': 'Franchise Locations',
+                                'franchises:soldOut': 'Sold Out Franchises',
+                                'franchises:reports': 'Franchise Reports',
+                                'businesses': 'All Business Modules',
+                                'businesses:listings': 'Business List',
+                                'businesses:editProperty': 'Add & Edit Business',
+                                'businesses:featured': 'Featured Businesses',
+                                'businesses:analytics': 'Business Analytics',
+                                'businesses:categories': 'Business Categories',
+                                'businesses:locations': 'Business Locations',
+                                'businesses:soldOut': 'Sold Out Businesses',
+                                'businesses:reports': 'Business Reports',
+                                'brokers': 'All Broker Modules',
+                                'brokers:directory': 'Broker Directory',
+                                'brokers:leaderboard': 'Broker Leaderboard',
+                                'brokers:premium': 'Premium Brokers',
+                                'brokers:category_rank': 'Broker Rankings',
+                                'brokers:location_rank': 'Broker Locations',
+                                'brokers:analytics': 'Broker Analytics',
+                                'users': 'User & Staff Mgt',
+                                'demand_regions': 'Demand Regions',
+                                'media_manager': 'Media Manager',
+                                'site_settings': 'Site Settings & CMS'
+                              };
+                              return (
+                                <span key={p} style={{ backgroundColor: '#DCFCE7', color: '#15803D', border: '1px solid #A7F3D0', padding: '3px 10px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                  {labelMap[p] || p}
+                                </span>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
         {activeTab === 'team' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0' }}>
@@ -2446,13 +3378,49 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif" }}>PHOTO UPLOAD *</label>
+                  <div 
+                    style={{ 
+                      width: '100%', padding: '24px', border: '2px dashed #CBD5E1', borderRadius: '12px', textAlign: 'center', backgroundColor: '#F8FAFC', cursor: 'pointer', position: 'relative', overflow: 'hidden'
+                    }}
+                  >
+                    {newTeamMember.photo ? (
+                      <div style={{ position: 'relative', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <img src={newTeamMember.photo} alt="Preview" style={{ height: '120px', width: '120px', objectFit: 'cover', borderRadius: '50%', marginBottom: '12px', border: '3px solid #1E40AF' }} />
+                        <span style={{ fontSize: '0.8rem', color: '#1E40AF', fontWeight: 600 }}>Click or Drag to change photo</span>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '20px 0' }}>
+                        <span style={{ fontSize: '2rem' }}>📸</span>
+                        <p style={{ margin: '12px 0 0 0', fontWeight: 600, color: '#475569' }}>Drag & Drop photo here or Click to Upload</p>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: '#94A3B8' }}>JPEG, PNG up to 5MB</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setNewTeamMember({ ...newTeamMember, photo: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
                 <div>
-                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif" }}>PHOTO URL (OR LEAVE BLANK)</label>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif" }}>GMAIL (EMAIL) ADDRESS</label>
                   <input
-                    type="text"
-                    placeholder="https://..."
-                    value={newTeamMember.photo}
-                    onChange={e => setNewTeamMember({ ...newTeamMember, photo: e.target.value })}
+                    type="email"
+                    placeholder="john@gmail.com"
+                    value={newTeamMember.email || ''}
+                    onChange={e => setNewTeamMember({ ...newTeamMember, email: e.target.value })}
                     style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>

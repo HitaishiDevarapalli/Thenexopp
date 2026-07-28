@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaCrosshairs, FaHistory, FaMapMarkerAlt, FaTimes, FaSpinner } from 'react-icons/fa';
-import { useLocationStore, LocationData } from '../../context/LocationContext';
+import { useLocationStore, type LocationData } from '../../context/LocationContext';
 
 interface LocationSelectorPanelProps {
   onClose: () => void;
