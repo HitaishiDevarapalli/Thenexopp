@@ -81,6 +81,7 @@ import { BrokerManagementSystem } from '../components/BrokerManagementSystem';
 import { Logo } from '../components/common/Logo';
 import { PropertyManagementSystem } from '../components/PropertyManagementSystem';
 import { FranchiseManagementSystem } from '../components/FranchiseManagementSystem';
+import { AiAssistantAdminPanel } from '../components/AiAssistantAdminPanel';
 import type {
   PropertyListing,
   FranchiseListing,
@@ -113,7 +114,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newTagInput, setNewTagInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'team' | 'roles' | 'inquiries' | 'media_manager'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -895,6 +896,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
           {/* Section: SITE MANAGEMENT */}
           {[
+            { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
             { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo />, perm: 'media_manager' },
             { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
             { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
@@ -907,6 +909,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 SITE MANAGEMENT
               </div>
               {[
+                { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
                 { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo />, perm: 'media_manager' },
                 { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
                 { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
@@ -3487,6 +3490,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             </div>
           </div>
         )}
+
+        {/* ================= AI ASSISTANT TAB ================= */}
+        {activeTab === 'ai_assistant' && <AiAssistantAdminPanel />}
 
         {/* ================= MEDIA MANAGER TAB ================= */}
         {activeTab === 'media_manager' && (() => {
