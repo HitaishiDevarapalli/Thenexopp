@@ -11,7 +11,7 @@ import {
 import type { PropertyListing } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 
-interface NexOopAiAssistantProps {
+interface NexOppAiAssistantProps {
   onNavigate?: (page: string) => void;
   onPropertyClick?: (id: string) => void;
 }
@@ -77,8 +77,8 @@ const FemaleAiAvatar: React.FC<{ size?: number; className?: string }> = ({ size 
     className={className}
   >
     <img
-      src="/assets/nexoop_female_ai_avatar.jpg"
-      alt="NexOop 3D Female AI Consultant"
+      src="/assets/nexopp_female_ai_avatar.jpg"
+      alt="NexOpp 3D Female AI Consultant"
       style={{
         width: `${size}px`,
         height: `${size}px`,
@@ -111,7 +111,7 @@ const FemaleAiAvatar: React.FC<{ size?: number; className?: string }> = ({ size 
   </div>
 );
 
-export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate, onPropertyClick }) => {
+export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate, onPropertyClick }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
   
   // State toggles
@@ -154,7 +154,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
     {
       id: 'm-1',
       sender: 'ai',
-      text: "Hi 👋 I'm **NexOop AI**, your personal property consultant. I can help you find verified properties, franchises, businesses, home loans, and calculate EMIs across Andhra Pradesh & Telangana.",
+      text: "Hi 👋 I'm **NexOpp AI**, your personal property consultant. I can help you find verified properties, franchises, businesses, home loans, and calculate EMIs across Andhra Pradesh & Telangana.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'welcome',
       options: [
@@ -333,7 +333,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return {
         confidence: 100,
         category: 'greeting',
-        response: "Hi! 👋 I'm NexOop AI, your personal property consultant. How can I help you today?"
+        response: "Hi! 👋 I'm NexOpp AI, your personal property consultant. How can I help you today?"
       };
     }
 
@@ -370,7 +370,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       return {
         confidence: 100,
         category: 'help',
-        response: "I'm NexOop AI, your senior property consultant. I can help you:\n• Search & filter verified properties in AP & Telangana\n• Compare up to 4 listings side-by-side\n• Calculate instant Home Loan EMIs\n• Explore commercial businesses & franchises\n• Schedule verified site visits"
+        response: "I'm NexOpp AI, your senior property consultant. I can help you:\n• Search & filter verified properties in AP & Telangana\n• Compare up to 4 listings side-by-side\n• Calculate instant Home Loan EMIs\n• Explore commercial businesses & franchises\n• Schedule verified site visits"
       };
     }
 
@@ -758,7 +758,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       {
         id: `ai-emi-${Date.now()}`,
         sender: 'ai',
-        text: "💰 **NexOop Instant Home Loan EMI Calculator**",
+        text: "💰 **NexOpp Instant Home Loan EMI Calculator**",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'emi_calc'
       }
@@ -791,7 +791,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
       {
         id: `m-reset-${Date.now()}`,
         sender: 'ai',
-        text: "Hi 👋 I'm **NexOop AI**, your personal property consultant. How can I assist you today?",
+        text: "Hi 👋 I'm **NexOpp AI**, your personal property consultant. How can I assist you today?",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'welcome',
         options: [
@@ -837,7 +837,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
               Need help finding your perfect property?
             </div>
             <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#10B981', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Ask NexOop AI ⚡
+              Ask NexOpp AI ⚡
             </div>
           </div>
           <button 
@@ -894,7 +894,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
             transform: isOpen ? 'scale(0.92)' : 'scale(1)',
             backdropFilter: 'blur(12px)'
           }}
-          title="Open NexOop AI Property Assistant"
+          title="Open NexOpp AI Property Assistant"
         >
           {/* Subtle Ring Pulse Animation */}
           <style>{`
@@ -957,7 +957,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.01em' }}>
-                    NexOop AI
+                    NexOpp AI
                   </span>
                   <FaCheckCircle style={{ color: '#10B981', fontSize: '0.85rem' }} title="Verified Property Consultant" />
                 </div>
@@ -1405,7 +1405,7 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
             <div style={{ backgroundColor: '#111827', padding: '18px 24px', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ fontSize: '1.2rem' }}>⚖️</span>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>NexOop AI Property Comparison</h3>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>NexOpp AI Property Comparison</h3>
               </div>
               <button onClick={() => setShowCompareModal(false)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
             </div>
@@ -1501,4 +1501,4 @@ export const NexOopAiAssistant: React.FC<NexOopAiAssistantProps> = ({ onNavigate
   );
 };
 
-export default NexOopAiAssistant;
+export default NexOppAiAssistant;

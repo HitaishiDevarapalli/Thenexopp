@@ -47,7 +47,7 @@ export const WhyTheNexopp: React.FC = () => {
             marginBottom: 48,
           }}
         >
-          Why Choose TheNexOop?
+          Why Choose TheNexOpp?
         </h2>
 
         <div

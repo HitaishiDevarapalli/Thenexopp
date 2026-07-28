@@ -229,11 +229,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     e.preventDefault();
     
     // Master Super Admin bypass
-    if (email === 'admin@thenexoop.in' && (password === 'admin123' || password === 'nexopp2026')) {
+    if (email === 'admin@thenexopp.in' && (password === 'admin123' || password === 'nexopp2026')) {
       sessionStorage.setItem('nexopp_admin_auth', 'true');
       sessionStorage.setItem('nexopp_admin_role', 'Super Admin');
       sessionStorage.setItem('nexopp_admin_user_name', 'Super Admin');
-      sessionStorage.setItem('nexopp_admin_user_email', 'admin@thenexoop.in');
+      sessionStorage.setItem('nexopp_admin_user_email', 'admin@thenexopp.in');
       setIsAuthenticated(true);
       setCurrentUserRole('Super Admin');
       setError(null);

@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class NexOopApplication {
+public class NexOppApplication {
     public static void main(String[] args) {
-        SpringApplication.run(NexOopApplication.class, args);
+        SpringApplication.run(NexOppApplication.class, args);
     }
 }

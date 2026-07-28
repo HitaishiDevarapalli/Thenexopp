@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem('nexoop_user');
+      const saved = localStorage.getItem('nexopp_user');
       return saved ? JSON.parse(saved) : null;
     } catch (e) {
       return null;
@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     setUser(newUser);
     try {
-      localStorage.setItem('nexoop_user', JSON.stringify(newUser));
+      localStorage.setItem('nexopp_user', JSON.stringify(newUser));
     } catch (e) {}
     setIsLoginModalOpen(false);
   };
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     setUser(null);
     try {
-      localStorage.removeItem('nexoop_user');
+      localStorage.removeItem('nexopp_user');
     } catch (e) {}
   };
 

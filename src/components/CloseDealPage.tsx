@@ -301,7 +301,7 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
                       <span style={{ color: 'var(--gold)', fontSize: '1.1rem' }}>📸</span>
                       <div>
                         <span style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-secondary)' }}>Instagram</span>
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.95rem', textDecoration: 'underline' }}>@thenexoop</a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.95rem', textDecoration: 'underline' }}>@thenexopp</a>
                       </div>
                     </div>
                   </div>
@@ -342,7 +342,7 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
                     </div>
                     <div>
                       <h4 style={{ fontSize: '1rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>Review Escrow Agreement</h4>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Draft legal agreements and fund secure escrow through TheNexOop's partner bank.</p>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>Draft legal agreements and fund secure escrow through TheNexOpp's partner bank.</p>
                     </div>
                   </div>
 

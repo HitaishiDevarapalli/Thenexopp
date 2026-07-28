@@ -237,7 +237,7 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                   <button className="btn btn-gold w-100 mt-4" style={{marginTop: '1.5rem', width: '100%'}} onClick={() => alert(`Contacting ${selectedDealer.companyName}...`)}>Contact Seller</button>
                   <div style={{ marginTop: '1rem', textAlign: 'center' }}>
                     <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                      📸 Instagram: @thenexoop
+                      📸 Instagram: @thenexopp
                     </a>
                   </div>
                 </div>
@@ -351,7 +351,7 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                       <span className="info-label">📸 Instagram Profile</span>
                       <span className="info-value">
                         <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>
-                          @thenexoop
+                          @thenexopp
                         </a>
                       </span>
                     </div>

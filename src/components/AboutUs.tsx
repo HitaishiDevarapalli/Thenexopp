@@ -22,7 +22,7 @@ export const AboutUs: React.FC = () => {
             Executive Leadership
           </span>
           <h2 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 16px 0', letterSpacing: '-0.03em' }}>
-            Meet the Visionaries Behind TheNexOop
+            Meet the Visionaries Behind TheNexOpp
           </h2>
           <p style={{ fontSize: '1.1rem', color: '#64748B', maxWidth: '700px', margin: '0 auto', lineHeight: '1.6' }}>
             Our team brings together decades of deep expertise across luxury real estate, institutional finance, enterprise mergers, and strategic franchise scaling.

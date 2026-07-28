@@ -247,7 +247,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
           }}
         >
           <p style={{ color: '#64748B', fontSize: '0.85rem', margin: 0 }}>
-            © 2026 TheNexOop. All Rights Reserved.
+            © 2026 TheNexOpp. All Rights Reserved.
           </p>
           <p style={{ color: '#64748B', fontSize: '0.85rem', margin: 0 }}>
             Made with ❤️ for Your Next Opportunity

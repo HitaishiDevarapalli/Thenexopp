@@ -61,11 +61,11 @@ export const AiAssistantAdminPanel: React.FC = () => {
     try {
       const saved = localStorage.getItem('nexopp_ai_admin_settings');
       return saved ? JSON.parse(saved) : {
-        assistantName: 'NexOop AI',
-        welcomeMessage: "Hi 👋 I'm NexOop AI, Your Retrieval-Augmented Property Consultant. How can I help you today?",
-        greetingText: "Welcome to NexOop Real Estate! Ask me about properties, franchises, businesses, or home loans.",
+        assistantName: 'NexOpp AI',
+        welcomeMessage: "Hi 👋 I'm NexOpp AI, Your Retrieval-Augmented Property Consultant. How can I help you today?",
+        greetingText: "Welcome to NexOpp Real Estate! Ask me about properties, franchises, businesses, or home loans.",
         tagline: "Your Retrieval-Augmented Property Consultant",
-        bubbleMessage: "Need help finding your perfect property? Ask NexOop AI ⚡",
+        bubbleMessage: "Need help finding your perfect property? Ask NexOpp AI ⚡",
         themeColor: '#10B981',
         onlineStatus: 'online',
         femaleAvatarUrl: 'default',
@@ -85,11 +85,11 @@ export const AiAssistantAdminPanel: React.FC = () => {
       };
     } catch (e) {
       return {
-        assistantName: 'NexOop AI',
-        welcomeMessage: "Hi 👋 I'm NexOop AI, Your Retrieval-Augmented Property Consultant.",
-        greetingText: "Welcome to NexOop Real Estate!",
+        assistantName: 'NexOpp AI',
+        welcomeMessage: "Hi 👋 I'm NexOpp AI, Your Retrieval-Augmented Property Consultant.",
+        greetingText: "Welcome to NexOpp Real Estate!",
         tagline: "Your Retrieval-Augmented Property Consultant",
-        bubbleMessage: "Need help finding your perfect property? Ask NexOop AI ⚡",
+        bubbleMessage: "Need help finding your perfect property? Ask NexOpp AI ⚡",
         themeColor: '#10B981',
         onlineStatus: 'online',
         femaleAvatarUrl: 'default',
@@ -122,7 +122,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
   const [trainingDocs, setTrainingDocs] = useState<TrainingDocument[]>([
     { id: 'doc-1', fileName: 'Hyderabad_RERA_Approved_Projects_2026.pdf', category: 'Legal & RERA', size: '2.4 MB', uploadedAt: '2026-07-20', status: 'Indexed' },
     { id: 'doc-2', fileName: 'Guntur_Amaravati_MasterPlan_Circular.pdf', category: 'Government Circular', size: '4.1 MB', uploadedAt: '2026-07-22', status: 'Indexed' },
-    { id: 'doc-3', fileName: 'NexOop_Franchise_Investment_FAQ.docx', category: 'FAQ Sheet', size: '850 KB', uploadedAt: '2026-07-25', status: 'Indexed' },
+    { id: 'doc-3', fileName: 'NexOpp_Franchise_Investment_FAQ.docx', category: 'FAQ Sheet', size: '850 KB', uploadedAt: '2026-07-25', status: 'Indexed' },
     { id: 'doc-4', fileName: 'Vizag_BeachRoad_Villas_PriceList.csv', category: 'Price List', size: '320 KB', uploadedAt: '2026-07-27', status: 'Indexed' }
   ]);
 
@@ -206,7 +206,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
           </div>
           <div>
             <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#111827' }}>
-              NexOop AI Assistant Administration
+              NexOpp AI Assistant Administration
             </h2>
             <div style={{ fontSize: '0.8rem', color: '#6B7280', marginTop: '2px' }}>
               Retrieval-Augmented Generation (RAG) Engine • Non-Hallucinated Knowledge Index

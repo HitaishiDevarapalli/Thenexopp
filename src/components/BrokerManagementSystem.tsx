@@ -203,7 +203,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `TheNexOop_Brokers_Export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `TheNexOpp_Brokers_Export_${new Date().toISOString().slice(0,10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -673,7 +673,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               <FaCrown style={{ color: '#FCD34D' }} /> PREMIUM BENEFITS
             </h3>
             <p style={{ fontSize: '0.88rem', lineHeight: 1.6, color: '#E2E8F0', margin: 0 }}>
-              Premium partners receive superior distribution algorithms across TheNexOop ecosystem:
+              Premium partners receive superior distribution algorithms across TheNexOpp ecosystem:
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.9rem' }}>
@@ -682,7 +682,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                 { title: 'Priority Search Results', desc: 'Ranked at the top of category & location queries.' },
                 { title: 'Featured Listings Badge', desc: 'Exclusive Gold Crown on all assigned properties.' },
                 { title: 'Higher Lead Distribution', desc: '3x more organic lead routing from public enquiries.' },
-                { title: 'Dedicated Account Advisor', desc: 'Direct priority support from NexOop headquarters.' }
+                { title: 'Dedicated Account Advisor', desc: 'Direct priority support from NexOpp headquarters.' }
               ].map((ben, i) => (
                 <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                   <FaCheckCircle style={{ color: '#FCD34D', marginTop: '3px', flexShrink: 0 }} />
@@ -965,7 +965,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                   </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Email Address</label>
-                    <input type="text" value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="broker@thenexoop.in" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                    <input type="text" value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="broker@thenexopp.in" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Gender</label>
@@ -1038,7 +1038,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Company / Agency Name *</label>
-                    <input required type="text" value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="e.g. TheNexOop Premier Realty" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                    <input required type="text" value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="e.g. TheNexOpp Premier Realty" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Experience (Years)</label>

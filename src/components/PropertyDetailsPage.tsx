@@ -287,7 +287,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 
     if (property) {
       // Dynamic Title & Description
-      document.title = `${property.title} | ${property.city}, ${property.state} | TheNexOop`;
+      document.title = `${property.title} | ${property.city}, ${property.state} | TheNexOpp`;
       
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) {
@@ -1157,7 +1157,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       <span className="info-label">📸 Instagram Profile</span>
                       <span className="info-value">
                         <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>
-                          @thenexoop
+                          @thenexopp
                         </a>
                       </span>
                     </div>

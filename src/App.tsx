@@ -26,7 +26,7 @@ import { siteSettingsDb, propertiesDb, franchiseDb, businessDb, updateSiteSettin
 import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { LoginModal } from './components/forms/LoginModal';
-import NexOopAiAssistant from './components/NexOopAiAssistant';
+import NexOppAiAssistant from './components/NexOppAiAssistant';
 
 type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage';
 
@@ -65,7 +65,7 @@ const routeMap: Record<string, PageType> = {
   '/about': 'aboutUsPage',
   '/secret-admin': 'adminPortal',
   '/portal': 'adminPortal',
-  '/nexoop-admin': 'adminPortal',
+  '/nexopp-admin': 'adminPortal',
 };
 
 const getPathForPage = (page: PageType): string => {
@@ -487,7 +487,7 @@ export const App: React.FC = () => {
         />
       )}
       {currentPage !== 'adminPortal' && (
-        <NexOopAiAssistant 
+        <NexOppAiAssistant 
           onNavigate={(page) => navigateTo(page as PageType)}
           onPropertyClick={(id) => {
             setSelectedPropertyId(id);

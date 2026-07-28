@@ -82,7 +82,7 @@ export const LoginPage: React.FC = () => {
   // Load remembered credentials or previous users
   useEffect(() => {
     try {
-      const remembered = localStorage.getItem('nexoop_remembered_mobile');
+      const remembered = localStorage.getItem('nexopp_remembered_mobile');
       if (remembered) {
         setMobile(remembered);
         const users = getRegisteredUsers();
@@ -108,7 +108,7 @@ export const LoginPage: React.FC = () => {
 
   const getRegisteredUsers = (): RegisteredUser[] => {
     try {
-      const data = localStorage.getItem('nexoop_registered_users');
+      const data = localStorage.getItem('nexopp_registered_users');
       return data ? JSON.parse(data) : [];
     } catch (e) {
       return [];
@@ -124,7 +124,7 @@ export const LoginPage: React.FC = () => {
       } else {
         users.push(user);
       }
-      localStorage.setItem('nexoop_registered_users', JSON.stringify(users));
+      localStorage.setItem('nexopp_registered_users', JSON.stringify(users));
     } catch (e) {}
   };
 
@@ -179,9 +179,9 @@ export const LoginPage: React.FC = () => {
       setResendTimer(30);
 
       if (rememberMe) {
-        localStorage.setItem('nexoop_remembered_mobile', mobile);
+        localStorage.setItem('nexopp_remembered_mobile', mobile);
       } else {
-        localStorage.removeItem('nexoop_remembered_mobile');
+        localStorage.removeItem('nexopp_remembered_mobile');
       }
 
       setSimulatedSms({ mobile, otp: code });
@@ -212,7 +212,7 @@ export const LoginPage: React.FC = () => {
       });
 
       // Login into App AuthContext
-      const mockEmail = `${mobile}@nexoop.in`;
+      const mockEmail = `${mobile}@nexopp.in`;
       loginWithGmail(mockEmail, 'Verified Investor', fullName.trim(), mobile, gender, district);
     }, 600);
   };
@@ -224,7 +224,7 @@ export const LoginPage: React.FC = () => {
     setGender(demoGender);
     setDistrict(demoDistrict);
     
-    const mockEmail = `${demoMobile}@nexoop.in`;
+    const mockEmail = `${demoMobile}@nexopp.in`;
     saveRegisteredUser({ fullName: demoName, mobile: demoMobile, gender: demoGender, district: demoDistrict });
     loginWithGmail(mockEmail, 'Verified Investor', demoName, demoMobile, demoGender, demoDistrict);
   };
@@ -367,7 +367,7 @@ export const LoginPage: React.FC = () => {
             </div>
             <div>
               <div style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
-                TheNexOop
+                TheNexOpp
               </div>
               <div style={{ fontSize: '0.78rem', color: '#A7F3D0', fontWeight: 600, letterSpacing: '0.04em' }}>
                 Opportunities Simplified

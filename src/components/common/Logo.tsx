@@ -51,7 +51,7 @@ export const Logo: React.FC<LogoProps> = ({
           style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 4px 6px rgba(22, 163, 74, 0.25))' }}
         >
           <defs>
-            <linearGradient id="nexOopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="nexOppGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#10B981" />
               <stop offset="100%" stopColor="#059669" />
             </linearGradient>
@@ -62,7 +62,7 @@ export const Logo: React.FC<LogoProps> = ({
           </defs>
 
           {/* Background Circle Badge */}
-          <circle cx="22" cy="22" r="22" fill="url(#nexOopGrad)" />
+          <circle cx="22" cy="22" r="22" fill="url(#nexOppGrad)" />
 
           {/* Inner subtle glow ring */}
           <circle cx="22" cy="22" r="20.5" stroke="#34D399" strokeWidth="0.75" strokeOpacity="0.5" fill="none" />

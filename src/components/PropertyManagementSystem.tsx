@@ -1736,7 +1736,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     <FaMoneyBillWave style={{ fontSize: '2rem', color: '#10B981', flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '1rem' }}>Transparent Valuation Guarantee</div>
-                      <div style={{ color: '#64748B', fontSize: '0.85rem', marginTop: '4px' }}>All property prices on TheNexOop are verified directly with sellers/builders with zero hidden markups.</div>
+                      <div style={{ color: '#64748B', fontSize: '0.85rem', marginTop: '4px' }}>All property prices on TheNexOpp are verified directly with sellers/builders with zero hidden markups.</div>
                     </div>
                   </div>
                 </div>

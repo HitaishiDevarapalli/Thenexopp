@@ -88,7 +88,7 @@ export const LoginModal: React.FC = () => {
             N
           </div>
           <h2 style={{ margin: '0 0 6px 0', fontSize: '1.6rem', fontWeight: 800, color: '#FFFFFF', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.5px' }}>
-            Welcome to NexOop
+            Welcome to NexOpp
           </h2>
           <p style={{ margin: 0, fontSize: '0.85rem', color: '#94A3B8', lineHeight: 1.4 }}>
             Sign in or register to unlock verified investments, operational businesses & franchise rights.
