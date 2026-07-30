@@ -351,19 +351,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const handleAddEmployee = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmployee.fullName || !newEmployee.email || !newEmployee.password) {
-      showNotification('Please fill all required employee fields', 'warning');
+    if (!newEmployee.fullName || !newEmployee.email || !newEmployee.password || !newEmployee.role.trim()) {
+      showNotification('Please fill all required employee fields including Assigned Role', 'warning');
       return;
     }
     const id = 'EMP_' + Date.now();
     const newEmp: EmployeeUser = {
       ...newEmployee,
+      role: newEmployee.role.trim(),
       id,
       createdAt: new Date().toISOString()
     };
     addEmployeeUser(newEmp);
-    showNotification(`Created credentials for ${newEmployee.fullName}!`);
-    setNewEmployee({ fullName: '', email: '', password: '', role: 'Property Editor', status: 'Active' });
+    showNotification(`Created credentials for ${newEmployee.fullName} as ${newEmp.role}!`);
+    setNewEmployee({ fullName: '', email: '', password: '', role: '', status: 'Active' });
   };
 
   const handleDeleteEmployee = (id: string, name: string) => {
@@ -2855,15 +2856,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
                 <div>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN ROLE *</label>
-                  <select
+                  <input
+                    type="text"
+                    required
+                    list="employee-role-suggestions"
+                    placeholder="Type custom role or select (e.g. Sales Executive)"
                     value={newEmployee.role}
                     onChange={e => setNewEmployee({ ...newEmployee, role: e.target.value })}
-                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', backgroundColor: '#FFFFFF', borderRadius: '8px', fontWeight: 600 }}
-                  >
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      border: '1px solid #CBD5E1',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      color: '#0F172A'
+                    }}
+                  />
+                  <datalist id="employee-role-suggestions">
                     {rolesDb.map(role => (
                       <option key={role.id} value={role.name}>{role.name}</option>
                     ))}
-                  </select>
+                    <option value="Property Editor">Property Editor</option>
+                    <option value="Franchise Manager">Franchise Manager</option>
+                    <option value="Business Analyst">Business Analyst</option>
+                    <option value="Sales Executive">Sales Executive</option>
+                    <option value="General Manager">General Manager</option>
+                    <option value="Accounts Lead">Accounts Lead</option>
+                    <option value="Super Admin">Super Admin</option>
+                  </datalist>
+                  <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                    Type any custom role title or select from suggestions
+                  </span>
                 </div>
                 <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
                   <button
