@@ -2859,7 +2859,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   <input
                     type="text"
                     required
-                    placeholder="Type role name manually (e.g. Sales Executive, Property Editor, Manager)"
+                    autoComplete="off"
+                    placeholder="Enter Role Name (e.g. Sales Executive, Property Editor, Manager)"
                     value={newEmployee.role}
                     onChange={e => setNewEmployee({ ...newEmployee, role: e.target.value })}
                     style={{
