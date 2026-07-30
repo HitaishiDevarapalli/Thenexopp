@@ -34,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
 
 
   useEffect(() => {
-    const handler = () => setCurrentCityState(localStorage.getItem('nexopp_selected_city') || 'Hyderabad');
+    const handler = () => setCurrentCityState(selectedCity);
     window.addEventListener('nexopp_data_changed', handler);
     return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);
@@ -43,27 +43,37 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      const scrollPos = window.scrollY || document.documentElement.scrollTop;
+      if (scrollPos > 50) {
         setScrolled(true);
       } else {
         setScrolled(false);
       }
 
+      // If at top of homepage, force 'hero' (Home) as active section
+      if (scrollPos < 120) {
+        setActiveSection('hero');
+        return;
+      }
+
       // Simple active section detection based on page scroll
-      const sections = ['hero', 'properties', 'franchise', 'business', 'finance', 'about', 'contact'];
+      const sections = ['properties', 'franchise', 'business', 'finance', 'about', 'contact'];
+      let current = 'hero';
       for (const section of sections) {
         const el = document.getElementById(section);
         if (el) {
           const rect = el.getBoundingClientRect();
-          if (rect.top <= 150 && rect.bottom >= 150) {
-            setActiveSection(section);
+          if (rect.top <= 200 && rect.bottom >= 150) {
+            current = section;
             break;
           }
         }
       }
+      setActiveSection(current);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 

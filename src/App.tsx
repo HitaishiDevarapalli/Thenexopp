@@ -22,9 +22,8 @@ import PropertyDetailsPage from './components/PropertyDetailsPage';
 import CloseDealPage from './components/CloseDealPage';
 import AdminPanel from './pages/AdminPanel';
 import { FaArrowLeft } from 'react-icons/fa';
-import { siteSettingsDb, propertiesDb, franchiseDb, businessDb, updateSiteSettings } from './db/marketplaceDb';
+import { siteSettingsDb, updateSiteSettings } from './db/marketplaceDb';
 import { useAuth } from './context/AuthContext';
-import { LoginPage } from './pages/LoginPage';
 import { LoginModal } from './components/forms/LoginModal';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 
@@ -218,10 +217,6 @@ export const App: React.FC = () => {
     };
   }, [currentPage]);
 
-  if (!user) {
-    return <LoginPage />;
-  }
-
   return (
     <div className="app-container">
       {currentPage !== 'adminPortal' && (
@@ -237,7 +232,11 @@ export const App: React.FC = () => {
           onNavigateFranchise={() => navigateTo('franchisePage')}
           onNavigateFinance={() => navigateTo('financePage')}
           onNavigateToPage={(page: any) => navigateTo(page)}
-          onGoHome={() => navigateToUrl('/')}
+          onGoHome={() => {
+            window.history.pushState({}, '', '/');
+            setCurrentPath('/');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
       )}
       

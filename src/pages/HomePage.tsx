@@ -93,12 +93,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   };
 
   const stats = [
-    { icon: FaHome, color: '#16A34A', bg: '#DCFCE7', value: s.propertiesListed, label: 'Properties Listed' },
-    { icon: FaStore, color: '#9333EA', bg: '#F3E8FF', value: s.franchisesCount, label: 'Franchises' },
-    { icon: FaUsers, color: '#EA580C', bg: '#FFEDD5', value: s.verifiedBrokers, label: 'Verified Brokers' },
-    { icon: FaCity, color: '#2563EB', bg: '#DBEAFE', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#DB2777', bg: '#FCE7F3', value: s.totalPropertyValue, label: 'Total Property Value' },
-    { icon: FaSmile, color: '#16A34A', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
+    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed' },
+    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount, label: 'Franchises' },
+    { icon: FaUsers, color: '#16A34A', bg: '#DCFCE7', value: s.verifiedBrokers, label: 'Verified Brokers' },
+    { icon: FaCity, color: '#0D9488', bg: '#CCFBF1', value: s.citiesCovered, label: 'Cities Covered' },
+    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value' },
+    { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
   ];
 
   // Search Bar Filter States
@@ -148,14 +148,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
   const currentSlide = HERO_SLIDES[currentSlideIndex];
 
-  // Category Cards List matching the mockup
+  // Category Cards List matching the unified Emerald theme
   const popularCategories = [
-    { title: 'Residential', subtitle: 'Find your dream home', icon: FaHome, bg: '#DCFCE7', color: '#16A34A', page: 'flatsPage' },
-    { title: 'Commercial', subtitle: 'Office, Shops & Spaces', icon: FaBuilding, bg: '#DBEAFE', color: '#2563EB', page: 'propertiesPage' },
+    { title: 'Residential', subtitle: 'Find your dream home', icon: FaHome, bg: '#ECFDF5', color: '#10B981', page: 'flatsPage' },
+    { title: 'Commercial', subtitle: 'Office, Shops & Spaces', icon: FaBuilding, bg: '#E6F4EA', color: '#059669', page: 'propertiesPage' },
     { title: 'Plots & Land', subtitle: 'Invest in Prime Land', icon: FaLeaf, bg: '#DCFCE7', color: '#16A34A', page: 'landPage' },
-    { title: 'Franchise', subtitle: 'Start your Business', icon: FaStore, bg: '#F3E8FF', color: '#9333EA', page: 'franchisePage' },
-    { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#E0F2FE', color: '#0284C7', page: 'businessPage' },
-    { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#DCFCE7', color: '#16A34A', page: 'financePage' },
+    { title: 'Franchise', subtitle: 'Start your Business', icon: FaStore, bg: '#ECFDF5', color: '#059669', page: 'franchisePage' },
+    { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#CCFBF1', color: '#0D9488', page: 'businessPage' },
+    { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#DCFCE7', color: '#10B981', page: 'financePage' },
   ];
 
   // Recently Sold properties (Latest 8 ordered by soldDate descending)
@@ -205,7 +205,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   });
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '80px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
+    <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
       
       {/* 1. HERO SECTION */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '50px 24px 20px 24px' }}>
@@ -864,13 +864,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         </div>
       </div>
 
-      {/* Stats Row (6 Horizontal Pill Cards) */}
-      <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 40px 24px' }}>
+      {/* Stats Row (6 Cards in a spacious 3x2 Grid) */}
+      <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 44px 24px' }}>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gap: '16px',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '20px',
           }}
         >
           {stats.map((stat, idx) => {
@@ -880,13 +880,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 key={idx}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '18px',
-                  padding: '18px 16px',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                  border: '1px solid #F1F5F9',
+                  borderRadius: '20px',
+                  padding: '20px 24px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+                  border: '1px solid #E2E8F0',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '14px',
+                  gap: '16px',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
                 onMouseEnter={(e) => {

@@ -91,29 +91,43 @@ export const CTABanner: React.FC = () => {
           alignItems: 'center',
           gap: '0.5rem',
         }}>
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.85rem 1.8rem',
-            borderRadius: '0.6rem',
-            border: '2px solid #FFFFFF',
-            background: '#FFFFFF',
-            color: '#16A34A',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.95rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}>
-            <FaPlus /> Post Opportunity
+          <button 
+            onClick={() => {
+              const el = document.getElementById('contact');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                window.location.hash = 'contact';
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.85rem 1.8rem',
+              borderRadius: '0.6rem',
+              border: '2px solid #FFFFFF',
+              background: '#FFFFFF',
+              color: '#16A34A',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '0.95rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.1)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F0FDF4'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+          >
+            Contact Us to List Your Property
           </button>
           <span style={{
             fontFamily: 'Inter, sans-serif',
             fontSize: '0.8rem',
-            color: 'rgba(255,255,255,0.8)',
+            color: 'rgba(255,255,255,0.85)',
             fontStyle: 'italic',
-          }}>It's Free & Easy</span>
+            fontWeight: 600
+          }}>Quick Response & Easy Listing</span>
         </div>
       </div>
     </section>

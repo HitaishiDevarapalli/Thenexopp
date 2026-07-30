@@ -75,8 +75,8 @@ import {
   showcaseSettingsDb,
   addShowcaseVideo,
   updateShowcaseVideo,
-  deleteShowcaseVideo,
-  updateShowcaseSettings
+  updateShowcaseSettings,
+  API_BASE_URL
 } from '../db/marketplaceDb';
 import { BrokerManagementSystem } from '../components/BrokerManagementSystem';
 import { Logo } from '../components/common/Logo';
@@ -115,7 +115,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newTagInput, setNewTagInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -199,8 +199,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   triggerRefresh;
 
+  // State for interactive Stat Graph Modal
+  const [statModalTopic, setStatModalTopic] = useState<'properties' | 'franchises' | 'businesses' | 'enquiries' | 'users' | 'sold' | null>(null);
+  const [registeredCustomers, setRegisteredCustomers] = useState<any[]>([]);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerDistrictFilter, setCustomerDistrictFilter] = useState('All');
+
+  const fetchRegisteredCustomers = () => {
+    fetch(`${API_BASE_URL}/api/customers`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setRegisteredCustomers(data);
+        }
+      })
+      .catch(err => console.error("Error fetching customers:", err));
+  };
+
   useEffect(() => {
-    const handler = () => setTick(t => t + 1);
+    fetchRegisteredCustomers();
+    const handler = () => {
+      setTick(t => t + 1);
+      fetchRegisteredCustomers();
+    };
     window.addEventListener('nexopp_data_changed', handler);
     return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);
@@ -228,12 +249,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Master Super Admin bypass
-    if (email === 'admin@thenexopp.in' && (password === 'admin123' || password === 'nexopp2026')) {
+    // Single Master Super Admin Credentials
+    const isMasterEmail = email.trim().toLowerCase() === 'admin@thenexopp.com';
+    const isMasterPassword = password === 'thenexopp123';
+
+    if (isMasterEmail && isMasterPassword) {
       sessionStorage.setItem('nexopp_admin_auth', 'true');
       sessionStorage.setItem('nexopp_admin_role', 'Super Admin');
       sessionStorage.setItem('nexopp_admin_user_name', 'Super Admin');
-      sessionStorage.setItem('nexopp_admin_user_email', 'admin@thenexopp.in');
+      sessionStorage.setItem('nexopp_admin_user_email', 'admin@thenexopp.com');
       setIsAuthenticated(true);
       setCurrentUserRole('Super Admin');
       setError(null);
@@ -531,9 +555,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ position: 'relative' }}>
               <input
-                type="email"
+                type="text"
                 required
-                placeholder="Admin Email Address"
+                placeholder="admin@thenexopp.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }}
@@ -615,8 +639,72 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'inquiries': return { title: 'Orders & Leads Enquiries', sub: 'Track Customer Leads, Consultation Requests & Inquiries' };
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
       case 'media_manager': return { title: '🎬 Featured Showcase Videos', sub: 'Manage videos displayed on the homepage carousel' };
+      case 'users_data': return { title: '👥 Users Data (Registered Customers)', sub: 'Database of all registered and logged-in customers across AP & Telangana' };
       default: return { title: 'Welcome back, Super Admin', sub: "Here's what's happening with your marketplace today." };
     }
+  };
+
+  const getStatGraphData = () => {
+    let items: { label: string; count: number; color: string }[] = [];
+    let totalCount = 0;
+
+    if (statModalTopic === 'properties') {
+      totalCount = propertiesDb.length;
+      items = [
+        { label: 'Commercial Office / Retail', count: propertiesDb.filter(p => p.category === 'Commercial').length, color: '#16A34A' },
+        { label: 'Apartments & Flats', count: propertiesDb.filter(p => p.category === 'Apartment').length, color: '#2563EB' },
+        { label: 'Luxury Villas', count: propertiesDb.filter(p => p.category === 'Villa').length, color: '#9333EA' },
+        { label: 'Independent Houses', count: propertiesDb.filter(p => p.category === 'House').length, color: '#EA580C' },
+        { label: 'Plots & Open Land', count: propertiesDb.filter(p => p.category === 'Plot').length, color: '#0891B2' },
+      ];
+    } else if (statModalTopic === 'franchises') {
+      totalCount = franchiseDb.length;
+      items = [
+        { label: 'Cafe & Food Outlets', count: franchiseDb.filter(f => (f.category || '').includes('Cafe') || (f.category || '').includes('Food')).length, color: '#2563EB' },
+        { label: 'Retail & Fashion Stores', count: franchiseDb.filter(f => (f.category || '').includes('Retail') || (f.category || '').includes('Fashion')).length, color: '#16A34A' },
+        { label: 'Healthcare & Fitness', count: franchiseDb.filter(f => (f.category || '').includes('Health')).length, color: '#0891B2' },
+        { label: 'Education & Training', count: franchiseDb.filter(f => (f.category || '').includes('Edu')).length, color: '#9333EA' },
+        { label: 'Other Franchises', count: franchiseDb.filter(f => !(f.category || '').includes('Cafe') && !(f.category || '').includes('Retail') && !(f.category || '').includes('Health') && !(f.category || '').includes('Edu')).length, color: '#64748B' },
+      ];
+    } else if (statModalTopic === 'businesses') {
+      totalCount = businessDb.length;
+      items = [
+        { label: 'Food & Restaurants', count: businessDb.filter((b: any) => (b.category || b.industry || '').includes('Food')).length, color: '#9333EA' },
+        { label: 'Healthcare & Medical', count: businessDb.filter((b: any) => (b.category || b.industry || '').includes('Health')).length, color: '#059669' },
+        { label: 'Retail Businesses', count: businessDb.filter((b: any) => (b.category || b.industry || '').includes('Retail')).length, color: '#2563EB' },
+        { label: 'Services & Tech Firms', count: businessDb.filter((b: any) => !(b.category || b.industry || '').includes('Food') && !(b.category || b.industry || '').includes('Health') && !(b.category || b.industry || '').includes('Retail')).length, color: '#D97706' },
+      ];
+    } else if (statModalTopic === 'enquiries') {
+      totalCount = enquiriesDb.length;
+      items = [
+        { label: 'New Lead Inquiries', count: enquiriesDb.filter(e => e.status === 'New').length, color: '#DC2626' },
+        { label: 'Contacted / In Progress', count: enquiriesDb.filter(e => e.status === 'Contacted').length, color: '#2563EB' },
+        { label: 'Follow-Up Scheduled', count: enquiriesDb.filter(e => e.status === 'Follow-up').length, color: '#D97706' },
+        { label: 'Closed / Converted Leads', count: enquiriesDb.filter(e => e.status === 'Closed').length, color: '#16A34A' },
+      ];
+    } else if (statModalTopic === 'users') {
+      totalCount = registeredCustomers.length;
+      items = [
+        { label: 'Guntur District Users', count: registeredCustomers.filter(c => (c.district || '').toLowerCase().includes('guntur')).length, color: '#16A34A' },
+        { label: 'Vijayawada (NTR) Users', count: registeredCustomers.filter(c => (c.district || '').toLowerCase().includes('vijayawada')).length, color: '#2563EB' },
+        { label: 'Hyderabad Users', count: registeredCustomers.filter(c => (c.district || '').toLowerCase().includes('hyderabad')).length, color: '#9333EA' },
+        { label: 'Visakhapatnam Users', count: registeredCustomers.filter(c => (c.district || '').toLowerCase().includes('visakhapatnam')).length, color: '#0891B2' },
+        { label: 'Other Districts', count: registeredCustomers.filter(c => !(c.district || '').toLowerCase().includes('guntur') && !(c.district || '').toLowerCase().includes('vijayawada') && !(c.district || '').toLowerCase().includes('hyderabad') && !(c.district || '').toLowerCase().includes('visakhapatnam')).length, color: '#64748B' },
+      ];
+    } else if (statModalTopic === 'sold') {
+      const soldProps = propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length;
+      const soldFranchises = franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length;
+      const soldBiz = businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length;
+      totalCount = soldProps + soldFranchises + soldBiz;
+      items = [
+        { label: 'Properties Sold', count: soldProps, color: '#16A34A' },
+        { label: 'Active Properties', count: propertiesDb.length - soldProps, color: '#3B82F6' },
+        { label: 'Franchises Sold', count: soldFranchises, color: '#9333EA' },
+        { label: 'Businesses Sold', count: soldBiz, color: '#EA580C' },
+      ];
+    }
+
+    return { items, totalCount };
   };
 
   const headerInfo = getHeaderInfo();
@@ -977,6 +1065,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </button>
             );
           })}
+
+          {/* VERY BOTTOM OPTION: Users Data (Registered Customers) */}
+          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#16A34A', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            CUSTOMER DATA
+          </div>
+          <button
+            onClick={() => {
+              setActiveTab('users_data' as any);
+              setExpandedMenu(null);
+            }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', border: 'none', borderRadius: '12px', cursor: 'pointer',
+              fontSize: '0.9rem', fontWeight: (activeTab as string) === 'users_data' ? 800 : 600,
+              backgroundColor: (activeTab as string) === 'users_data' ? '#16A34A' : '#ECFDF5',
+              color: (activeTab as string) === 'users_data' ? '#FFFFFF' : '#047857',
+              boxShadow: (activeTab as string) === 'users_data' ? '0 4px 14px rgba(22, 163, 74, 0.3)' : 'none',
+              transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+            }}
+          >
+            <span style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}><FaUsers /></span>
+            <span style={{ flexGrow: 1 }}>Users Data</span>
+            <span style={{ backgroundColor: (activeTab as string) === 'users_data' ? '#FFFFFF' : '#10B981', color: (activeTab as string) === 'users_data' ? '#16A34A' : '#FFFFFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 800 }}>
+              {registeredCustomers.length}
+            </span>
+          </button>
         </nav>
       </div>
 
@@ -1034,12 +1147,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           {/* ================= CATEGORY 0: GRAND OVERVIEW ================= */}
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif" }}>
-              
               {/* ROW 1: Top 6 Stat Cards with SVG Sparkline Graphs */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
-                
                 {/* Card 1: TOTAL PROPERTIES */}
-                <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px' }}>
+                <div
+                  onClick={() => setStatModalTopic('properties')}
+                  title="Click to view interactive graph & real database statistics"
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                       <FaHome />
@@ -1050,7 +1165,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   {propertiesDb.length.toLocaleString()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>↑ 12.5% from last week</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>🟢 Real-Time DB</span>
                   <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
                     <path d={propertiesDb.length === 0 ? "M2 18 L58 18" : "M2 18 C 12 14, 20 20, 32 10 C 44 2, 50 14, 58 6"} stroke="#16A34A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -1058,7 +1173,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               {/* Card 2: FRANCHISES */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px' }}>
+              <div
+                onClick={() => setStatModalTopic('franchises')}
+                title="Click to view interactive graph & real database statistics"
+                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DBEAFE', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                     <FaStore />
@@ -1069,7 +1188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   {franchiseDb.length.toLocaleString()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563EB' }}>↑ 9.3% from last week</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563EB' }}>🟢 Real-Time DB</span>
                   <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
                     <path d={franchiseDb.length === 0 ? "M2 18 L58 18" : "M2 16 C 14 18, 22 8, 34 14 C 46 20, 50 6, 58 8"} stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -1077,7 +1196,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               {/* Card 3: BUSINESSES */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px' }}>
+              <div
+                onClick={() => setStatModalTopic('businesses')}
+                title="Click to view interactive graph & real database statistics"
+                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F3E8FF', color: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                     <FaBriefcase />
@@ -1088,7 +1211,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   {businessDb.length.toLocaleString()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9333EA' }}>↑ 8.7% from last week</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9333EA' }}>🟢 Real-Time DB</span>
                   <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
                     <path d={businessDb.length === 0 ? "M2 18 L58 18" : "M2 18 C 16 10, 24 18, 34 8 C 44 -2, 50 14, 58 6"} stroke="#9333EA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -1096,7 +1219,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               {/* Card 4: LEAD ENQUIRIES */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px' }}>
+              <div
+                onClick={() => setStatModalTopic('enquiries')}
+                title="Click to view interactive graph & real database statistics"
+                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FFEDD5', color: '#EA580C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                     <FaEnvelope />
@@ -1107,7 +1234,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   {enquiriesDb.length.toLocaleString()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>↑ 15.8% from last week</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EA580C' }}>📥 Active Leads</span>
                   <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
                     <path d={enquiriesDb.length === 0 ? "M2 18 L58 18" : "M2 16 C 14 16, 24 10, 36 12 C 48 14, 52 6, 58 8"} stroke="#EA580C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -1115,7 +1242,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               {/* Card 5: TOTAL USERS */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px' }}>
+              <div
+                onClick={() => setStatModalTopic('users')}
+                title="Click to view interactive graph & real database statistics"
+                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#CCFBF1', color: '#0D9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                     <FaUsers />
@@ -1123,63 +1254,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL USERS</span>
                 </div>
                 <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {(dealersDb.length + teamMembersDb.length + enquiriesDb.length).toLocaleString()}
+                  {registeredCustomers.length.toLocaleString()}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>↑ 18.6% from last week</span>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0D9488' }}>👤 Customer DB</span>
                   <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d={(dealersDb.length + teamMembersDb.length + enquiriesDb.length) === 0 ? "M2 18 L58 18" : "M2 18 C 14 18, 24 12, 36 15 C 48 18, 52 6, 58 10"} stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d={registeredCustomers.length === 0 ? "M2 18 L58 18" : "M2 18 C 14 18, 24 12, 36 15 C 48 18, 52 6, 58 10"} stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
               </div>
 
-              {/* Card 6: WEBSITE VISITORS */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px' }}>
+              {/* Card 6: TOTAL SOLD DATA */}
+              <div
+                onClick={() => setStatModalTopic('sold')}
+                title="Click to view interactive graph & real database statistics"
+                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#EFF6FF', color: '#1E40AF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                    <FaEye />
+                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F0FDF4', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                    <FaCheckCircle />
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>WEBSITE VISITORS</span>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL SOLD DATA</span>
                 </div>
                 <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {(siteSettingsDb.analytics?.totalVisitors || 0).toLocaleString()}
+                  {(
+                    propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length +
+                    franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length +
+                    businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length
+                  ).toLocaleString()}
                 </div>
-                <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newCount = prompt("Enter new visitor count:", String(siteSettingsDb.analytics?.totalVisitors || 0));
-                      if (newCount !== null && !isNaN(Number(newCount))) {
-                        updateSiteSettings({
-                          analytics: {
-                            ...(siteSettingsDb.analytics || {}),
-                            totalVisitors: Number(newCount)
-                          }
-                        });
-                        showNotification("Visitor count updated successfully!", "success");
-                      }
-                    }}
-                    style={{ flex: 1, padding: '5px 8px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#1E40AF', fontSize: '0.65rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm("Are you sure you want to reset the visitor count to 0?")) {
-                        updateSiteSettings({
-                          analytics: {
-                            ...(siteSettingsDb.analytics || {}),
-                            totalVisitors: 0
-                          }
-                        });
-                        showNotification("Visitor count reset to 0.", "warning");
-                      }
-                    }}
-                    style={{ flex: 1, padding: '5px 8px', border: '1px solid #FCA5A5', backgroundColor: '#FEF2F2', color: '#EF4444', fontSize: '0.65rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                  >
-                    Reset
-                  </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>🏷️ Closed Deals</span>
+                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
+                    <path d="M2 18 C 14 18, 24 12, 36 15 C 48 18, 52 6, 58 10" stroke="#16A34A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -1712,7 +1820,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
             </div>
-
           </div>
         )}
 
@@ -3690,6 +3797,152 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           );
         })()}
 
+        {/* ================= CATEGORY: USERS DATA (REGISTERED CUSTOMERS) ================= */}
+        {(activeTab as string) === 'users_data' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+            
+            {/* Top Stat Cards for Customer Database */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>TOTAL REGISTERED USERS</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginTop: '6px' }}>{registeredCustomers.length}</div>
+                <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 600, marginTop: '4px' }}>Saved in PostgreSQL Database</div>
+              </div>
+
+              <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>VERIFIED INVESTORS</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981', marginTop: '6px' }}>
+                  {registeredCustomers.filter(c => c.role === 'Verified Investor' || !c.role).length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Property Buyers & Investors</div>
+              </div>
+
+              <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>FRANCHISE & BIZ PARTNERS</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563EB', marginTop: '6px' }}>
+                  {registeredCustomers.filter(c => c.role === 'Franchise Partner' || c.role === 'Business Buyer').length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Business Seekers</div>
+              </div>
+
+              <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>GUNTUR & AP USERS</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#8B5CF6', marginTop: '6px' }}>
+                  {registeredCustomers.filter(c => (c.district || '').toLowerCase().includes('guntur') || (c.district || '').toLowerCase().includes('vijayawada')).length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Regional Footprint</div>
+              </div>
+            </div>
+
+            {/* Filter & Search Controls */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '18px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, maxWidth: '420px', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '12px', padding: '10px 16px' }}>
+                <FaSearch style={{ color: '#007A55' }} />
+                <input
+                  type="text"
+                  placeholder="Search by name, phone, email, or district..."
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem', color: '#0F172A', fontWeight: 600 }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#475569' }}>Filter District:</span>
+                <select
+                  value={customerDistrictFilter}
+                  onChange={(e) => setCustomerDistrictFilter(e.target.value)}
+                  style={{ padding: '10px 16px', borderRadius: '12px', border: '1.5px solid #CBD5E1', backgroundColor: '#FFFFFF', fontSize: '0.9rem', color: '#0F172A', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  <option value="All">All Districts</option>
+                  <option value="Guntur">Guntur</option>
+                  <option value="Vijayawada">Vijayawada (NTR)</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Visakhapatnam">Visakhapatnam</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Customers Data Table */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Registered Customer Database</h3>
+                  <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '4px 0 0 0' }}>All customer login accounts & registration profiles saved in PostgreSQL database.</p>
+                </div>
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', fontWeight: 700 }}>
+                    <th style={{ padding: '16px 24px' }}>Customer Profile</th>
+                    <th style={{ padding: '16px 20px' }}>Contact Phone</th>
+                    <th style={{ padding: '16px 20px' }}>Email Address</th>
+                    <th style={{ padding: '16px 20px' }}>Gender</th>
+                    <th style={{ padding: '16px 20px' }}>District</th>
+                    <th style={{ padding: '16px 20px' }}>Role / Type</th>
+                    <th style={{ padding: '16px 20px' }}>Last Login Time</th>
+                    <th style={{ padding: '16px 24px', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registeredCustomers
+                    .filter(c => {
+                      const q = customerSearchQuery.toLowerCase();
+                      const matchesSearch = !q || (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(q) || (c.email || '').toLowerCase().includes(q) || (c.district || '').toLowerCase().includes(q);
+                      const matchesDistrict = customerDistrictFilter === 'All' || (c.district || '').includes(customerDistrictFilter);
+                      return matchesSearch && matchesDistrict;
+                    })
+                    .map((cust) => (
+                      <tr key={cust.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background-color 0.15s' }}>
+                        <td style={{ padding: '16px 24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <img
+                              src={cust.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(cust.name || 'User')}&background=007A55&color=fff`}
+                              alt={cust.name}
+                              style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                            <div>
+                              <div style={{ fontWeight: 800, color: '#0F172A' }}>{cust.name}</div>
+                              <div style={{ fontSize: '0.78rem', color: '#64748B' }}>ID: {cust.id}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px 20px', fontWeight: 700, color: '#0F172A' }}>{cust.phone || 'N/A'}</td>
+                        <td style={{ padding: '16px 20px', color: '#475569' }}>{cust.email}</td>
+                        <td style={{ padding: '16px 20px' }}>
+                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, backgroundColor: cust.gender === 'Female' ? '#FCE7F3' : '#E0F2FE', color: cust.gender === 'Female' ? '#DB2777' : '#0284C7' }}>
+                            {cust.gender || 'Male'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px 20px', fontWeight: 700, color: '#047857' }}>{cust.district || 'Guntur'}</td>
+                        <td style={{ padding: '16px 20px' }}>
+                          <span style={{ padding: '4px 12px', borderRadius: '14px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>
+                            {cust.role || 'Verified Investor'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px 20px', fontSize: '0.82rem', color: '#64748B' }}>{cust.lastLoginAt || cust.registeredDate || 'Just now'}</td>
+                        <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove user record ${cust.name}?`)) {
+                                fetch(`${API_BASE_URL}/api/customers/${cust.id}`, { method: 'DELETE' })
+                                  .then(() => fetchRegisteredCustomers());
+                              }
+                            }}
+                            style={{ padding: '8px 14px', borderRadius: '8px', backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+                          >
+                            Delete User
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* ================= MODAL: EDIT PROPERTY ================= */}
@@ -3849,6 +4102,184 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <button onClick={() => { updateDealer(editingBroker.id, editingBroker); setEditingBroker(null); showNotification("Broker profile updated successfully!"); }} style={{ padding: '12px 28px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", letterSpacing: '0.06em' }}>SAVE PROFILE</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= INTERACTIVE REAL-TIME DATABASE STAT GRAPH & SLIDABLE MODAL ================= */}
+      {statModalTopic && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '24px' }}>
+          <div data-lenis-prevent="true" style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', width: '100%', maxWidth: '980px', maxHeight: '92vh', overflowY: 'auto', border: '1px solid #E2E8F0', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', padding: '36px' }}>
+            
+            {/* Modal Top Header with Close Button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid #F1F5F9', paddingBottom: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '1.5rem' }}>
+                    {statModalTopic === 'properties' ? '🏠' : statModalTopic === 'franchises' ? '🏪' : statModalTopic === 'businesses' ? '💼' : statModalTopic === 'enquiries' ? '📥' : statModalTopic === 'users' ? '👥' : '🏷️'}
+                  </span>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    {statModalTopic === 'properties' ? 'Properties Database Analytics & Graphs' : statModalTopic === 'franchises' ? 'Franchises Database Analytics & Graphs' : statModalTopic === 'businesses' ? 'Businesses Database Analytics & Graphs' : statModalTopic === 'enquiries' ? 'Lead Enquiries Analytics & Graphs' : statModalTopic === 'users' ? 'Registered Customers Analytics & Graphs' : 'Sold Deals & Transaction Analytics'}
+                  </h2>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '4px 0 0 0', fontWeight: 500 }}>
+                  100% Real-Time Database Metrics computed dynamically from live PostgreSQL database.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setStatModalTopic(null)}
+                style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Slidable Top Nav Tabs for 6 Topics */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#F8FAFC', padding: '8px', borderRadius: '16px', marginBottom: '28px', overflowX: 'auto' }}>
+              {[
+                { id: 'properties', label: '🏠 Properties', count: propertiesDb.length },
+                { id: 'franchises', label: '🏪 Franchises', count: franchiseDb.length },
+                { id: 'businesses', label: '💼 Businesses', count: businessDb.length },
+                { id: 'enquiries', label: '📥 Lead Enquiries', count: enquiriesDb.length },
+                { id: 'users', label: '👥 Registered Users', count: registeredCustomers.length },
+                { id: 'sold', label: '🏷️ Sold Data', count: (propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length + franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length + businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length) },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setStatModalTopic(t.id as any)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 800,
+                    fontSize: '0.88rem',
+                    backgroundColor: statModalTopic === t.id ? '#007A55' : 'transparent',
+                    color: statModalTopic === t.id ? '#FFFFFF' : '#64748B',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s ease',
+                    boxShadow: statModalTopic === t.id ? '0 4px 12px rgba(0, 122, 85, 0.25)' : 'none'
+                  }}
+                >
+                  {t.label} ({t.count})
+                </button>
+              ))}
+            </div>
+
+            {/* Interactive Dynamic Bar Graph & Data Table */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              
+              {/* Dynamic Visual Bar Graph */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 14px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Category Breakdown & Database Graph</h4>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#007A55', backgroundColor: '#ECFDF5', padding: '4px 12px', borderRadius: '12px' }}>
+                    Total Count: {getStatGraphData().totalCount} Items
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {getStatGraphData().items.map((item, idx) => {
+                    const total = getStatGraphData().totalCount;
+                    const maxVal = Math.max(...getStatGraphData().items.map(i => i.count), 1);
+                    const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                    const barWidthPercent = total > 0 ? Math.max((item.count / maxVal) * 100, 4) : 0;
+
+                    return (
+                      <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.88rem', fontWeight: 700 }}>
+                          <span style={{ color: '#334155' }}>{item.label}</span>
+                          <span style={{ color: '#0F172A' }}>{item.count} items ({percentage}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '14px', backgroundColor: '#F1F5F9', borderRadius: '8px', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              width: `${barWidthPercent}%`,
+                              height: '100%',
+                              backgroundColor: item.color,
+                              borderRadius: '8px',
+                              transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Dynamic Database Item Breakdown Table */}
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                <div style={{ padding: '16px 24px', backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', fontWeight: 800, color: '#0F172A', fontSize: '0.95rem' }}>
+                  Live Database Itemized Records ({statModalTopic?.toUpperCase()})
+                </div>
+                <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                  {getStatGraphData().totalCount === 0 ? (
+                    <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontWeight: 600 }}>
+                      No database entries found for this category yet.
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #E2E8F0', color: '#64748B', fontWeight: 700, backgroundColor: '#FFFFFF' }}>
+                          <th style={{ padding: '12px 20px' }}>Item Title / User</th>
+                          <th style={{ padding: '12px 16px' }}>Category / District</th>
+                          <th style={{ padding: '12px 16px' }}>Status / Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statModalTopic === 'properties' && propertiesDb.slice(0, 10).map((p: any) => (
+                          <tr key={p.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{p.title}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{p.category} ({p.city || p.district})</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 800, color: '#16A34A' }}>{p.priceDisplay || `₹ ${p.price} L`}</td>
+                          </tr>
+                        ))}
+                        {statModalTopic === 'franchises' && franchiseDb.slice(0, 10).map((f: any) => (
+                          <tr key={f.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{f.brand || f.title}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{f.category}</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 800, color: '#2563EB' }}>{f.investmentDisplay}</td>
+                          </tr>
+                        ))}
+                        {statModalTopic === 'businesses' && businessDb.slice(0, 10).map((b: any) => (
+                          <tr key={b.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{b.title || b.name}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{b.category || b.industry}</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 800, color: '#9333EA' }}>{b.priceDisplay || `₹ ${b.askingPrice} L`}</td>
+                          </tr>
+                        ))}
+                        {statModalTopic === 'enquiries' && enquiriesDb.slice(0, 10).map((e: any) => (
+                          <tr key={e.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{e.customerName} ({e.phone})</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{e.listingTitle}</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 800, color: e.status === 'New' ? '#DC2626' : '#16A34A' }}>{e.status}</td>
+                          </tr>
+                        ))}
+                        {statModalTopic === 'users' && registeredCustomers.slice(0, 10).map((c: any) => (
+                          <tr key={c.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{c.name} ({c.email})</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{c.district} ({c.gender})</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 800, color: '#0D9488' }}>{c.role || 'Verified User'}</td>
+                          </tr>
+                        ))}
+                        {statModalTopic === 'sold' && propertiesDb.slice(0, 10).map((p: any) => (
+                          <tr key={p.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{p.title}</td>
+                            <td style={{ padding: '12px 16px', color: '#475569' }}>{p.category}</td>
+                            <td style={{ padding: '12px 16px', fontWeight: 800, color: (p.sold || p.listingStatus === 'Sold' || p.status === 'Sold') ? '#16A34A' : '#2563EB' }}>
+                              {(p.sold || p.listingStatus === 'Sold' || p.status === 'Sold') ? '🏷️ SOLD OUT' : '🟢 Active'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

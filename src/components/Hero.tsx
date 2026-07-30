@@ -48,6 +48,20 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
     }
   }, [selectedCity]);
 
+  // Sync dropdown defaults when activeTab changes
+  useEffect(() => {
+    if (activeTab === 'Commercial') {
+      setPropertyType('All Commercial');
+      setBhk('Any Usage');
+    } else if (activeTab === 'Plots/Land') {
+      setPropertyType('All Plots');
+      setBhk('Any Zone');
+    } else {
+      setPropertyType('All Types');
+      setBhk('All BHK');
+    }
+  }, [activeTab]);
+
   const handleSearch = () => {
     if (onSearch) {
       let query = locationText;
@@ -87,19 +101,19 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
   };
 
   const stats = [
-    { icon: FaHome, color: '#16A34A', bg: '#DCFCE7', value: s.propertiesListed, label: 'Properties Listed' },
-    { icon: FaStore, color: '#9333EA', bg: '#F3E8FF', value: s.franchisesCount, label: 'Franchises' },
-    { icon: FaUsers, color: '#EA580C', bg: '#FFEDD5', value: s.verifiedBrokers, label: 'Verified Brokers' },
-    { icon: FaCity, color: '#2563EB', bg: '#DBEAFE', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#DB2777', bg: '#FCE7F3', value: s.totalPropertyValue, label: 'Total Property Value' },
-    { icon: FaSmile, color: '#16A34A', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
+    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed' },
+    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount, label: 'Franchises' },
+    { icon: FaUsers, color: '#16A34A', bg: '#DCFCE7', value: s.verifiedBrokers, label: 'Verified Brokers' },
+    { icon: FaCity, color: '#0D9488', bg: '#CCFBF1', value: s.citiesCovered, label: 'Cities Covered' },
+    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value' },
+    { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
   ];
 
   return (
     <section
       id="hero"
       style={{
-        paddingTop: '90px',
+        paddingTop: '115px',
         paddingBottom: '3rem',
         background: 'linear-gradient(135deg, #E0F2FE 0%, #F0F9FF 40%, #FFFFFF 100%)',
         minHeight: '100vh',
@@ -371,11 +385,31 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                     onChange={(e) => setPropertyType(e.target.value)}
                     style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer', outline: 'none' }}
                   >
-                    <option value="All Types">Property Type</option>
-                    <option value="Apartment">Apartment</option>
-                    <option value="Villa">Villa</option>
-                    <option value="Independent House">Independent House</option>
-                    <option value="Plot/Land">Plot / Land</option>
+                    {activeTab === 'Commercial' ? (
+                      <>
+                        <option value="All Commercial">Commercial Type</option>
+                        <option value="Office Space">Office Space</option>
+                        <option value="Retail Shop">Retail Shop</option>
+                        <option value="Commercial Showroom">Showroom</option>
+                        <option value="Warehouse / Godown">Warehouse / Godown</option>
+                        <option value="Industrial Building">Industrial Building</option>
+                      </>
+                    ) : activeTab === 'Plots/Land' ? (
+                      <>
+                        <option value="All Plots">Plot Type</option>
+                        <option value="Residential Plot">Residential Plot</option>
+                        <option value="Commercial Plot">Commercial Plot</option>
+                        <option value="Agricultural Land">Agricultural Land</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="All Types">Property Type</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="Villa">Villa</option>
+                        <option value="Independent House">Independent House</option>
+                        <option value="Plot/Land">Plot / Land</option>
+                      </>
+                    )}
                   </select>
 
                   <select
@@ -383,11 +417,30 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                     onChange={(e) => setBhk(e.target.value)}
                     style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer', outline: 'none' }}
                   >
-                    <option value="All BHK">BHK</option>
-                    <option value="1 BHK">1 BHK</option>
-                    <option value="2 BHK">2 BHK</option>
-                    <option value="3 BHK">3 BHK</option>
-                    <option value="4+ BHK">4+ BHK</option>
+                    {activeTab === 'Commercial' ? (
+                      <>
+                        <option value="Any Usage">Suitable For</option>
+                        <option value="Corporate Office">Corporate Office</option>
+                        <option value="Retail Store">Retail Store</option>
+                        <option value="Showroom">Showroom</option>
+                        <option value="Warehouse">Warehouse</option>
+                      </>
+                    ) : activeTab === 'Plots/Land' ? (
+                      <>
+                        <option value="Any Zone">Zone</option>
+                        <option value="Residential Zone">Residential Zone</option>
+                        <option value="Commercial Zone">Commercial Zone</option>
+                        <option value="Agricultural Zone">Agricultural Zone</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="All BHK">BHK</option>
+                        <option value="1 BHK">1 BHK</option>
+                        <option value="2 BHK">2 BHK</option>
+                        <option value="3 BHK">3 BHK</option>
+                        <option value="4+ BHK">4+ BHK</option>
+                      </>
+                    )}
                   </select>
 
                   <select
@@ -716,13 +769,13 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
           </div>
         </div>
 
-        {/* Stats Row (6 Horizontal Pill Cards) */}
+        {/* Stats Row (6 Cards in a spacious 3x2 Grid) */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gap: '16px',
-            marginTop: '20px',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '20px',
+            marginTop: '28px',
           }}
         >
           {stats.map((stat, idx) => {
@@ -732,13 +785,13 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                 key={idx}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '18px',
-                  padding: '18px 16px',
-                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                  border: '1px solid #F1F5F9',
+                  borderRadius: '20px',
+                  padding: '20px 24px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+                  border: '1px solid #E2E8F0',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '14px',
+                  gap: '16px',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
                 onMouseEnter={(e) => {

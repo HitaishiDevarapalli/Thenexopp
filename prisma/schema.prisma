@@ -1,18 +1,17 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-enum RoleType {
+enum Role {
   SUPER_ADMIN
   ADMIN
+  PROPERTY_EDITOR
+  FRANCHISE_EDITOR
+  USER
 }
 
 enum PropertyStatus {
@@ -26,353 +25,176 @@ enum PropertyStatus {
   ARCHIVED
 }
 
-enum ListingType {
-  SALE
-  RENT
-  LEASE
-  AUCTION
-}
-
-model Role {
-  id          String   @id @default(uuid())
-  name        RoleType @unique
-  description String?
-  users       User[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
 model User {
-  id             String         @id @default(uuid())
-  email          String         @unique
-  passwordHash   String
-  firstName      String
-  lastName       String
-  phone          String?
-  roleId         String
-  role           Role           @relation(fields: [roleId], references: [id])
-  isActive       Boolean        @default(true)
-  auditLogs      AuditLog[]
-  notifications  Notification[]
-  assignedLeads  Enquiry[]      @relation("AssignedAdmin")
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String
+  fullName          String
+  role              Role     @default(USER)
+  status            String   @default("Active")
+  phone             String?
+  gender            String?
+  district          String?
+  avatar            String?
+  customPermissions String[] @default([])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  properties        Property[]
+  enquiries         Enquiry[]
 }
 
-model Broker {
-  id             String     @id @default(uuid())
-  name           String
-  companyName    String?
-  designation    String?
-  reraNumber     String?    @unique
-  experienceYrs  Int        @default(0)
-  languages      String[]   @default(["English", "Hindi", "Telugu"])
-  commissionRate Float?
-  specialization String?
-  rating         Float      @default(5.0)
-  reviewCount    Int        @default(0)
-  address        String?
-  phone          String
-  whatsapp       String?
-  email          String     @unique
-  photoUrl       String?
-  socialLinks    Json?      // e.g. { linkedin, facebook, twitter }
-  revenueGenerated Float    @default(0.0)
-  properties     Property[]
-  enquiries      Enquiry[]
-  reviews        Review[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-}
+model Dealer {
+  id              String   @id @default(uuid())
+  companyName     String
+  logo            String?
+  photo           String?
+  rating          Float    @default(4.5)
+  reviewCount     Int      @default(0)
+  verified        Boolean  @default(true)
+  yearsExperience Int      @default(5)
+  phone           String?
+  email           String?
+  specialization  String?
+  reraNumber      String?
+  state           String   @default("Andhra Pradesh")
+  city            String   @default("Guntur")
+  createdAt       DateTime @default(now())
 
-model Category {
-  id            String         @id @default(uuid())
-  name          String         @unique // Residential, Commercial, Franchises, Businesses, etc.
-  slug          String         @unique
-  description   String?
-  subCategories SubCategory[]
-  properties    Property[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-}
-
-model SubCategory {
-  id          String     @id @default(uuid())
-  name        String     // Apartments, Villas, Independent Houses, Plots, Agricultural Land, etc.
-  slug        String     @unique
-  categoryId  String
-  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  properties  Property[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
-
-model Location {
-  id              String     @id @default(uuid())
-  latitude        Float
-  longitude       Float
-  street          String?
-  area            String
-  village         String?
-  mandal          String?
-  district        String?
-  city            String
-  state           String
-  country         String     @default("India")
-  pincode         String?
-  nearbyLandmarks String[]
-  nearbySchools   String[]
-  nearbyHospitals String[]
-  nearbyMetro     String[]
-  nearbyAirport   String[]
-  nearbyBusStop   String[]
-  property        Property?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-}
-
-model Amenity {
-  id          String     @id @default(uuid())
-  name        String     @unique // Swimming Pool, Gym, Lift, Security, etc.
-  icon        String?
-  properties  Property[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  properties      Property[]
+  franchises      Franchise[]
 }
 
 model Property {
-  id                  String           @id @default(uuid())
-  title               String
-  slug                String           @unique
-  propertyCode        String           @unique
-  description         String
-  status              PropertyStatus   @default(PUBLISHED)
-  listingType         ListingType      @default(SALE)
-  
-  // Relations
-  categoryId          String
-  category            Category         @relation(fields: [categoryId], references: [id])
-  subCategoryId       String?
-  subCategory         SubCategory?     @relation(fields: [subCategoryId], references: [id])
-  brokerId            String?
-  broker              Broker?          @relation(fields: [brokerId], references: [id])
-  locationId          String           @unique
-  location            Location         @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  amenities           Amenity[]
-  
-  // Pricing
-  price               Float
-  negotiable          Boolean          @default(true)
-  emiEst              Float?
-  maintenance         Float?
-  bookingAmount       Float?
-  taxes               Float?
-  registrationCharges Float?
-  
-  // Specifications
-  bedrooms            Int?
-  bathrooms           Int?
-  balconies           Int?
-  floors              Int?
-  facing              String?
-  ageYears            Int?
-  furnishing          String?          // Unfurnished, Semi, Fully
-  parkingSlots        Int?
-  carpetAreaSqFt      Float?
-  builtUpAreaSqFt     Float?
-  plotAreaSqYd        Float?
-  dimensions          String?
-  
-  // Enterprise Flags
-  featured            Boolean          @default(false)
-  premium             Boolean          @default(false)
-  trending            Boolean          @default(false)
-  urgent              Boolean          @default(false)
-  luxury              Boolean          @default(false)
-  verified            Boolean          @default(true)
-  hotDeal             Boolean          @default(false)
-  topPick             Boolean          @default(false)
-  newArrival          Boolean          @default(false)
-  editorsChoice       Boolean          @default(false)
-  readyToMove         Boolean          @default(false)
-  underConstruction   Boolean          @default(false)
-  
-  // Metrics
-  viewsCount          Int              @default(0)
-  enquiriesCount      Int              @default(0)
-  
-  // Media & Docs
-  images              PropertyImage[]
-  videos              PropertyVideo[]
-  floorPlans          FloorPlan[]
-  documents           Document[]
-  enquiries           Enquiry[]
-  reviews             Review[]
-  favorites           Favorite[]
-  
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  id            String         @id @default(uuid())
+  title         String
+  description   String
+  image         String
+  image2        String?
+  image3        String?
+  image4        String?
+  image5        String?
+  image6        String?
+  state         String
+  district      String
+  city          String
+  area          String
+  latitude      Float          @default(16.3067)
+  longitude     Float          @default(80.4363)
+  price         Float
+  priceDisplay  String
+  category      String
+  status        String         @default("Buy")
+  listingStatus PropertyStatus @default(PUBLISHED)
+  areaSqFt      String
+  bedrooms      Int            @default(0)
+  bathrooms     Int            @default(0)
+  rating        Float          @default(4.5)
+  reviewCount   Int            @default(0)
+  verified      Boolean        @default(true)
+  premium       Boolean        @default(false)
+  trending      Boolean        @default(false)
+  agentName     String?
+  viewsCount    Int            @default(0)
+  createdDate   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  dealerId      String?
+  dealer        Dealer?        @relation(fields: [dealerId], references: [id])
+  userId        String?
+  user          User?          @relation(fields: [userId], references: [id])
 }
 
-model PropertyImage {
-  id         String   @id @default(uuid())
-  url        String
-  caption    String?
-  isCover    Boolean  @default(false)
-  order      Int      @default(0)
-  propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+model Franchise {
+  id                   String   @id @default(uuid())
+  brand                String
+  type                 String
+  category             String?
+  investment           Float
+  investmentDisplay    String
+  location             String
+  state                String
+  city                 String
+  latitude             Float    @default(16.3067)
+  longitude            Float    @default(80.4363)
+  rating               Float    @default(4.8)
+  reviewCount          Int      @default(0)
+  verified             Boolean  @default(true)
+  trending             Boolean  @default(false)
+  availableBranchCount Int      @default(1)
+  image                String
+  logo                 String
+  trustScore           Int      @default(95)
+  status               String   @default("Active")
+  createdAt            DateTime @default(now())
+
+  dealerId             String?
+  dealer               Dealer?  @relation(fields: [dealerId], references: [id])
 }
 
-model PropertyVideo {
-  id         String   @id @default(uuid())
-  url        String
-  title      String?
-  is360      Boolean  @default(false)
-  propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-}
-
-model FloorPlan {
-  id         String   @id @default(uuid())
-  title      String
-  imageUrl   String
-  areaSqFt   Float?
-  propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-}
-
-model Document {
-  id           String   @id @default(uuid())
-  title        String
-  fileUrl      String
-  documentType String   // Legal, Brochure, Title Deed, Encumbrance Certificate
-  propertyId   String
-  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-}
-
-model Customer {
-  id        String     @id @default(uuid())
-  name      String
-  phone     String     @unique
-  email     String?
-  city      String?
-  enquiries Enquiry[]
-  favorites Favorite[]
-  reviews   Review[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+model Business {
+  id              String   @id @default(uuid())
+  name            String
+  industry        String
+  location        String
+  state           String
+  city            String
+  latitude        Float    @default(16.3067)
+  longitude       Float    @default(80.4363)
+  price           Float
+  priceDisplay    String
+  revenueMonthly  String
+  profitMonthly   String
+  establishedYear Int      @default(2020)
+  employeesCount  Int      @default(10)
+  rating          Float    @default(4.7)
+  reviewCount     Int      @default(0)
+  verified        Boolean  @default(true)
+  image           String
+  description     String
+  reasonForSale   String
+  trustScore      Int      @default(95)
+  createdAt       DateTime @default(now())
 }
 
 model Enquiry {
-  id               String    @id @default(uuid())
-  customerName     String
-  customerPhone    String
-  customerEmail    String?
-  message          String?
-  status           String    @default("NEW") // NEW, CONTACTED, FOLLOW_UP, CLOSED
-  priority         String    @default("MEDIUM") // HIGH, MEDIUM, LOW
-  source           String    @default("WEBSITE_FORM")
-  
-  customerId       String?
-  customer         Customer? @relation(fields: [customerId], references: [id])
-  propertyId       String?
-  property         Property? @relation(fields: [propertyId], references: [id])
-  brokerId         String?
-  broker           Broker?   @relation(fields: [brokerId], references: [id])
-  assignedAdminId  String?
-  assignedAdmin    User?     @relation("AssignedAdmin", fields: [assignedAdminId], references: [id])
-  
-  followUpReminder DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id           String   @id @default(uuid())
+  customerName String
+  phone        String
+  email        String
+  listingTitle String
+  brokerName   String   @default("NEXOPP Advisor")
+  status       String   @default("New")
+  priority     String   @default("Medium")
+  source       String   @default("Direct Portal")
+  date         String?
+  createdAt    DateTime @default(now())
+
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
 }
 
-model Review {
-  id         String    @id @default(uuid())
-  rating     Int       @default(5)
-  comment    String?
-  customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id])
-  propertyId String?
-  property   Property? @relation(fields: [propertyId], references: [id])
-  brokerId   String?
-  broker     Broker?   @relation(fields: [brokerId], references: [id])
-  createdAt  DateTime  @default(now())
-}
-
-model Favorite {
-  id         String   @id @default(uuid())
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-
-  @@unique([customerId, propertyId])
-}
-
-model HomepageBanner {
-  id          String   @id @default(uuid())
-  title       String
-  subtitle    String?
-  imageUrl    String
-  ctaText     String?
-  ctaLink     String?
-  isActive    Boolean  @default(true)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model SEO {
-  id              String   @id @default(uuid())
-  pageSlug        String   @unique // e.g. "home", "properties", "franchises"
-  metaTitle       String
-  metaDescription String
-  ogImage         String?
-  keywords        String[]
-  canonicalUrl    String?
-  robots          String   @default("index, follow")
-  schemaJson      Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-}
-
-model AuditLog {
-  id         String   @id @default(uuid())
-  action     String   // e.g. "PUBLISH_PROPERTY", "DELETE_BROKER", "LOGIN"
-  entityType String   // e.g. "Property", "User"
-  entityId   String?
-  details    Json?
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  ipAddress  String?
-  createdAt  DateTime @default(now())
-}
-
-model Analytics {
+model ShowcaseVideo {
   id             String   @id @default(uuid())
-  date           DateTime @unique @default(now())
-  pageViews      Int      @default(0)
-  uniqueVisitors Int      @default(0)
-  leadsGenerated Int      @default(0)
-  topCities      Json?    // e.g. { "Hyderabad": 1200, "Guntur": 850 }
-  topCategories  Json?    // e.g. { "Residential": 450, "Franchises": 210 }
-  revenueEst     Float    @default(0.0)
+  videoUrl       String
+  thumbnailUrl   String?
+  title          String
+  linkedCategory String   @default("Property")
+  linkedId       String?
+  displayOrder   Int      @default(1)
+  status         String   @default("Active")
+  createdDate    String?
   createdAt      DateTime @default(now())
+}
+
+model SiteSettings {
+  id                String   @id @default("default")
+  heroTitle         String   @default("Your Next Opportunity")
+  heroHighlightText String   @default("One Click Away")
+  heroSubtitle      String   @default("India's Premier Integrated Portal for Luxury Properties & Franchises")
+  primaryColor      String   @default("#10B981")
+  themeStyle        String   @default("professional-white-green")
+  availableCities   String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
+  updatedAt         DateTime @updatedAt
 }

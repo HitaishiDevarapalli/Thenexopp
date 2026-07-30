@@ -1,3 +1,5 @@
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081').replace(/\/$/, '');
+
 export interface Dealer {
   id: string;
   logo: string;
@@ -502,38 +504,38 @@ const sampleBusinesses: BusinessListing[] = [];
 const sampleFranchiseEnquiries: FranchiseEnquiry[] = [];
 
 const defaultSettings: SiteSettings = {
-  heroTitle: "Your Next Opportunity",
-  heroHighlightText: "One Click Away",
-  heroSubtitle: "India's Premier Integrated Portal for Luxury Properties, Enterprise Franchises & Acquisitions.",
-  heroBgUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-  heroMediaType: "image",
-  heroVideoUrl: "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-building-exterior-41580-large.mp4",
-  heroPopularTags: ['Apartment', 'Villa', 'Franchise', 'Commercial Property'],
-  heroBadge1Text: "View More Pics",
-  heroBadge2Text: "Verified Genuine Listings",
-  primaryColor: "#10B981",
-  themeStyle: "professional-white-green",
+  heroTitle: '',
+  heroHighlightText: '',
+  heroSubtitle: '',
+  heroBgUrl: '',
+  heroMediaType: 'image',
+  heroVideoUrl: '',
+  heroPopularTags: [],
+  heroBadge1Text: '',
+  heroBadge2Text: '',
+  primaryColor: '#10B981',
+  themeStyle: 'professional-white-green',
   analytics: {
-    activeListings: 12,
-    happyClients: 180,
-    dealsClosed: 45,
-    totalVisitors: 14500
+    activeListings: 0,
+    happyClients: 0,
+    dealsClosed: 0,
+    totalVisitors: 0
   },
-  availableCities: ['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi NCR', 'Chennai', 'Pune'],
-  defaultCity: 'Hyderabad',
-  promotionalVideoUrl: "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-building-exterior-41580-large.mp4",
+  availableCities: [],
+  defaultCity: '',
+  promotionalVideoUrl: '',
   mainPageStats: {
-    propertiesListed: '18,500+',
-    franchisesCount: '950+',
-    verifiedBrokers: '2,400+',
-    citiesCovered: '32',
-    totalPropertyValue: '₹850 Cr+',
-    happyClients: '15K+',
-    activeListingsWhy: '10,000+',
-    happyCustomersWhy: '5,000+',
-    citiesCoveredWhy: '50+',
-    verifiedListingsWhy: '100%',
-    customerSupportWhy: '24/7'
+    propertiesListed: '0',
+    franchisesCount: '0',
+    verifiedBrokers: '0',
+    citiesCovered: '0',
+    totalPropertyValue: '₹0',
+    happyClients: '0',
+    activeListingsWhy: '0',
+    happyCustomersWhy: '0',
+    citiesCoveredWhy: '0',
+    verifiedListingsWhy: '0',
+    customerSupportWhy: '0'
   }
 };
 
@@ -578,275 +580,193 @@ export let showcaseSettingsDb: ShowcaseSettings = {
   defaultPlaybackDurationSec: 10
 };
 
-const defaultShowcaseVideos: ShowcaseVideo[] = [
-  {
-    id: 'sv1',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-modern-villa-with-a-swimming-pool-42526-large.mp4',
-    title: 'Luxury Villa Showcase',
-    linkedCategory: 'None',
-    displayOrder: 1,
-    status: 'Active',
-    createdDate: new Date().toLocaleDateString()
-  },
-  {
-    id: 'sv2',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-office-building-glass-facade-reflecting-the-sky-40439-large.mp4',
-    title: 'Commercial Business Center',
-    linkedCategory: 'None',
-    displayOrder: 2,
-    status: 'Active',
-    createdDate: new Date().toLocaleDateString()
-  },
-  {
-    id: 'sv3',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-man-typing-on-a-laptop-42171-large.mp4',
-    title: 'Modern Workspaces & Offices',
-    linkedCategory: 'None',
-    displayOrder: 3,
-    status: 'Active',
-    createdDate: new Date().toLocaleDateString()
-  },
-  {
-    id: 'sv4',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-chef-preparing-a-fresh-vegetable-salad-41617-large.mp4',
-    title: 'Premium Restaurant Opportunities',
-    linkedCategory: 'None',
-    displayOrder: 4,
-    status: 'Active',
-    createdDate: new Date().toLocaleDateString()
-  },
-  {
-    id: 'sv5',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-woman-shopping-in-a-clothing-store-42323-large.mp4',
-    title: 'Retail Shops & Showrooms',
-    linkedCategory: 'None',
-    displayOrder: 5,
-    status: 'Active',
-    createdDate: new Date().toLocaleDateString()
-  }
-];
+const defaultShowcaseVideos: ShowcaseVideo[] = [];
+const defaultDemandRegions: DemandRegion[] = [];
 
-
-const defaultDemandRegions: DemandRegion[] = [
-  {
-    id: 'dr1',
-    name: 'Jubilee Hills',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    latitude: 17.4300,
-    longitude: 78.4000,
-    radius: 5,
-    demandScore: 85,
-    demandLevel: 'High',
-    propertySalesCount: 12,
-    franchiseSalesCount: 4,
-    businessSalesCount: 2,
-    lastUpdated: new Date().toLocaleDateString(),
-    isAiEnabled: true
-  },
-  {
-    id: 'dr2',
-    name: 'Koramangala',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    latitude: 12.9300,
-    longitude: 77.6200,
-    radius: 5,
-    demandScore: 78,
-    demandLevel: 'High',
-    propertySalesCount: 15,
-    franchiseSalesCount: 6,
-    businessSalesCount: 1,
-    lastUpdated: new Date().toLocaleDateString(),
-    isAiEnabled: true
-  },
-  {
-    id: 'dr3',
-    name: 'Bandra West',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    latitude: 19.0500,
-    longitude: 72.8200,
-    radius: 2,
-    demandScore: 92,
-    demandLevel: 'High',
-    propertySalesCount: 18,
-    franchiseSalesCount: 8,
-    businessSalesCount: 3,
-    lastUpdated: new Date().toLocaleDateString(),
-    isAiEnabled: true
-  },
-  {
-    id: 'dr4',
-    name: 'Gachibowli',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    latitude: 17.4400,
-    longitude: 78.3400,
-    radius: 5,
-    demandScore: 55,
-    demandLevel: 'Medium',
-    propertySalesCount: 6,
-    franchiseSalesCount: 2,
-    businessSalesCount: 0,
-    lastUpdated: new Date().toLocaleDateString(),
-    isAiEnabled: true
-  },
-  {
-    id: 'dr5',
-    name: 'Whitefield',
-    city: 'Bengaluru',
-    state: 'Karnataka',
-    latitude: 12.9600,
-    longitude: 77.7500,
-    radius: 10,
-    demandScore: 48,
-    demandLevel: 'Medium',
-    propertySalesCount: 8,
-    franchiseSalesCount: 1,
-    businessSalesCount: 1,
-    lastUpdated: new Date().toLocaleDateString(),
-    isAiEnabled: true
-  }
-];
-
-
-// Reactive Selected City State
-export let selectedCity: string = localStorage.getItem('nexopp_selected_city') || 'Hyderabad';
+// Reactive Selected City State (Stored in Memory)
+export let selectedCity: string = 'Guntur';
 export const setSelectedCity = (city: string) => {
   selectedCity = city;
-  localStorage.setItem('nexopp_selected_city', city);
   window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
 };
 
-// Load from LocalStorage
+// Clear localStorage permanently
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.clear();
+  }
+} catch (e) {}
+
+// PostgreSQL Data Sync Loader (No LocalStorage)
 const loadData = () => {
   try {
-    if (localStorage.getItem('nexopp_wiped_fake_data_v11_all') !== 'true') {
-      localStorage.removeItem('nexopp_properties');
-      localStorage.removeItem('nexopp_franchises');
-      localStorage.removeItem('nexopp_dealers');
-      localStorage.removeItem('nexopp_enquiries');
-      localStorage.removeItem('nexopp_franchise_enquiries');
-      localStorage.removeItem('nexopp_team_members');
-      localStorage.removeItem('nexopp_businesses');
-      localStorage.removeItem('nexopp_employee_users');
-      localStorage.setItem('nexopp_wiped_fake_data_v11_all', 'true');
-    }
-
-    const p = localStorage.getItem('nexopp_properties');
-    const f = localStorage.getItem('nexopp_franchises');
-    const d = localStorage.getItem('nexopp_dealers');
-    const e = localStorage.getItem('nexopp_enquiries');
-    const fe = localStorage.getItem('nexopp_franchise_enquiries');
-    const s = localStorage.getItem('nexopp_settings');
-    const t = localStorage.getItem('nexopp_team_members');
-    const b = localStorage.getItem('nexopp_businesses');
-    const dr = localStorage.getItem('nexopp_demand_regions');
-    const sv = localStorage.getItem('nexopp_showcase_videos');
-    const ss = localStorage.getItem('nexopp_showcase_settings');
-    const eu = localStorage.getItem('nexopp_employee_users');
-    const rd = localStorage.getItem('nexopp_roles');
-
-    propertiesDb = p ? JSON.parse(p) : [];
-    franchiseDb = f ? JSON.parse(f) : [];
-    businessDb = b ? JSON.parse(b) : [];
-    dealersDb = d ? JSON.parse(d) : [];
-    if (!dealersDb || dealersDb.length === 0) {
-      dealersDb = defaultDealers;
-    }
-    enquiriesDb = e ? JSON.parse(e) : [];
-    franchiseEnquiriesDb = fe ? JSON.parse(fe) : [];
-    siteSettingsDb = s ? JSON.parse(s) : defaultSettings;
-    teamMembersDb = t ? JSON.parse(t) : [];
-    employeeUsersDb = eu ? JSON.parse(eu) : [];
-    
-    // Default roles if none exist
-    rolesDb = rd ? JSON.parse(rd) : [
-      { id: 'r1', name: 'Super Admin', permissions: ['all'] },
-      { id: 'r2', name: 'Property Editor', permissions: ['properties'] },
-      { id: 'r3', name: 'Franchise Editor', permissions: ['franchises'] },
-      { id: 'r4', name: 'Data Manager', permissions: ['properties', 'franchises', 'businesses', 'demand_regions', 'brokers'] },
-      { id: 'r5', name: 'Photo Manager', permissions: ['media_manager'] }
-    ];
-
-    demandRegionsDb = dr ? JSON.parse(dr) : defaultDemandRegions;
-    showcaseVideosDb = sv ? JSON.parse(sv) : defaultShowcaseVideos;
-    showcaseSettingsDb = ss ? JSON.parse(ss) : {
-      maxVideoSizeMB: 200,
-      maxVideoDurationSec: 60,
-      defaultPlaybackDurationSec: 10
-    };
-
-    if (siteSettingsDb.primaryColor === '#D4AF37') {
-      siteSettingsDb.primaryColor = '#10B981';
-    }
-    if (!siteSettingsDb.availableCities || !siteSettingsDb.availableCities.includes('Guntur')) {
-      siteSettingsDb.availableCities = ['Guntur', 'Vijayawada', 'Hyderabad', 'Visakhapatnam', 'Bengaluru', 'Mumbai', 'Delhi NCR', 'Chennai', 'Pune'];
-    }
-    if (!siteSettingsDb.promotionalVideoUrl) {
-      siteSettingsDb.promotionalVideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-building-exterior-41580-large.mp4";
-    }
-    if (!siteSettingsDb.heroHighlightText) {
-      siteSettingsDb.heroHighlightText = "One Click Away";
-    }
-    if (!siteSettingsDb.heroMediaType) {
-      siteSettingsDb.heroMediaType = "image";
-    }
-    if (!siteSettingsDb.heroVideoUrl) {
-      siteSettingsDb.heroVideoUrl = "https://assets.mixkit.co/videos/preview/mixkit-modern-apartment-building-exterior-41580-large.mp4";
-    }
-    if (!siteSettingsDb.heroPopularTags || siteSettingsDb.heroPopularTags.length === 0) {
-      siteSettingsDb.heroPopularTags = ['Apartment', 'Villa', 'Franchise', 'Commercial Property'];
-    }
-    if (!siteSettingsDb.heroBadge1Text) {
-      siteSettingsDb.heroBadge1Text = "View More Pics";
-    }
-    if (!siteSettingsDb.heroBadge2Text) {
-      siteSettingsDb.heroBadge2Text = "Verified Genuine Listings";
-    }
-    if (!siteSettingsDb.mainPageStats) {
-      siteSettingsDb.mainPageStats = defaultSettings.mainPageStats;
-    }
-    insuranceDb = [];
-    servicesDb = [];
-  } catch (err) {
-    console.error("Error loading marketplace data from localStorage:", err);
     propertiesDb = [];
     franchiseDb = [];
+    businessDb = [];
     dealersDb = [];
     enquiriesDb = [];
     franchiseEnquiriesDb = [];
     siteSettingsDb = defaultSettings;
     teamMembersDb = [];
-    showcaseVideosDb = defaultShowcaseVideos;
+    employeeUsersDb = [];
+    rolesDb = [];
+    demandRegionsDb = [];
+    showcaseVideosDb = [];
     showcaseSettingsDb = {
       maxVideoSizeMB: 200,
       maxVideoDurationSec: 60,
       defaultPlaybackDurationSec: 10
     };
+
+    // Async Fetch from PostgreSQL API Backend Server
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/properties)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          propertiesDb = data;
+          recalculateAllDemandRegions();
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/franchises)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          franchiseDb = data;
+          recalculateAllDemandRegions();
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/businesses)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          businessDb = data;
+          recalculateAllDemandRegions();
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/enquiries)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          enquiriesDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/showcase-videos)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          showcaseVideosDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/settings)
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+          siteSettingsDb = { ...siteSettingsDb, ...data };
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/dealers)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          dealersDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/team-members)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          teamMembersDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/employees)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          employeeUsersDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/roles)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          rolesDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/demand-regions)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          demandRegionsDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/franchise-enquiries)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          franchiseEnquiriesDb = data;
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+    fetch(${API_BASE_URL}${API_BASE_URL}/api/showcase-settings)
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data === 'object') {
+          showcaseSettingsDb = { ...showcaseSettingsDb, ...data };
+          window.dispatchEvent(new Event('nexopp_data_changed'));
+        }
+      })
+      .catch(() => {});
+
+  } catch (err) {
+    console.error("Error initializing PostgreSQL marketplace data:", err);
   }
 };
 
-// Save to LocalStorage and Notify App
+
+import { queryClient } from '../api/queryClient';
+
+// Dispatch Data Changed Event (No LocalStorage)
 export const notifyDataChanged = () => {
   try {
-    localStorage.setItem('nexopp_properties', JSON.stringify(propertiesDb));
-    localStorage.setItem('nexopp_franchises', JSON.stringify(franchiseDb));
-    localStorage.setItem('nexopp_businesses', JSON.stringify(businessDb));
-    localStorage.setItem('nexopp_dealers', JSON.stringify(dealersDb));
-    localStorage.setItem('nexopp_enquiries', JSON.stringify(enquiriesDb));
-    localStorage.setItem('nexopp_franchise_enquiries', JSON.stringify(franchiseEnquiriesDb));
-    localStorage.setItem('nexopp_settings', JSON.stringify(siteSettingsDb));
-    localStorage.setItem('nexopp_team_members', JSON.stringify(teamMembersDb));
-    localStorage.setItem('nexopp_employee_users', JSON.stringify(employeeUsersDb));
-    localStorage.setItem('nexopp_roles', JSON.stringify(rolesDb));
-    localStorage.setItem('nexopp_demand_regions', JSON.stringify(demandRegionsDb));
-    localStorage.setItem('nexopp_showcase_videos', JSON.stringify(showcaseVideosDb));
-    localStorage.setItem('nexopp_showcase_settings', JSON.stringify(showcaseSettingsDb));
     window.dispatchEvent(new Event('nexopp_data_changed'));
+    queryClient.invalidateQueries();
   } catch (err) {
-    console.error("Error saving data to localStorage:", err);
+    console.error("Error dispatching nexopp_data_changed event:", err);
   }
 };
 
@@ -857,7 +777,7 @@ loadData();
 export const addProperty = (item: PropertyListing) => {
   propertiesDb = [item, ...propertiesDb];
   notifyDataChanged();
-  fetch('http://localhost:8081/api/properties', {
+  fetch(${API_BASE_URL}${API_BASE_URL}/api/properties, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
@@ -867,7 +787,7 @@ export const addProperty = (item: PropertyListing) => {
 export const updateProperty = (id: string, updated: Partial<PropertyListing>) => {
   propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...updated } : p);
   notifyDataChanged();
-  fetch(`http://localhost:8081/api/properties/${id}`, {
+  fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
@@ -878,7 +798,7 @@ export const deleteProperty = (id: string) => {
   propertiesDb = propertiesDb.filter(p => p.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Property' && v.linkedId === id));
   notifyDataChanged();
-  fetch(`http://localhost:8081/api/properties/${id}`, {
+  fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'DELETE'
   }).catch(err => console.error("Sync failed:", err));
 };
@@ -927,17 +847,30 @@ export const incrementPropertyViewCount = (id: string) => {
 export const addFranchise = (item: FranchiseListing) => {
   franchiseDb = [item, ...franchiseDb];
   notifyDataChanged();
+  fetch(${API_BASE_URL}${API_BASE_URL}/api/franchises, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
 };
 
 export const updateFranchise = (id: string, updated: Partial<FranchiseListing>) => {
   franchiseDb = franchiseDb.map(f => f.id === id ? { ...f, ...updated } : f);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchises/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
 };
 
 export const deleteFranchise = (id: string) => {
   franchiseDb = franchiseDb.filter(f => f.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Franchise' && v.linkedId === id));
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchises/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const addDealer = (item: Dealer) => {
@@ -958,12 +891,20 @@ export const deleteDealer = (id: string) => {
 export const addBusiness = (item: BusinessListing) => {
   businessDb = [item, ...businessDb];
   notifyDataChanged();
+  fetch(${API_BASE_URL}${API_BASE_URL}/api/businesses, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
 };
 
 export const deleteBusiness = (id: string) => {
   businessDb = businessDb.filter(b => b.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Business' && v.linkedId === id));
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/businesses/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 // Showcase Video Mutations
@@ -975,16 +916,29 @@ export const addShowcaseVideo = (video: Omit<ShowcaseVideo, 'id' | 'createdDate'
   };
   showcaseVideosDb = [...showcaseVideosDb, newVideo];
   notifyDataChanged();
+  fetch(${API_BASE_URL}${API_BASE_URL}/api/showcase-videos, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newVideo)
+  }).catch(() => {});
 };
 
 export const updateShowcaseVideo = (id: string, updated: Partial<ShowcaseVideo>) => {
   showcaseVideosDb = showcaseVideosDb.map(v => v.id === id ? { ...v, ...updated } : v);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/showcase-videos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
 };
 
 export const deleteShowcaseVideo = (id: string) => {
   showcaseVideosDb = showcaseVideosDb.filter(v => v.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/showcase-videos/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
@@ -995,16 +949,29 @@ export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
 export const deleteEnquiry = (id: string) => {
   enquiriesDb = enquiriesDb.filter(e => e.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'Follow-up' | 'Closed') => {
   enquiriesDb = enquiriesDb.map(e => e.id === id ? { ...e, status } : e);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).catch(() => {});
 };
 
 export const updateSiteSettings = (settings: Partial<SiteSettings>) => {
   siteSettingsDb = { ...siteSettingsDb, ...settings };
   notifyDataChanged();
+  fetch(${API_BASE_URL}${API_BASE_URL}/api/settings, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings)
+  }).catch(() => {});
 };
 
 export const clearAllStaticData = () => {
@@ -1133,41 +1100,44 @@ export const calculateDemandScore = (region: DemandRegion): { score: number; lev
 
   let propSales = 0;
   let activeProps = 0;
-  propertiesDb.forEach(p => {
-    if (p.latitude && p.longitude) {
-      const dist = getDistance(region.latitude, region.longitude, p.latitude, p.longitude);
-      if (dist <= region.radius) {
-        if (p.approvalStatus === 'Sold') {
-          propSales++;
-        } else {
-          activeProps++;
-        }
+  propertiesDb.forEach((p: any) => {
+    const isNearby = (p.latitude && p.longitude) ? getDistance(region.latitude, region.longitude, p.latitude, p.longitude) <= region.radius : false;
+    const isCityMatch = (p.city || p.district || p.location || p.address || '').toLowerCase().includes(region.city.toLowerCase()) || (region.name && (p.city || p.district || p.location || p.address || '').toLowerCase().includes(region.name.toLowerCase()));
+    
+    if (isNearby || isCityMatch) {
+      if (p.sold || p.listingStatus === 'Sold' || p.status === 'Sold' || p.approvalStatus === 'Sold') {
+        propSales++;
+      } else {
+        activeProps++;
       }
     }
   });
 
   let franSales = 0;
   let activeFrans = 0;
-  franchiseDb.forEach(f => {
-    if (f.latitude && f.longitude) {
-      const dist = getDistance(region.latitude, region.longitude, f.latitude, f.longitude);
-      if (dist <= region.radius) {
-        if (f.status === 'Sold' || f.approvalStatus === 'Closed') {
-          franSales++;
-        } else {
-          activeFrans++;
-        }
+  franchiseDb.forEach((f: any) => {
+    const isNearby = (f.latitude && f.longitude) ? getDistance(region.latitude, region.longitude, f.latitude, f.longitude) <= region.radius : false;
+    const isCityMatch = (f.city || f.location || f.address || '').toLowerCase().includes(region.city.toLowerCase()) || (region.name && (f.city || f.location || f.address || '').toLowerCase().includes(region.name.toLowerCase()));
+
+    if (isNearby || isCityMatch) {
+      if (f.sold || f.listingStatus === 'Sold' || f.status === 'Sold' || f.approvalStatus === 'Closed') {
+        franSales++;
+      } else {
+        activeFrans++;
       }
     }
   });
 
   let busSales = 0;
   let activeBuses = 0;
-  businessDb.forEach(b => {
-    if (b.latitude && b.longitude) {
-      const dist = getDistance(region.latitude, region.longitude, b.latitude, b.longitude);
-      if (dist <= region.radius) {
-        // BusinessListing does not have status/approvalStatus. Treat all matched businesses as active
+  businessDb.forEach((b: any) => {
+    const isNearby = (b.latitude && b.longitude) ? getDistance(region.latitude, region.longitude, b.latitude, b.longitude) <= region.radius : false;
+    const isCityMatch = (b.city || b.location || b.address || '').toLowerCase().includes(region.city.toLowerCase()) || (region.name && (b.city || b.location || b.address || '').toLowerCase().includes(region.name.toLowerCase()));
+
+    if (isNearby || isCityMatch) {
+      if (b.sold || b.listingStatus === 'Sold' || b.status === 'Sold') {
+        busSales++;
+      } else {
         activeBuses++;
       }
     }
@@ -1176,11 +1146,10 @@ export const calculateDemandScore = (region: DemandRegion): { score: number; lev
   const totalSales = propSales + franSales + busSales;
   const totalActive = activeProps + activeFrans + activeBuses;
   
-  let score = 25 + (totalSales * 15) + (totalActive * 3);
+  let score = 15 + (totalSales * 20) + (totalActive * 5);
   
-  // Custom logic: If a person buys (sales > 0) from that area, that region should be high demand
   if (totalSales > 0) {
-    score = Math.max(score, 75); // Force score into High Demand threshold (>70)
+    score = Math.max(score, 75);
   }
 
   if (score > 100) score = 100;
@@ -1258,3 +1227,4 @@ export const deleteDemandRegion = (id: string) => {
   demandRegionsDb = demandRegionsDb.filter(r => r.id !== id);
   notifyDataChanged();
 };
+

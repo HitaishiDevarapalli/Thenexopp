@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 export const ContactUs: React.FC = () => {
+  const { user, openLoginModal } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -13,6 +15,12 @@ export const ContactUs: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      alert('🔒 Login required to submit contact inquiries. Please sign in to continue.');
+      openLoginModal();
+      return;
+    }
+
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);

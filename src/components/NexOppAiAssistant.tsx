@@ -117,23 +117,12 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
   
   // State toggles
   const [isOpen, setIsOpen] = useState(false);
-  const [showBubble, setShowBubble] = useState(true);
+  const [showBubble, setShowBubble] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // User Memory State (Persisted in localStorage)
-  const [userMemory, setUserMemory] = useState<UserMemoryState>(() => {
-    try {
-      const saved = localStorage.getItem('nexopp_ai_user_memory');
-      return saved ? JSON.parse(saved) : { recentSearches: [] };
-    } catch (e) {
-      return { recentSearches: [] };
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem('nexopp_ai_user_memory', JSON.stringify(userMemory));
-  }, [userMemory]);
+  // User Memory State (In-Memory)
+  const [userMemory, setUserMemory] = useState<UserMemoryState>({ recentSearches: [] });
 
   // Guided Flow State
   const [guidedStep, setGuidedStep] = useState<'idle' | 'intent' | 'budget' | 'city' | 'custom_city' | 'type' | 'purpose' | 'complete'>('idle');
