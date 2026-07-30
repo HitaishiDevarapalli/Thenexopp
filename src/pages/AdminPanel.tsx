@@ -75,6 +75,7 @@ import {
   showcaseSettingsDb,
   addShowcaseVideo,
   updateShowcaseVideo,
+  deleteShowcaseVideo,
   updateShowcaseSettings,
   API_BASE_URL
 } from '../db/marketplaceDb';

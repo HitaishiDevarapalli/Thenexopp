@@ -16,7 +16,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     window.scrollTo(0, 0);
   }, []);
 
-  const resolvedProperties = wishlistItems.map(id => {
+  const resolvedProperties = wishlistItems.map((id: string) => {
     let prop = propertiesDb.find(p => p.id === id);
     if (prop) return { ...prop, type: prop.category };
     

@@ -19,10 +19,10 @@ export const useLocationStore = create<LocationState>((set) => ({
   latitude: 16.3067,
   longitude: 80.4363,
 
-  setSelectedCity: (city) => set({ selectedCity: city }),
-  setSelectedDistrict: (district) => set({ selectedDistrict: district }),
-  setSelectedArea: (area) => set({ selectedArea: area }),
-  setLocation: (city, district = '', area = '', lat = null, lng = null) =>
+  setSelectedCity: (city: string) => set({ selectedCity: city }),
+  setSelectedDistrict: (district: string) => set({ selectedDistrict: district }),
+  setSelectedArea: (area: string) => set({ selectedArea: area }),
+  setLocation: (city: string, district = '', area = '', lat: number | null = null, lng: number | null = null) =>
     set({
       selectedCity: city,
       selectedDistrict: district || city,

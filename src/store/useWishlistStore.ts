@@ -12,17 +12,17 @@ interface WishlistState {
 export const useWishlistStore = create<WishlistState>((set, get) => ({
   wishlistIds: [],
 
-  addToWishlist: (id) =>
-    set((state) => ({
+  addToWishlist: (id: string) =>
+    set((state: WishlistState) => ({
       wishlistIds: state.wishlistIds.includes(id) ? state.wishlistIds : [...state.wishlistIds, id],
     })),
 
-  removeFromWishlist: (id) =>
-    set((state) => ({
-      wishlistIds: state.wishlistIds.filter((item) => item !== id),
+  removeFromWishlist: (id: string) =>
+    set((state: WishlistState) => ({
+      wishlistIds: state.wishlistIds.filter((item: string) => item !== id),
     })),
 
-  toggleWishlist: (id) => {
+  toggleWishlist: (id: string) => {
     const isPresent = get().wishlistIds.includes(id);
     if (isPresent) {
       get().removeFromWishlist(id);
@@ -31,6 +31,6 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
     }
   },
 
-  isWishlisted: (id) => get().wishlistIds.includes(id),
+  isWishlisted: (id: string) => get().wishlistIds.includes(id),
   clearWishlist: () => set({ wishlistIds: [] }),
 }));
