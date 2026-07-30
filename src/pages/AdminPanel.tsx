@@ -2859,8 +2859,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   <input
                     type="text"
                     required
-                    list="employee-role-suggestions"
-                    placeholder="Type custom role or select (e.g. Sales Executive)"
+                    placeholder="Type role name manually (e.g. Sales Executive, Property Editor, Manager)"
                     value={newEmployee.role}
                     onChange={e => setNewEmployee({ ...newEmployee, role: e.target.value })}
                     style={{
@@ -2875,20 +2874,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       color: '#0F172A'
                     }}
                   />
-                  <datalist id="employee-role-suggestions">
-                    {rolesDb.map(role => (
-                      <option key={role.id} value={role.name}>{role.name}</option>
-                    ))}
-                    <option value="Property Editor">Property Editor</option>
-                    <option value="Franchise Manager">Franchise Manager</option>
-                    <option value="Business Analyst">Business Analyst</option>
-                    <option value="Sales Executive">Sales Executive</option>
-                    <option value="General Manager">General Manager</option>
-                    <option value="Accounts Lead">Accounts Lead</option>
-                    <option value="Super Admin">Super Admin</option>
-                  </datalist>
                   <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                    Type any custom role title or select from suggestions
+                    Type any role name manually to assign
                   </span>
                 </div>
                 <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
