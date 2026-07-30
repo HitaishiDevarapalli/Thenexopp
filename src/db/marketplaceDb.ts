@@ -619,7 +619,7 @@ const loadData = () => {
     };
 
     // Async Fetch from PostgreSQL API Backend Server
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/properties)
+    fetch(`${API_BASE_URL}/api/properties`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -630,7 +630,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/franchises)
+    fetch(`${API_BASE_URL}/api/franchises`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -641,7 +641,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/businesses)
+    fetch(`${API_BASE_URL}/api/businesses`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -652,7 +652,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/enquiries)
+    fetch(`${API_BASE_URL}/api/enquiries`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -662,7 +662,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/showcase-videos)
+    fetch(`${API_BASE_URL}/api/showcase-videos`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -672,7 +672,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/settings)
+    fetch(`${API_BASE_URL}/api/settings`)
       .then(res => res.json())
       .then(data => {
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
@@ -682,7 +682,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/dealers)
+    fetch(`${API_BASE_URL}/api/dealers`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -692,7 +692,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/team-members)
+    fetch(`${API_BASE_URL}/api/team-members`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -702,7 +702,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/employees)
+    fetch(`${API_BASE_URL}/api/employees`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -712,7 +712,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/roles)
+    fetch(`${API_BASE_URL}/api/roles`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -722,7 +722,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/demand-regions)
+    fetch(`${API_BASE_URL}/api/demand-regions`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -732,7 +732,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/franchise-enquiries)
+    fetch(`${API_BASE_URL}/api/franchise-enquiries`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -742,7 +742,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(${API_BASE_URL}${API_BASE_URL}/api/showcase-settings)
+    fetch(`${API_BASE_URL}/api/showcase-settings`)
       .then(res => res.json())
       .then(data => {
         if (data && typeof data === 'object') {
@@ -777,7 +777,7 @@ loadData();
 export const addProperty = (item: PropertyListing) => {
   propertiesDb = [item, ...propertiesDb];
   notifyDataChanged();
-  fetch(${API_BASE_URL}${API_BASE_URL}/api/properties, {
+  fetch(`${API_BASE_URL}/api/properties`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
@@ -847,7 +847,7 @@ export const incrementPropertyViewCount = (id: string) => {
 export const addFranchise = (item: FranchiseListing) => {
   franchiseDb = [item, ...franchiseDb];
   notifyDataChanged();
-  fetch(${API_BASE_URL}${API_BASE_URL}/api/franchises, {
+  fetch(`${API_BASE_URL}/api/franchises`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
@@ -891,7 +891,7 @@ export const deleteDealer = (id: string) => {
 export const addBusiness = (item: BusinessListing) => {
   businessDb = [item, ...businessDb];
   notifyDataChanged();
-  fetch(${API_BASE_URL}${API_BASE_URL}/api/businesses, {
+  fetch(`${API_BASE_URL}/api/businesses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
@@ -916,7 +916,7 @@ export const addShowcaseVideo = (video: Omit<ShowcaseVideo, 'id' | 'createdDate'
   };
   showcaseVideosDb = [...showcaseVideosDb, newVideo];
   notifyDataChanged();
-  fetch(${API_BASE_URL}${API_BASE_URL}/api/showcase-videos, {
+  fetch(`${API_BASE_URL}/api/showcase-videos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(newVideo)
@@ -967,7 +967,7 @@ export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'F
 export const updateSiteSettings = (settings: Partial<SiteSettings>) => {
   siteSettingsDb = { ...siteSettingsDb, ...settings };
   notifyDataChanged();
-  fetch(${API_BASE_URL}${API_BASE_URL}/api/settings, {
+  fetch(`${API_BASE_URL}/api/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings)
