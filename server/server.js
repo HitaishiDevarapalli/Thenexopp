@@ -530,6 +530,14 @@ app.put('/api/settings', async (req, res, next) => {
   }
 });
 
+// ── STUB ENDPOINTS FOR UNIMPLEMENTED ADMIN ROUTES ───────────────────────────
+app.get('/api/team-members', (req, res) => res.json([]));
+app.get('/api/roles', (req, res) => res.json([]));
+app.get('/api/employees', (req, res) => res.json([]));
+app.get('/api/demand-regions', (req, res) => res.json([]));
+app.get('/api/franchise-enquiries', (req, res) => res.json([]));
+app.get('/api/showcase-settings', (req, res) => res.json({}));
+
 // ── HEALTH CHECK ENDPOINT ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
