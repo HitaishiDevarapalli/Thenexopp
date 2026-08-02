@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -42,9 +43,11 @@ model User {
 
   properties        Property[]
   enquiries         Enquiry[]
+  favorites         Favorite[]
+  tokens            AuthToken[]
 }
 
-model Dealer {
+model Broker {
   id              String   @id @default(uuid())
   companyName     String
   logo            String?
@@ -63,6 +66,30 @@ model Dealer {
 
   properties      Property[]
   franchises      Franchise[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  properties  Property[]
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  city      String
+  district  String
+  state     String
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+
+  properties Property[]
 }
 
 model Property {
@@ -100,10 +127,97 @@ model Property {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  dealerId      String?
-  dealer        Dealer?        @relation(fields: [dealerId], references: [id])
+  categoryId    String?
+  categoryRef   Category?      @relation(fields: [categoryId], references: [id])
+  locationId    String?
+  locationRef   Location?      @relation(fields: [locationId], references: [id])
+  brokerId      String?
+  broker        Broker?        @relation(fields: [brokerId], references: [id])
   userId        String?
   user          User?          @relation(fields: [userId], references: [id])
+
+  images        PropertyImage[]
+  features      PropertyFeature[]
+  favorites     Favorite[]
+  views         PropertyView[]
+}
+
+model PropertyImage {
+  id         String   @id @default(uuid())
+  url        String
+  isPrimary  Boolean  @default(false)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model PropertyFeature {
+  id         String   @id @default(uuid())
+  name       String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model PropertyView {
+  id         String   @id @default(uuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
+
+model Favorite {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model Enquiry {
+  id           String   @id @default(uuid())
+  customerName String
+  phone        String
+  email        String
+  listingTitle String
+  brokerName   String   @default("NEXOPP Advisor")
+  status       String   @default("New")
+  priority     String   @default("Medium")
+  source       String   @default("Direct Portal")
+  date         String?
+  createdAt    DateTime @default(now())
+
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+}
+
+model AuthToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  name           String
+  email          String?
+  phone          String?
+  gender         String?  @default("Male")
+  district       String?  @default("Guntur")
+  role           String?  @default("Verified Investor")
+  avatar         String?
+  lastLoginAt    String?
+  loginCount     Int      @default(1)
+  status         String   @default("Active")
+  registeredDate String?
+  createdAt      DateTime @default(now())
 }
 
 model Franchise {
@@ -129,8 +243,8 @@ model Franchise {
   status               String   @default("Active")
   createdAt            DateTime @default(now())
 
-  dealerId             String?
-  dealer               Dealer?  @relation(fields: [dealerId], references: [id])
+  brokerId             String?
+  broker               Broker?  @relation(fields: [brokerId], references: [id])
 }
 
 model Business {
@@ -158,23 +272,6 @@ model Business {
   createdAt       DateTime @default(now())
 }
 
-model Enquiry {
-  id           String   @id @default(uuid())
-  customerName String
-  phone        String
-  email        String
-  listingTitle String
-  brokerName   String   @default("NEXOPP Advisor")
-  status       String   @default("New")
-  priority     String   @default("Medium")
-  source       String   @default("Direct Portal")
-  date         String?
-  createdAt    DateTime @default(now())
-
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id])
-}
-
 model ShowcaseVideo {
   id             String   @id @default(uuid())
   videoUrl       String
@@ -190,10 +287,10 @@ model ShowcaseVideo {
 
 model SiteSettings {
   id                String   @id @default("default")
-  heroTitle         String   @default("Your Next Opportunity")
-  heroHighlightText String   @default("One Click Away")
-  heroSubtitle      String   @default("India's Premier Integrated Portal for Luxury Properties & Franchises")
-  primaryColor      String   @default("#10B981")
+  heroTitle         String   @default("The Nexopp")
+  heroHighlightText String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
+  heroSubtitle      String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
+  primaryColor      String   @default("#007A55")
   themeStyle        String   @default("professional-white-green")
   availableCities   String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
   updatedAt         DateTime @updatedAt
