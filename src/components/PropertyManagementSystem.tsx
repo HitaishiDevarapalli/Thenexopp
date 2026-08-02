@@ -158,20 +158,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     status: 'Buy',
     price: 0,
     priceDisplay: '',
-    areaSqFt: '2,500 Sq.Ft.',
-    superBuiltUpArea: '2,500 Sq.Ft.',
-    carpetArea: '2,100 Sq.Ft.',
-    plotArea: '300 Sq. Yds.',
-    bedrooms: 3,
-    bathrooms: 3,
-    balconies: 2,
-    floorNumber: 1,
-    totalFloors: 3,
-    facing: 'East',
-    ageYears: 1,
-    furnishing: 'Semi-Furnished',
-    parkingSlots: 2,
-    ownershipType: 'Freehold',
+    areaSqFt: '',
+    superBuiltUpArea: '',
+    carpetArea: '',
+    plotArea: '',
+    bedrooms: undefined,
+    bathrooms: undefined,
+    balconies: undefined,
+    floorNumber: undefined,
+    totalFloors: undefined,
+    facing: '',
+    ageYears: undefined,
+    furnishing: '',
+    parkingSlots: undefined,
+    ownershipType: '',
     negotiable: true,
     state: '',
     district: '',
@@ -285,20 +285,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       status: 'Buy',
       price: 0,
       priceDisplay: '',
-      areaSqFt: '2,500 Sq.Ft.',
-      superBuiltUpArea: '2,500 Sq.Ft.',
-      carpetArea: '2,100 Sq.Ft.',
-      plotArea: '300 Sq. Yds.',
-      bedrooms: 3,
-      bathrooms: 3,
-      balconies: 2,
-      floorNumber: 5,
-      totalFloors: 10,
-      facing: 'East',
-      ageYears: 1,
-      furnishing: 'Semi-Furnished',
-      parkingSlots: 2,
-      ownershipType: 'Freehold',
+      areaSqFt: '',
+      superBuiltUpArea: '',
+      carpetArea: '',
+      plotArea: '',
+      bedrooms: undefined,
+      bathrooms: undefined,
+      balconies: undefined,
+      floorNumber: undefined,
+      totalFloors: undefined,
+      facing: '',
+      ageYears: undefined,
+      furnishing: '',
+      parkingSlots: undefined,
+      ownershipType: '',
       negotiable: true,
       state: '',
       district: '',
@@ -1679,27 +1679,28 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>SUPER BUILT-UP AREA</label>
-                        <input type="text" value={formData.superBuiltUpArea || formData.areaSqFt} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 4,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                        <input type="text" value={formData.superBuiltUpArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                       </div>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>CARPET AREA</label>
-                        <input type="text" value={formData.carpetArea} onChange={e => setFormData({ ...formData, carpetArea: e.target.value })} placeholder="e.g. 3,800 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                        <input type="text" value={formData.carpetArea || ''} onChange={e => setFormData({ ...formData, carpetArea: e.target.value })} placeholder="e.g. 2,100 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                       </div>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>BEDROOMS (BHK)</label>
-                        <input type="number" value={formData.bedrooms || 3} onChange={e => setFormData({ ...formData, bedrooms: parseInt(e.target.value) || 3 })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                        <input type="number" value={formData.bedrooms ?? ''} onChange={e => setFormData({ ...formData, bedrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 3" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                       </div>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>BATHROOMS</label>
-                        <input type="number" value={formData.bathrooms || 3} onChange={e => setFormData({ ...formData, bathrooms: parseInt(e.target.value) || 3 })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                        <input type="number" value={formData.bathrooms ?? ''} onChange={e => setFormData({ ...formData, bathrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 3" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                       </div>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PARKING SLOTS</label>
-                        <input type="number" value={formData.parkingSlots || 2} onChange={e => setFormData({ ...formData, parkingSlots: parseInt(e.target.value) || 2 })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                        <input type="number" value={formData.parkingSlots ?? ''} onChange={e => setFormData({ ...formData, parkingSlots: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 2" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                       </div>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>OWNERSHIP TYPE</label>
-                        <select value={formData.ownershipType || 'Freehold'} onChange={e => setFormData({ ...formData, ownershipType: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                        <select value={formData.ownershipType || ''} onChange={e => setFormData({ ...formData, ownershipType: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                          <option value="">Select Ownership Type</option>
                           <option value="Freehold">Freehold</option>
                           <option value="Leasehold">Leasehold</option>
                           <option value="Co-operative Society">Co-operative Society</option>
@@ -1707,11 +1708,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       </div>
                       <div>
                         <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FACING DIRECTION</label>
-                        <select value={formData.facing || 'East'} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                        <select value={formData.facing || ''} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                          <option value="">Select Facing Direction</option>
                           <option value="East">East Facing</option>
                           <option value="North-East">North-East Facing</option>
                           <option value="North">North Facing</option>
                           <option value="West">West Facing</option>
+                          <option value="South">South Facing</option>
+                          <option value="South-East">South-East Facing</option>
+                          <option value="South-West">South-West Facing</option>
+                          <option value="North-West">North-West Facing</option>
                         </select>
                       </div>
                     </div>

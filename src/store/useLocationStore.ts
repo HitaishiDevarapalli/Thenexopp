@@ -9,7 +9,7 @@ interface LocationState {
   setSelectedCity: (city: string) => void;
   setSelectedDistrict: (district: string) => void;
   setSelectedArea: (area: string) => void;
-  setLocation: (city: string, district?: string, area?: string, lat?: number, lng?: number) => void;
+  setLocation: (city: string, district?: string, area?: string, lat?: number | null, lng?: number | null) => void;
 }
 
 export const useLocationStore = create<LocationState>((set) => ({

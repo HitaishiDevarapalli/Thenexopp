@@ -1,0 +1,23 @@
+{
+  "properties": [],
+  "franchises": [],
+  "businesses": [],
+  "dealers": [],
+  "enquiries": [],
+  "showcaseVideos": [],
+  "customers": [],
+  "settings": {
+    "analytics": {
+      "activeListings": 0,
+      "happyClients": 0,
+      "dealsClosed": 0,
+      "totalVisitors": 1
+    }
+  },
+  "users": [],
+  "teamMembers": [],
+  "employees": [],
+  "roles": [],
+  "demandRegions": [],
+  "franchiseEnquiries": []
+}

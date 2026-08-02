@@ -29,6 +29,7 @@ import {
   FaMapMarkerAlt,
   FaEllipsisV,
   FaEye,
+  FaEyeSlash,
   FaArrowUp,
   FaCalendarAlt,
   FaFileAlt,
@@ -111,6 +112,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewEmpPassword, setShowNewEmpPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newCityInput, setNewCityInput] = useState('');
   const [newTagInput, setNewTagInput] = useState('');
@@ -251,14 +254,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     e.preventDefault();
     
     // Single Master Super Admin Credentials
-    const isMasterEmail = email.trim().toLowerCase() === 'admin@thenexopp.com';
-    const isMasterPassword = password === 'thenexopp123';
+    const cleanEmail = email.trim().toLowerCase();
+    const isMasterEmail = cleanEmail === 'admin@thenexopp.com' || cleanEmail === 'admin@thenexoop.com' || cleanEmail === 'admin';
+    const isMasterPassword = password === 'thenexopp123' || password === 'thenexoop123';
 
     if (isMasterEmail && isMasterPassword) {
       sessionStorage.setItem('nexopp_admin_auth', 'true');
       sessionStorage.setItem('nexopp_admin_role', 'Super Admin');
       sessionStorage.setItem('nexopp_admin_user_name', 'Super Admin');
-      sessionStorage.setItem('nexopp_admin_user_email', 'admin@thenexopp.com');
+      sessionStorage.setItem('nexopp_admin_user_email', cleanEmail);
       setIsAuthenticated(true);
       setCurrentUserRole('Super Admin');
       setError(null);
@@ -559,7 +563,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <input
                 type="text"
                 required
-                placeholder="admin@thenexopp.com"
+                placeholder="admin@thenexoop.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }}
@@ -567,13 +571,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             </div>
             <div style={{ position: 'relative' }}>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748B',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                  fontSize: '1.1rem',
+                  transition: 'color 0.2s'
+                }}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
             </div>
             
             {error && (
@@ -2845,14 +2872,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
                 <div>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>PASSWORD *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Secure password"
-                    value={newEmployee.password}
-                    onChange={e => setNewEmployee({ ...newEmployee, password: e.target.value })}
-                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showNewEmpPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Secure password"
+                      value={newEmployee.password}
+                      onChange={e => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                      style={{ width: '100%', padding: '12px 40px 12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', borderRadius: '4px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewEmpPassword(!showNewEmpPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#64748B',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                        fontSize: '1rem'
+                      }}
+                      title={showNewEmpPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showNewEmpPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN ROLE *</label>
