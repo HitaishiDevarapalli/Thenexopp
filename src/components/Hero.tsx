@@ -144,21 +144,39 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
         >
           {/* Left Column: Typography & Search Card */}
           <div>
+            {/* SEO Trust Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#ECFDF5',
+              border: '1px solid #A7F3D0',
+              padding: '6px 16px',
+              borderRadius: '9999px',
+              color: '#047857',
+              fontSize: '0.88rem',
+              fontWeight: 800,
+              marginBottom: '16px'
+            }}>
+              <FaCheckCircle style={{ color: '#10B981' }} />
+              India's Trusted Platform for Verified Listings
+            </div>
+
             <h1
               style={{
-                fontSize: '3.4rem',
-                fontWeight: 800,
+                fontSize: '3.1rem',
+                fontWeight: 900,
                 color: '#0F172A',
                 lineHeight: 1.15,
                 letterSpacing: '-0.03em',
                 margin: '0 0 16px 0',
               }}
             >
-              Your Next Opportunity
+              The Nexopp – India's Trusted Platform
               <br />
-              Is Just{' '}
+              for Verified Listings to{' '}
               <span style={{ color: '#16A34A', position: 'relative', display: 'inline-block' }}>
-                One Click Away
+                Buy and Sell
                 {/* Hand-drawn underline graphic */}
                 <svg
                   viewBox="0 0 260 20"
@@ -192,7 +210,7 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                 fontWeight: 500,
               }}
             >
-              Discover verified properties, premium franchises, profitable businesses, financing & insurance – All in one place.
+              The Nexopp connects buyers, sellers, investors, and business owners with 100% verified real estate properties, luxury villas, commercial spaces, and operational franchises across India.
             </p>
 
             {/* Multi-Tab Search Box Card */}

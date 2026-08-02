@@ -96,7 +96,42 @@ export const App: React.FC = () => {
   const { user } = useAuth();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentPath, setCurrentPath] = useState(window.location.pathname + window.location.search);
+
+  // Dynamic SEO Document Title update
+  useEffect(() => {
+    const pageData = parseUrl(window.location.pathname);
+    const page = pageData.page;
+    switch (page) {
+      case 'home':
+        document.title = "The Nexopp – India's Trusted Platform for Verified Listings to Buy and Sell";
+        break;
+      case 'propertiesPage':
+      case 'flatsPage':
+      case 'villasPage':
+      case 'housesPage':
+      case 'landPage':
+        document.title = "Verified Real Estate Properties for Sale & Rent | The Nexopp";
+        break;
+      case 'franchisePage':
+      case 'franchiseResales':
+      case 'newFranchise':
+        document.title = "Verified Franchise Opportunities & Resales in India | The Nexopp";
+        break;
+      case 'businessPage':
+      case 'businessListings':
+        document.title = "Operational Businesses for Buy and Sell | The Nexopp";
+        break;
+      case 'adminPortal':
+        document.title = "Enterprise Admin Management Console | The Nexopp";
+        break;
+      case 'wishlist':
+        document.title = "Saved Properties & Wishlist | The Nexopp";
+        break;
+      default:
+        document.title = "The Nexopp – India's Trusted Platform for Verified Listings to Buy and Sell";
+    }
+  }, [currentPath]);
  
    // Sync state with URL
    useEffect(() => {
