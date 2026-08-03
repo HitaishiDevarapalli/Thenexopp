@@ -428,7 +428,21 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       let exactLocationMatch = true;
       let distanceKm = 0;
       // 2. Geospatial Location Filtering
-      if (location && location.lat && location.lng) {
+      const hasLocalSearch = locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') && !locationText.toLowerCase().includes('gps');
+
+      if (hasLocalSearch) {
+        const loc = locationText.toLowerCase().trim();
+        const matchLoc =
+          (item.city && item.city.toLowerCase().includes(loc)) ||
+          (item.location && item.location.toLowerCase().includes(loc)) ||
+          (item.title && item.title.toLowerCase().includes(loc)) ||
+          (item.type && item.type.toLowerCase().includes(loc));
+        if (!matchLoc) return false;
+        
+        const itemCity = (item.city || '').toLowerCase();
+        const itemLocStr = (item.location || '').toLowerCase();
+        exactLocationMatch = itemCity === loc || itemLocStr.includes(loc) || (item.title || '').toLowerCase().includes(loc);
+      } else if (location && location.lat && location.lng) {
         if (item.latitude && item.longitude) {
           const dist = getDistance(location.lat, location.lng, item.latitude, item.longitude);
           distanceKm = dist;
@@ -452,20 +466,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             if (!matchLoc) return false;
             exactLocationMatch = true;
           }
-        }
-      } else if (locationText && locationText.trim() !== '') {
-        const loc = locationText.toLowerCase().trim();
-        if (!loc.includes('current location') && !loc.includes('gps')) {
-          const matchLoc =
-            (item.city && item.city.toLowerCase().includes(loc)) ||
-            (item.location && item.location.toLowerCase().includes(loc)) ||
-            (item.title && item.title.toLowerCase().includes(loc)) ||
-            (item.type && item.type.toLowerCase().includes(loc));
-          if (!matchLoc) return false;
-          
-          const itemCity = (item.city || '').toLowerCase();
-          const itemLocStr = (item.location || '').toLowerCase();
-          exactLocationMatch = itemCity === loc || itemLocStr.includes(loc) || (item.title || '').toLowerCase().includes(loc);
         }
       }
       
