@@ -549,7 +549,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total Properties</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.totalProperties}</div>
-            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 12.5% this month</div>
+            <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 500 }}>Database count</div>
           </div>
 
           {/* Active Listings */}
@@ -559,7 +559,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Active Listings</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.activeListings}</div>
-            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 8.2% this month</div>
+            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>Live on marketplace</div>
           </div>
 
           {/* Total Sold Properties */}
@@ -608,8 +608,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               <FaCrown style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Premium</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.sponsoredCount || 156}</div>
-            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 15.3% this month</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.sponsoredCount}</div>
+            <div style={{ fontSize: '0.7rem', color: '#9333EA', fontWeight: 600 }}>Premium badge active</div>
           </div>
 
           {/* Total Value */}
@@ -619,7 +619,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total Value</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>₹{stats.totalValue} Cr</div>
-            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>↑ 18.7% this month</div>
+            <div style={{ fontSize: '0.7rem', color: '#0D9488', fontWeight: 600 }}>Total portfolio value</div>
           </div>
 
         </div>
