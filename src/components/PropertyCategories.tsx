@@ -449,8 +449,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (item.latitude && item.longitude) {
           const dist = getDistance(location.lat, location.lng, item.latitude, item.longitude);
           distanceKm = dist;
-          // Only show properties within 50km radius
-          if (dist > 50) return false;
+          // Only show properties within 300km radius
+          if (dist > 300) return false;
           
           const targetLoc = (location.city || location.displayName || '').toLowerCase();
           const itemCity = (item.city || '').toLowerCase();
@@ -474,6 +474,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       
       (item as any).exactLocationMatch = exactLocationMatch;
       (item as any).distanceKm = distanceKm;
+      
+      let distanceTier = 0;
+      if (!exactLocationMatch && distanceKm > 0) {
+        if (distanceKm <= 50) distanceTier = 50;
+        else if (distanceKm <= 100) distanceTier = 100;
+        else if (distanceKm <= 150) distanceTier = 150;
+        else if (distanceKm <= 200) distanceTier = 200;
+        else if (distanceKm <= 250) distanceTier = 250;
+        else distanceTier = 300;
+      }
+      (item as any).distanceTier = distanceTier;
 
       // 3. Tab Categorization
       if (activeTab === 'Buy') {
@@ -1301,9 +1312,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 paginatedProperties.map((prop, index) => {
                 const targetCityRaw = location?.city || location?.displayName || (locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') ? locationText : null);
                 const targetCity = targetCityRaw ? targetCityRaw.charAt(0).toUpperCase() + targetCityRaw.slice(1) : '';
-                const showSeparator = !(prop as any).exactLocationMatch && 
-                  (index === 0 || (paginatedProperties[index - 1] as any).exactLocationMatch) && 
-                  targetCity;
+                const currentTier = (prop as any).distanceTier || 0;
+                const prevTier = index === 0 ? 0 : ((paginatedProperties[index - 1] as any).distanceTier || 0);
+                
+                const showSeparator = currentTier > 0 && currentTier > prevTier && targetCity;
 
                 const isFav = !!wishlisted[prop.id];
                 let badgeBg = '#DCFCE7';
@@ -1329,7 +1341,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     {showSeparator && (
                       <div style={{ gridColumn: '1 / -1', marginTop: index > 0 ? '12px' : '0', marginBottom: '8px', paddingBottom: '12px', borderBottom: '2px solid #E2E8F0' }}>
                         <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#475569', fontWeight: 700 }}>
-                          Displaying ads within 50 kms from {targetCity}
+                          Displaying ads within {currentTier} kms from {targetCity}
                         </h3>
                       </div>
                     )}

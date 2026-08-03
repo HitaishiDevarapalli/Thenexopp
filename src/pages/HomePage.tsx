@@ -216,7 +216,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       if (region && region.latitude && region.longitude && item.latitude && item.longitude) {
         const dist = getDistance(region.latitude, region.longitude, item.latitude, item.longitude);
         item.distanceKm = dist;
-        return dist <= 50; // Return true if within 50km
+        return dist <= 300; // Return true if within 300km
       }
 
       // If no exact match and no coordinates available, exclude
