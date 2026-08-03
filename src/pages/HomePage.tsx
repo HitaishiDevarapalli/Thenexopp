@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
@@ -81,6 +81,13 @@ const HERO_SLIDES = [
 ];
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick }) => {
+  const [, setForceUpdate] = useState(0);
+  useEffect(() => {
+    const handler = () => setForceUpdate(prev => prev + 1);
+    window.addEventListener('nexopp_data_changed', handler);
+    return () => window.removeEventListener('nexopp_data_changed', handler);
+  }, []);
+
   const { location } = useLocationStore();
   const currentGlobalCity = location?.city || location?.displayName || selectedCity || 'Guntur';
   // Hero Carousel Index State
