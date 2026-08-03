@@ -209,40 +209,61 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       boxShadow: scrolled ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
       transition: 'box-shadow 0.3s ease',
     }}>
-      <div className="navbar-container flex-wrap-safe" style={{
+      <div className="navbar-container" style={{
         maxWidth: '1360px',
         margin: '0 auto',
-        padding: '10px 24px',
+        padding: '12px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
         boxSizing: 'border-box',
+        height: '70px'
       }}>
 
-        {/* Left: Logo */}
-        <a
-          href="#hero"
-          onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            if (onNavigateToPage) onNavigateToPage('adminPortal');
-            else window.location.href = '/secret-admin';
-          }}
-          title="Double-click for Admin Portal"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            textDecoration: 'none',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          <Logo size="md" />
-        </a>
+        {/* Left: Mobile Hamburger + Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            className="mobile-only"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '22px',
+              color: '#1E293B',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <FaBars />
+          </button>
 
-        {/* Center: Nav Items */}
-        <ul className="navbar-menu" style={{
+          <a
+            href="#hero"
+            onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              if (onNavigateToPage) onNavigateToPage('adminPortal');
+              else window.location.href = '/secret-admin';
+            }}
+            title="Double-click for Admin Portal"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <Logo size="md" />
+          </a>
+        </div>
+
+        {/* Center: Desktop Nav Items */}
+        <ul className="navbar-menu desktop-only" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
@@ -584,10 +605,110 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             </button>
           )}
         </div>
-
       </div>
 
+      {/* Mobile Menu Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'fixed',
+          top: '70px',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#FFFFFF',
+          zIndex: 999999,
+          overflowY: 'auto',
+          padding: '20px 24px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          animation: 'fadeIn 0.2s ease'
+        }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {menuItems.map((item) => (
+              <li key={item.id} style={{ borderBottom: '1px solid #F1F5F9', padding: '14px 0' }}>
+                <div
+                  onClick={() => {
+                    handleNavItemClick(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, color: '#0F172A', cursor: 'pointer' }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ color: '#16A34A', fontSize: '18px' }}>{item.icon}</span>
+                    {item.label}
+                  </span>
+                  {item.dropdown && <FaChevronDown style={{ fontSize: '12px', color: '#94A3B8' }} />}
+                </div>
 
+                {item.dropdown && (
+                  <div style={{ paddingLeft: '30px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {item.dropdown.map((sub, sIdx) => (
+                      <div
+                        key={sIdx}
+                        onClick={(e) => {
+                          handleDropdownClick(item.id, sub.name, sub.link, e);
+                          setMobileMenuOpen(false);
+                        }}
+                        style={{ fontSize: '14px', fontWeight: 600, color: '#475569', padding: '6px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      >
+                        {sub.subIcon && <span style={{ opacity: 0.7 }}>{sub.subIcon}</span>}
+                        {sub.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
+            {!user ? (
+              <button
+                onClick={() => {
+                  openLoginModal();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#16A34A',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <FaUser /> Login / Register
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#FEF2F2',
+                  color: '#EF4444',
+                  border: '1px solid #FCA5A5',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '15px',
+                  cursor: 'pointer'
+                }}
+              >
+                Logout ({user.name})
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

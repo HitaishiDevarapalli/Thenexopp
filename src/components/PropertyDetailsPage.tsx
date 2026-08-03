@@ -807,8 +807,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               </div>
 
               {/* Interactive Map Grid Container */}
-              {/* Interactive Map Grid Container */}
-              <div style={{ width: '100%', height: '340px', borderRadius: '16px', position: 'relative', overflow: 'hidden', border: '2px solid #E2E8F0', marginBottom: '24px' }}>
+              <div className="property-map-container">
                 <PropertyLocationMap
                   latitude={property.latitude}
                   longitude={property.longitude}
