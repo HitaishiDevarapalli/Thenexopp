@@ -491,6 +491,7 @@ app.post('/api/dealers', async (req, res, next) => {
         reraNumber: d.reraNumber || null,
         state: d.state || 'Andhra Pradesh',
         city: d.city || 'Guntur',
+        status: d.status || 'Active',
       },
     });
     return res.status(201).json(created);
@@ -514,6 +515,9 @@ app.put('/api/dealers/:id', async (req, res, next) => {
     if (d.email !== undefined) updateData.email = d.email;
     if (d.specialization !== undefined) updateData.specialization = d.specialization;
     if (d.reraNumber !== undefined) updateData.reraNumber = d.reraNumber;
+    if (d.state !== undefined) updateData.state = d.state;
+    if (d.city !== undefined) updateData.city = d.city;
+    if (d.status !== undefined) updateData.status = d.status;
 
     const updated = await prisma.broker.update({ where: { id }, data: updateData });
     return res.json(updated);

@@ -61,6 +61,7 @@ model Broker {
   reraNumber      String?
   state           String   @default("Andhra Pradesh")
   city            String   @default("Guntur")
+  status          String   @default("Active")
   createdAt       DateTime @default(now())
 
   properties      Property[]
