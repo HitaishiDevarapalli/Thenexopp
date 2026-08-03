@@ -59,6 +59,12 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       center: [mapCenter.lat, mapCenter.lng],
       zoom: 13,
       zoomControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      touchZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
