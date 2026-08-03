@@ -319,8 +319,31 @@ app.get('/api/franchises', async (req, res, next) => {
 
 app.post('/api/franchises', async (req, res, next) => {
   try {
-    const newFranchise = { id: req.body.id || `fran-pg-${Date.now()}`, ...req.body };
-    const created = await prisma.franchise.create({ data: newFranchise });
+    const f = req.body;
+    const created = await prisma.franchise.create({
+      data: {
+        id: f.id || `fran-pg-${Date.now()}`,
+        brand: f.brand || f.name || 'Franchise Brand',
+        type: f.type || 'Standard',
+        category: f.category || 'Retail',
+        investment: Number(f.investment) || 500000,
+        investmentDisplay: f.investmentDisplay || `₹${f.investment || '5 Lakhs'}`,
+        location: f.location || 'Guntur',
+        state: f.state || 'Andhra Pradesh',
+        city: f.city || 'Guntur',
+        latitude: Number(f.latitude) || 16.3067,
+        longitude: Number(f.longitude) || 80.4363,
+        rating: Number(f.rating) || 4.8,
+        reviewCount: Number(f.reviewCount) || 0,
+        verified: f.verified !== false,
+        trending: Boolean(f.trending),
+        availableBranchCount: Number(f.availableBranchCount) || 1,
+        image: f.image || '',
+        logo: f.logo || f.image || '',
+        trustScore: Number(f.trustScore) || 95,
+        status: f.status || 'Active',
+      },
+    });
     return res.status(201).json(created);
   } catch (err) {
     next(err);
@@ -330,7 +353,24 @@ app.post('/api/franchises', async (req, res, next) => {
 app.put('/api/franchises/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updated = await prisma.franchise.update({ where: { id }, data: req.body });
+    const f = req.body;
+    const updateData = {};
+    if (f.brand !== undefined) updateData.brand = f.brand;
+    if (f.type !== undefined) updateData.type = f.type;
+    if (f.category !== undefined) updateData.category = f.category;
+    if (f.investment !== undefined) updateData.investment = Number(f.investment);
+    if (f.investmentDisplay !== undefined) updateData.investmentDisplay = f.investmentDisplay;
+    if (f.location !== undefined) updateData.location = f.location;
+    if (f.state !== undefined) updateData.state = f.state;
+    if (f.city !== undefined) updateData.city = f.city;
+    if (f.rating !== undefined) updateData.rating = Number(f.rating);
+    if (f.verified !== undefined) updateData.verified = Boolean(f.verified);
+    if (f.trending !== undefined) updateData.trending = Boolean(f.trending);
+    if (f.image !== undefined) updateData.image = f.image;
+    if (f.logo !== undefined) updateData.logo = f.logo;
+    if (f.status !== undefined) updateData.status = f.status;
+
+    const updated = await prisma.franchise.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) {
     next(err);
@@ -358,8 +398,32 @@ app.get('/api/businesses', async (req, res, next) => {
 
 app.post('/api/businesses', async (req, res, next) => {
   try {
-    const newBiz = { id: req.body.id || `biz-pg-${Date.now()}`, ...req.body };
-    const created = await prisma.business.create({ data: newBiz });
+    const b = req.body;
+    const created = await prisma.business.create({
+      data: {
+        id: b.id || `biz-pg-${Date.now()}`,
+        name: b.name || 'Business Listing',
+        industry: b.industry || 'General',
+        location: b.location || 'Guntur',
+        state: b.state || 'Andhra Pradesh',
+        city: b.city || 'Guntur',
+        latitude: Number(b.latitude) || 16.3067,
+        longitude: Number(b.longitude) || 80.4363,
+        price: Number(b.price) || 1000000,
+        priceDisplay: b.priceDisplay || `₹${b.price || '10 Lakhs'}`,
+        revenueMonthly: b.revenueMonthly || '₹1 Lakh/mo',
+        profitMonthly: b.profitMonthly || '₹30,000/mo',
+        establishedYear: Number(b.establishedYear) || 2020,
+        employeesCount: Number(b.employeesCount) || 5,
+        rating: Number(b.rating) || 4.7,
+        reviewCount: Number(b.reviewCount) || 0,
+        verified: b.verified !== false,
+        image: b.image || '',
+        description: b.description || '',
+        reasonForSale: b.reasonForSale || 'Retirement',
+        trustScore: Number(b.trustScore) || 95,
+      },
+    });
     return res.status(201).json(created);
   } catch (err) {
     next(err);
@@ -369,7 +433,19 @@ app.post('/api/businesses', async (req, res, next) => {
 app.put('/api/businesses/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updated = await prisma.business.update({ where: { id }, data: req.body });
+    const b = req.body;
+    const updateData = {};
+    if (b.name !== undefined) updateData.name = b.name;
+    if (b.industry !== undefined) updateData.industry = b.industry;
+    if (b.location !== undefined) updateData.location = b.location;
+    if (b.price !== undefined) updateData.price = Number(b.price);
+    if (b.priceDisplay !== undefined) updateData.priceDisplay = b.priceDisplay;
+    if (b.revenueMonthly !== undefined) updateData.revenueMonthly = b.revenueMonthly;
+    if (b.profitMonthly !== undefined) updateData.profitMonthly = b.profitMonthly;
+    if (b.image !== undefined) updateData.image = b.image;
+    if (b.description !== undefined) updateData.description = b.description;
+
+    const updated = await prisma.business.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) {
     next(err);
@@ -398,8 +474,25 @@ app.get('/api/dealers', async (req, res, next) => {
 
 app.post('/api/dealers', async (req, res, next) => {
   try {
-    const newDealer = { id: req.body.id || `dealer-pg-${Date.now()}`, ...req.body };
-    const created = await prisma.broker.create({ data: newDealer });
+    const d = req.body;
+    const created = await prisma.broker.create({
+      data: {
+        id: d.id || `dealer-pg-${Date.now()}`,
+        companyName: d.companyName || d.fullName || 'Independent Realty',
+        logo: d.logo || d.photo || null,
+        photo: d.photo || d.logo || null,
+        rating: Number(d.rating) || 4.8,
+        reviewCount: Number(d.reviewCount) || 0,
+        verified: d.verified !== false,
+        yearsExperience: Number(d.yearsExperience) || 5,
+        phone: d.phone || d.mobileNumber || null,
+        email: d.email || null,
+        specialization: d.specialization || 'Residential & Commercial',
+        reraNumber: d.reraNumber || null,
+        state: d.state || 'Andhra Pradesh',
+        city: d.city || 'Guntur',
+      },
+    });
     return res.status(201).json(created);
   } catch (err) {
     next(err);
@@ -409,7 +502,20 @@ app.post('/api/dealers', async (req, res, next) => {
 app.put('/api/dealers/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updated = await prisma.broker.update({ where: { id }, data: req.body });
+    const d = req.body;
+    const updateData = {};
+    if (d.companyName !== undefined || d.fullName !== undefined) updateData.companyName = d.companyName || d.fullName;
+    if (d.logo !== undefined) updateData.logo = d.logo;
+    if (d.photo !== undefined) updateData.photo = d.photo;
+    if (d.rating !== undefined) updateData.rating = Number(d.rating);
+    if (d.verified !== undefined) updateData.verified = Boolean(d.verified);
+    if (d.yearsExperience !== undefined) updateData.yearsExperience = Number(d.yearsExperience);
+    if (d.phone !== undefined || d.mobileNumber !== undefined) updateData.phone = d.phone || d.mobileNumber;
+    if (d.email !== undefined) updateData.email = d.email;
+    if (d.specialization !== undefined) updateData.specialization = d.specialization;
+    if (d.reraNumber !== undefined) updateData.reraNumber = d.reraNumber;
+
+    const updated = await prisma.broker.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) {
     next(err);
