@@ -291,14 +291,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
           </div>
 
           {/* Row of Filter Inputs */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2.2fr 1.3fr 1.3fr 1.1fr auto',
-              gap: '14px',
-              alignItems: 'start',
-            }}
-          >
+          <div className="top-search-filter-bar-5">
             {/* Location Input */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
@@ -426,7 +419,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         </div>
 
         {/* MAIN 2-COLUMN GRID AREA */}
-        <div style={{ display: 'grid', gridTemplateColumns: '270px 1fr', gap: '28px', alignItems: 'start' }}>
+        <div className="layout-sidebar-main">
           
           {/* LEFT SIDEBAR: "Filter By" Card */}
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '22px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)' }}>
@@ -608,7 +601,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
             </div>
 
             {/* BUSINESS CARDS GRID */}
-            <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'map' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '20px', marginBottom: '36px' }}>
+            <div className={`responsive-property-grid ${viewMode === 'map' ? 'map-view-grid' : ''}`} style={{ marginBottom: '36px' }}>
               {businessesList.length === 0 ? (
                 <div style={{ gridColumn: '1 / -1', backgroundColor: '#FFFFFF', padding: '60px 20px', borderRadius: '24px', border: '1px solid #E2E8F0', textAlign: 'center', color: '#64748B' }}>
                   <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>💼</div>

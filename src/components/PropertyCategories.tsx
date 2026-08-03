@@ -399,6 +399,23 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       };
     });
 
+    const hasLocalSearch = locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') && !locationText.toLowerCase().includes('gps');
+    
+    let searchLat = location?.lat;
+    let searchLng = location?.lng;
+    
+    if (hasLocalSearch && (!searchLat || !searchLng)) {
+      const locStr = locationText.toLowerCase().trim();
+      const anchorProp = baseList.find(item => 
+        (item.city && item.city.toLowerCase() === locStr) ||
+        (item.location && item.location.toLowerCase().includes(locStr))
+      );
+      if (anchorProp && anchorProp.latitude && anchorProp.longitude) {
+        searchLat = anchorProp.latitude;
+        searchLng = anchorProp.longitude;
+      }
+    }
+
     let filtered = baseList.filter((item) => {
       // Availability Filter
       if (availabilityFilter === 'Available' && item.sold) return false;
@@ -431,45 +448,37 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       let exactLocationMatch = true;
       let distanceKm = 0;
       // 2. Geospatial Location Filtering
-      const hasLocalSearch = locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') && !locationText.toLowerCase().includes('gps');
+      
+      const locStr = locationText ? locationText.toLowerCase().trim() : '';
 
-      if (hasLocalSearch) {
-        const loc = locationText.toLowerCase().trim();
-        const matchLoc =
-          (item.city && item.city.toLowerCase().includes(loc)) ||
-          (item.location && item.location.toLowerCase().includes(loc)) ||
-          (item.title && item.title.toLowerCase().includes(loc)) ||
-          (item.type && item.type.toLowerCase().includes(loc));
-        if (!matchLoc) return false;
-        
-        const itemCity = (item.city || '').toLowerCase();
-        const itemLocStr = (item.location || '').toLowerCase();
-        exactLocationMatch = itemCity === loc || itemLocStr.includes(loc) || (item.title || '').toLowerCase().includes(loc);
-      } else if (location && location.lat && location.lng) {
-        if (item.latitude && item.longitude) {
-          const dist = getDistance(location.lat, location.lng, item.latitude, item.longitude);
-          distanceKm = dist;
-          // Only show properties within 300km radius
-          if (dist > 300) return false;
-          
-          const targetLoc = (location.city || location.displayName || '').toLowerCase();
-          const itemCity = (item.city || '').toLowerCase();
-          const itemLocStr = (item.location || '').toLowerCase();
-          
-          if (targetLoc) {
-            exactLocationMatch = itemCity.includes(targetLoc) || itemLocStr.includes(targetLoc);
-          } else {
-            exactLocationMatch = dist <= 5;
-          }
-        } else {
-          // Fallback to string matching if property doesn't have lat/lng yet in the mock DB
-          const loc = (location.city || location.displayName || '').toLowerCase();
-          if (loc) {
-            const matchLoc = item.location.toLowerCase().includes(loc) || (item.city && item.city.toLowerCase().includes(loc));
-            if (!matchLoc) return false;
-            exactLocationMatch = true;
-          }
-        }
+      if (searchLat && searchLng && item.latitude && item.longitude) {
+         const dist = getDistance(searchLat, searchLng, item.latitude, item.longitude);
+         distanceKm = dist;
+         
+         const targetLoc = (location?.city || location?.displayName || locStr).toLowerCase();
+         const itemCity = (item.city || '').toLowerCase();
+         const itemLocStr = (item.location || '').toLowerCase();
+         
+         if (targetLoc) {
+             exactLocationMatch = itemCity === targetLoc || itemLocStr.includes(targetLoc) || (item.title || '').toLowerCase().includes(targetLoc);
+         } else {
+             exactLocationMatch = dist <= 5;
+         }
+      } else if (hasLocalSearch) {
+         // Fallback to string only if no lat/lng found anywhere
+         const matchLoc =
+          (item.city && item.city.toLowerCase().includes(locStr)) ||
+          (item.location && item.location.toLowerCase().includes(locStr)) ||
+          (item.title && item.title.toLowerCase().includes(locStr)) ||
+          (item.type && item.type.toLowerCase().includes(locStr));
+         if (!matchLoc) return false;
+         
+         const itemCity = (item.city || '').toLowerCase();
+         const itemLocStr = (item.location || '').toLowerCase();
+         exactLocationMatch = itemCity === locStr || itemLocStr.includes(locStr) || (item.title || '').toLowerCase().includes(locStr);
+      } else {
+         // If no search, exactLocationMatch is true (shows all by default if no filters)
+         exactLocationMatch = true; 
       }
       
       (item as any).exactLocationMatch = exactLocationMatch;
@@ -737,14 +746,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           </div>
 
           {/* Row of Filter Inputs */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2.2fr 1.3fr 1.3fr 1.1fr 1.3fr auto',
-              gap: '14px',
-              alignItems: 'start',
-            }}
-          >
+          <div className="top-search-filter-bar">
             {/* Location Input */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
@@ -1027,14 +1029,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         </div>
 
         {/* MAIN 2-COLUMN GRID AREA */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '270px 1fr',
-            gap: '28px',
-            alignItems: 'start',
-          }}
-        >
+        <div className="layout-sidebar-main">
           {/* LEFT SIDEBAR: "Filter By" Card */}
           <div
             style={{
@@ -1296,10 +1291,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
             {/* PROPERTY CARDS GRID */}
             <div
+              className={`responsive-property-grid ${viewMode === 'map' ? 'map-view-grid' : ''}`}
               style={{
-                display: 'grid',
-                gridTemplateColumns: viewMode === 'map' ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-                gap: '20px',
                 marginBottom: '36px',
               }}
             >
@@ -1342,7 +1335,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     {showSeparator && (
                       <div style={{ gridColumn: '1 / -1', marginTop: index > 0 ? '12px' : '0', marginBottom: '8px', paddingBottom: '12px', borderBottom: '2px solid #E2E8F0' }}>
                         <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#475569', fontWeight: 700 }}>
-                          Displaying ads within {currentTier} kms from {targetCity}
+                          {currentTier === 50 ? `Properties within 50 kms from ${targetCity}` :
+                           currentTier === 100 ? `Properties above 50 kms from ${targetCity}` :
+                           currentTier === 150 ? `Properties above 100 kms from ${targetCity}` :
+                           currentTier >= 200 ? `Properties above 150 kms from ${targetCity}` :
+                           `Properties within ${currentTier} kms from ${targetCity}`}
                         </h3>
                       </div>
                     )}

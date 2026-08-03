@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, FaChevronDown, FaMapMarkedAlt, FaStore, FaHandHoldingUsd, FaChartLine, FaShieldAlt, FaEnvelope, FaUtensils, FaMedkit, FaSearch, FaRegHeart, FaUser } from 'react-icons/fa';
+import { FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, FaChevronDown, FaMapMarkedAlt, FaStore, FaHandHoldingUsd, FaChartLine, FaShieldAlt, FaEnvelope, FaUtensils, FaMedkit, FaSearch, FaRegHeart, FaUser, FaBars } from 'react-icons/fa';
 import { selectedCity, setSelectedCity } from '../../db/marketplaceDb';
 import { searchLivePlaces, geocodeLocationOnline } from '../../utils/locationIntelligence';
 import { Logo } from '../common/Logo';
@@ -25,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const [activeSection, setActiveSection] = useState('hero');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentCity, setCurrentCityState] = useState(selectedCity);
 
   // Location Context & Panel State
@@ -208,14 +209,13 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       boxShadow: scrolled ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
       transition: 'box-shadow 0.3s ease',
     }}>
-      <div style={{
+      <div className="navbar-container flex-wrap-safe" style={{
         maxWidth: '1360px',
         margin: '0 auto',
-        padding: '0 24px',
+        padding: '10px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: '80px',
         width: '100%',
         boxSizing: 'border-box',
       }}>
@@ -242,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         </a>
 
         {/* Center: Nav Items */}
-        <ul style={{
+        <ul className="navbar-menu" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
@@ -357,7 +357,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         </ul>
 
         {/* Right: Watchlist, Post, Profile */}
-        <div style={{
+        <div className="mobile-stack flex-wrap-safe" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
