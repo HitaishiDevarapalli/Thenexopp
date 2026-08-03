@@ -5229,6 +5229,61 @@ body.modal-open {
   }
 }
 
+/* Location Selector Popup Dropdown Container */
+.location-selector-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 360px;
+  max-width: 90vw;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 1px solid #E2E8F0;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  /* Location Selector fixed overlay on mobile to prevent right overflow */
+  .location-selector-dropdown {
+    position: fixed !important;
+    top: 60px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    z-index: 99999 !important;
+  }
+
+  /* Centering Stats Grid on Mobile */
+  .responsive-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+  }
+  .responsive-stats-grid > div {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: center !important;
+  }
+
+  /* Hero Showcase Slide Title Scaling */
+  .hero-slide-title {
+    font-size: 1.05rem !important;
+    line-height: 1.25 !important;
+  }
+
+  /* Showcase Video Box Container Height on Mobile */
+  .showcase-video-box {
+    height: 240px !important;
+    min-height: 220px !important;
+  }
+}
+
 /* ================================================================
    MOBILE LAYOUT & OVERRIDE CLASSES (< 768px)
    ================================================================ */

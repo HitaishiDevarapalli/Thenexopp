@@ -140,10 +140,11 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
   return (
     <div
       ref={panelRef}
+      className="location-selector-dropdown"
       style={{
         position: 'absolute',
         top: '60px',
-        left: '0', // Adjust this based on parent relative positioning
+        right: '0',
         width: '360px',
         backgroundColor: '#FFFFFF',
         borderRadius: '12px',

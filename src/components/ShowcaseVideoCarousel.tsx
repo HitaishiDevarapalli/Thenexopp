@@ -279,22 +279,20 @@ export const ShowcaseVideoCarousel: React.FC<{
       }}
     >
       {/* Container */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+      <div ref={containerRef} style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
 
-        {/* 16:9 ASPECT RATIO VIDEO CONTAINER */}
+        {/* 16:9 Video Box (No black glare or text blocking video) */}
         <div
-          ref={containerRef}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          className="showcase-video-box"
           style={{
             position: 'relative',
             width: '100%',
             aspectRatio: '16 / 9',
-            backgroundColor: '#020617',
-            borderRadius: '24px',
+            backgroundColor: '#000000',
+            borderRadius: '20px',
             overflow: 'hidden',
-            boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255,255,255,0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.12)'
+            boxShadow: '0 15px 40px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #E2E8F0'
           }}
         >
           {activeVideos.length > 0 && currentVideo ? (
@@ -331,11 +329,12 @@ export const ShowcaseVideoCarousel: React.FC<{
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover',
+                  objectFit: 'contain',
                   position: 'absolute',
                   top: 0,
                   left: 0,
-                  zIndex: 2
+                  zIndex: 2,
+                  backgroundColor: '#000000'
                 }}
                 onError={(e) => {
                   // Fallback video source if primary URL fails
@@ -349,161 +348,60 @@ export const ShowcaseVideoCarousel: React.FC<{
             <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
               <FaFilm style={{ fontSize: '48px', marginBottom: '16px', color: '#10B981' }} />
               <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF' }}>No Video Loaded</div>
-              <div style={{ fontSize: '0.88rem', marginTop: '6px' }}>Click "Upload / Add Video" to add your property video!</div>
             </div>
           )}
 
-          {/* Clean 16:9 Video Box (No top overlays) */}
-
-          {/* Navigation Overlay Arrows */}
+          {/* Navigation Overlay Arrows (Discreet) */}
           {activeVideos.length > 1 && (
             <>
               <button
                 onClick={goPrev}
                 style={{
                   position: 'absolute',
-                  left: '20px',
+                  left: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   zIndex: 10,
-                  width: '48px',
-                  height: '48px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  border: 'none',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  backdropFilter: 'blur(8px)',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)'
+                  backdropFilter: 'blur(4px)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.75)'}
               >
-                <FaChevronLeft style={{ fontSize: '16px' }} />
+                <FaChevronLeft style={{ fontSize: '14px' }} />
               </button>
 
               <button
                 onClick={goNext}
                 style={{
                   position: 'absolute',
-                  right: '20px',
+                  right: '12px',
                   top: '50%',
                   transform: 'translateY(-50%)',
                   zIndex: 10,
-                  width: '48px',
-                  height: '48px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  border: 'none',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  backdropFilter: 'blur(8px)',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)'
+                  backdropFilter: 'blur(4px)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#10B981'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.75)'}
               >
-                <FaChevronRight style={{ fontSize: '16px' }} />
+                <FaChevronRight style={{ fontSize: '14px' }} />
               </button>
             </>
-          )}
-
-          {/* Bottom Gradient Details Overlay */}
-          {currentVideo && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 9,
-                padding: '60px 24px 20px 24px',
-                background: 'linear-gradient(to top, rgba(2,6,23,0.92) 0%, rgba(2,6,23,0.5) 60%, transparent 100%)',
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'space-between',
-                gap: '16px',
-                pointerEvents: 'none'
-              }}
-            >
-              <div style={{ pointerEvents: 'auto' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFFFFF', margin: '0 0 6px 0', textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}>
-                  {currentVideo.title}
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.88rem', color: '#CBD5E1' }}>
-                  {location && <span>📍 {location}</span>}
-                  {price && <span style={{ color: '#34D399', fontWeight: 800 }}>💰 {price}</span>}
-                </div>
-              </div>
-
-              {/* Action & Fullscreen Controls */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto' }}>
-                {!ytEmbed && (
-                  <>
-                    <button
-                      onClick={togglePlayPause}
-                      style={{
-                        padding: '8px 14px',
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        borderRadius: '10px',
-                        color: '#FFFFFF',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        backdropFilter: 'blur(4px)'
-                      }}
-                    >
-                      {isPlaying ? <FaPause /> : <FaPlay />}
-                      <span>{isPlaying ? 'Pause' : 'Play'}</span>
-                    </button>
-
-                    <button
-                      onClick={toggleMute}
-                      style={{
-                        padding: '8px 12px',
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                        border: '1px solid rgba(255,255,255,0.2)',
-                        borderRadius: '10px',
-                        color: '#FFFFFF',
-                        cursor: 'pointer',
-                        backdropFilter: 'blur(4px)'
-                      }}
-                      title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
-                    >
-                      {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
-                    </button>
-                  </>
-                )}
-
-                <button
-                  onClick={toggleFullscreen}
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: '10px',
-                    color: '#FFFFFF',
-                    cursor: 'pointer',
-                    backdropFilter: 'blur(4px)'
-                  }}
-                  title="Fullscreen 16:9"
-                >
-                  <FaExpand />
-                </button>
-              </div>
-            </div>
           )}
         </div>
 

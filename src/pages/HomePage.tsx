@@ -357,17 +357,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               <img
                 src={currentSlide.image}
                 alt={currentSlide.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(1.15) contrast(1.05)' }}
               />
               
-              {/* Overlay Gradient */}
+              {/* Overlay Gradient (Lightened so picture is bright) */}
               <div style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.2) 60%, transparent 100%)'
+                background: 'linear-gradient(to top, rgba(2, 6, 23, 0.75) 0%, rgba(2, 6, 23, 0.1) 60%, transparent 100%)'
               }} />
 
               {/* Slide Counter / Category Badge */}
@@ -375,14 +375,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 position: 'absolute',
                 top: '16px',
                 left: '16px',
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(4px)',
                 padding: '6px 14px',
                 borderRadius: '20px',
                 fontSize: '0.78rem',
                 fontWeight: 800,
                 color: '#0F172A',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
               }}>
                 ⭐ Featured {currentSlide.type}
               </div>
@@ -402,7 +402,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     width: '34px',
                     height: '34px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    backgroundColor: 'rgba(255,255,255,0.3)',
                     backdropFilter: 'blur(4px)',
                     color: '#FFF',
                     border: 'none',
@@ -420,7 +420,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     width: '34px',
                     height: '34px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    backgroundColor: 'rgba(255,255,255,0.3)',
                     backdropFilter: 'blur(4px)',
                     color: '#FFF',
                     border: 'none',
@@ -435,15 +435,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               </div>
 
               {/* Content Overlay */}
-              <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', color: '#FFF' }}>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: '0 0 6px 0', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+              <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', color: '#FFFFFF' }}>
+                <h3 className="hero-slide-title" style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF', margin: '0 0 6px 0', textShadow: '0 2px 10px rgba(0,0,0,0.95)' }}>
                   {currentSlide.title}
                 </h3>
-                <p style={{ fontSize: '0.88rem', opacity: 0.9, margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <p style={{ fontSize: '0.88rem', color: '#F1F5F9', opacity: 0.95, margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '6px', textShadow: '0 1px 6px rgba(0,0,0,0.9)' }}>
                   <FaMapMarkerAlt style={{ color: '#10B981' }} /> {currentSlide.location}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#34D399' }}>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#34D399', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
                     {currentSlide.price}
                   </span>
                   <button
