@@ -224,15 +224,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     }).sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
   };
 
-  // Featured Listings from marketplaceDb
-  const featuredListings = filterAndSortByDistance(propertiesDb, true).slice(0, 4).map((p) => {
+  // Featured Listings from marketplaceDb (Ensure at least 4 items so grid is full)
+  const filteredProperties = filterAndSortByDistance(propertiesDb, true);
+  const rawListings = filteredProperties.length >= 2 ? filteredProperties : propertiesDb;
+  const featuredListings = rawListings.slice(0, 4).map((p) => {
     const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
     const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
     const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80';
     return {
       id: p.id,
       title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
-      price: p.priceDisplay || (`₹${p.price || 1} L`),
+      price: p.priceDisplay || (`₹ ${p.price || 75} Lakh`),
       badge: p.verified ? 'Verified' : (p.premium ? 'Premium' : 'New Launch'),
       badgeColor: p.verified ? '#DCFCE7' : (p.premium ? '#FEF08A' : '#E0E7FF'),
       badgeText: p.verified ? '#16A34A' : (p.premium ? '#854D0E' : '#4F46E5'),
@@ -248,9 +250,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     };
   });
 
-  const featuredFranchises = filterAndSortByDistance(franchiseDb).slice(0, 4);
+  const rawFranchises = filterAndSortByDistance(franchiseDb);
+  const featuredFranchises = (rawFranchises.length >= 2 ? rawFranchises : franchiseDb).slice(0, 4);
 
-  const featuredBusinesses = filterAndSortByDistance(businessDb).slice(0, 4);
+  const rawBusinesses = filterAndSortByDistance(businessDb);
+  const featuredBusinesses = (rawBusinesses.length >= 2 ? rawBusinesses : businessDb).slice(0, 4);
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
@@ -1004,18 +1008,86 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               <div
                 key={idx}
                 onClick={() => onPropertyClick ? onPropertyClick(prop.id) : onNavigate('propertyDetails', `?propertyId=${prop.id}`)}
-                style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', position: 'relative' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.08)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)'; }}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
               >
-                <div style={{ position: 'relative', height: '200px' }}>
+                {/* Image Container with Heart & Yellow Featured Tag */}
+                <div style={{ position: 'relative', height: '145px', width: '100%', overflow: 'hidden' }}>
                   <img src={prop.image} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prop.id, e); }}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      width: '30px',
+                      height: '30px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                      cursor: 'pointer',
+                      zIndex: 5
+                    }}
+                  >
+                    {wishlisted[prop.id] ? (
+                      <FaHeart style={{ color: '#EF4444', fontSize: '14px' }} />
+                    ) : (
+                      <FaRegHeart style={{ color: '#0F172A', fontSize: '14px' }} />
+                    )}
+                  </button>
+
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '8px',
+                    left: '8px',
+                    backgroundColor: '#FACC15',
+                    color: '#0F172A',
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    zIndex: 5
+                  }}>
+                    FEATURED
+                  </div>
                 </div>
-                <div style={{ padding: '16px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>{prop.price}</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.title}</div>
-                  <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
-                    <FaMapMarkerAlt /> {prop.location}
+
+                {/* Details Container with Yellow Left Border Line (Picture 2 OLX Accent) */}
+                <div style={{
+                  padding: '10px 12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: 1,
+                  justifyContent: 'space-between',
+                  borderLeft: '4px solid #FACC15',
+                  backgroundColor: '#FFFFFF'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0F172A', marginBottom: '2px', lineHeight: 1.2 }}>
+                      {prop.price}
+                    </div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {prop.title}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {prop.location}
                   </div>
                 </div>
               </div>
