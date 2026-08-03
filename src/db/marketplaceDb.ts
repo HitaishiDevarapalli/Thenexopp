@@ -30,6 +30,10 @@ export interface Dealer {
   languages?: string;
   reraNumber?: string;
 
+  city?: string;
+  state?: string;
+  district?: string;
+
   // Personal Information
   fullName?: string;
   mobileNumber?: string;
