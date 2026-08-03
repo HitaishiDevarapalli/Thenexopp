@@ -246,13 +246,25 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
   const leaderboardBrokers = useMemo(() => {
     const multiplier = timePeriod === 'Today' ? 0.05 : timePeriod === 'This Week' ? 0.15 : timePeriod === 'This Month' ? 0.35 : timePeriod === 'This Year' ? 0.8 : 1.0;
     
-    const calculated = dealersDb.map(b => ({
-      ...b,
-      calcSales: Math.round((b.totalPropertiesSold || 0) * multiplier),
-      calcFranchise: Math.round((b.totalFranchiseDealsClosed || 0) * multiplier),
-      calcRevenue: parseFloat(((b.revenueGenerated || 0) * multiplier).toFixed(2)),
-      calcLeads: Math.round((b.totalLeadsHandled || 0) * multiplier)
-    }));
+    const calculated = dealersDb.map(b => {
+      const brokerProps = propertiesDb.filter(p => p.dealerId === b.id || (p.agentName && b.companyName && p.agentName.toLowerCase() === b.companyName.toLowerCase()));
+      const soldProps = brokerProps.filter(p => p.sold || p.listingStatus === 'Sold' || p.approvalStatus === 'Sold');
+      const dynamicSold = soldProps.length;
+      const dynamicRevenue = soldProps.reduce((acc, p) => acc + (p.price || 0), 0) / 10000000;
+
+      const totalSold = b.totalPropertiesSold ?? dynamicSold;
+      const totalRevenue = b.revenueGenerated ?? parseFloat(dynamicRevenue.toFixed(2));
+
+      return {
+        ...b,
+        totalPropertiesSold: totalSold,
+        revenueGenerated: totalRevenue,
+        calcSales: Math.round(totalSold * multiplier),
+        calcFranchise: Math.round((b.totalFranchiseDealsClosed || 0) * multiplier),
+        calcRevenue: parseFloat((totalRevenue * multiplier).toFixed(2)),
+        calcLeads: Math.round((b.totalLeadsHandled || 0) * multiplier)
+      };
+    });
 
     const sorted = calculated.sort((a, b) => {
       if (sortBy === 'sales') return (b.calcSales + b.calcFranchise) - (a.calcSales + a.calcFranchise);
@@ -264,7 +276,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
 
     if (leaderboardLimit === 'All') return sorted;
     return sorted.slice(0, parseInt(leaderboardLimit));
-  }, [dealersDb, timePeriod, sortBy, leaderboardLimit]);
+  }, [dealersDb, propertiesDb, timePeriod, sortBy, leaderboardLimit]);
 
   // Category ranked brokers
   const categoryRankedBrokers = useMemo(() => {
