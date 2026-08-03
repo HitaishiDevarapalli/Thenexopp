@@ -248,18 +248,18 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     
     const calculated = dealersDb.map(b => ({
       ...b,
-      calcSales: Math.round((b.totalPropertiesSold || 15) * multiplier),
-      calcFranchise: Math.round((b.totalFranchiseDealsClosed || 5) * multiplier),
-      calcRevenue: parseFloat(((b.revenueGenerated || 10) * multiplier).toFixed(2)),
-      calcLeads: Math.round((b.totalLeadsHandled || 60) * multiplier)
+      calcSales: Math.round((b.totalPropertiesSold || 0) * multiplier),
+      calcFranchise: Math.round((b.totalFranchiseDealsClosed || 0) * multiplier),
+      calcRevenue: parseFloat(((b.revenueGenerated || 0) * multiplier).toFixed(2)),
+      calcLeads: Math.round((b.totalLeadsHandled || 0) * multiplier)
     }));
 
     const sorted = calculated.sort((a, b) => {
       if (sortBy === 'sales') return (b.calcSales + b.calcFranchise) - (a.calcSales + a.calcFranchise);
       if (sortBy === 'revenue') return b.calcRevenue - a.calcRevenue;
       if (sortBy === 'leads') return b.calcLeads - a.calcLeads;
-      if (sortBy === 'rating') return b.rating - a.rating;
-      return parseInt(a.responseTime || '30') - parseInt(b.responseTime || '30');
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+      return parseInt(a.responseTime || '0') - parseInt(b.responseTime || '0');
     });
 
     if (leaderboardLimit === 'All') return sorted;
@@ -271,7 +271,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     return dealersDb.filter(b => {
       if (!b.propertyCategories) return true;
       return b.propertyCategories.includes(selectedCategory);
-    }).sort((a, b) => (b.totalPropertiesSold || 10) - (a.totalPropertiesSold || 10));
+    }).sort((a, b) => (b.totalPropertiesSold || 0) - (a.totalPropertiesSold || 0));
   }, [dealersDb, selectedCategory]);
 
   // Location ranked brokers
@@ -283,7 +283,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       const matchCity = filterCity === 'All' || areas.some(a => a.city.toLowerCase() === filterCity.toLowerCase());
       const matchArea = filterAreaSearch === '' || areas.some(a => a.area.toLowerCase().includes(filterAreaSearch.toLowerCase()));
       return matchState && matchDistrict && matchCity && matchArea;
-    }).sort((a, b) => (b.totalPropertiesSold || 10) - (a.totalPropertiesSold || 10));
+    }).sort((a, b) => (b.totalPropertiesSold || 0) - (a.totalPropertiesSold || 0));
   }, [dealersDb, filterState, filterDistrict, filterCity, filterAreaSearch]);
 
   return (
@@ -592,7 +592,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                         </div>
                       </td>
                       <td style={{ padding: '16px 20px', fontSize: '0.88rem', color: '#475569' }}>
-                        {broker.serviceAreas?.[0]?.city || 'Hyderabad'}
+                        {broker.serviceAreas?.[0]?.city || (broker as any).city || 'N/A'}
                       </td>
                       <td style={{ padding: '16px 20px', fontWeight: 700, color: '#0F172A' }}>
                         {broker.calcSales} Units
@@ -605,16 +605,16 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                       </td>
                       <td style={{ padding: '16px 20px' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, color: '#D97706' }}>
-                          <FaStar /> {broker.rating}
+                          <FaStar /> {broker.rating || 4.5}
                         </span>
                       </td>
                       <td style={{ padding: '16px 20px' }}>
                         <span style={{ padding: '4px 8px', borderRadius: '4px', backgroundColor: '#DCFCE7', color: '#16A34A', fontWeight: 700, fontSize: '0.8rem' }}>
-                          {broker.successRate || 94}%
+                          {broker.successRate ? `${broker.successRate}%` : 'N/A'}
                         </span>
                       </td>
                       <td style={{ padding: '16px 20px', fontSize: '0.85rem', color: '#64748B' }}>
-                        {broker.responseTime}
+                        {broker.responseTime || 'N/A'}
                       </td>
                       <td style={{ padding: '16px 20px', fontWeight: 700, color: '#334155' }}>
                         {broker.calcLeads} Leads
@@ -758,11 +758,11 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                   <div style={{ display: 'flex', gap: '24px', textAlign: 'right', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>CATEGORY SALES</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{broker.totalPropertiesSold || 12} Units</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{broker.totalPropertiesSold || 0} Units</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>REVENUE</div>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E40AF' }}>₹{broker.revenueGenerated || 10.5} Cr</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E40AF' }}>₹{broker.revenueGenerated || 0} Cr</div>
                     </div>
                   </div>
                 </div>
@@ -827,12 +827,12 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                   <div style={{ fontWeight: 800, fontSize: '0.95rem', color: borderColor, marginBottom: '14px' }}>{medal}</div>
                   <img src={broker.photo || broker.logo} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${borderColor}`, marginBottom: '12px' }} />
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', fontWeight: 700 }}>{broker.companyName}</h4>
-                  <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 12px 0' }}>{broker.serviceAreas?.[0]?.city || 'Hyderabad'}</p>
+                  <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 12px 0' }}>{broker.serviceAreas?.[0]?.city || (broker as any).city || 'N/A'}</p>
                   
                   <div style={{ width: '100%', padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px', marginBottom: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <div>
                       <div style={{ fontSize: '0.7rem', color: '#64748B' }}>SOLD</div>
-                      <div style={{ fontWeight: 800, color: '#0F172A' }}>{broker.totalPropertiesSold || 15} Units</div>
+                      <div style={{ fontWeight: 800, color: '#0F172A' }}>{broker.totalPropertiesSold || 0} Units</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.7rem', color: '#64748B' }}>RATING</div>
