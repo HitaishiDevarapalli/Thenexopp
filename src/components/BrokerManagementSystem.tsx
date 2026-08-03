@@ -162,17 +162,30 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
 
   const handleSaveBroker = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.companyName || !formData.fullName) {
-      showNotification("Company Name and Full Name are required.", "warning");
+    const fullName = (formData.fullName || formData.companyName || '').trim();
+    const companyName = (formData.companyName || formData.fullName || '').trim();
+
+    if (!fullName && !companyName) {
+      showNotification("Please enter Full Name or Company Name.", "warning");
       return;
     }
 
+    const finalBrokerData = {
+      ...formData,
+      fullName: fullName || companyName,
+      companyName: companyName || fullName,
+      phone: formData.phone || formData.mobileNumber || '',
+      mobileNumber: formData.mobileNumber || formData.phone || '',
+      status: formData.status || 'Active',
+      verified: formData.verified !== false
+    };
+
     if (editingBrokerId) {
-      updateDealer(editingBrokerId, formData);
-      showNotification(`Broker '${formData.companyName}' updated successfully!`);
+      updateDealer(editingBrokerId, finalBrokerData);
+      showNotification(`Broker '${finalBrokerData.companyName}' updated successfully!`);
     } else {
       const newBroker: Dealer = {
-        ...formData as Dealer,
+        ...finalBrokerData as Dealer,
         id: formData.id || `D${Date.now()}`,
         inventoryCount: propertiesDb.filter(p => p.dealerId === formData.id).length
       };
@@ -955,6 +968,10 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               
               {modalTab === 'personal' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Company / Agency Name *</label>
+                    <input type="text" value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="e.g. TheNexOpp Premier Realty" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                  </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Full Name *</label>
                     <input required type="text" value={formData.fullName || ''} onChange={e => setFormData({ ...formData, fullName: e.target.value })} placeholder="e.g. Rajeshwar Reddy" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
