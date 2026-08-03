@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -294,4 +293,77 @@ model SiteSettings {
   themeStyle        String   @default("professional-white-green")
   availableCities   String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
   updatedAt         DateTime @updatedAt
+}
+
+model TeamMember {
+  id          String   @id @default(uuid())
+  name        String
+  designation String
+  photo       String
+  phone       String?
+  email       String?
+  linkedin    String?
+  createdAt   DateTime @default(now())
+}
+
+model EmployeeUser {
+  id                String   @id @default(uuid())
+  fullName          String
+  email             String   @unique
+  password          String
+  role              String
+  status            String   @default("Active")
+  customPermissions String[] @default([])
+  createdAt         DateTime @default(now())
+}
+
+model CustomRole {
+  id          String   @id @default(uuid())
+  name        String
+  permissions String[] @default([])
+  createdAt   DateTime @default(now())
+}
+
+model DemandRegion {
+  id                  String   @id @default(uuid())
+  name                String
+  city                String
+  state               String
+  latitude            Float
+  longitude           Float
+  radius              Float
+  demandScore         Float
+  demandLevel         String
+  propertySalesCount  Int      @default(0)
+  franchiseSalesCount Int      @default(0)
+  businessSalesCount  Int      @default(0)
+  lastUpdated         String?
+  isAiEnabled         Boolean  @default(false)
+  manualOverrideLevel String?
+  createdAt           DateTime @default(now())
+}
+
+model FranchiseEnquiry {
+  id                  String   @id @default(uuid())
+  franchiseId         String?
+  customerName        String
+  mobileNumber        String
+  email               String
+  interestedFranchise String
+  investmentBudget    String
+  preferredLocation   String
+  assignedBrokerId    String?
+  assignedBrokerName  String?
+  status              String
+  date                String?
+  createdDate         String?
+  createdAt           DateTime @default(now())
+}
+
+model ShowcaseSettings {
+  id                         String   @id @default("default")
+  maxVideoSizeMB             Int      @default(200)
+  maxVideoDurationSec        Int      @default(60)
+  defaultPlaybackDurationSec Int      @default(10)
+  updatedAt                  DateTime @updatedAt
 }

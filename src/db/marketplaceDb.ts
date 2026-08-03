@@ -880,16 +880,29 @@ export const deleteFranchise = (id: string) => {
 export const addDealer = (item: Dealer) => {
   dealersDb = [item, ...dealersDb];
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/dealers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
 };
 
 export const updateDealer = (id: string, updated: Partial<Dealer>) => {
   dealersDb = dealersDb.map(d => d.id === id ? { ...d, ...updated } : d);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/dealers/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
 };
 
 export const deleteDealer = (id: string) => {
   dealersDb = dealersDb.filter(d => d.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/dealers/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const addBusiness = (item: BusinessListing) => {
@@ -899,6 +912,16 @@ export const addBusiness = (item: BusinessListing) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
+  }).catch(() => {});
+};
+
+export const updateBusiness = (id: string, updated: Partial<BusinessListing>) => {
+  businessDb = businessDb.map(b => b.id === id ? { ...b, ...updated } : b);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/businesses/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
   }).catch(() => {});
 };
 
@@ -948,6 +971,11 @@ export const deleteShowcaseVideo = (id: string) => {
 export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
   showcaseSettingsDb = { ...showcaseSettingsDb, ...updated };
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/showcase-settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
 };
 
 export const deleteEnquiry = (id: string) => {
@@ -991,96 +1019,382 @@ export const clearAllStaticData = () => {
 export const bulkPublishProperties = (ids: string[]) => {
   propertiesDb = propertiesDb.map(p => ids.includes(p.id) ? { ...p, listingStatus: 'Published' } : p);
   notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/properties/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingStatus: 'Published' })
+    })
+  )).catch(() => {});
 };
 
 export const bulkHideProperties = (ids: string[]) => {
   propertiesDb = propertiesDb.map(p => ids.includes(p.id) ? { ...p, listingStatus: 'Hidden' } : p);
   notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/properties/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingStatus: 'Hidden' })
+    })
+  )).catch(() => {});
 };
 
 export const bulkDeleteProperties = (ids: string[]) => {
   propertiesDb = propertiesDb.filter(p => !ids.includes(p.id));
   notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' })
+  )).catch(() => {});
 };
 
 export const addTeamMember = (item: TeamMember) => {
   teamMembersDb = [item, ...teamMembersDb];
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/team-members`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
 };
 
 export const updateTeamMember = (id: string, updated: Partial<TeamMember>) => {
   teamMembersDb = teamMembersDb.map(m => m.id === id ? { ...m, ...updated } : m);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/team-members/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
 };
 
 export const deleteTeamMember = (id: string) => {
   teamMembersDb = teamMembersDb.filter(m => m.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/team-members/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const addEmployeeUser = (item: EmployeeUser) => {
   employeeUsersDb = [item, ...employeeUsersDb];
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/employees`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
 };
 
 export const updateEmployeeUser = (id: string, updated: Partial<EmployeeUser>) => {
   employeeUsersDb = employeeUsersDb.map(u => u.id === id ? { ...u, ...updated } : u);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/employees/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
 };
 
 export const deleteEmployeeUser = (id: string) => {
   employeeUsersDb = employeeUsersDb.filter(u => u.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/employees/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const updateRole = (id: string, permissions: string[]) => {
   rolesDb = rolesDb.map(r => r.id === id ? { ...r, permissions } : r);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/roles/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ permissions })
+  }).catch(() => {});
 };
 
 export const addRole = (role: Role) => {
   rolesDb = [...rolesDb, role];
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/roles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(role)
+  }).catch(() => {});
 };
 
 export const deleteRole = (id: string) => {
   rolesDb = rolesDb.filter(r => r.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/roles/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const addFranchiseEnquiry = (item: FranchiseEnquiry) => {
   franchiseEnquiriesDb = [item, ...franchiseEnquiriesDb];
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
 };
 
 export const updateFranchiseEnquiryStatus = (id: string, status: FranchiseEnquiry['status']) => {
   franchiseEnquiriesDb = franchiseEnquiriesDb.map(e => e.id === id ? { ...e, status } : e);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).catch(() => {});
 };
 
 export const assignFranchiseEnquiryBroker = (id: string, brokerId: string, brokerName: string) => {
   franchiseEnquiriesDb = franchiseEnquiriesDb.map(e => e.id === id ? { ...e, assignedBrokerId: brokerId, assignedBrokerName: brokerName } : e);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ assignedBrokerId: brokerId, assignedBrokerName: brokerName })
+  }).catch(() => {});
 };
 
 export const deleteFranchiseEnquiry = (id: string) => {
   franchiseEnquiriesDb = franchiseEnquiriesDb.filter(e => e.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
 
 export const bulkPublishFranchises = (ids: string[]) => {
   franchiseDb = franchiseDb.map(f => ids.includes(f.id) ? { ...f, approvalStatus: 'Published', status: 'Active' } : f);
   notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/franchises/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approvalStatus: 'Published', status: 'Active' })
+    })
+  )).catch(() => {});
 };
 
 export const bulkArchiveFranchises = (ids: string[]) => {
   franchiseDb = franchiseDb.map(f => ids.includes(f.id) ? { ...f, approvalStatus: 'Archived' } : f);
   notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/franchises/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approvalStatus: 'Archived' })
+    })
+  )).catch(() => {});
 };
 
 export const bulkDeleteFranchises = (ids: string[]) => {
   franchiseDb = franchiseDb.filter(f => !ids.includes(f.id));
   notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/franchises/${id}`, { method: 'DELETE' })
+  )).catch(() => {});
+};
+
+export const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in KM
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+export const calculateDemandScore = (region: DemandRegion): { score: number; level: 'High' | 'Medium' | 'Low'; propSales: number; franSales: number; busSales: number } => {
+  if (!region.isAiEnabled && region.manualOverrideLevel) {
+    const level = region.manualOverrideLevel;
+    const score = level === 'High' ? 85 : (level === 'Medium' ? 50 : 15);
+    return { score, level, propSales: region.propertySalesCount, franSales: region.franchiseSalesCount, busSales: region.businessSalesCount };
+  }
+
+  let propSales = 0;
+  let activeProps = 0;
+  propertiesDb.forEach((p: any) => {
+    const isNearby = (p.latitude && p.longitude) ? getDistance(region.latitude, region.longitude, p.latitude, p.longitude) <= region.radius : false;
+    const isCityMatch = (p.city || p.district || p.location || p.address || '').toLowerCase().includes(region.city.toLowerCase()) || (region.name && (p.city || p.district || p.location || p.address || '').toLowerCase().includes(region.name.toLowerCase()));
+    
+    if (isNearby || isCityMatch) {
+      if (p.sold || p.listingStatus === 'Sold' || p.status === 'Sold' || p.approvalStatus === 'Sold') {
+        propSales++;
+      } else {
+        activeProps++;
+      }
+    }
+  });
+
+  let franSales = 0;
+  let activeFrans = 0;
+  franchiseDb.forEach((f: any) => {
+    const isNearby = (f.latitude && f.longitude) ? getDistance(region.latitude, region.longitude, f.latitude, f.longitude) <= region.radius : false;
+    const isCityMatch = (f.city || f.location || f.address || '').toLowerCase().includes(region.city.toLowerCase()) || (region.name && (f.city || f.location || f.address || '').toLowerCase().includes(region.name.toLowerCase()));
+
+    if (isNearby || isCityMatch) {
+      if (f.sold || f.listingStatus === 'Sold' || f.status === 'Sold' || f.approvalStatus === 'Closed') {
+  teamMembersDb = [item, ...teamMembersDb];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/team-members`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
+};
+
+export const updateTeamMember = (id: string, updated: Partial<TeamMember>) => {
+  teamMembersDb = teamMembersDb.map(m => m.id === id ? { ...m, ...updated } : m);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/team-members/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
+};
+
+export const deleteTeamMember = (id: string) => {
+  teamMembersDb = teamMembersDb.filter(m => m.id !== id);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/team-members/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
+};
+
+export const addEmployeeUser = (item: EmployeeUser) => {
+  employeeUsersDb = [item, ...employeeUsersDb];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/employees`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
+};
+
+export const updateEmployeeUser = (id: string, updated: Partial<EmployeeUser>) => {
+  employeeUsersDb = employeeUsersDb.map(u => u.id === id ? { ...u, ...updated } : u);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/employees/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
+};
+
+export const deleteEmployeeUser = (id: string) => {
+  employeeUsersDb = employeeUsersDb.filter(u => u.id !== id);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/employees/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
+};
+
+export const updateRole = (id: string, permissions: string[]) => {
+  rolesDb = rolesDb.map(r => r.id === id ? { ...r, permissions } : r);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/roles/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ permissions })
+  }).catch(() => {});
+};
+
+export const addRole = (role: Role) => {
+  rolesDb = [...rolesDb, role];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/roles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(role)
+  }).catch(() => {});
+};
+
+export const deleteRole = (id: string) => {
+  rolesDb = rolesDb.filter(r => r.id !== id);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/roles/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
+};
+
+export const addFranchiseEnquiry = (item: FranchiseEnquiry) => {
+  franchiseEnquiriesDb = [item, ...franchiseEnquiriesDb];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(() => {});
+};
+
+export const updateFranchiseEnquiryStatus = (id: string, status: FranchiseEnquiry['status']) => {
+  franchiseEnquiriesDb = franchiseEnquiriesDb.map(e => e.id === id ? { ...e, status } : e);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status })
+  }).catch(() => {});
+};
+
+export const assignFranchiseEnquiryBroker = (id: string, brokerId: string, brokerName: string) => {
+  franchiseEnquiriesDb = franchiseEnquiriesDb.map(e => e.id === id ? { ...e, assignedBrokerId: brokerId, assignedBrokerName: brokerName } : e);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ assignedBrokerId: brokerId, assignedBrokerName: brokerName })
+  }).catch(() => {});
+};
+
+export const deleteFranchiseEnquiry = (id: string) => {
+  franchiseEnquiriesDb = franchiseEnquiriesDb.filter(e => e.id !== id);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
+};
+
+export const bulkPublishFranchises = (ids: string[]) => {
+  franchiseDb = franchiseDb.map(f => ids.includes(f.id) ? { ...f, approvalStatus: 'Published', status: 'Active' } : f);
+  notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/franchises/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approvalStatus: 'Published', status: 'Active' })
+    })
+  )).catch(() => {});
+};
+
+export const bulkArchiveFranchises = (ids: string[]) => {
+  franchiseDb = franchiseDb.map(f => ids.includes(f.id) ? { ...f, approvalStatus: 'Archived' } : f);
+  notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/franchises/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approvalStatus: 'Archived' })
+    })
+  )).catch(() => {});
+};
+
+export const bulkDeleteFranchises = (ids: string[]) => {
+  franchiseDb = franchiseDb.filter(f => !ids.includes(f.id));
+  notifyDataChanged();
+  Promise.all(ids.map(id => 
+    fetch(`${API_BASE_URL}/api/franchises/${id}`, { method: 'DELETE' })
+  )).catch(() => {});
 };
 
 export const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -1205,6 +1519,11 @@ export const addDemandRegion = (item: Omit<DemandRegion, 'id' | 'demandScore' | 
   };
   demandRegionsDb = [finalRegion, ...demandRegionsDb];
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/demand-regions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(finalRegion)
+  }).catch(() => {});
 };
 
 export const updateDemandRegion = (id: string, updated: Partial<DemandRegion>) => {
@@ -1225,10 +1544,21 @@ export const updateDemandRegion = (id: string, updated: Partial<DemandRegion>) =
     return r;
   });
   notifyDataChanged();
+  
+  const updatedRegion = demandRegionsDb.find(r => r.id === id);
+  if (updatedRegion) {
+    fetch(`${API_BASE_URL}/api/demand-regions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedRegion)
+    }).catch(() => {});
+  }
 };
 
 export const deleteDemandRegion = (id: string) => {
   demandRegionsDb = demandRegionsDb.filter(r => r.id !== id);
   notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/demand-regions/${id}`, {
+    method: 'DELETE'
+  }).catch(() => {});
 };
-

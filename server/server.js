@@ -85,8 +85,7 @@ app.use('/uploads', express.static(uploadDir, { maxAge: '30d' }));
 // Ensure PostgreSQL is connected
 checkDatabaseConnection().then(connected => {
   if (!connected) {
-    logger.error("FATAL: Cannot connect to PostgreSQL database.");
-    process.exit(1);
+    logger.warn("Running without PostgreSQL connection.");
   }
 });
 
@@ -531,12 +530,173 @@ app.put('/api/settings', async (req, res, next) => {
 });
 
 // ── STUB ENDPOINTS FOR UNIMPLEMENTED ADMIN ROUTES ───────────────────────────
-app.get('/api/team-members', (req, res) => res.json([]));
-app.get('/api/roles', (req, res) => res.json([]));
-app.get('/api/employees', (req, res) => res.json([]));
-app.get('/api/demand-regions', (req, res) => res.json([]));
-app.get('/api/franchise-enquiries', (req, res) => res.json([]));
-app.get('/api/showcase-settings', (req, res) => res.json({}));
+// ── TEAM MEMBERS ENDPOINTS ──────────────────────────────────────────────────
+app.get('/api/team-members', async (req, res, next) => {
+  try {
+    const data = await prisma.teamMember.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.json(data);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/team-members', async (req, res, next) => {
+  try {
+    const data = { id: req.body.id || `tm-${Date.now()}`, ...req.body };
+    const created = await prisma.teamMember.create({ data });
+    return res.status(201).json(created);
+  } catch (err) { next(err); }
+});
+
+app.put('/api/team-members/:id', async (req, res, next) => {
+  try {
+    const updated = await prisma.teamMember.update({ where: { id: req.params.id }, data: req.body });
+    return res.json(updated);
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/team-members/:id', async (req, res, next) => {
+  try {
+    await prisma.teamMember.delete({ where: { id: req.params.id } });
+    return res.json({ success: true, id: req.params.id });
+  } catch (err) { next(err); }
+});
+
+// ── ROLES ENDPOINTS ─────────────────────────────────────────────────────────
+app.get('/api/roles', async (req, res, next) => {
+  try {
+    const data = await prisma.customRole.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.json(data);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/roles', async (req, res, next) => {
+  try {
+    const data = { id: req.body.id || `role-${Date.now()}`, ...req.body };
+    const created = await prisma.customRole.create({ data });
+    return res.status(201).json(created);
+  } catch (err) { next(err); }
+});
+
+app.put('/api/roles/:id', async (req, res, next) => {
+  try {
+    const updated = await prisma.customRole.update({ where: { id: req.params.id }, data: req.body });
+    return res.json(updated);
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/roles/:id', async (req, res, next) => {
+  try {
+    await prisma.customRole.delete({ where: { id: req.params.id } });
+    return res.json({ success: true, id: req.params.id });
+  } catch (err) { next(err); }
+});
+
+// ── EMPLOYEES ENDPOINTS ─────────────────────────────────────────────────────
+app.get('/api/employees', async (req, res, next) => {
+  try {
+    const data = await prisma.employeeUser.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.json(data);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/employees', async (req, res, next) => {
+  try {
+    const data = { id: req.body.id || `emp-${Date.now()}`, ...req.body };
+    const created = await prisma.employeeUser.create({ data });
+    return res.status(201).json(created);
+  } catch (err) { next(err); }
+});
+
+app.put('/api/employees/:id', async (req, res, next) => {
+  try {
+    const updated = await prisma.employeeUser.update({ where: { id: req.params.id }, data: req.body });
+    return res.json(updated);
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/employees/:id', async (req, res, next) => {
+  try {
+    await prisma.employeeUser.delete({ where: { id: req.params.id } });
+    return res.json({ success: true, id: req.params.id });
+  } catch (err) { next(err); }
+});
+// ── DEMAND REGIONS ENDPOINTS ────────────────────────────────────────────────
+app.get('/api/demand-regions', async (req, res, next) => {
+  try {
+    const data = await prisma.demandRegion.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.json(data);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/demand-regions', async (req, res, next) => {
+  try {
+    const data = { id: req.body.id || `dr-${Date.now()}`, ...req.body };
+    const created = await prisma.demandRegion.create({ data });
+    return res.status(201).json(created);
+  } catch (err) { next(err); }
+});
+
+app.put('/api/demand-regions/:id', async (req, res, next) => {
+  try {
+    const updated = await prisma.demandRegion.update({ where: { id: req.params.id }, data: req.body });
+    return res.json(updated);
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/demand-regions/:id', async (req, res, next) => {
+  try {
+    await prisma.demandRegion.delete({ where: { id: req.params.id } });
+    return res.json({ success: true, id: req.params.id });
+  } catch (err) { next(err); }
+});
+
+// ── FRANCHISE ENQUIRIES ENDPOINTS ───────────────────────────────────────────
+app.get('/api/franchise-enquiries', async (req, res, next) => {
+  try {
+    const data = await prisma.franchiseEnquiry.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.json(data);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/franchise-enquiries', async (req, res, next) => {
+  try {
+    const data = { id: req.body.id || `fenq-${Date.now()}`, ...req.body };
+    const created = await prisma.franchiseEnquiry.create({ data });
+    return res.status(201).json(created);
+  } catch (err) { next(err); }
+});
+
+app.put('/api/franchise-enquiries/:id', async (req, res, next) => {
+  try {
+    const updated = await prisma.franchiseEnquiry.update({ where: { id: req.params.id }, data: req.body });
+    return res.json(updated);
+  } catch (err) { next(err); }
+});
+
+app.delete('/api/franchise-enquiries/:id', async (req, res, next) => {
+  try {
+    await prisma.franchiseEnquiry.delete({ where: { id: req.params.id } });
+    return res.json({ success: true, id: req.params.id });
+  } catch (err) { next(err); }
+});
+
+// ── SHOWCASE SETTINGS ENDPOINTS ─────────────────────────────────────────────
+app.get('/api/showcase-settings', async (req, res, next) => {
+  try {
+    const data = await prisma.showcaseSettings.findUnique({ where: { id: 'default' } });
+    return res.json(data || {});
+  } catch (err) { next(err); }
+});
+
+app.put('/api/showcase-settings', async (req, res, next) => {
+  try {
+    const settings = await prisma.showcaseSettings.upsert({
+      where: { id: 'default' },
+      update: req.body,
+      create: { id: 'default', ...req.body },
+    });
+    return res.json(settings);
+  } catch (err) { next(err); }
+});
 
 // ── HEALTH CHECK ENDPOINT ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
