@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
 import {
@@ -184,7 +184,41 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     });
 
   // Featured Listings from marketplaceDb
-  const featuredListings = propertiesDb.filter(p => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && (p.city?.toLowerCase() === currentGlobalCity.toLowerCase() || (p.area || '').toLowerCase().includes(currentGlobalCity.toLowerCase()))).slice(0, 4).map((p) => {
+  // Get the target region for distance calculations
+  const region = demandRegionsDb.find(r => r.name.toLowerCase() === currentGlobalCity.toLowerCase()) || 
+                 (location?.lat ? { latitude: location.lat, longitude: location.lng } : null);
+
+  const filterAndSortByDistance = (items: any[], isProperty = false) => {
+    return items.filter(item => {
+      if (isProperty && (item.sold || item.approvalStatus === 'Sold' || item.listingStatus === 'Sold')) return false;
+
+      const itemCity = (item.city || '').toLowerCase();
+      const itemLocStr = (item.location || '').toLowerCase();
+      const itemTitle = (item.title || item.brand || item.name || '').toLowerCase();
+      const targetLoc = currentGlobalCity.toLowerCase();
+
+      // Exact match
+      let exactMatch = itemCity === targetLoc || itemLocStr.includes(targetLoc) || itemTitle.includes(targetLoc);
+
+      if (exactMatch) {
+        item.distanceKm = 0;
+        return true;
+      }
+
+      // Distance match if lat/lng available
+      if (region && region.latitude && region.longitude && item.latitude && item.longitude) {
+        const dist = getDistance(region.latitude, region.longitude, item.latitude, item.longitude);
+        item.distanceKm = dist;
+        return dist <= 50; // Return true if within 50km
+      }
+
+      // If no exact match and no coordinates available, exclude
+      return false;
+    }).sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+  };
+
+  // Featured Listings from marketplaceDb
+  const featuredListings = filterAndSortByDistance(propertiesDb, true).slice(0, 4).map((p) => {
     const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
     const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
     const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80';
@@ -207,14 +241,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     };
   });
 
+  const featuredFranchises = filterAndSortByDistance(franchiseDb).slice(0, 4);
 
-  const featuredFranchises = franchiseDb
-    .filter(f => (f.city || '').toLowerCase() === currentGlobalCity.toLowerCase() || (f.location || '').toLowerCase().includes(currentGlobalCity.toLowerCase()))
-    .slice(0, 4);
-
-  const featuredBusinesses = businessDb
-    .filter(b => (b.city || '').toLowerCase() === currentGlobalCity.toLowerCase() || (b.location || '').toLowerCase().includes(currentGlobalCity.toLowerCase()))
-    .slice(0, 4);
+  const featuredBusinesses = filterAndSortByDistance(businessDb).slice(0, 4);
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
