@@ -667,7 +667,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'customization': return { title: 'Website Settings & Customization', sub: 'Configure Showcase Feeds, Brand Interactions & Stats' };
       case 'inquiries': return { title: 'Orders & Leads Enquiries', sub: 'Track Customer Leads, Consultation Requests & Inquiries' };
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
-      case 'media_manager': return { title: '🎬 Featured Showcase Videos', sub: 'Manage videos displayed on the homepage carousel' };
+      case 'media_manager': return { title: '🖥️ Main Page Settings', sub: 'Manage videos and settings displayed on the homepage carousel' };
       case 'users_data': return { title: '👥 Users Data (Registered Customers)', sub: 'Database of all registered and logged-in customers across AP & Telangana' };
       default: return { title: 'Welcome back, Super Admin', sub: "Here's what's happening with your marketplace today." };
     }
@@ -1015,7 +1015,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           {/* Section: SITE MANAGEMENT */}
           {[
             { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
-            { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo />, perm: 'media_manager' },
+            { id: 'media_manager', label: '🖥️ Main page settings', icon: <FaVideo />, perm: 'media_manager' },
             { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
             { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
             { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
@@ -1028,7 +1028,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
               {[
                 { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
-                { id: 'media_manager', label: '🎬 Media Manager', icon: <FaVideo />, perm: 'media_manager' },
+                { id: 'media_manager', label: '🖥️ Main page settings', icon: <FaVideo />, perm: 'media_manager' },
                 { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
                 { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
                 { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
@@ -3682,7 +3682,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   <FaVideo />
                 </div>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>🎬 Featured Showcase Videos</h2>
+                  <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>🖥️ Main Page Settings</h2>
                   <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#64748B', fontWeight: 500 }}>Manage videos displayed on the homepage carousel</p>
                 </div>
                 <div style={{ marginLeft: 'auto', backgroundColor: '#DCFCE7', color: '#16A34A', padding: '8px 16px', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem' }}>
