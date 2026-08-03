@@ -1248,6 +1248,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     else if (onBuyProperty) onBuyProperty(id);
                   }}
                   height={viewMode === 'map' ? '550px' : '360px'}
+                  localSearchLocation={locationText}
                 />
               </div>
             )}

@@ -10,6 +10,7 @@ interface LiveLocationMapProps {
   type: 'property' | 'business' | 'franchise';
   onSelectItem?: (id: string) => void;
   height?: string;
+  localSearchLocation?: string;
 }
 
 export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
@@ -17,6 +18,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   type,
   onSelectItem,
   height = '380px',
+  localSearchLocation,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -45,10 +47,14 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     };
   }, [centerCity]);
 
-  const cityGeo = parseIndiaLocation(centerCity);
+  const effectiveCity = localSearchLocation && localSearchLocation.trim() !== '' && !localSearchLocation.toLowerCase().includes('current location') && !localSearchLocation.toLowerCase().includes('gps') 
+    ? localSearchLocation 
+    : centerCity;
+    
+  const cityGeo = parseIndiaLocation(effectiveCity);
   const mapCenter = useMemo(() => {
-    return userGps || { lat: cityGeo.latitude, lng: cityGeo.longitude, label: `${centerCity}` };
-  }, [userGps, cityGeo.latitude, cityGeo.longitude, centerCity]);
+    return userGps || { lat: cityGeo.latitude, lng: cityGeo.longitude, label: `${effectiveCity}` };
+  }, [userGps, cityGeo.latitude, cityGeo.longitude, effectiveCity]);
 
   // Initialize Map
   useEffect(() => {
