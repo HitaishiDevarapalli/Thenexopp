@@ -5230,24 +5230,93 @@ body.modal-open {
 }
 
 /* ================================================================
-   MOBILE LAYOUT — iPhone & Small Screens (< 768px)
+   MOBILE LAYOUT & OVERRIDE CLASSES (< 768px)
    ================================================================ */
-@media (max-width: 767px) {
+.responsive-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 36px;
+  align-items: center;
+}
 
+.responsive-trust-badges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.top-search-filter-bar-home {
+  display: grid;
+  grid-template-columns: 1.3fr 1.1fr 1.1fr 1.1fr auto 1.4fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.responsive-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.responsive-category-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.responsive-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr;
+  gap: 40px;
+}
+
+@media (max-width: 767px) {
   /* --- Property Grid: OLX-style 2 columns --- */
   .responsive-property-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
   }
+  .responsive-property-grid > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* --- Hero & Homepage Grid Overrides --- */
+  .responsive-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  
+  .responsive-trust-badges {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .top-search-filter-bar-home {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .responsive-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .responsive-category-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .responsive-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
 
   /* --- Hero section fixes --- */
   #hero {
-    padding-top: 70px !important;
+    padding-top: 60px !important;
     min-height: auto !important;
-  }
-  #hero > div > div:first-child {
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
   }
   #hero h1 {
     font-size: 1.6rem !important;
@@ -5261,16 +5330,10 @@ body.modal-open {
     max-width: 100% !important;
   }
 
-  /* --- Section padding top reduction (navbar is 56px on mobile) --- */
+  /* --- Section padding top reduction --- */
   section[style*="paddingTop: '115px'"],
   .prop-details-page {
-    padding-top: 70px !important;
-  }
-
-  /* --- Statistics grid (2x2 on mobile) --- */
-  .category-icon-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
+    padding-top: 60px !important;
   }
 
   /* --- Map container compact --- */

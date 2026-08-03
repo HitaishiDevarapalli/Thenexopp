@@ -257,7 +257,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       
       {/* 1. HERO SECTION */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '50px 24px 20px 24px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: '36px', alignItems: 'center' }}>
+        <div className="responsive-hero-grid">
           
           {/* Left Column: Headline & Value Proposition */}
           <div>
@@ -280,23 +280,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               <span>Trusted by 10,000+ Buyers & Investors</span>
             </div>
 
-            {/* Main Headline */}
+            {/* Headline */}
             <h1 style={{
-              fontSize: '3.2rem',
+              fontSize: '2.8rem',
               fontWeight: 900,
-              lineHeight: 1.15,
               color: '#0F172A',
-              letterSpacing: '-0.03em',
-              margin: '0 0 18px 0'
+              lineHeight: 1.15,
+              margin: '0 0 20px 0',
+              letterSpacing: '-0.03em'
             }}>
-              Your Next Opportunity<br />
-              Is Just <span style={{ color: '#10B981', position: 'relative', display: 'inline-block' }}>
-                One Click Away
-                {/* Curved Yellow Underline Accent */}
-                <svg style={{ position: 'absolute', bottom: '-10px', left: 0, width: '100%', height: '14px' }} viewBox="0 0 200 12" fill="none">
-                  <path d="M3 9C55 3 145 3 197 9" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
-                </svg>
-              </span>
+              Your Next Opportunity Is Just <span style={{ color: '#00A86B' }}>One Click Away</span>
             </h1>
 
             {/* Subtitle */}
@@ -312,7 +305,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             </p>
 
             {/* Trust Features Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div className="responsive-trust-badges">
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <FaShieldAlt style={{ color: '#10B981', fontSize: '18px' }} />
@@ -370,170 +363,104 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: 'linear-gradient(180deg, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.85) 100%)'
+                background: 'linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.2) 60%, transparent 100%)'
               }} />
 
-              {/* Badges Top Left */}
-              <div style={{ position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px', zIndex: 3 }}>
-                <span style={{
-                  padding: '6px 14px',
-                  backgroundColor: '#FEF08A',
-                  color: '#854D0E',
-                  borderRadius: '20px',
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}>
-                  <FaCrown /> Premium Listing
-                </span>
-                <span style={{
-                  padding: '6px 14px',
-                  backgroundColor: '#DCFCE7',
-                  color: '#16A34A',
-                  borderRadius: '20px',
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}>
-                  <FaCheckCircle /> Verified
-                </span>
+              {/* Slide Counter / Category Badge */}
+              <div style={{
+                position: 'absolute',
+                top: '16px',
+                left: '16px',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(4px)',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}>
+                ⭐ Featured {currentSlide.type}
               </div>
 
-              {/* Wishlist Button Top Right */}
-              <button
-                onClick={(e) => toggleWishlist(currentSlide.id, e)}
-                style={{
-                  position: 'absolute',
-                  top: '16px',
-                  right: '16px',
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  zIndex: 3
-                }}
-              >
-                {wishlisted[currentSlide.id] ? (
-                  <FaHeart style={{ color: '#EF4444', fontSize: '18px' }} />
-                ) : (
-                  <FaRegHeart style={{ color: '#1E293B', fontSize: '18px' }} />
-                )}
-              </button>
+              {/* Slider Controls */}
+              <div style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <button
+                  onClick={handlePrevSlide}
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    backdropFilter: 'blur(4px)',
+                    color: '#FFF',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <FaChevronLeft style={{ fontSize: '12px' }} />
+                </button>
+                <button
+                  onClick={handleNextSlide}
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    backdropFilter: 'blur(4px)',
+                    color: '#FFF',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <FaChevronRight style={{ fontSize: '12px' }} />
+                </button>
+              </div>
 
-              {/* Navigation Arrow Buttons */}
-              <button
-                onClick={handlePrevSlide}
-                style={{
-                  position: 'absolute',
-                  left: '14px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  backgroundColor: '#FFFFFF',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 4
-                }}
-              >
-                <FaChevronLeft style={{ fontSize: '14px', color: '#1E293B' }} />
-              </button>
-
-              <button
-                onClick={handleNextSlide}
-                style={{
-                  position: 'absolute',
-                  right: '14px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  backgroundColor: '#FFFFFF',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                  zIndex: 4
-                }}
-              >
-                <FaChevronRight style={{ fontSize: '14px', color: '#1E293B' }} />
-              </button>
-
-              {/* Bottom Details Overlay */}
-              <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', zIndex: 3, color: '#FFFFFF' }}>
-                <div style={{ fontSize: '0.9rem', color: '#E2E8F0', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  <FaMapMarkerAlt style={{ color: '#10B981' }} />
-                  <span>{currentSlide.location}</span>
-                </div>
-
+              {/* Content Overlay */}
+              <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', color: '#FFF' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, margin: '0 0 6px 0', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                  {currentSlide.title}
+                </h3>
+                <p style={{ fontSize: '0.88rem', opacity: 0.9, margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <FaMapMarkerAlt style={{ color: '#10B981' }} /> {currentSlide.location}
+                </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.85rem', color: '#CBD5E1' }}>
-                    <span><FaBed /> {currentSlide.bhk}</span>
-                    <span><FaBath /> {currentSlide.baths}</span>
-                    <span><FaRulerCombined /> {currentSlide.area}</span>
-                    <span><FaHome /> {currentSlide.type}</span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#FFFFFF' }}>
-                      {currentSlide.price}
-                    </span>
-                    <button
-                      onClick={() => onNavigate('propertiesPage')}
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#10B981',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: '20px',
-                        fontWeight: 800,
-                        fontSize: '0.88rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      View Details <FaArrowRight style={{ fontSize: '12px' }} />
-                    </button>
-                  </div>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#34D399' }}>
+                    {currentSlide.price}
+                  </span>
+                  <button
+                    onClick={() => onNavigate('propertiesPage')}
+                    style={{
+                      backgroundColor: '#10B981',
+                      color: '#FFF',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '12px',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    View Listing <FaArrowRight style={{ fontSize: '10px' }} />
+                  </button>
                 </div>
-
-                {/* Carousel Dots */}
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '12px' }}>
-                  {HERO_SLIDES.map((_, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setCurrentSlideIndex(idx)}
-                      style={{
-                        width: idx === currentSlideIndex ? '20px' : '7px',
-                        height: '7px',
-                        borderRadius: '4px',
-                        backgroundColor: idx === currentSlideIndex ? '#10B981' : 'rgba(255,255,255,0.4)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                    />
-                  ))}
-                </div>
-
               </div>
 
             </div>
@@ -542,18 +469,26 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         </div>
       </div>
 
-      {/* 2. FLOATING SEARCH & FILTER CARD (Wide Horizontal Bar as in Picture 2) */}
-      <div style={{ maxWidth: '1360px', margin: '24px auto 48px auto', padding: '0 24px' }}>
+      {/* 2. MAIN SEARCH FILTER CARD */}
+      <div style={{ maxWidth: '1360px', margin: '0 auto 50px auto', padding: '0 24px' }}>
         <div style={{
           backgroundColor: '#FFFFFF',
           borderRadius: '24px',
-          padding: '32px 36px',
-          boxShadow: '0 20px 50px -10px rgba(15, 23, 42, 0.07), 0 0 1px rgba(0,0,0,0.05)',
+          padding: '24px',
+          boxShadow: '0 10px 40px rgba(15, 23, 42, 0.06)',
           border: '1px solid #E2E8F0'
         }}>
           
-          {/* Top Category Tabs (5 Pills in 1 Single Horizontal Row) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', flexWrap: 'nowrap', overflowX: 'auto' }}>
+          {/* Top Tabs */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexWrap: 'wrap',
+            marginBottom: '20px',
+            borderBottom: '1px solid #F1F5F9',
+            paddingBottom: '16px'
+          }}>
             {[
               { id: 'Property', label: 'Property', icon: FaHome },
               { id: 'Franchise', label: 'Franchise', icon: FaStore },
@@ -568,17 +503,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   key={tab.id}
                   onClick={() => setActiveSearchTab(tab.id as any)}
                   style={{
-                    padding: '10px 22px',
-                    borderRadius: '20px',
-                    border: isActive ? 'none' : '1px solid #E2E8F0',
-                    backgroundColor: isActive ? '#00A86B' : '#F8FAFC',
-                    color: isActive ? '#FFFFFF' : '#475569',
-                    fontWeight: isActive ? 800 : 600,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: '30px',
+                    border: isActive ? 'none' : '1px solid #E2E8F0',
+                    backgroundColor: isActive ? '#00A86B' : '#F8FAFC',
+                    color: isActive ? '#FFFFFF' : '#475569',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     boxShadow: isActive ? '0 4px 14px rgba(0, 168, 107, 0.3)' : 'none',
                     whiteSpace: 'nowrap'
@@ -591,14 +526,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             })}
           </div>
 
-          {/* Filter Dropdowns Grid (1 Horizontal Row) */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1.3fr 1.1fr 1.1fr 1.1fr auto 1.4fr',
-            gap: '14px',
-            alignItems: 'center'
-          }}>
-
+          {/* Filter Dropdowns Grid */}
+          <div className="top-search-filter-bar-home">
             {/* 1. Search Location */}
             <div style={{
               backgroundColor: '#F8FAFC',
@@ -849,18 +778,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             </label>
           </div>
 
-          {/* Popular Searches Row */}
+          {/* Popular Searches & Advanced Search Section */}
           <div style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            gap: '12px',
             marginTop: '16px',
             paddingTop: '16px',
             borderTop: '1px solid #F1F5F9'
           }}>
-            {/* Left: Popular Searches */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569' }}>
+            {/* Top: Popular Searches Tags */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569', marginRight: '4px' }}>
                 Popular Searches:
               </span>
               {['Apartment', 'Villa', 'Plots', 'Commercial', 'Franchise', 'Farm Land'].map((tag) => (
@@ -874,7 +803,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     else onNavigate('propertiesPage');
                   }}
                   style={{
-                    padding: '6px 16px',
+                    padding: '6px 14px',
                     borderRadius: '16px',
                     border: tag === selectedTag ? 'none' : '1px solid #E2E8F0',
                     backgroundColor: tag === selectedTag ? '#DCFCE7' : '#F8FAFC',
@@ -890,23 +819,27 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               ))}
             </div>
 
-            {/* Right: Advanced Search Link */}
-            <button
-              onClick={() => onNavigate('propertiesPage')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#00A86B',
-                fontWeight: 800,
-                fontSize: '0.88rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              Advanced Search <FaArrowRight style={{ fontSize: '11px' }} />
-            </button>
+            {/* Bottom: Advanced Search Link directly below */}
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '4px' }}>
+              <button
+                onClick={() => onNavigate('propertiesPage')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#00A86B',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: 0
+                }}
+              >
+                <span>Advanced Search</span>
+                <FaArrowRight style={{ fontSize: '12px' }} />
+              </button>
+            </div>
           </div>
 
         </div>
@@ -914,13 +847,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
       {/* Stats Row (6 Cards in a spacious 3x2 Grid) */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 44px 24px' }}>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '20px',
-          }}
-        >
+        <div className="responsive-stats-grid">
           {stats.map((stat, idx) => {
             const Icon = stat.icon;
             return (
@@ -1001,8 +928,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
           </button>
         </div>
 
-        {/* Categories Grid (6 Cards) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+        {/* Categories Grid */}
+        <div className="responsive-category-grid">
           {popularCategories.map((cat, idx) => {
             const CatIcon = cat.icon;
             return (
@@ -1072,7 +999,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Properties in {currentGlobalCity}</h2>
             <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>Top recommended residential and commercial properties.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+          <div className="responsive-property-grid">
             {featuredListings.map((prop, idx) => (
               <div
                 key={idx}
@@ -1107,7 +1034,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Franchises in {currentGlobalCity}</h2>
             <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>Top brand opportunities available for setup.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+          <div className="responsive-property-grid">
             {featuredFranchises.map((f, idx) => (
               <div
                 key={idx}
@@ -1142,7 +1069,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Businesses in {currentGlobalCity}</h2>
             <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>Turnkey operations and commercial businesses for sale.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+          <div className="responsive-property-grid">
             {featuredBusinesses.map((b, idx) => (
               <div
                 key={idx}
@@ -1181,7 +1108,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               Explore properties successfully sold through NexOpp.
             </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
+          <div className="responsive-property-grid">
             {recentlySoldListings.map((prop, idx) => (
               <div
                 key={idx}

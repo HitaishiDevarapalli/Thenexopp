@@ -77,16 +77,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
   return (
     <footer style={{ backgroundColor: '#FFFFFF', color: '#0F172A', borderTop: '1px solid #E2E8F0', padding: '60px 0 0 0' }}>
       {/* Top Row */}
-      <div
-        style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1fr 1.3fr',
-          gap: '40px',
-        }}
-      >
+      <div className="responsive-footer-grid" style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '0 24px',
+      }}>
         {/* Column 1 - Newsletter */}
         <div>
           <div style={{ marginBottom: '20px', display: 'inline-block' }}>
