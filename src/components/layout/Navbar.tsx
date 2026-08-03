@@ -377,46 +377,21 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
           ))}
         </ul>
 
-        {/* Right: Watchlist, Post, Profile */}
-        <div className="mobile-stack flex-wrap-safe" style={{
+        {/* Right: DESKTOP ONLY — full Location, Saved, Login */}
+        <div className="desktop-only" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
           flexShrink: 0,
           marginLeft: '8px',
         }}>
-          {/* Vertical Separator */}
           <div style={{ width: '1px', height: '28px', backgroundColor: '#E2E8F0', marginRight: '8px' }} />
 
-          {/* Location Trigger Button */}
+          {/* Location */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowLocationPanel(!showLocationPanel)}
-              onMouseEnter={(e) => {
-                if(!showLocationPanel) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
-                  (e.currentTarget as HTMLElement).style.borderColor = '#CBD5E1';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if(!showLocationPanel) {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = '#FFFFFF';
-                  (e.currentTarget as HTMLElement).style.borderColor = '#E2E8F0';
-                }
-              }}
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                backgroundColor: showLocationPanel ? '#F8FAFC' : '#FFFFFF', 
-                border: '1px solid',
-                borderColor: showLocationPanel ? '#CBD5E1' : '#E2E8F0',
-                height: '42px',
-                padding: '0 16px', 
-                borderRadius: '21px', 
-                cursor: 'pointer', 
-                transition: 'all 0.2s ease' 
-              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: showLocationPanel ? '#F8FAFC' : '#FFFFFF', border: '1px solid', borderColor: showLocationPanel ? '#CBD5E1' : '#E2E8F0', height: '42px', padding: '0 16px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}
             >
               <FaMapMarkedAlt style={{ color: '#10B981', fontSize: '15px' }} />
               <span style={{ color: '#1E293B', fontWeight: 600, fontSize: '13.5px' }}>{location?.city || 'Location'}</span>
@@ -425,185 +400,63 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             {showLocationPanel && <LocationSelectorPanel onClose={() => setShowLocationPanel(false)} />}
           </div>
 
-          {/* Saved / Wishlist Button */}
-          <button
-            onClick={onOpenWishlist}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
-              (e.currentTarget as HTMLElement).style.borderColor = '#CBD5E1';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = '#FFFFFF';
-              (e.currentTarget as HTMLElement).style.borderColor = '#E2E8F0';
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-              height: '42px',
-              padding: '0 16px',
-              borderRadius: '21px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
+          {/* Saved */}
+          <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '42px', padding: '0 16px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
             <FaRegHeart style={{ color: '#EF4444', fontSize: '15px' }} />
             <span style={{ color: '#1E293B', fontWeight: 600, fontSize: '13.5px' }}>Saved</span>
           </button>
 
-          {/* Login / Profile Section */}
+          {/* Login / Profile */}
           {user ? (
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
-                  (e.currentTarget as HTMLElement).style.borderColor = '#CBD5E1';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = '#FFFFFF';
-                  (e.currentTarget as HTMLElement).style.borderColor = '#E2E8F0';
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E2E8F0',
-                  height: '42px',
-                  padding: '0 12px 0 6px',
-                  borderRadius: '21px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '42px', padding: '0 12px 0 6px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}
               >
-                <div style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  backgroundColor: '#10B981',
-                  color: '#FFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '13px',
-                  fontWeight: 700
-                }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#10B981', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700 }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <span style={{ color: '#1E293B', fontWeight: 600, fontSize: '13.5px' }}>{user.name}</span>
                 <FaChevronDown style={{ fontSize: '11px', color: '#64748B', marginLeft: '2px' }} />
               </button>
-
               {openDropdown === 'user' && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '8px',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
-                  minWidth: '220px',
-                  zIndex: 50,
-                  overflow: 'hidden',
-                  padding: '6px 0'
-                }}>
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', minWidth: '220px', zIndex: 50, overflow: 'hidden', padding: '6px 0' }}>
                   <div style={{ padding: '8px 16px', borderBottom: '1px solid #F1F5F9' }}>
                     <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>PROFILE DETAILS</div>
                     <div style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>{user.name}</div>
-                    <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', wordBreak: 'break-all' }}>{user.email}</div>
-                    {user.phone && (
-                      <div style={{ fontSize: '11px', color: '#0D9488', fontWeight: 700, marginTop: '2px' }}>📞 {user.phone}</div>
-                    )}
+                    <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', wordBreak: 'break-all' as const }}>{user.email}</div>
                   </div>
-                  <button
-                    onClick={() => {
-                      setOpenDropdown(null);
-                      if (onNavigateToPage) onNavigateToPage('admin');
-                    }}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '10px 16px',
-                      background: 'none',
-                      border: 'none',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: '#0F172A',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      transition: 'background 0.15s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
+                  <button onClick={() => { setOpenDropdown(null); if (onNavigateToPage) onNavigateToPage('admin'); }} style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <FaUser style={{ color: '#10B981' }} /> My Dashboard
                   </button>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setOpenDropdown(null);
-                    }}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '10px 16px',
-                      background: 'none',
-                      border: 'none',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: '#EF4444',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      transition: 'background 0.15s',
-                      borderTop: '1px solid #F1F5F9'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEF2F2'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
+                  <button onClick={() => { logout(); setOpenDropdown(null); }} style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #F1F5F9' }}>
                     Logout
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <button
-              onClick={openLoginModal}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                backgroundColor: '#FFFFFF',
-                color: '#16A34A',
-                border: '1px solid #16A34A',
-                padding: '7px 16px',
-                borderRadius: '20px',
-                fontWeight: 700,
-                fontSize: '13px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#F0FDF4';
-                e.currentTarget.style.color = '#15803D';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#16A34A';
-              }}
-            >
+            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', color: '#16A34A', border: '1px solid #16A34A', padding: '7px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}>
               <FaUser style={{ fontSize: '12px' }} />
               <span>Login / Register</span>
             </button>
           )}
+        </div>
+
+        {/* Right: MOBILE ONLY — compact icons */}
+        <div className="mobile-only" style={{ display: 'none', alignItems: 'center', gap: '10px' }}>
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowLocationPanel(!showLocationPanel)}
+              style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <FaMapMarkedAlt style={{ color: '#10B981', fontSize: '16px' }} />
+            </button>
+            {showLocationPanel && <LocationSelectorPanel onClose={() => setShowLocationPanel(false)} />}
+          </div>
+          <button onClick={onOpenWishlist} style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <FaRegHeart style={{ color: '#EF4444', fontSize: '16px' }} />
+          </button>
         </div>
       </div>
 
