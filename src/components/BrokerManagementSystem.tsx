@@ -657,7 +657,9 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                 {dealersDb.map(broker => (
                   <div key={broker.id} style={{ padding: '18px', border: broker.premiumPartner ? '2px solid #F59E0B' : '1px solid #E2E8F0', borderRadius: '10px', backgroundColor: broker.premiumPartner ? '#FFFBEB' : '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      <img src={broker.photo || broker.logo} alt="" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover' }} />
+                      {(broker.photo || broker.logo) && (
+                        <img src={broker.photo || broker.logo} alt="" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover' }} />
+                      )}
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>{broker.companyName}</h4>
@@ -760,7 +762,9 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: idx === 0 ? '#F59E0B' : '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem' }}>
                       #{idx + 1}
                     </div>
-                    <img src={broker.photo || broker.logo} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+                    {(broker.photo || broker.logo) && (
+                      <img src={broker.photo || broker.logo} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+                    )}
                     <div>
                       <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>{broker.companyName}</h4>
                       <p style={{ margin: '2px 0 0 0', color: '#64748B', fontSize: '0.85rem' }}>⭐ {broker.rating} ({broker.reviewCount} reviews) • {broker.fullName}</p>
@@ -837,7 +841,9 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               return (
                 <div key={broker.id} style={{ backgroundColor: '#FFFFFF', padding: '24px', borderTop: `6px solid ${borderColor}`, border: '1px solid #E2E8F0', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ fontWeight: 800, fontSize: '0.95rem', color: borderColor, marginBottom: '14px' }}>{medal}</div>
-                  <img src={broker.photo || broker.logo} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${borderColor}`, marginBottom: '12px' }} />
+                  {(broker.photo || broker.logo) && (
+                    <img src={broker.photo || broker.logo} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${borderColor}`, marginBottom: '12px' }} />
+                  )}
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', fontWeight: 700 }}>{broker.companyName}</h4>
                   <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 12px 0' }}>{broker.serviceAreas?.[0]?.city || (broker as any).city || 'N/A'}</p>
                   

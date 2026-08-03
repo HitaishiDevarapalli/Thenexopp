@@ -283,11 +283,14 @@ export const FranchiseResalesPage: React.FC<FranchiseResalesPageProps> = ({ onBa
             <div className="portfolio-seller-details-card premium-card" style={{ marginBottom: '3rem', padding: '2.5rem' }}>
               <div className="seller-details-grid">
                 <div className="seller-profile-column">
-                  <img 
-                    src={showSellerPortfolio.photo || showSellerPortfolio.logo} 
-                    alt={showSellerPortfolio.companyName} 
-                    className="seller-details-avatar" 
-                  />
+                  {(showSellerPortfolio.photo || showSellerPortfolio.logo) && (
+                    <img 
+                      src={showSellerPortfolio.photo || showSellerPortfolio.logo} 
+                      alt={showSellerPortfolio.companyName} 
+                      className="seller-details-avatar" 
+                      style={{ objectFit: 'contain', backgroundColor: '#EFF6FF' }}
+                    />
+                  )}
                   <h3 className="seller-details-name">{showSellerPortfolio.companyName}</h3>
                   <div className="seller-details-badges" style={{ marginTop: '0.5rem' }}>
                     {showSellerPortfolio.verified && <span className="badge-verified" style={{ marginRight: '8px' }}>✔ Verified Dealer</span>}
@@ -301,38 +304,42 @@ export const FranchiseResalesPage: React.FC<FranchiseResalesPageProps> = ({ onBa
                 <div className="seller-info-column">
                   <h4 className="column-title">Contact & Agent Information</h4>
                   <div className="info-list">
-                    <div className="info-item">
-                      <span className="info-label">👤 Authorized Name</span>
-                      <span className="info-value">{showSellerPortfolio.companyName} Operations Group</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">📞 Mobile Number</span>
-                      <span className="info-value" style={{ color: 'var(--gold)', fontWeight: 'bold' }}>+91 99890 87654</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">✉ Email Address</span>
-                      <span className="info-value">info@{showSellerPortfolio.companyName.toLowerCase().replace(/\s+/g, '')}.com</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">📍 Headquarters / City</span>
-                      <span className="info-value">Jubilee Hills, Hyderabad, Telangana</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">⏱ Avg Response Time</span>
-                      <span className="info-value">{showSellerPortfolio.responseTime}</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">💼 Experience</span>
-                      <span className="info-value">{showSellerPortfolio.yearsExperience} Years in Market</span>
-                    </div>
-                    <div className="info-item">
-                      <span className="info-label">📸 Instagram Profile</span>
-                      <span className="info-value">
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>
-                          @thenexopp
-                        </a>
-                      </span>
-                    </div>
+                    {showSellerPortfolio.fullName && (
+                      <div className="info-item">
+                        <span className="info-label">👤 Authorized Name</span>
+                        <span className="info-value">{showSellerPortfolio.fullName}</span>
+                      </div>
+                    )}
+                    {(showSellerPortfolio.phone || showSellerPortfolio.mobileNumber) && (
+                      <div className="info-item">
+                        <span className="info-label">📞 Mobile Number</span>
+                        <span className="info-value" style={{ color: 'var(--gold)', fontWeight: 'bold' }}>{showSellerPortfolio.phone || showSellerPortfolio.mobileNumber}</span>
+                      </div>
+                    )}
+                    {showSellerPortfolio.email && (
+                      <div className="info-item">
+                        <span className="info-label">✉ Email Address</span>
+                        <span className="info-value">{showSellerPortfolio.email}</span>
+                      </div>
+                    )}
+                    {(showSellerPortfolio.city || showSellerPortfolio.state || showSellerPortfolio.district) && (
+                      <div className="info-item">
+                        <span className="info-label">📍 Headquarters / City</span>
+                        <span className="info-value">{[showSellerPortfolio.city, showSellerPortfolio.district, showSellerPortfolio.state].filter(Boolean).join(', ')}</span>
+                      </div>
+                    )}
+                    {showSellerPortfolio.responseTime && (
+                      <div className="info-item">
+                        <span className="info-label">⏱ Avg Response Time</span>
+                        <span className="info-value">{showSellerPortfolio.responseTime}</span>
+                      </div>
+                    )}
+                    {showSellerPortfolio.yearsExperience != null && (
+                      <div className="info-item">
+                        <span className="info-label">💼 Experience</span>
+                        <span className="info-value">{showSellerPortfolio.yearsExperience} Years in Market</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="portfolio-message-box" style={{ marginTop: '2rem' }}>

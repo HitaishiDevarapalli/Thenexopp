@@ -425,17 +425,33 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (!match) return false;
       }
 
+      let exactLocationMatch = true;
+      let distanceKm = 0;
       // 2. Geospatial Location Filtering
       if (location && location.lat && location.lng) {
         if (item.latitude && item.longitude) {
           const dist = getDistance(location.lat, location.lng, item.latitude, item.longitude);
+          distanceKm = dist;
           // Only show properties within 50km radius
           if (dist > 50) return false;
+          
+          const targetLoc = (location.city || location.displayName || '').toLowerCase();
+          const itemCity = (item.city || '').toLowerCase();
+          const itemLocStr = (item.location || '').toLowerCase();
+          
+          if (targetLoc) {
+            exactLocationMatch = itemCity.includes(targetLoc) || itemLocStr.includes(targetLoc);
+          } else {
+            exactLocationMatch = dist <= 5;
+          }
         } else {
           // Fallback to string matching if property doesn't have lat/lng yet in the mock DB
-          const loc = location.city.toLowerCase() || location.displayName.toLowerCase();
-          const matchLoc = item.location.toLowerCase().includes(loc) || (item.city && item.city.toLowerCase().includes(loc));
-          if (!matchLoc) return false;
+          const loc = (location.city || location.displayName || '').toLowerCase();
+          if (loc) {
+            const matchLoc = item.location.toLowerCase().includes(loc) || (item.city && item.city.toLowerCase().includes(loc));
+            if (!matchLoc) return false;
+            exactLocationMatch = true;
+          }
         }
       } else if (locationText && locationText.trim() !== '') {
         const loc = locationText.toLowerCase().trim();
@@ -446,8 +462,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             (item.title && item.title.toLowerCase().includes(loc)) ||
             (item.type && item.type.toLowerCase().includes(loc));
           if (!matchLoc) return false;
+          
+          const itemCity = (item.city || '').toLowerCase();
+          const itemLocStr = (item.location || '').toLowerCase();
+          exactLocationMatch = itemCity === loc || itemLocStr.includes(loc) || (item.title || '').toLowerCase().includes(loc);
         }
       }
+      
+      (item as any).exactLocationMatch = exactLocationMatch;
+      (item as any).distanceKm = distanceKm;
 
       // 3. Tab Categorization
       if (activeTab === 'Buy') {
@@ -529,29 +552,35 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     });
 
     // Sorting (Default: Available properties listed first, followed by sold properties)
-    if (sortBy === 'Relevance' || !sortBy) {
-      filtered.sort((a, b) => {
+    filtered.sort((a, b) => {
+      if ((a as any).exactLocationMatch && !(b as any).exactLocationMatch) return -1;
+      if (!(a as any).exactLocationMatch && (b as any).exactLocationMatch) return 1;
+
+      if (sortBy === 'Relevance' || !sortBy) {
         if (!a.sold && b.sold) return -1;
         if (a.sold && !b.sold) return 1;
+        
+        if (!(a as any).exactLocationMatch && !(b as any).exactLocationMatch) {
+            return ((a as any).distanceKm || 0) - ((b as any).distanceKm || 0);
+        }
         return 0;
-      });
-    } else if (sortBy === 'Price: Low to High') {
-      filtered.sort((a, b) => a.rawPrice - b.rawPrice);
-    } else if (sortBy === 'Price: High to Low') {
-      filtered.sort((a, b) => b.rawPrice - a.rawPrice);
-    } else if (sortBy === 'Newest First' || sortBy === 'Newest') {
-      filtered.sort((a, b) => b.id.localeCompare(a.id));
-    } else if (sortBy === 'Oldest') {
-      filtered.sort((a, b) => a.id.localeCompare(b.id));
-    } else if (sortBy === 'Recently Sold') {
-      filtered.sort((a, b) => {
+      } else if (sortBy === 'Price: Low to High') {
+        return a.rawPrice - b.rawPrice;
+      } else if (sortBy === 'Price: High to Low') {
+        return b.rawPrice - a.rawPrice;
+      } else if (sortBy === 'Newest First' || sortBy === 'Newest') {
+        return b.id.localeCompare(a.id);
+      } else if (sortBy === 'Oldest') {
+        return a.id.localeCompare(b.id);
+      } else if (sortBy === 'Recently Sold') {
         if (a.sold && !b.sold) return -1;
         if (!a.sold && b.sold) return 1;
         const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
         const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
         return dateB - dateA;
-      });
-    }
+      }
+      return 0;
+    });
 
     return filtered;
   }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
@@ -1266,7 +1295,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                   <p style={{ fontSize: '0.95rem', maxWidth: '400px', margin: '0 auto' }}>There are currently no active properties matching your filter criteria or in the marketplace.</p>
                 </div>
               ) : (
-                paginatedProperties.map((prop) => {
+                paginatedProperties.map((prop, index) => {
+                const targetCityRaw = location?.city || location?.displayName || (locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') ? locationText : null);
+                const targetCity = targetCityRaw ? targetCityRaw.charAt(0).toUpperCase() + targetCityRaw.slice(1) : '';
+                const showSeparator = !(prop as any).exactLocationMatch && 
+                  (index === 0 || (paginatedProperties[index - 1] as any).exactLocationMatch) && 
+                  targetCity;
+
                 const isFav = !!wishlisted[prop.id];
                 let badgeBg = '#DCFCE7';
                 let badgeColor = '#16A34A';
@@ -1287,6 +1322,14 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 }
 
                 return (
+                  <React.Fragment key={prop.id + '-wrap'}>
+                    {showSeparator && (
+                      <div style={{ gridColumn: '1 / -1', marginTop: index > 0 ? '12px' : '0', marginBottom: '8px', paddingBottom: '12px', borderBottom: '2px solid #E2E8F0' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#475569', fontWeight: 700 }}>
+                          Displaying ads within 50 kms from {targetCity}
+                        </h3>
+                      </div>
+                    )}
                   <div
                     key={prop.id}
                     onClick={() => onPropertyClick?.(prop.id)}
@@ -1478,6 +1521,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       </div>
                     </div>
                   </div>
+                  </React.Fragment>
                 );
               }))}
             </div>
