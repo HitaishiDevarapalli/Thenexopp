@@ -61,8 +61,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [bhkFilter, setBhkFilter] = useState('Any BHK');
 
   useEffect(() => {
-    setLocationText(selectedCity || '');
-  }, [selectedCity]);
+    const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
+    if (currentGlobalCity) {
+      setLocationText(currentGlobalCity);
+    }
+  }, [location?.city, location?.displayName, selectedCity]);
 
   // Left Sidebar Filters State
   const [budgetOpen, setBudgetOpen] = useState(true);
