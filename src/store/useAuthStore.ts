@@ -90,5 +90,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       .catch((err) => console.error('Customer DB sync failed:', err));
   },
 
-  logout: () => set({ user: null }),
+  logout: () => {
+    set({ user: null });
+    fetch(`${API_BASE_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    }).catch(() => {});
+  },
 }));

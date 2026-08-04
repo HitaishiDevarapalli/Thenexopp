@@ -153,8 +153,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     }
   };
 
-  // Handle Send OTP
-  const handleSendOtp = (e: React.FormEvent) => {
+  // Dynamically load MSG91 OTP Widget SDK script
+  useEffect(() => {
+    const existingScript = document.getElementById('msg91-widget-script');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.id = 'msg91-widget-script';
+      script.src = 'https://control.msg91.com/app/assets/otp-provider/otp-provider.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // Handle MSG91 OTP Widget SDK Login & Token verification
+  const handleWidgetLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -176,51 +188,84 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(code);
-      setResendTimer(30);
-
-      if (rememberMe) {
-        localStorage.setItem('nexopp_remembered_mobile', mobile);
-      } else {
-        localStorage.removeItem('nexopp_remembered_mobile');
-      }
-
-      setSimulatedSms({ mobile, otp: code });
-      setStep('otp');
-    }, 800);
-  };
-
-  // Handle Verify OTP
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!otpInput || otpInput.trim() !== generatedOtp) {
-      setError('Incorrect OTP code. Please enter the code shown in the simulation header.');
-      return;
+    if (rememberMe) {
+      localStorage.setItem('nexopp_remembered_mobile', mobile);
+    } else {
+      localStorage.removeItem('nexopp_remembered_mobile');
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    const widgetId = import.meta.env.VITE_MSG91_WIDGET_ID || 'YOUR_MSG91_WIDGET_ID';
 
-      // Save to registered list
-      saveRegisteredUser({
-        fullName: fullName.trim(),
-        gender,
-        mobile,
-        district
-      });
+    // Verification token callback -> POST to /api/auth/widget-login
+    const sendTokenToBackend = async (token: string) => {
+      setLoading(true);
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+        const res = await fetch(`${apiBase}/auth/widget-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            verificationToken: token,
+            fullName: fullName.trim(),
+            gender,
+            district,
+          }),
+        });
 
-      // Login into App AuthContext
-      const mockEmail = `${mobile}@nexopp.in`;
-      loginWithGmail(mockEmail, 'Verified Investor', fullName.trim(), mobile, gender, district);
-      onClose?.();
-    }, 600);
+        const data = await res.json();
+        setLoading(false);
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || data.message || 'Verification token validation failed');
+        }
+
+        saveRegisteredUser({
+          fullName: fullName.trim(),
+          gender,
+          mobile,
+          district,
+        });
+
+        const mockEmail = `${mobile}@nexopp.in`;
+        loginWithGmail(mockEmail, 'Verified Investor', fullName.trim(), mobile, gender, district);
+        onClose?.();
+      } catch (err: any) {
+        setLoading(false);
+        setError(err.message || 'Failed to authenticate verified mobile number');
+      }
+    };
+
+    // Invoke MSG91 Widget SDK if loaded on window
+    if (typeof (window as any).initSendOTP === 'function') {
+      try {
+        const configuration = {
+          widgetId: widgetId,
+          tokenAuth: '', // Maintained securely on backend server
+          identifier: mobile,
+          exposeMethods: true,
+          success: (data: any) => {
+            const token = typeof data === 'string' ? data : (data.message || data.verificationToken || data['access-token'] || data.token);
+            sendTokenToBackend(token);
+          },
+          failure: (error: any) => {
+            console.error('MSG91 Widget Error:', error);
+            setError(typeof error === 'string' ? error : (error.message || 'OTP verification failed via MSG91 Widget.'));
+          },
+        };
+
+        (window as any).initSendOTP(configuration);
+        setSuccess('MSG91 OTP Widget initialized. Complete verification in the popup.');
+      } catch (err) {
+        console.error('Widget initialization error:', err);
+        // Dev / test fallback token
+        sendTokenToBackend(`sim_${mobile}`);
+      }
+    } else {
+      // SDK fallback for development or offline testing
+      console.log('MSG91 Widget SDK initializing in Dev/Test Mode');
+      sendTokenToBackend(`sim_${mobile}`);
+    }
   };
 
   // Quick Demo Login helper
@@ -643,404 +688,287 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
             </div>
           )}
 
-          {/* STEP 1: DETAILS & MOBILE INPUT */}
-          {step === 'details' && (
-            <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* MSG91 OTP WIDGET FORM */}
+          <form onSubmit={handleWidgetLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-              {/* 1. Full Name */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  Full Name <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <FaUser style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#007A55',
-                    fontSize: '15px'
-                  }} />
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Enter your full name"
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px 14px 44px',
-                      borderRadius: '12px',
-                      border: '1.5px solid #E2E8F0',
-                      fontSize: '0.95rem',
-                      color: '#0F172A',
-                      backgroundColor: '#F8FAFC',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      transition: 'border-color 0.2s'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* 2. Gender Selection */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  Gender <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  {['Male', 'Female', 'Other'].map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setGender(g)}
-                      style={{
-                        padding: '12px',
-                        borderRadius: '12px',
-                        border: gender === g ? '2px solid #007A55' : '1.5px solid #E2E8F0',
-                        backgroundColor: gender === g ? '#ECFDF5' : '#F8FAFC',
-                        color: gender === g ? '#007A55' : '#475569',
-                        fontWeight: gender === g ? 800 : 600,
-                        fontSize: '0.9rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <FaVenusMars style={{ fontSize: '13px' }} />
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. Phone Number */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  Phone Number <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  {/* Country Code Prefix */}
-                  <div style={{
-                    padding: '14px 16px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    backgroundColor: '#F1F5F9',
-                    fontSize: '0.95rem',
-                    fontWeight: 700,
-                    color: '#334155',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}>
-                    <FaPhoneAlt style={{ fontSize: '13px', color: '#007A55' }} />
-                    +91
-                  </div>
-                  {/* Input */}
-                  <div style={{ flex: 1, position: 'relative' }}>
-                    <input
-                      type="tel"
-                      value={mobile}
-                      onChange={(e) => handleMobileChange(e.target.value)}
-                      placeholder="Enter 10-digit phone number"
-                      maxLength={10}
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px',
-                        borderRadius: '12px',
-                        border: '1.5px solid #E2E8F0',
-                        fontSize: '0.95rem',
-                        color: '#0F172A',
-                        backgroundColor: '#F8FAFC',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* 4. District Selection */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  District <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <FaMapMarkerAlt style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#007A55',
-                    fontSize: '15px'
-                  }} />
-                  <select
-                    value={district}
-                    onChange={(e) => setDistrict(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px 14px 44px',
-                      borderRadius: '12px',
-                      border: '1.5px solid #E2E8F0',
-                      fontSize: '0.95rem',
-                      color: '#0F172A',
-                      backgroundColor: '#F8FAFC',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {DISTRICT_OPTIONS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Checkbox Options */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{ width: '17px', height: '17px', accentColor: '#007A55', cursor: 'pointer' }}
-                  />
-                  Remember me
-                </label>
-              </div>
-
-              {/* Primary Action Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  backgroundColor: '#007A55',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
-                  transition: 'all 0.2s ease',
-                  marginTop: '4px'
-                }}
-              >
-                {loading ? 'Sending OTP...' : 'Send OTP'} <FaArrowRight style={{ fontSize: '14px' }} />
-              </button>
-
-              {/* Divider */}
-              <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0', gap: '12px' }}>
-                <div style={{ flex: 1, height: '1px', backgroundColor: '#E2E8F0' }} />
-                <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 600, textTransform: 'lowercase' }}>or continue with</span>
-                <div style={{ flex: 1, height: '1px', backgroundColor: '#E2E8F0' }} />
-              </div>
-
-              {/* Social Login Buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {/* Google Button */}
-                <button
-                  type="button"
-                  onClick={() => loginWithGmail('user@gmail.com', 'Verified Investor', fullName || 'Google User', mobile || '9876543210', gender, district)}
-                  style={{
-                    padding: '12px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    backgroundColor: '#FFFFFF',
-                    color: '#334155',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  Google
-                </button>
-
-                {/* Microsoft Button */}
-                <button
-                  type="button"
-                  onClick={() => loginWithGmail('user@microsoft.com', 'Verified Investor', fullName || 'Microsoft User', mobile || '9876543210', gender, district)}
-                  style={{
-                    padding: '12px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    backgroundColor: '#FFFFFF',
-                    color: '#334155',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 23 23">
-                    <path fill="#f35325" d="M1 1h10v10H1z"/>
-                    <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                    <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                    <path fill="#ffba08" d="M12 12h10v10H12z"/>
-                  </svg>
-                  Microsoft
-                </button>
-              </div>
-
-              {/* Demo Account Quick Pickers */}
-              <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>Quick Demo Fill: </span>
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('Rahul Sharma', '9876543210', 'Male', 'Hyderabad')}
-                  style={{ background: 'none', border: 'none', color: '#007A55', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  Rahul (Hyderabad)
-                </button>
-                <span style={{ color: '#CBD5E1', margin: '0 6px' }}>•</span>
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemoLogin('Priya Reddy', '9988776655', 'Female', 'Guntur')}
-                  style={{ background: 'none', border: 'none', color: '#007A55', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  Priya (Guntur)
-                </button>
-              </div>
-
-            </form>
-          )}
-
-          {/* STEP 2: OTP VERIFICATION INPUT */}
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{
-                backgroundColor: '#ECFDF5',
-                border: '1px solid #A7F3D0',
-                borderRadius: '14px',
-                padding: '16px',
-                color: '#064E3B',
-                fontSize: '0.9rem'
-              }}>
-                <div style={{ fontWeight: 800, marginBottom: '4px' }}>Name: {fullName} ({gender})</div>
-                <div>Mobile: +91 {mobile} • District: {district}</div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  Enter 6-Digit OTP Code
-                </label>
+            {/* 1. Full Name */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                Full Name <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <FaUser style={{
+                  position: 'absolute',
+                  left: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#007A55',
+                  fontSize: '15px'
+                }} />
                 <input
                   type="text"
-                  value={otpInput}
-                  onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="e.g. 684219"
-                  maxLength={6}
+                  value={fullName}
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="e.g. Rahul Sharma"
                   style={{
                     width: '100%',
-                    padding: '16px',
+                    padding: '14px 16px 14px 44px',
                     borderRadius: '12px',
-                    border: '2px solid #007A55',
-                    fontSize: '1.3rem',
-                    fontWeight: 900,
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: '0.95rem',
                     color: '#0F172A',
                     backgroundColor: '#F8FAFC',
-                    letterSpacing: '8px',
-                    textAlign: 'center',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
-                  autoFocus
                   required
                 />
               </div>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <button
-                  type="button"
-                  onClick={() => setStep('details')}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#64748B',
-                    fontWeight: 700,
-                    fontSize: '0.88rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <FaArrowLeft /> Edit Details
-                </button>
-
-                <button
-                  type="button"
-                  disabled={resendTimer > 0}
-                  onClick={() => {
-                    const code = Math.floor(100000 + Math.random() * 900000).toString();
-                    setGeneratedOtp(code);
-                    setResendTimer(30);
-                    setSimulatedSms({ mobile, otp: code });
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: resendTimer > 0 ? '#94A3B8' : '#007A55',
-                    fontWeight: 700,
-                    fontSize: '0.88rem',
-                    cursor: resendTimer > 0 ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {resendTimer > 0 ? `Resend code in ${resendTimer}s` : 'Resend OTP'}
-                </button>
+            {/* 2. Gender Selection */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                Gender <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                {['Male', 'Female', 'Other'].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGender(g)}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: gender === g ? '2px solid #007A55' : '1.5px solid #E2E8F0',
+                      backgroundColor: gender === g ? '#ECFDF5' : '#F8FAFC',
+                      color: gender === g ? '#007A55' : '#475569',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <FaVenusMars style={{ fontSize: '13px' }} /> {g}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  backgroundColor: '#007A55',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontSize: '1rem',
+            {/* 3. Mobile Number */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                Mobile Number <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: '#007A55',
                   fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9rem'
+                }}>
+                  <FaPhoneAlt style={{ fontSize: '13px' }} />
+                  <span>+91</span>
+                </div>
+                <input
+                  type="tel"
+                  value={mobile}
+                  onChange={(e) => handleMobileChange(e.target.value)}
+                  placeholder="9876543210"
+                  maxLength={10}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px 14px 75px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: '0.95rem',
+                    color: '#0F172A',
+                    backgroundColor: '#F8FAFC',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* 4. District Selection */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                District <span style={{ color: '#DC2626' }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <FaMapMarkerAlt style={{
+                  position: 'absolute',
+                  left: '16px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#007A55',
+                  fontSize: '15px'
+                }} />
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px 14px 44px',
+                    borderRadius: '12px',
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: '0.95rem',
+                    color: '#0F172A',
+                    backgroundColor: '#F8FAFC',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {DISTRICT_OPTIONS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Checkbox Options */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={{ width: '17px', height: '17px', accentColor: '#007A55', cursor: 'pointer' }}
+                />
+                Remember me
+              </label>
+            </div>
+
+            {/* MSG91 Widget Action Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '12px',
+                backgroundColor: '#007A55',
+                color: '#FFFFFF',
+                border: 'none',
+                fontSize: '1rem',
+                fontWeight: 700,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
+                transition: 'all 0.2s ease',
+                marginTop: '4px'
+              }}
+            >
+              {loading ? 'Verifying Token...' : 'Continue with Mobile (MSG91 Widget)'} <FaArrowRight style={{ fontSize: '14px' }} />
+            </button>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0', gap: '12px' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#E2E8F0' }} />
+              <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 600, textTransform: 'lowercase' }}>or continue with</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#E2E8F0' }} />
+            </div>
+
+            {/* Social Login Buttons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {/* Google Button */}
+              <button
+                type="button"
+                onClick={() => loginWithGmail('user@gmail.com', 'Verified Investor', fullName || 'Google User', mobile || '9876543210', gender, district)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  backgroundColor: '#FFFFFF',
+                  color: '#334155',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '10px',
-                  boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
-                  transition: 'all 0.2s ease'
+                  transition: 'background-color 0.2s'
                 }}
               >
-                {loading ? 'Verifying...' : 'Verify OTP & Sign In'} <FaArrowRight style={{ fontSize: '14px' }} />
+                <svg width="18" height="18" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                Google
               </button>
-            </form>
-          )}
+
+              {/* Microsoft Button */}
+              <button
+                type="button"
+                onClick={() => loginWithGmail('user@microsoft.com', 'Verified Investor', fullName || 'Microsoft User', mobile || '9876543210', gender, district)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  border: '1.5px solid #E2E8F0',
+                  backgroundColor: '#FFFFFF',
+                  color: '#334155',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 23 23">
+                  <path fill="#f35325" d="M1 1h10v10H1z"/>
+                  <path fill="#81bc06" d="M12 1h10v10H1z"/>
+                  <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                  <path fill="#ffba08" d="M12 12h10v10H1z"/>
+                </svg>
+                Microsoft
+              </button>
+            </div>
+
+            {/* Demo Account Quick Pickers */}
+            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+              <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>Quick Demo Fill: </span>
+              <button
+                type="button"
+                onClick={() => handleQuickDemoLogin('Rahul Sharma', '9876543210', 'Male', 'Hyderabad')}
+                style={{ background: 'none', border: 'none', color: '#007A55', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Rahul (Hyderabad)
+              </button>
+              <span style={{ color: '#CBD5E1', margin: '0 6px' }}>•</span>
+              <button
+                type="button"
+                onClick={() => handleQuickDemoLogin('Priya Reddy', '9988776655', 'Female', 'Guntur')}
+                style={{ background: 'none', border: 'none', color: '#007A55', fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Priya (Guntur)
+              </button>
+            </div>
+
+          </form>
 
         </div>
       </div>

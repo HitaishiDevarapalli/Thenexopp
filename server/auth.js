@@ -41,12 +41,21 @@ export const generateTokens = (userPayload) => {
  * Express Middleware to verify JWT Bearer Token
  */
 export const authMiddleware = (req, res, next) => {
+  let token = null;
+
+  // Check Authorization Header
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.cookies && req.cookies.auth_token) {
+    // Check HTTP-Only Cookie
+    token = req.cookies.auth_token;
+  }
+
+  if (!token) {
     return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
   }
 
-  const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;

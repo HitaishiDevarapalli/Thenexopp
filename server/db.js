@@ -1,19 +1,18 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 import pino from 'pino';
 
 const logger = pino({ name: 'PrismaDatabase' });
 
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-const adapter = new PrismaPg(pool);
+let prismaInstance;
+try {
+  prismaInstance = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  });
+} catch (e) {
+  prismaInstance = new PrismaClient();
+}
 
-export const prisma = new PrismaClient({
-  adapter,
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-});
+export const prisma = prismaInstance;
 
 // Test and handle database connection gracefully
 export const checkDatabaseConnection = async () => {
@@ -29,8 +28,10 @@ export const checkDatabaseConnection = async () => {
 
 // Handle process termination gracefully
 process.on('beforeExit', async () => {
-  await prisma.$disconnect();
-  logger.info('Prisma disconnected gracefully.');
+  try {
+    await prisma.$disconnect();
+    logger.info('Prisma disconnected gracefully.');
+  } catch (e) {}
 });
 
 export default prisma;

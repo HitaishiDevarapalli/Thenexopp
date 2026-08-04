@@ -9,10 +9,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pinoHttp from 'pino-http';
 import pino from 'pino';
+import cookieParser from 'cookie-parser';
 
 import { prisma, checkDatabaseConnection } from './db.js';
 import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole } from './auth.js';
 import { optimizeAndSaveImage } from './imageProcessor.js';
+import { verifyWidgetToken } from './services/msg91WidgetService.js';
 import {
   userRegisterSchema,
   userLoginSchema,
@@ -69,6 +71,7 @@ app.use(pinoHttp({ logger }));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cookieParser());
 
 // ── FILE STORAGE SUBDIRECTORIES ──────────────────────────────────────────────
 const uploadDir = path.join(__dirname, '../uploads');
@@ -119,7 +122,112 @@ app.post('/api/upload', async (req, res, next) => {
   }
 });
 
-// ── AUTHENTICATION ENDPOINTS ──────────────────────────────────────────────────
+// ── MSG91 WIDGET OTP AUTHENTICATION ENDPOINT ─────────────────────────────────
+app.post('/api/auth/widget-login', async (req, res, next) => {
+  try {
+    const { verificationToken, fullName, gender, district } = req.body;
+    if (!verificationToken) {
+      return res.status(400).json({ error: 'Verification token is required' });
+    }
+
+    // Verify verificationToken with MSG91 Widget API
+    const verifyResult = await verifyWidgetToken(verificationToken);
+    if (!verifyResult.success || !verifyResult.mobile) {
+      return res.status(400).json({ error: verifyResult.message || 'MSG91 Widget Token verification failed' });
+    }
+
+    const verifiedMobile = verifyResult.mobile;
+    const now = new Date().toLocaleString();
+    const mockEmail = `${verifiedMobile}@nexopp.in`;
+
+    let customer = null;
+    try {
+      const existing = await prisma.customer.findFirst({
+        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
+      });
+
+      if (existing) {
+        customer = await prisma.customer.update({
+          where: { id: existing.id },
+          data: {
+            name: fullName || existing.name,
+            gender: gender || existing.gender,
+            district: district || existing.district,
+            lastLoginAt: now,
+            loginCount: existing.loginCount + 1,
+          },
+        });
+      } else {
+        customer = await prisma.customer.create({
+          data: {
+            name: fullName || 'Verified Investor',
+            email: mockEmail,
+            phone: verifiedMobile,
+            gender: gender || 'Male',
+            district: district || 'Hyderabad',
+            role: 'Verified Investor',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=007A55&color=fff`,
+            lastLoginAt: now,
+            loginCount: 1,
+            status: 'Active',
+            registeredDate: new Date().toLocaleDateString(),
+          },
+        });
+      }
+    } catch (dbErr) {
+      logger.warn({ dbErr }, 'Database offline or query error during Widget login, falling back to session payload');
+      customer = {
+        id: `cust-${verifiedMobile}`,
+        name: fullName || 'Verified Investor',
+        email: mockEmail,
+        phone: verifiedMobile,
+        gender: gender || 'Male',
+        district: district || 'Hyderabad',
+        role: 'Verified Investor',
+      };
+    }
+
+    // Generate JWT Token
+    const userPayload = {
+      id: customer.id,
+      email: customer.email,
+      fullName: customer.name,
+      mobile: customer.phone,
+      role: customer.role || 'Verified Investor',
+      gender: customer.gender,
+      district: customer.district,
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    // Set HTTP-Only Cookie
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.json({
+      success: true,
+      message: 'Widget login successful',
+      user: userPayload,
+      tokens,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  return res.json({ success: true, user: req.user });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('auth_token');
+  return res.json({ success: true, message: 'Logged out successfully' });
+});
+
 app.post('/api/auth/register', async (req, res, next) => {
   try {
     const validated = userRegisterSchema.parse(req.body);
@@ -138,6 +246,13 @@ app.post('/api/auth/register', async (req, res, next) => {
     });
 
     const tokens = generateTokens(newUser);
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res.status(201).json({ success: true, user: { id: newUser.id, email: newUser.email, fullName: newUser.fullName, role: newUser.role }, tokens });
   } catch (err) {
     next(err);
@@ -155,6 +270,13 @@ app.post('/api/auth/login', async (req, res, next) => {
     if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
 
     const tokens = generateTokens(user);
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res.json({ success: true, user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role }, tokens });
   } catch (err) {
     next(err);
