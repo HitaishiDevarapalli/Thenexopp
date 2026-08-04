@@ -226,8 +226,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           widgetId: widgetId,
           tokenAuth: tokenAuth,
           identifier: formattedMobile,
-          exposeMethods: true,
           success: (data: any) => {
+            console.log('MSG91 Widget success:', data);
             const token = typeof data === 'string' ? data : (data.message || data.verificationToken || data['access-token'] || data.token);
             sendTokenToBackend(token);
           },
@@ -238,7 +238,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
         };
 
         (window as any).initSendOTP(configuration);
-        setSuccess(`MSG91 OTP Widget opened for +${formattedMobile}. Check popup window or SMS.`);
+
+        // If MSG91 exposed sendOTP or openOtpWidget methods, call sendOTP to trigger SMS/Modal
+        if (typeof (window as any).sendOTP === 'function') {
+          (window as any).sendOTP(formattedMobile);
+        } else if (typeof (window as any).openOtpWidget === 'function') {
+          (window as any).openOtpWidget();
+        }
+
+        setSuccess(`MSG91 OTP Widget triggered for +${formattedMobile}. Complete verification in the popup.`);
       } catch (err) {
         console.error('Widget initialization error:', err);
         setError('Failed to open MSG91 OTP Widget. Please try again.');
