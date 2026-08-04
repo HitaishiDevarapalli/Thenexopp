@@ -9,7 +9,6 @@ import {
   FaCheckCircle, 
   FaBriefcase, 
   FaArrowRight, 
-  FaArrowLeft, 
   FaLock
 } from 'react-icons/fa';
 
@@ -62,8 +61,6 @@ interface LoginPageProps {
 export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }) => {
   const { loginWithGmail } = useAuth();
 
-  // Mode: 'signin' | 'otp_verify'
-  const [step, setStep] = useState<'details' | 'otp'>('details');
   const [isRegistering, setIsRegistering] = useState(false);
 
   // Form Fields
@@ -73,16 +70,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   const [district, setDistrict] = useState('Hyderabad');
   const [rememberMe, setRememberMe] = useState(true);
 
-  // OTP Verification
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [otpInput, setOtpInput] = useState('');
-  const [resendTimer, setResendTimer] = useState(0);
-
   // UI notifications & states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [simulatedSms, setSimulatedSms] = useState<{ mobile: string; otp: string } | null>(null);
 
   // Load remembered credentials or previous users
   useEffect(() => {
@@ -100,16 +91,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       }
     } catch (e) {}
   }, []);
-
-  // OTP Countdown timer
-  useEffect(() => {
-    if (resendTimer > 0) {
-      const interval = setInterval(() => {
-        setResendTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [resendTimer]);
 
   const getRegisteredUsers = (): RegisteredUser[] => {
     try {
@@ -267,19 +248,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     }
   };
 
-  // Quick Demo Login helper
-  const handleQuickDemoLogin = (demoName: string, demoMobile: string, demoGender: string, demoDistrict: string) => {
-    setFullName(demoName);
-    setMobile(demoMobile);
-    setGender(demoGender);
-    setDistrict(demoDistrict);
-    
-    const mockEmail = `${demoMobile}@nexopp.in`;
-    saveRegisteredUser({ fullName: demoName, mobile: demoMobile, gender: demoGender, district: demoDistrict });
-    loginWithGmail(mockEmail, 'Verified Investor', demoName, demoMobile, demoGender, demoDistrict);
-    onClose?.();
-  };
-
   return (
     <div style={{
       minHeight: isModal ? 'auto' : '100vh',
@@ -292,64 +260,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       padding: isModal ? '0' : '24px 16px',
       fontFamily: "'Outfit', 'Inter', system-ui, -apple-system, sans-serif"
     }}>
-
-      {/* Simulated Live SMS Notification Banner */}
-      {simulatedSms && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 99999,
-          backgroundColor: '#0F172A',
-          color: '#FFFFFF',
-          padding: '14px 24px',
-          borderRadius: '16px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          border: '1px solid #334155',
-          animation: 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-        }}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '12px',
-            backgroundColor: '#007A55',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            color: '#FFFFFF'
-          }}>
-            📱
-          </div>
-          <div>
-            <div style={{ fontSize: '0.82rem', color: '#94A3B8', fontWeight: 600 }}>SMS Verification Code Received</div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F8FAFC' }}>
-              OTP for +91 {simulatedSms.mobile}: <span style={{ color: '#34D399', letterSpacing: '2px', fontSize: '1.1rem' }}>{simulatedSms.otp}</span>
-            </div>
-          </div>
-          <button 
-            onClick={() => setOtpInput(simulatedSms.otp)} 
-            style={{
-              marginLeft: '12px',
-              padding: '6px 14px',
-              backgroundColor: '#34D399',
-              color: '#064E3B',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              cursor: 'pointer'
-            }}
-          >
-            Auto-fill
-          </button>
-        </div>
-      )}
-
       {/* Main Login Card Container */}
       <div style={{
         width: '100%',
@@ -409,7 +319,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
               justifyContent: 'center',
               boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
             }}>
-              {/* Custom 3D Cube Icon */}
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
@@ -645,14 +554,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           {/* Form Header */}
           <div style={{ marginBottom: '28px' }}>
             <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0' }}>
-              {step === 'otp' ? 'Enter OTP Code' : (isRegistering ? 'Create Account' : 'Sign In')}
+              {isRegistering ? 'Create Account' : 'Sign In'}
             </h2>
             <p style={{ fontSize: '0.92rem', color: '#64748B', margin: 0 }}>
-              {step === 'otp'
-                ? `Verification code sent to +91 ${mobile}`
-                : (isRegistering
-                    ? 'Fill in your details to register & receive OTP'
-                    : 'Please enter your mobile number to sign in')}
+              {isRegistering
+                ? 'Fill in your details to register & verify with MSG91 OTP'
+                : 'Please enter your details to verify with MSG91 OTP'}
             </p>
           </div>
 
@@ -871,207 +778,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
-              color: '#16A34A',
-              padding: '12px 16px',
-              borderRadius: '12px',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              marginBottom: '20px'
-            }}>
-              {success}
-            </div>
-          )}
-
-          {/* MSG91 OTP WIDGET FORM */}
-          <form onSubmit={handleWidgetLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-            {/* 1. Full Name */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                Full Name <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <FaUser style={{
-                  position: 'absolute',
-                  left: '16px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#007A55',
-                  fontSize: '15px'
-                }} />
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => {
-                    setFullName(e.target.value);
-                    setError('');
-                  }}
-                  placeholder="e.g. Rahul Sharma"
-                  style={{
-                    width: '100%',
-                    padding: '14px 16px 14px 44px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '0.95rem',
-                    color: '#0F172A',
-                    backgroundColor: '#F8FAFC',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* 2. Gender Selection */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                Gender <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                {['Male', 'Female', 'Other'].map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setGender(g)}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '10px',
-                      border: gender === g ? '2px solid #007A55' : '1.5px solid #E2E8F0',
-                      backgroundColor: gender === g ? '#ECFDF5' : '#F8FAFC',
-                      color: gender === g ? '#007A55' : '#475569',
-                      fontWeight: 700,
-                      fontSize: '0.88rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <FaVenusMars style={{ fontSize: '13px' }} /> {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Mobile Number */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                Mobile Number <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <div style={{
-                  position: 'absolute',
-                  left: '14px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  color: '#007A55',
-                  fontWeight: 700,
-                  fontSize: '0.9rem'
-                }}>
-                  <FaPhoneAlt style={{ fontSize: '13px' }} />
-                  <span>+91</span>
-                </div>
-                <input
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => handleMobileChange(e.target.value)}
-                  placeholder="9876543210"
-                  maxLength={10}
-                  style={{
-                    width: '100%',
-                    padding: '14px 16px 14px 75px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '0.95rem',
-                    color: '#0F172A',
-                    backgroundColor: '#F8FAFC',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* 4. District Selection */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                District <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <FaMapMarkerAlt style={{
-                  position: 'absolute',
-                  left: '16px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#007A55',
-                  fontSize: '15px'
-                }} />
-                <select
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '14px 16px 14px 44px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '0.95rem',
-                    color: '#0F172A',
-                    backgroundColor: '#F8FAFC',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {DISTRICT_OPTIONS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Checkbox Options */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ width: '17px', height: '17px', accentColor: '#007A55', cursor: 'pointer' }}
-                />
-                Remember me
-              </label>
-            </div>
-
-            {/* MSG91 Widget Action Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '12px',
-                backgroundColor: '#007A55',
-                color: '#FFFFFF',
-                border: 'none',
-                fontSize: '1rem',
-                fontWeight: 700,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
                 boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
                 transition: 'all 0.2s ease',
                 marginTop: '4px'
               }}
             >
               {loading ? 'Verifying Token...' : 'Continue with Mobile (MSG91 Widget)'} <FaArrowRight style={{ fontSize: '14px' }} />
+            </button>
           </form>
         </div>
       </div>
