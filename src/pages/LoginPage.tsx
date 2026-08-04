@@ -175,7 +175,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       localStorage.removeItem('nexopp_remembered_mobile');
     }
 
-    const widgetId = import.meta.env.VITE_MSG91_WIDGET_ID || '36686464635556533333331313137';
+    const widgetId = import.meta.env.VITE_MSG91_WIDGET_ID || '3668635565333331313137';
     const tokenAuth = import.meta.env.VITE_MSG91_TOKEN_AUTH || '557093TbSwW47iNa86a715c45P1';
     const formattedMobile = mobile.startsWith('91') ? mobile : `91${mobile}`;
 
