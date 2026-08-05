@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { parseIndiaLocation } from '../../utils/locationIntelligence';
-import { selectedCity as dbSelectedCity, demandRegionsDb, getDistance } from '../../db/marketplaceDb';
+import { selectedCity as dbSelectedCity, demandRegionsDb } from '../../db/marketplaceDb';
 import { FaLocationArrow, FaPlus, FaMinus, FaCompressArrowsAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { useLocationStore } from '../../context/LocationContext';
 
 interface LiveLocationMapProps {
   items: Array<any>;
@@ -20,41 +21,39 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   height = '380px',
   localSearchLocation,
 }) => {
+  const { location: navbarLocation } = useLocationStore();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
-  const [centerCity, setCenterCity] = useState<string>(() => {
-    return localStorage.getItem('nexopp_selected_city') || dbSelectedCity || 'Hyderabad';
-  });
   const [userGps, setUserGps] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [detectingGps, setDetectingGps] = useState(false);
   const [demandFilter, setDemandFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
 
-  // Listen to city changes in localStorage or db
-  useEffect(() => {
-    const handleStorage = () => {
-      const city = localStorage.getItem('nexopp_selected_city') || dbSelectedCity || 'Hyderabad';
-      if (city !== centerCity) {
-        setCenterCity(city);
-      }
-    };
-    const interval = setInterval(handleStorage, 1000);
-    window.addEventListener('storage', handleStorage);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, [centerCity]);
-
-  const effectiveCity = localSearchLocation && localSearchLocation.trim() !== '' && !localSearchLocation.toLowerCase().includes('current location') && !localSearchLocation.toLowerCase().includes('gps') 
-    ? localSearchLocation 
-    : centerCity;
-    
-  const cityGeo = parseIndiaLocation(effectiveCity);
+  // Compute map center dynamically from Navbar LocationContext, localSearchLocation, or default
   const mapCenter = useMemo(() => {
-    return userGps || { lat: cityGeo.latitude, lng: cityGeo.longitude, label: `${effectiveCity}` };
-  }, [userGps, cityGeo.latitude, cityGeo.longitude, effectiveCity]);
+    if (userGps) return userGps;
+
+    if (navbarLocation && typeof navbarLocation.lat === 'number' && typeof navbarLocation.lng === 'number') {
+      const areaLabel = navbarLocation.suburb || navbarLocation.area || navbarLocation.locality || navbarLocation.city || 'Location';
+      return {
+        lat: navbarLocation.lat,
+        lng: navbarLocation.lng,
+        label: areaLabel,
+      };
+    }
+
+    const effectiveCity = localSearchLocation && localSearchLocation.trim() !== '' && !localSearchLocation.toLowerCase().includes('current location') && !localSearchLocation.toLowerCase().includes('gps') 
+      ? localSearchLocation 
+      : (localStorage.getItem('nexopp_selected_city') || dbSelectedCity || 'Guntur');
+      
+    const cityGeo = parseIndiaLocation(effectiveCity);
+    return {
+      lat: cityGeo.latitude,
+      lng: cityGeo.longitude,
+      label: effectiveCity,
+    };
+  }, [userGps, navbarLocation, localSearchLocation]);
 
   // Initialize Map
   useEffect(() => {
@@ -63,14 +62,14 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
 
     const map = L.map(mapContainerRef.current, {
       center: [mapCenter.lat, mapCenter.lng],
-      zoom: 13,
+      zoom: 14,
       zoomControl: false,
-      dragging: false,
-      scrollWheelZoom: false,
-      touchZoom: false,
-      doubleClickZoom: false,
-      boxZoom: false,
-      keyboard: false,
+      dragging: true,
+      scrollWheelZoom: true,
+      touchZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true,
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -88,11 +87,14 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     };
   }, []);
 
-  // Update Markers & Center
+  // Update Map Position & Markers whenever mapCenter changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     const layer = markersLayerRef.current;
     if (!map || !layer) return;
+
+    // Smoothly fly to selected Navbar location coordinates
+    map.flyTo([mapCenter.lat, mapCenter.lng], 14, { duration: 1.2 });
 
     // Clear old markers
     layer.clearLayers();
@@ -114,141 +116,74 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     });
     L.marker([mapCenter.lat, mapCenter.lng], { icon: centerIcon, zIndexOffset: 1000 }).addTo(layer);
 
-    const boundsPoints: L.LatLng[] = [L.latLng(mapCenter.lat, mapCenter.lng)];
-
     // 1.5 Draw Demand Regions if filtered/enabled
     const activeRegions = demandRegionsDb.filter(r => 
-      r.city.toLowerCase() === centerCity.toLowerCase() && 
-      (demandFilter === 'All' || r.demandLevel === demandFilter)
+      demandFilter === 'All' || r.demandLevel === demandFilter
     );
 
-    activeRegions.forEach(region => {
-      const color = region.demandLevel === 'High' ? '#16A34A' : (region.demandLevel === 'Medium' ? '#EAB308' : '#EF4444');
-      
-      // Draw Circle Overlay based on configured radius
-      L.circle([region.latitude, region.longitude], {
-        color: color,
-        fillColor: color,
-        fillOpacity: 0.12,
-        radius: region.radius * 1000, // in meters
-        weight: 2
+    activeRegions.forEach((region: any) => {
+      const regionColor = region.demandLevel === 'High' ? '#EF4444' : region.demandLevel === 'Medium' ? '#F59E0B' : '#3B82F6';
+      const rLat = parseFloat(region.latitude || region.lat || 16.3067);
+      const rLng = parseFloat(region.longitude || region.lng || 80.4365);
+      const rRad = parseFloat(region.radiusKm || region.radius || 5);
+      L.circle([rLat, rLng], {
+        color: regionColor,
+        fillColor: regionColor,
+        fillOpacity: 0.15,
+        radius: rRad * 1000,
+        weight: 1.5,
+        dashArray: '4, 6'
       }).addTo(layer);
-
-      // Draw Region Label Marker
-      const labelIcon = L.divIcon({
-        className: 'demand-region-label',
-        html: `
-          <div style="background-color: ${color}; color: #FFFFFF; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer;">
-            📍 ${region.name} (${region.demandLevel} Demand)
-          </div>
-        `,
-        iconSize: [120, 24],
-        iconAnchor: [60, 12]
-      });
-
-      const regionMarker = L.marker([region.latitude, region.longitude], { icon: labelIcon }).addTo(layer);
-      regionMarker.on('click', () => {
-        map.flyTo([region.latitude, region.longitude], 14, { duration: 1.2 });
-      });
     });
 
-    // 2. Filter items according to Selected Demand Level inside configured radius
-    const filteredItems = items.filter(item => {
-      if (demandFilter === 'All') return true;
-      return activeRegions.some(region => {
-        if (item.latitude && item.longitude) {
-          const dist = getDistance(region.latitude, region.longitude, item.latitude, item.longitude);
-          return dist <= region.radius;
-        }
-        return false;
-      });
-    });
+    // 2. Add Property/Business/Franchise Item Markers
+    items.forEach((item) => {
+      const itemLat = parseFloat(item.latitude);
+      const itemLng = parseFloat(item.longitude);
+      if (isNaN(itemLat) || isNaN(itemLng)) return;
 
-    // 3. Add property / business / franchise markers
-    filteredItems.forEach((item, idx) => {
-      let lat = item.latitude;
-      let lng = item.longitude;
+      const title = item.title || item.name || item.brand || 'Listing';
+      const price = item.priceDisplay || item.investmentDisplay || (item.price ? `₹${item.price}` : 'View Details');
+      const itemCategory = item.category || item.type || type;
+      const itemId = item.id;
 
-      // If invalid lat/lng (outside India bounds or 0,0), generate realistic coordinates around center
-      if (!lat || !lng || lat < 6 || lat > 38 || lng < 68 || lng > 98) {
-        const str = item.id || item.title || item.name || String(idx);
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) hash = (hash << 5) - hash + str.charCodeAt(i);
-        const offsetLat = ((hash % 100) - 50) * 0.0008; // approx 1-3 km radius around center
-        const offsetLng = (((hash >> 3) % 100) - 50) * 0.0008;
-        lat = mapCenter.lat + offsetLat;
-        lng = mapCenter.lng + offsetLng;
-      }
-
-      boundsPoints.push(L.latLng(lat, lng));
-
-      const displayPrice = item.priceDisplay || item.investmentDisplay || (item.price ? `₹${item.price}` : 'View Price');
-      const title = item.title || item.name || item.brand || 'Property';
-      const cat = item.category || item.type || item.industry || 'Listing';
-      const img = item.image || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=500&q=80';
-
-      const pinColor = type === 'property' ? '#16A34A' : (type === 'business' ? '#4F46E5' : '#EA580C');
+      const markerBg = type === 'property' ? '#10B981' : type === 'business' ? '#8B5CF6' : '#F59E0B';
 
       const itemIcon = L.divIcon({
         className: 'custom-item-pin',
         html: `
-          <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s;">
-            <div style="background-color: ${pinColor}; color: #FFFFFF; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 14px rgba(0,0,0,0.25); border: 2px solid #FFFFFF; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
-              <span>${displayPrice}</span>
-            </div>
-            <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid ${pinColor}; margin-top: -1px;"></div>
+          <div style="background-color: ${markerBg}; color: #FFFFFF; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.25); border: 2px solid #FFFFFF; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: transform 0.2s;">
+            <span>${price}</span>
           </div>
         `,
-        iconSize: [80, 32],
-        iconAnchor: [40, 32],
+        iconSize: [80, 30],
+        iconAnchor: [40, 15],
       });
 
-      const marker = L.marker([lat, lng], { icon: itemIcon }).addTo(layer);
+      const marker = L.marker([itemLat, itemLng], { icon: itemIcon }).addTo(layer);
 
-      const popupHtml = `
-        <div style="width: 220px; font-family: 'Outfit', 'Inter', sans-serif; padding: 4px;">
-          <div style="width: 100%; height: 110px; border-radius: 12px; overflow: hidden; margin-bottom: 8px; position: relative; background-color: #F1F5F9;">
-            <img src="${img}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=500&q=80'" />
-            <span style="position: absolute; top: 6px; left: 6px; background: rgba(15,23,42,0.75); color: #FFF; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; backdrop-filter: blur(4px);">${cat}</span>
-            ${(item.approvalStatus === 'Sold' || item.listingStatus === 'Sold' || item.status === 'Sold') ? `
-              <div style="position: absolute; top: 6px; right: 6px; background-color: #E53935; color: #FFFFFF; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 4px; box-shadow: 0 2px 6px rgba(229, 57, 53, 0.4); transform: rotate(5deg); font-family: 'Outfit', sans-serif; z-index: 10;">SOLD</div>
-            ` : ''}
-          </div>
-          <h4 style="font-size: 14px; font-weight: 800; color: #0F172A; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</h4>
-          <p style="font-size: 12px; color: #64748B; margin: 0 0 8px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">📍 ${item.area || item.city || item.location || centerCity}</p>
-          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #E2E8F0; padding-top: 8px;">
-            <span style="font-size: 14px; font-weight: 800; color: ${pinColor};">${displayPrice}</span>
-            <button id="btn-select-${item.id}" style="background-color: #0F172A; color: #FFFFFF; border: none; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">View Details →</button>
-          </div>
+      const popupContent = `
+        <div style="width: 220px; font-family: 'Outfit', sans-serif;">
+          ${item.image ? `<img src="${item.image}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 10px; margin-bottom: 8px;" />` : ''}
+          <div style="font-size: 10px; font-weight: 800; color: ${markerBg}; text-transform: uppercase; margin-bottom: 2px;">${itemCategory}</div>
+          <div style="font-size: 13px; font-weight: 800; color: #0F172A; line-height: 1.3; margin-bottom: 4px;">${title}</div>
+          <div style="font-size: 12px; font-weight: 800; color: #10B981; margin-bottom: 8px;">${price}</div>
+          <button id="btn-view-${itemId}" style="width: 100%; background-color: #0F172A; color: #FFFFFF; border: none; padding: 6px 0; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+            View Listing
+          </button>
         </div>
       `;
 
-      const popup = L.popup({
-        closeButton: false,
-        className: 'custom-map-popup',
-        offset: [0, -28],
-      }).setContent(popupHtml);
-
-      marker.bindPopup(popup);
+      marker.bindPopup(popupContent);
 
       marker.on('popupopen', () => {
-        setTimeout(() => {
-          const btn = document.getElementById(`btn-select-${item.id}`);
-          if (btn && onSelectItem) {
-            btn.onclick = () => onSelectItem(item.id);
-          }
-        }, 50);
+        const btn = document.getElementById(`btn-view-${itemId}`);
+        if (btn && onSelectItem) {
+          btn.onclick = () => onSelectItem(itemId);
+        }
       });
     });
-
-    // Auto-fit to visible markers (including center pin)
-    if (boundsPoints.length > 1) {
-      const bounds = L.latLngBounds(boundsPoints);
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-    } else {
-      map.flyTo([mapCenter.lat, mapCenter.lng], 13, { duration: 1.2 });
-    }
-  }, [items, mapCenter, centerCity, type, onSelectItem, demandFilter]);
+  }, [items, mapCenter, type, onSelectItem, demandFilter]);
 
   const handleDetectLiveGps = () => {
     if (!navigator.geolocation) {
@@ -270,29 +205,9 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     );
   };
 
-  const nearbyCount = useMemo(() => {
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-      const R = 6371; // km
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    };
-    return items.filter(item => {
-      const lat = item.latitude;
-      const lng = item.longitude;
-      if (!lat || !lng) return false;
-      const dist = calculateDistance(mapCenter.lat, mapCenter.lng, lat, lng);
-      return dist <= 15;
-    }).length;
-  }, [items, mapCenter]);
-
   const handleResetView = () => {
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([mapCenter.lat, mapCenter.lng], 13, { duration: 1 });
+      mapInstanceRef.current.flyTo([mapCenter.lat, mapCenter.lng], 14, { duration: 1 });
     }
   };
 
@@ -348,72 +263,104 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
             fontSize: '13px',
             fontWeight: 800,
             cursor: detectingGps ? 'wait' : 'pointer',
-            boxShadow: '0 4px 16px rgba(37, 99, 235, 0.35)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
+            boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
             transition: 'all 0.2s',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1D4ED8')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2563EB')}
         >
-          <FaLocationArrow className={detectingGps ? 'animate-spin' : ''} />
-          <span>{detectingGps ? 'Locating GPS...' : 'Live GPS'}</span>
+          <FaLocationArrow style={{ animation: detectingGps ? 'spin 1s linear infinite' : 'none' }} />
+          <span>{detectingGps ? 'Detecting...' : 'Live GPS'}</span>
         </button>
 
-        {/* Demand Region Selector */}
-        <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '7px 14px', borderRadius: '14px', border: '1px solid #CBD5E1', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Demand Region</span>
-          <select
-            value={demandFilter}
-            onChange={(e) => setDemandFilter(e.target.value as any)}
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', fontWeight: 800, color: '#0F172A', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            <option value="All">All Regions</option>
-            <option value="High">🟢 High Demand</option>
-            <option value="Medium">🟡 Medium Demand</option>
-            <option value="Low">🔴 Low Demand</option>
-          </select>
+        {/* Demand Filter Pill Chips */}
+        <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '4px 6px', borderRadius: '14px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 800, paddingLeft: '6px', textTransform: 'uppercase' }}>Demand:</span>
+          {(['All', 'High', 'Medium', 'Low'] as const).map(lvl => (
+            <button
+              key={lvl}
+              onClick={() => setDemandFilter(lvl)}
+              style={{
+                border: 'none',
+                backgroundColor: demandFilter === lvl ? '#0F172A' : 'transparent',
+                color: demandFilter === lvl ? '#FFFFFF' : '#475569',
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '4px 10px',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {lvl}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Right Zoom & Reset Controls */}
-      <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 500, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* Right Controls: Recenter, Zoom */}
+      <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 500, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button
+          onClick={handleResetView}
+          title="Recenter Map"
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #CBD5E1',
+            color: '#0F172A',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            fontSize: '15px',
+          }}
+        >
+          <FaCompressArrowsAlt />
+        </button>
         <button
           onClick={() => mapInstanceRef.current?.zoomIn()}
           title="Zoom In"
-          style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0F172A', fontSize: '15px', fontWeight: 700, transition: 'all 0.2s' }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px 12px 4px 4px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #CBD5E1',
+            color: '#0F172A',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            fontSize: '14px',
+          }}
         >
           <FaPlus />
         </button>
         <button
           onClick={() => mapInstanceRef.current?.zoomOut()}
           title="Zoom Out"
-          style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0F172A', fontSize: '15px', fontWeight: 700, transition: 'all 0.2s' }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '4px 4px 12px 12px',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #CBD5E1',
+            color: '#0F172A',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            fontSize: '14px',
+          }}
         >
           <FaMinus />
         </button>
-        <button
-          onClick={handleResetView}
-          title="Reset View"
-          style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0F172A', fontSize: '15px', fontWeight: 700, marginTop: '4px', transition: 'all 0.2s' }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <FaCompressArrowsAlt />
-        </button>
-      </div>
-
-      {/* Bottom Live Status Banner */}
-      <div style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px', zIndex: 1000, display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
-        <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', color: '#FFFFFF', padding: '8px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, boxShadow: '0 4px 16px rgba(0,0,0,0.2)', pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22C55E', display: 'inline-block', animation: 'pulse 1.5s infinite' }}></span>
-          <span>Showing {nearbyCount} listings within 15 km of {mapCenter.label}</span>
-        </div>
       </div>
     </div>
   );
