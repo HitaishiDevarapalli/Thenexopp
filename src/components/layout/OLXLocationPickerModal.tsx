@@ -379,8 +379,12 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Body Content (Two-Column Layout Grid) */}
         <style>{`
+          .olx-modal-scroll {
+            max-height: 460px;
+            overflow-y: scroll !important;
+            overscroll-behavior: contain;
+          }
           .olx-modal-scroll::-webkit-scrollbar {
             width: 8px;
           }
@@ -400,9 +404,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
           className="olx-modal-scroll"
           style={{
             flex: '1 1 auto',
-            minHeight: 0,
-            maxHeight: '60vh',
-            overflowY: 'auto',
+            minHeight: '200px',
             WebkitOverflowScrolling: 'touch',
             padding: '24px 28px',
             display: 'grid',
