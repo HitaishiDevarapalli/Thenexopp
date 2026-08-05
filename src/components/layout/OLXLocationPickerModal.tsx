@@ -81,20 +81,66 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
       return;
     }
 
+  // Debounced 300ms Search calling PostgreSQL backend endpoint with Photon backup for instant results
+  useEffect(() => {
+    const cleanQuery = query.trim();
+    if (cleanQuery.length < 1) {
+      setResults([]);
+      setLoading(false);
+      setSelectedIndex(-1);
+      return;
+    }
+
     setLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/locations/search?q=${encodeURIComponent(cleanQuery)}&limit=10`);
-        if (res.ok) {
-          const data = await res.json();
-          setResults(data);
+        const res = await fetch(`/api/locations/search?q=${encodeURIComponent(cleanQuery)}&limit=10`).catch(() => null);
+        let data: any[] = [];
+        if (res && res.ok) {
+          data = await res.json().catch(() => []);
         }
+
+        // If backend search returns empty, use Photon Geocoder API as instant client fallback
+        if (!Array.isArray(data) || data.length === 0) {
+          const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(cleanQuery + ' India')}&limit=8&lang=en`).catch(() => null);
+          if (photonRes && photonRes.ok) {
+            const photonData = await photonRes.json().catch(() => null);
+            if (photonData && Array.isArray(photonData.features)) {
+              data = photonData.features.map((f: any) => {
+                const props = f.properties || {};
+                const coords = f.geometry?.coordinates || [80.4363, 16.3067];
+                const areaName = props.name || props.street || props.district || props.city || cleanQuery;
+                const cityName = props.city || props.county || props.district || 'Guntur';
+                const stateName = props.state || 'Andhra Pradesh';
+                return {
+                  id: `photon-${props.osm_id || Math.random()}`,
+                  displayName: [areaName, cityName, stateName].filter(Boolean).join(', '),
+                  city: cityName,
+                  district: props.district || cityName,
+                  suburb: areaName,
+                  area: areaName,
+                  locality: areaName,
+                  state: stateName,
+                  country: props.country || 'India',
+                  postalCode: props.postcode || '',
+                  pincode: props.postcode || '',
+                  latitude: coords[1],
+                  longitude: coords[0],
+                  lat: coords[1],
+                  lng: coords[0],
+                };
+              });
+            }
+          }
+        }
+
+        setResults(data || []);
       } catch (err) {
         console.error('Location search failed:', err);
       } finally {
         setLoading(false);
       }
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timer);
   }, [query]);

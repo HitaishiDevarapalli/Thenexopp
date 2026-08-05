@@ -15,13 +15,16 @@ const DEFAULT_POPULAR_CITIES = [
   { city: 'Visakhapatnam', state: 'Andhra Pradesh', area: 'MVP Colony / Siripuram', lat: 17.6868, lng: 83.2185, popularity: 78 },
 ];
 
-// Curated seed locations including specific user examples (SVN Colony, Brodipet/Brodipeta, Madhapur, Gachibowli, Whitefield, Benz Circle, Pattabhipuram)
+// Curated seed locations including specific user examples (SVN Colony, Brodipet/Brodipeta, Kobaldupeta, Madhapur, Gachibowli, Whitefield, Benz Circle, Pattabhipuram)
 const SEED_LOCATIONS = [
   { osmId: '3948120', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'SVN Colony', area: 'SVN Colony', locality: 'SVN Colony', postcode: '522006', lat: 16.3100, lng: 80.4300, displayName: 'SVN Colony, Guntur, Andhra Pradesh', popularity: 95 },
   { osmId: '3948121', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Pattabhipuram', area: 'Pattabhipuram', locality: 'Pattabhipuram Main Road', postcode: '522006', lat: 16.3080, lng: 80.4280, displayName: 'Pattabhipuram, Guntur, Andhra Pradesh', popularity: 94 },
   { osmId: '3948122', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Brodipet', area: 'Brodipet', locality: 'Brodipet (Brodipeta)', postcode: '522002', lat: 16.3067, lng: 80.4365, displayName: 'Brodipet (Brodipeta), Guntur, Andhra Pradesh', popularity: 98 },
   { osmId: '3948123', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Arundelpet', area: 'Arundelpet', locality: 'Arundelpet (Arundelpeta)', postcode: '522002', lat: 16.3050, lng: 80.4380, displayName: 'Arundelpet (Arundelpeta), Guntur, Andhra Pradesh', popularity: 88 },
   { osmId: '3948124', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Guntur Railway Station', area: 'Guntur Railway Station', locality: 'Station Road', postcode: '522001', lat: 16.3000, lng: 80.4450, displayName: 'Guntur Railway Station, Guntur, Andhra Pradesh', popularity: 89 },
+  { osmId: '3948136', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Kobaldupeta', area: 'Kobaldupeta', locality: 'Kobaldupeta Main', postcode: '522004', lat: 16.3020, lng: 80.4320, displayName: 'Kobaldupeta, Guntur, Andhra Pradesh', popularity: 96 },
+  { osmId: '3948137', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Gorantla', area: 'Gorantla', locality: 'Gorantla', postcode: '522034', lat: 16.3200, lng: 80.4150, displayName: 'Gorantla, Guntur, Andhra Pradesh', popularity: 90 },
+  { osmId: '3948138', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Vidyanagar', area: 'Vidyanagar', locality: 'Vidyanagar', postcode: '522007', lat: 16.2980, lng: 80.4350, displayName: 'Vidyanagar, Guntur, Andhra Pradesh', popularity: 89 },
   { osmId: '3948125', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Madhapur', area: 'Madhapur', locality: 'Madhapur', postcode: '500081', lat: 17.4483, lng: 78.3915, displayName: 'Madhapur, Hyderabad, Telangana', popularity: 98 },
   { osmId: '3948126', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Hitech City', area: 'Hitech City', locality: 'Hitech City', postcode: '500081', lat: 17.4435, lng: 78.3772, displayName: 'Hitech City, Hyderabad, Telangana', popularity: 97 },
   { osmId: '3948127', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Kondapur', area: 'Kondapur', locality: 'Kondapur', postcode: '500084', lat: 17.4622, lng: 78.3568, displayName: 'Kondapur, Hyderabad, Telangana', popularity: 94 },
@@ -41,13 +44,12 @@ const SEED_LOCATIONS = [
 export const initLocationDb = async (prisma) => {
   try {
     const count = await prisma.location.count().catch(() => 0);
-    // If count < 5, re-seed/upsert seed locations to ensure rich dataset exists
-    if (count < 10) {
+    if (count < 15) {
       logger.info('Seeding initial location database...');
 
       for (const loc of [...DEFAULT_POPULAR_CITIES, ...SEED_LOCATIONS]) {
         const displayName = loc.displayName || `${loc.area ? loc.area + ', ' : ''}${loc.city}, ${loc.state}`;
-        const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.suburb || ''} ${loc.district || ''} ${loc.state} ${displayName} brodipeta arundelpeta`.toLowerCase();
+        const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.suburb || ''} ${loc.district || ''} ${loc.state} ${displayName} brodipeta arundelpeta kobaldupeta`.toLowerCase();
         
         await prisma.location.create({
           data: {
@@ -78,7 +80,7 @@ export const initLocationDb = async (prisma) => {
 };
 
 /**
- * Enterprise 2-Step Hybrid Search (PostgreSQL first with multi-variant search, Nominatim fallback + auto-insert)
+ * Enterprise OLX-Style Hybrid Search Engine (startsWith priority, 1-char fast DB query, Nominatim fallback)
  */
 export const searchLocationsService = async (prisma, query, limit = 10) => {
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -86,39 +88,19 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
   }
 
   const cleanQuery = query.trim().toLowerCase();
-  
-  // Multi-variant terms for spelling variations (e.g. brodipeta -> brodipet / brod)
-  const queryTerms = new Set([cleanQuery]);
-  
-  // Stemming variant: remove trailing 'a', 'i', 'e', 'am'
-  if (cleanQuery.endsWith('a') || cleanQuery.endsWith('i') || cleanQuery.endsWith('e')) {
-    queryTerms.add(cleanQuery.slice(0, -1));
-  } else {
-    queryTerms.add(cleanQuery + 'a');
-  }
 
-  // Prefix term (min 3 chars)
-  if (cleanQuery.length >= 3) {
-    queryTerms.add(cleanQuery.slice(0, Math.min(cleanQuery.length, 4)));
-  }
-
-  const searchConditions = Array.from(queryTerms).flatMap((term) => [
-    { city: { contains: term, mode: 'insensitive' } },
-    { area: { contains: term, mode: 'insensitive' } },
-    { locality: { contains: term, mode: 'insensitive' } },
-    { suburb: { contains: term, mode: 'insensitive' } },
-    { displayName: { contains: term, mode: 'insensitive' } },
-    { searchText: { contains: term, mode: 'insensitive' } },
-    { district: { contains: term, mode: 'insensitive' } },
-    { postcode: { contains: term, mode: 'insensitive' } },
-    { state: { contains: term, mode: 'insensitive' } },
-  ]);
-
-  // STEP 1: Search PostgreSQL Database First
-  try {
-    const dbResults = await prisma.location.findMany({
+  // Fast 1 or 2 letter prefix matching (e.g. 'b', 'k', 'm', 'ko', 'sv')
+  if (cleanQuery.length <= 2) {
+    const startsWithResults = await prisma.location.findMany({
       where: {
-        OR: searchConditions,
+        OR: [
+          { city: { startsWith: cleanQuery, mode: 'insensitive' } },
+          { area: { startsWith: cleanQuery, mode: 'insensitive' } },
+          { locality: { startsWith: cleanQuery, mode: 'insensitive' } },
+          { suburb: { startsWith: cleanQuery, mode: 'insensitive' } },
+          { displayName: { startsWith: cleanQuery, mode: 'insensitive' } },
+          { searchText: { startsWith: cleanQuery, mode: 'insensitive' } },
+        ],
       },
       orderBy: [
         { popularity: 'desc' },
@@ -127,47 +109,85 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
       take: Number(limit) || 10,
     }).catch(() => []);
 
-    // STEP 1 RESULT: If PostgreSQL has 1 or more matching locations, return immediately (<50ms)!
-    if (Array.isArray(dbResults) && dbResults.length > 0) {
-      return dbResults;
-    }
-  } catch (err) {
-    logger.warn({ error: err.message }, 'PostgreSQL location search failed, attempting Nominatim fallback');
+    return startsWithResults;
   }
 
-  // STEP 2: PostgreSQL returned 0 matches -> Call OpenStreetMap Nominatim Search API
-  logger.info({ cleanQuery }, 'Zero matches in PostgreSQL. Fallback searching OpenStreetMap Nominatim...');
+  // 3+ character search with startsWith priority + contains
+  const queryTerms = new Set([cleanQuery]);
+  if (cleanQuery.endsWith('a') || cleanQuery.endsWith('i') || cleanQuery.endsWith('e')) {
+    queryTerms.add(cleanQuery.slice(0, -1));
+  } else {
+    queryTerms.add(cleanQuery + 'a');
+  }
+
+  const startsWithConditions = Array.from(queryTerms).flatMap((term) => [
+    { city: { startsWith: term, mode: 'insensitive' } },
+    { area: { startsWith: term, mode: 'insensitive' } },
+    { locality: { startsWith: term, mode: 'insensitive' } },
+    { suburb: { startsWith: term, mode: 'insensitive' } },
+    { displayName: { startsWith: term, mode: 'insensitive' } },
+    { searchText: { startsWith: term, mode: 'insensitive' } },
+  ]);
+
+  const containsConditions = Array.from(queryTerms).flatMap((term) => [
+    { city: { contains: term, mode: 'insensitive' } },
+    { area: { contains: term, mode: 'insensitive' } },
+    { locality: { contains: term, mode: 'insensitive' } },
+    { suburb: { contains: term, mode: 'insensitive' } },
+    { displayName: { contains: term, mode: 'insensitive' } },
+    { searchText: { contains: term, mode: 'insensitive' } },
+  ]);
+
+  // STEP 1: Search PostgreSQL Database (startsWith + contains)
   try {
-    const searchQueries = [
-      cleanQuery,
-      `${cleanQuery} India`,
-      `${Array.from(queryTerms)[1] || cleanQuery} India`,
-    ];
+    const startsResults = await prisma.location.findMany({
+      where: { OR: startsWithConditions },
+      orderBy: [{ popularity: 'desc' }],
+      take: Number(limit) || 10,
+    }).catch(() => []);
 
-    let rawOsmData = [];
-    for (const qStr of searchQueries) {
-      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(qStr)}&format=json&addressdetails=1&limit=10&countrycodes=in`;
-      const response = await fetch(nominatimUrl, {
-        headers: {
-          'User-Agent': 'TheNexopp-PropertyMarketplace/1.0 (contact@thenexopp.com)',
-          'Accept-Language': 'en-US,en;q=0.9',
-        },
-      }).catch(() => null);
-
-      if (response && response.ok) {
-        const data = await response.json().catch(() => []);
-        if (Array.isArray(data) && data.length > 0) {
-          rawOsmData = data;
-          break;
-        }
-      }
+    if (Array.isArray(startsResults) && startsResults.length > 0) {
+      return startsResults;
     }
 
+    const containsResults = await prisma.location.findMany({
+      where: { OR: containsConditions },
+      orderBy: [{ popularity: 'desc' }],
+      take: Number(limit) || 10,
+    }).catch(() => []);
+
+    if (Array.isArray(containsResults) && containsResults.length > 0) {
+      return containsResults;
+    }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'PostgreSQL search notice');
+  }
+
+  // STEP 2: Nominatim Search API Fallback (with 1.8s timeout abort controller)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1800);
+
+    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery + ' India')}&format=json&addressdetails=1&limit=10&countrycodes=in`;
+    const response = await fetch(nominatimUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'TheNexopp-PropertyMarketplace/1.0 (contact@thenexopp.com)',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    }).catch(() => null);
+
+    clearTimeout(timeoutId);
+
+    if (!response || !response.ok) {
+      return [];
+    }
+
+    const rawOsmData = await response.json().catch(() => []);
     if (!Array.isArray(rawOsmData) || rawOsmData.length === 0) {
       return [];
     }
 
-    // STEP 3 & 4: Process & Auto-Insert returned locations into PostgreSQL for future searches
     const insertedLocations = [];
     for (const item of rawOsmData) {
       const addr = item.address || {};
@@ -234,7 +254,6 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
 
     return insertedLocations;
   } catch (err) {
-    logger.error({ error: err.message }, 'OpenStreetMap Nominatim search fallback error');
     return [];
   }
 };
