@@ -55,15 +55,20 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto Focus Input when Modal Opens
+  // Lock main page background scroll when modal opens
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       setTimeout(() => inputRef.current?.focus(), 100);
       setSelectedIndex(-1);
     } else {
+      document.body.style.overflow = 'unset';
       setQuery('');
       setResults([]);
     }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
 
   // Handle Esc Key
@@ -382,7 +387,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
         <style>{`
           .olx-modal-scroll {
             max-height: 460px;
-            overflow-y: scroll !important;
+            overflow-y: auto !important;
             overscroll-behavior: contain;
           }
           .olx-modal-scroll::-webkit-scrollbar {
@@ -402,6 +407,9 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
         `}</style>
         <div
           className="olx-modal-scroll"
+          onWheel={(e) => {
+            e.stopPropagation();
+          }}
           style={{
             flex: '1 1 auto',
             minHeight: '200px',
