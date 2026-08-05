@@ -478,8 +478,8 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                   >
                     <span>⚙ More Filters</span>
                     <FaChevronDown style={{ fontSize: '10px' }} />
-                  </button>
                 </div>
+              </div>
 
               {/* Row 3: Popular Searches & Advanced Search */}
               <div
