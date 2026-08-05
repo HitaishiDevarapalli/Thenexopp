@@ -662,11 +662,17 @@ const loadData = () => {
       defaultPlaybackDurationSec: 10
     };
 
+    const safeFetchJson = (url: string) => {
+      return fetch(url).then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      });
+    };
+
     // Async Fetch from PostgreSQL API Backend Server
-    fetch(`${API_BASE_URL}/api/properties`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/properties`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(p => p.id));
           const localOnly = propertiesDb.filter(p => !apiIds.has(p.id));
           propertiesDb = [...data, ...localOnly];
@@ -677,10 +683,9 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/franchises`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/franchises`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(f => f.id));
           const localOnly = franchiseDb.filter(f => !apiIds.has(f.id));
           franchiseDb = [...data, ...localOnly];
@@ -691,10 +696,9 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/businesses`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/businesses`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(b => b.id));
           const localOnly = businessDb.filter(b => !apiIds.has(b.id));
           businessDb = [...data, ...localOnly];
@@ -705,8 +709,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/enquiries`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/enquiries`)
       .then(data => {
         if (Array.isArray(data)) {
           enquiriesDb = data;
@@ -716,8 +719,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/showcase-videos`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/showcase-videos`)
       .then(data => {
         if (Array.isArray(data)) {
           showcaseVideosDb = data;
@@ -726,8 +728,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/settings`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/settings`)
       .then(data => {
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           siteSettingsDb = { ...siteSettingsDb, ...data };
@@ -736,10 +737,9 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/dealers`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/dealers`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(d => d.id));
           const localOnly = dealersDb.filter(d => !apiIds.has(d.id));
           dealersDb = [...data, ...localOnly];
@@ -749,8 +749,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/team-members`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/team-members`)
       .then(data => {
         if (Array.isArray(data)) {
           teamMembersDb = data;
