@@ -15,20 +15,6 @@ import { prisma, checkDatabaseConnection } from './db.js';
 import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole } from './auth.js';
 import { optimizeAndSaveImage } from './imageProcessor.js';
 import { verifyWidgetToken } from './services/msg91WidgetService.js';
-import { initLocationDatabase } from './locationDatabase.js';
-import {
-  searchLocations,
-  getPopularCities,
-  getTrendingLocations,
-  getNearbyLocations,
-  getRecentSearches,
-  saveRecentSearch,
-  getAdminLocations,
-  createAdminLocation,
-  updateAdminLocation,
-  deleteAdminLocation,
-  importBulkLocationsCsv,
-} from './locationController.js';
 import {
   userRegisterSchema,
   userLoginSchema,
@@ -40,35 +26,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env variables into process.env if not already set (for PM2 compatibility)
-if (!process.env.DATABASE_URL) {
-  try {
-    const envPath = path.join(__dirname, '../.env');
-    if (fs.existsSync(envPath)) {
-      const envContent = fs.readFileSync(envPath, 'utf8');
-      envContent.split(/\r?\n/).forEach(line => {
-        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-        if (match) {
-          const key = match[1];
-          let value = match[2] || '';
-          if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
-          if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
-          if (!process.env[key]) process.env[key] = value.trim();
-        }
-      });
-    }
-  } catch (e) {}
-}
-
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
-
-process.on('unhandledRejection', (reason) => {
-  logger.warn({ reason }, 'Unhandled Promise Rejection caught');
-});
-process.on('uncaughtException', (err) => {
-  logger.error({ err }, 'Uncaught Exception caught');
-});
-
 const app = express();
 const PORT = process.env.PORT || 8081;
 
@@ -131,29 +89,12 @@ subDirs.forEach(sub => {
 });
 app.use('/uploads', express.static(uploadDir, { maxAge: '30d' }));
 
-// Ensure PostgreSQL is connected and initialize location engine
+// Ensure PostgreSQL is connected
 checkDatabaseConnection().then(connected => {
   if (!connected) {
     logger.warn("Running without PostgreSQL connection.");
   }
-  initLocationDatabase();
 });
-
-// ── LOCATION SYSTEM APIS ───────────────────────────────────────────────────
-app.get('/api/location/search', searchLocations);
-app.get('/api/location/popular', getPopularCities);
-app.get('/api/location/trending', getTrendingLocations);
-app.get('/api/location/nearby', getNearbyLocations);
-app.get('/api/location/recent', getRecentSearches);
-app.post('/api/location/recent', saveRecentSearch);
-
-// ── LOCATION ADMIN MANAGEMENT APIS ─────────────────────────────────────────
-app.get('/api/admin/locations', getAdminLocations);
-app.post('/api/admin/locations', createAdminLocation);
-app.put('/api/admin/locations/:id', updateAdminLocation);
-app.delete('/api/admin/locations/:id', deleteAdminLocation);
-app.post('/api/admin/locations/import-csv', importBulkLocationsCsv);
-
 
 // ── SHARP WEBP IMAGE UPLOAD ENDPOINT ─────────────────────────────────────────
 app.post('/api/upload', async (req, res, next) => {
@@ -347,14 +288,12 @@ app.post('/api/auth/login', async (req, res, next) => {
 });
 
 // ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
-// ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
-app.get('/api/customers', async (req, res) => {
+app.get('/api/customers', async (req, res, next) => {
   try {
     const customers = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(customers);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Customers fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -419,13 +358,12 @@ app.delete('/api/customers/:id', async (req, res, next) => {
 });
 
 // ── PROPERTY ENDPOINTS ────────────────────────────────────────────────────────
-app.get('/api/properties', async (req, res) => {
+app.get('/api/properties', async (req, res, next) => {
   try {
     const props = await prisma.property.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(props);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Properties fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -496,13 +434,12 @@ app.delete('/api/properties/:id', async (req, res, next) => {
   }
 });
 
-app.get('/api/franchises', async (req, res) => {
+app.get('/api/franchises', async (req, res, next) => {
   try {
     const franchises = await prisma.franchise.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(franchises);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Franchises fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -576,13 +513,12 @@ app.delete('/api/franchises/:id', async (req, res, next) => {
   }
 });
 
-app.get('/api/businesses', async (req, res) => {
+app.get('/api/businesses', async (req, res, next) => {
   try {
     const businesses = await prisma.business.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(businesses);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Businesses fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -653,13 +589,12 @@ app.delete('/api/businesses/:id', async (req, res, next) => {
 });
 
 // ── DEALER / BROKER ENDPOINTS ─────────────────────────────────────────────────
-app.get('/api/dealers', async (req, res) => {
+app.get('/api/dealers', async (req, res, next) => {
   try {
     const dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(dealers);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Dealers fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -728,13 +663,12 @@ app.delete('/api/dealers/:id', async (req, res, next) => {
 });
 
 // ── SHOWCASE VIDEOS ENDPOINTS ─────────────────────────────────────────────────
-app.get('/api/showcase-videos', async (req, res) => {
+app.get('/api/showcase-videos', async (req, res, next) => {
   try {
     const videos = await prisma.showcaseVideo.findMany({ orderBy: { displayOrder: 'asc' } });
     return res.json(videos);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Showcase videos fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -769,13 +703,12 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
 });
 
 // ── ENQUIRIES ENDPOINTS ───────────────────────────────────────────────────────
-app.get('/api/enquiries', async (req, res) => {
+app.get('/api/enquiries', async (req, res, next) => {
   try {
     const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(enquiries);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Enquiries fetch DB error fallback.');
-    return res.json([]);
+    next(err);
   }
 });
 
@@ -810,13 +743,12 @@ app.delete('/api/enquiries/:id', async (req, res, next) => {
 });
 
 // ── SETTINGS ENDPOINTS ────────────────────────────────────────────────────────
-app.get('/api/settings', async (req, res) => {
+app.get('/api/settings', async (req, res, next) => {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } });
-    return res.json(settings || {});
+    return res.json(settings);
   } catch (err) {
-    logger.warn({ error: err.message }, 'Settings fetch DB error fallback.');
-    return res.json({});
+    next(err);
   }
 });
 
@@ -835,14 +767,11 @@ app.put('/api/settings', async (req, res, next) => {
 
 // ── STUB ENDPOINTS FOR UNIMPLEMENTED ADMIN ROUTES ───────────────────────────
 // ── TEAM MEMBERS ENDPOINTS ──────────────────────────────────────────────────
-app.get('/api/team-members', async (req, res) => {
+app.get('/api/team-members', async (req, res, next) => {
   try {
     const data = await prisma.teamMember.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Team members fetch DB error fallback.');
-    return res.json([]);
-  }
+  } catch (err) { next(err); }
 });
 
 app.post('/api/team-members', async (req, res, next) => {
@@ -868,14 +797,11 @@ app.delete('/api/team-members/:id', async (req, res, next) => {
 });
 
 // ── ROLES ENDPOINTS ─────────────────────────────────────────────────────────
-app.get('/api/roles', async (req, res) => {
+app.get('/api/roles', async (req, res, next) => {
   try {
     const data = await prisma.customRole.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Roles fetch DB error fallback.');
-    return res.json([]);
-  }
+  } catch (err) { next(err); }
 });
 
 app.post('/api/roles', async (req, res, next) => {
@@ -901,14 +827,11 @@ app.delete('/api/roles/:id', async (req, res, next) => {
 });
 
 // ── EMPLOYEES ENDPOINTS ─────────────────────────────────────────────────────
-app.get('/api/employees', async (req, res) => {
+app.get('/api/employees', async (req, res, next) => {
   try {
     const data = await prisma.employeeUser.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Employees fetch DB error fallback.');
-    return res.json([]);
-  }
+  } catch (err) { next(err); }
 });
 
 app.post('/api/employees', async (req, res, next) => {
@@ -932,16 +855,12 @@ app.delete('/api/employees/:id', async (req, res, next) => {
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
-
 // ── DEMAND REGIONS ENDPOINTS ────────────────────────────────────────────────
-app.get('/api/demand-regions', async (req, res) => {
+app.get('/api/demand-regions', async (req, res, next) => {
   try {
     const data = await prisma.demandRegion.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Demand regions fetch DB error fallback.');
-    return res.json([]);
-  }
+  } catch (err) { next(err); }
 });
 
 app.post('/api/demand-regions', async (req, res, next) => {
@@ -967,14 +886,11 @@ app.delete('/api/demand-regions/:id', async (req, res, next) => {
 });
 
 // ── FRANCHISE ENQUIRIES ENDPOINTS ───────────────────────────────────────────
-app.get('/api/franchise-enquiries', async (req, res) => {
+app.get('/api/franchise-enquiries', async (req, res, next) => {
   try {
     const data = await prisma.franchiseEnquiry.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Franchise enquiries fetch DB error fallback.');
-    return res.json([]);
-  }
+  } catch (err) { next(err); }
 });
 
 app.post('/api/franchise-enquiries', async (req, res, next) => {
@@ -1000,14 +916,11 @@ app.delete('/api/franchise-enquiries/:id', async (req, res, next) => {
 });
 
 // ── SHOWCASE SETTINGS ENDPOINTS ─────────────────────────────────────────────
-app.get('/api/showcase-settings', async (req, res) => {
+app.get('/api/showcase-settings', async (req, res, next) => {
   try {
     const data = await prisma.showcaseSettings.findUnique({ where: { id: 'default' } });
     return res.json(data || {});
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Showcase settings fetch DB error fallback.');
-    return res.json({});
-  }
+  } catch (err) { next(err); }
 });
 
 app.put('/api/showcase-settings', async (req, res, next) => {
@@ -1035,9 +948,13 @@ app.get('/api/health', (req, res) => {
 
 // ── CENTRALIZED ERROR HANDLING MIDDLEWARE ─────────────────────────────────────
 app.use((err, req, res, next) => {
-  logger.error({ err: err.message, stack: err.stack, path: req.path }, 'Unhandled application error caught');
-  if (res.headersSent) return next(err);
-  return res.status(200).json([]);
+  logger.error({ err: err.message, stack: err.stack }, 'Unhandled application error');
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
+    success: false,
+    error: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
+  });
 });
 
 app.listen(PORT, () => {

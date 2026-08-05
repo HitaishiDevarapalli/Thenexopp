@@ -513,35 +513,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             ))}
           </ul>
 
-          <div style={{ marginTop: '20px', padding: '16px 0', borderTop: '1px solid #E2E8F0' }}>
-            <button
-              onClick={() => {
-                setShowLocationPanel(true);
-                setMobileMenuOpen(false);
-              }}
-              style={{
-                width: '100%',
-                backgroundColor: '#F8FAFC',
-                border: '1px solid #E2E8F0',
-                padding: '12px 16px',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '15px',
-                color: '#0F172A',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '12px'
-              }}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FaMapMarkedAlt style={{ color: '#10B981', fontSize: '18px' }} />
-                <span>{location?.city || location?.displayName || 'Select Location'}</span>
-              </span>
-              <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />
-            </button>
-
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
             {!user ? (
               <button
                 onClick={() => {

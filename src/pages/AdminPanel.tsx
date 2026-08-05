@@ -42,7 +42,6 @@ import {
   FaCompass,
   FaRobot
 } from 'react-icons/fa';
-import { LocationManagementModule } from '../components/admin/LocationManagementModule';
 import { 
   propertiesDb, 
   franchiseDb, 
@@ -120,7 +119,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newTagInput, setNewTagInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant' | 'locations'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -1010,17 +1009,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 >
                   <FaCog /> Roles & Permissions
                 </button>
-                <button
-                  onClick={() => {
-                    setActiveTab('locations');
-                    setExpandedMenu(null);
-                  }}
-                  style={{
-                    padding: '12px 16px', backgroundColor: activeTab === 'locations' ? '#DCFCE7' : 'transparent', color: activeTab === 'locations' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'locations' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
-                  }}
-                >
-                  <FaMapMarkerAlt /> Location Management
-                </button>
               </>
             )}
 
@@ -1185,9 +1173,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         {/* Scrollable Content Area */}
         <div data-lenis-prevent="true" style={{ padding: '32px 36px', overflowY: 'auto', flexGrow: 1, backgroundColor: '#F8FAFC' }}>
           
-          {/* ================= LOCATION MANAGEMENT MODULE ================= */}
-          {activeTab === 'locations' && <LocationManagementModule />}
-
           {/* ================= CATEGORY 0: GRAND OVERVIEW ================= */}
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif" }}>

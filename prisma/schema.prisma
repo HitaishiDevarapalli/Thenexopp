@@ -92,50 +92,6 @@ model Location {
   properties Property[]
 }
 
-model LocationItem {
-  id             String   @id @default(uuid())
-  name           String
-  slug           String   @unique
-  type           String   // Country, State, District, City, Area, Locality, Village, Pincode
-  latitude       Float    @default(0.0)
-  longitude      Float    @default(0.0)
-  parentId       String?
-  parentName     String?
-  city           String?
-  district       String?
-  state          String?
-  country        String?  @default("India")
-  aliases        String[] @default([])
-  searchKeywords String[] @default([])
-  population     Int      @default(0)
-  listingCount   Int      @default(0)
-  priority       Int      @default(0)
-  status         String   @default("Active")
-  featured       Boolean  @default(false)
-  trending       Boolean  @default(false)
-  searchCount    Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@index([type])
-  @@index([status])
-  @@index([trending])
-  @@index([listingCount])
-}
-
-model RecentSearch {
-  id           String   @id @default(uuid())
-  userId       String?
-  query        String
-  locationName String
-  locationId   String?
-  createdAt    DateTime @default(now())
-
-  @@index([userId])
-  @@index([createdAt])
-}
-
-
 model Property {
   id            String         @id @default(uuid())
   title         String
