@@ -11,6 +11,7 @@ import type { PropertyListing } from '../db/marketplaceDb';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
 import { AdminLocationStep } from './admin/AdminLocationStep';
+import { compressImage } from '../utils/imageCompressor';
 import { 
   FaBuilding, FaSearch, FaPlus, FaEdit, FaTrash, 
   FaCrown, FaMapMarkerAlt, FaFileExport, FaCopy, 
@@ -1590,21 +1591,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     {/* Single Optional Drag & Drop Zone */}
                     <div
                       onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
+                      onDrop={async (e) => {
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (ev) => {
-                            const base64 = ev.target?.result as string;
-                            if (!formData.image) setFormData({ ...formData, image: base64 });
-                            else if (!formData.image2) setFormData({ ...formData, image2: base64 });
-                            else if (!formData.image3) setFormData({ ...formData, image3: base64 });
-                            else if (!formData.image4) setFormData({ ...formData, image4: base64 });
-                            else if (!formData.image5) setFormData({ ...formData, image5: base64 });
-                            else if (!formData.image6) setFormData({ ...formData, image6: base64 });
-                          };
-                          reader.readAsDataURL(file);
+                          const base64 = await compressImage(file);
+                          setFormData(prev => {
+                            if (!prev.image) return { ...prev, image: base64 };
+                            if (!prev.image2) return { ...prev, image2: base64 };
+                            if (!prev.image3) return { ...prev, image3: base64 };
+                            if (!prev.image4) return { ...prev, image4: base64 };
+                            if (!prev.image5) return { ...prev, image5: base64 };
+                            if (!prev.image6) return { ...prev, image6: base64 };
+                            return prev;
+                          });
                         }
                       }}
                       onClick={() => {
@@ -1629,54 +1629,48 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     >
                       <FaCamera style={{ fontSize: '2.5rem', color: '#3B82F6', marginBottom: '12px' }} />
                       <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1E3A8A' }}>Drag & Drop or Click to Upload Image</div>
-                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>PNG, JPG, or WEBP (Max 6 showcase images)</div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>PNG, JPG, or WEBP (Auto-optimized for instant save)</div>
                       <div style={{ display: 'none' }}>
-                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file);
+                            setFormData(prev => ({ ...prev, image: base64 }));
                           }
                         }} />
-                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image2: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file);
+                            setFormData(prev => ({ ...prev, image2: base64 }));
                           }
                         }} />
-                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image3: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file);
+                            setFormData(prev => ({ ...prev, image3: base64 }));
                           }
                         }} />
-                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image4: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file);
+                            setFormData(prev => ({ ...prev, image4: base64 }));
                           }
                         }} />
-                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image5: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file);
+                            setFormData(prev => ({ ...prev, image5: base64 }));
                           }
                         }} />
-                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image6: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file);
+                            setFormData(prev => ({ ...prev, image6: base64 }));
                           }
                         }} />
                       </div>

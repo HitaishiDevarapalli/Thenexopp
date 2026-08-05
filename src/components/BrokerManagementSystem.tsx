@@ -8,6 +8,7 @@ import {
   franchiseDb 
 } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
+import { compressImage } from '../utils/imageCompressor';
 import { 
   FaUserTie, FaSearch, FaFilter, FaPlus, FaEdit, FaTrash, FaCheckCircle, 
   FaFileExport, 
@@ -1022,14 +1023,11 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                           type="file"
                           accept="image/*"
                           style={{ display: 'none' }}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              setFormData({ ...formData, photo: ev.target?.result as string });
-                            };
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file, 400, 0.8);
+                            setFormData(prev => ({ ...prev, photo: base64 }));
                           }}
                         />
                       </label>
@@ -1050,14 +1048,11 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                           type="file"
                           accept="image/*"
                           style={{ display: 'none' }}
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file) return;
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              setFormData({ ...formData, logo: ev.target?.result as string });
-                            };
-                            reader.readAsDataURL(file);
+                            const base64 = await compressImage(file, 400, 0.8);
+                            setFormData(prev => ({ ...prev, logo: base64 }));
                           }}
                         />
                       </label>

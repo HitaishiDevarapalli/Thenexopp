@@ -15,6 +15,7 @@ import {
 } from '../db/marketplaceDb';
 import type { FranchiseListing } from '../db/marketplaceDb';
 import { AdminLocationStep } from './admin/AdminLocationStep';
+import { compressImage } from '../utils/imageCompressor';
 import {
   FaPlus,
   FaSearch,
@@ -1592,15 +1593,12 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div
                               onDragOver={(e) => e.preventDefault()}
-                              onDrop={(e) => {
+                              onDrop={async (e) => {
                                 e.preventDefault();
                                 const file = e.dataTransfer.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setEditingFranchise({ ...editingFranchise, image: ev.target?.result as string });
-                                  };
-                                  reader.readAsDataURL(file);
+                                  const base64 = await compressImage(file);
+                                  setEditingFranchise(prev => ({ ...prev, image: base64 }));
                                 }
                               }}
                               onClick={() => document.getElementById('franchise-cover-file')?.click()}
@@ -1617,21 +1615,18 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               }}
                             >
                               <div>Drag & Drop or Click to Upload Primary Cover Image</div>
-                              <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '2px' }}>PNG, JPG, or WEBP</div>
+                              <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '2px' }}>PNG, JPG, or WEBP (Auto-optimized)</div>
                             </div>
                             <input
                               id="franchise-cover-file"
                               type="file"
                               accept="image/*"
                               style={{ display: 'none' }}
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setEditingFranchise({ ...editingFranchise, image: ev.target?.result as string });
-                                  };
-                                  reader.readAsDataURL(file);
+                                  const base64 = await compressImage(file);
+                                  setEditingFranchise(prev => ({ ...prev, image: base64 }));
                                 }
                               }}
                             />
@@ -1653,15 +1648,12 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div
                               onDragOver={(e) => e.preventDefault()}
-                              onDrop={(e) => {
+                              onDrop={async (e) => {
                                 e.preventDefault();
                                 const file = e.dataTransfer.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setEditingFranchise({ ...editingFranchise, logo: ev.target?.result as string });
-                                  };
-                                  reader.readAsDataURL(file);
+                                  const base64 = await compressImage(file, 400, 0.8);
+                                  setEditingFranchise(prev => ({ ...prev, logo: base64 }));
                                 }
                               }}
                               onClick={() => document.getElementById('franchise-logo-file')?.click()}
@@ -1685,14 +1677,11 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="file"
                               accept="image/*"
                               style={{ display: 'none' }}
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const reader = new FileReader();
-                                  reader.onload = (ev) => {
-                                    setEditingFranchise({ ...editingFranchise, logo: ev.target?.result as string });
-                                  };
-                                  reader.readAsDataURL(file);
+                                  const base64 = await compressImage(file, 400, 0.8);
+                                  setEditingFranchise(prev => ({ ...prev, logo: base64 }));
                                 }
                               }}
                             />

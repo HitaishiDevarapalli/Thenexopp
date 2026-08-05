@@ -598,14 +598,33 @@ export const setSelectedCity = (city: string) => {
   window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
 };
 
-// LocalStorage Persistence Helpers
+// LocalStorage Persistence Helpers with Quota Guard
 const saveLocal = (key: string, data: any) => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.setItem(key, JSON.stringify(data));
     }
   } catch (err) {
-    console.warn(`Failed to save ${key} to localStorage:`, err);
+    console.warn(`Failed to save ${key} to localStorage (quota exceeded), attempting compact save:`, err);
+    try {
+      if (Array.isArray(data)) {
+        const compactData = data.map(item => {
+          if (item && typeof item === 'object') {
+            const clone = { ...item };
+            delete (clone as any).image2;
+            delete (clone as any).image3;
+            delete (clone as any).image4;
+            delete (clone as any).image5;
+            delete (clone as any).image6;
+            return clone;
+          }
+          return item;
+        });
+        window.localStorage.setItem(key, JSON.stringify(compactData));
+      }
+    } catch (e) {
+      console.error(`Compact save also failed for ${key}:`, e);
+    }
   }
 };
 
@@ -643,11 +662,17 @@ const loadData = () => {
       defaultPlaybackDurationSec: 10
     };
 
+    const safeFetchJson = (url: string) => {
+      return fetch(url).then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      });
+    };
+
     // Async Fetch from PostgreSQL API Backend Server
-    fetch(`${API_BASE_URL}/api/properties`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/properties`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(p => p.id));
           const localOnly = propertiesDb.filter(p => !apiIds.has(p.id));
           propertiesDb = [...data, ...localOnly];
@@ -658,10 +683,9 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/franchises`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/franchises`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(f => f.id));
           const localOnly = franchiseDb.filter(f => !apiIds.has(f.id));
           franchiseDb = [...data, ...localOnly];
@@ -672,10 +696,9 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/businesses`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/businesses`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(b => b.id));
           const localOnly = businessDb.filter(b => !apiIds.has(b.id));
           businessDb = [...data, ...localOnly];
@@ -686,8 +709,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/enquiries`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/enquiries`)
       .then(data => {
         if (Array.isArray(data)) {
           enquiriesDb = data;
@@ -697,8 +719,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/showcase-videos`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/showcase-videos`)
       .then(data => {
         if (Array.isArray(data)) {
           showcaseVideosDb = data;
@@ -707,8 +728,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/settings`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/settings`)
       .then(data => {
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           siteSettingsDb = { ...siteSettingsDb, ...data };
@@ -717,10 +737,9 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/dealers`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/dealers`)
       .then(data => {
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           const apiIds = new Set(data.map(d => d.id));
           const localOnly = dealersDb.filter(d => !apiIds.has(d.id));
           dealersDb = [...data, ...localOnly];
@@ -730,8 +749,7 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/team-members`)
-      .then(res => res.json())
+    safeFetchJson(`${API_BASE_URL}/api/team-members`)
       .then(data => {
         if (Array.isArray(data)) {
           teamMembersDb = data;
