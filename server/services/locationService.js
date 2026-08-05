@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import pino from 'pino';
 
 const logger = pino({ name: 'LocationService' });
