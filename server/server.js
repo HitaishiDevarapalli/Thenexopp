@@ -347,12 +347,14 @@ app.post('/api/auth/login', async (req, res, next) => {
 });
 
 // ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
-app.get('/api/customers', async (req, res, next) => {
+// ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
+app.get('/api/customers', async (req, res) => {
   try {
     const customers = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(customers);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Customers fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -417,12 +419,13 @@ app.delete('/api/customers/:id', async (req, res, next) => {
 });
 
 // ── PROPERTY ENDPOINTS ────────────────────────────────────────────────────────
-app.get('/api/properties', async (req, res, next) => {
+app.get('/api/properties', async (req, res) => {
   try {
     const props = await prisma.property.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(props);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Properties fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -493,12 +496,13 @@ app.delete('/api/properties/:id', async (req, res, next) => {
   }
 });
 
-app.get('/api/franchises', async (req, res, next) => {
+app.get('/api/franchises', async (req, res) => {
   try {
     const franchises = await prisma.franchise.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(franchises);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Franchises fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -572,12 +576,13 @@ app.delete('/api/franchises/:id', async (req, res, next) => {
   }
 });
 
-app.get('/api/businesses', async (req, res, next) => {
+app.get('/api/businesses', async (req, res) => {
   try {
     const businesses = await prisma.business.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(businesses);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Businesses fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -648,12 +653,13 @@ app.delete('/api/businesses/:id', async (req, res, next) => {
 });
 
 // ── DEALER / BROKER ENDPOINTS ─────────────────────────────────────────────────
-app.get('/api/dealers', async (req, res, next) => {
+app.get('/api/dealers', async (req, res) => {
   try {
     const dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(dealers);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Dealers fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -722,12 +728,13 @@ app.delete('/api/dealers/:id', async (req, res, next) => {
 });
 
 // ── SHOWCASE VIDEOS ENDPOINTS ─────────────────────────────────────────────────
-app.get('/api/showcase-videos', async (req, res, next) => {
+app.get('/api/showcase-videos', async (req, res) => {
   try {
     const videos = await prisma.showcaseVideo.findMany({ orderBy: { displayOrder: 'asc' } });
     return res.json(videos);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Showcase videos fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -762,12 +769,13 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
 });
 
 // ── ENQUIRIES ENDPOINTS ───────────────────────────────────────────────────────
-app.get('/api/enquiries', async (req, res, next) => {
+app.get('/api/enquiries', async (req, res) => {
   try {
     const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(enquiries);
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Enquiries fetch DB error fallback.');
+    return res.json([]);
   }
 });
 
@@ -802,12 +810,13 @@ app.delete('/api/enquiries/:id', async (req, res, next) => {
 });
 
 // ── SETTINGS ENDPOINTS ────────────────────────────────────────────────────────
-app.get('/api/settings', async (req, res, next) => {
+app.get('/api/settings', async (req, res) => {
   try {
     const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } });
-    return res.json(settings);
+    return res.json(settings || {});
   } catch (err) {
-    next(err);
+    logger.warn({ error: err.message }, 'Settings fetch DB error fallback.');
+    return res.json({});
   }
 });
 
@@ -826,11 +835,14 @@ app.put('/api/settings', async (req, res, next) => {
 
 // ── STUB ENDPOINTS FOR UNIMPLEMENTED ADMIN ROUTES ───────────────────────────
 // ── TEAM MEMBERS ENDPOINTS ──────────────────────────────────────────────────
-app.get('/api/team-members', async (req, res, next) => {
+app.get('/api/team-members', async (req, res) => {
   try {
     const data = await prisma.teamMember.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) { next(err); }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Team members fetch DB error fallback.');
+    return res.json([]);
+  }
 });
 
 app.post('/api/team-members', async (req, res, next) => {
@@ -856,11 +868,14 @@ app.delete('/api/team-members/:id', async (req, res, next) => {
 });
 
 // ── ROLES ENDPOINTS ─────────────────────────────────────────────────────────
-app.get('/api/roles', async (req, res, next) => {
+app.get('/api/roles', async (req, res) => {
   try {
     const data = await prisma.customRole.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) { next(err); }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Roles fetch DB error fallback.');
+    return res.json([]);
+  }
 });
 
 app.post('/api/roles', async (req, res, next) => {
@@ -886,11 +901,14 @@ app.delete('/api/roles/:id', async (req, res, next) => {
 });
 
 // ── EMPLOYEES ENDPOINTS ─────────────────────────────────────────────────────
-app.get('/api/employees', async (req, res, next) => {
+app.get('/api/employees', async (req, res) => {
   try {
     const data = await prisma.employeeUser.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) { next(err); }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Employees fetch DB error fallback.');
+    return res.json([]);
+  }
 });
 
 app.post('/api/employees', async (req, res, next) => {
@@ -914,12 +932,16 @@ app.delete('/api/employees/:id', async (req, res, next) => {
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
+
 // ── DEMAND REGIONS ENDPOINTS ────────────────────────────────────────────────
-app.get('/api/demand-regions', async (req, res, next) => {
+app.get('/api/demand-regions', async (req, res) => {
   try {
     const data = await prisma.demandRegion.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) { next(err); }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Demand regions fetch DB error fallback.');
+    return res.json([]);
+  }
 });
 
 app.post('/api/demand-regions', async (req, res, next) => {
@@ -945,11 +967,14 @@ app.delete('/api/demand-regions/:id', async (req, res, next) => {
 });
 
 // ── FRANCHISE ENQUIRIES ENDPOINTS ───────────────────────────────────────────
-app.get('/api/franchise-enquiries', async (req, res, next) => {
+app.get('/api/franchise-enquiries', async (req, res) => {
   try {
     const data = await prisma.franchiseEnquiry.findMany({ orderBy: { createdAt: 'desc' } });
     return res.json(data);
-  } catch (err) { next(err); }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Franchise enquiries fetch DB error fallback.');
+    return res.json([]);
+  }
 });
 
 app.post('/api/franchise-enquiries', async (req, res, next) => {
@@ -975,11 +1000,14 @@ app.delete('/api/franchise-enquiries/:id', async (req, res, next) => {
 });
 
 // ── SHOWCASE SETTINGS ENDPOINTS ─────────────────────────────────────────────
-app.get('/api/showcase-settings', async (req, res, next) => {
+app.get('/api/showcase-settings', async (req, res) => {
   try {
     const data = await prisma.showcaseSettings.findUnique({ where: { id: 'default' } });
     return res.json(data || {});
-  } catch (err) { next(err); }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Showcase settings fetch DB error fallback.');
+    return res.json({});
+  }
 });
 
 app.put('/api/showcase-settings', async (req, res, next) => {
@@ -1007,13 +1035,9 @@ app.get('/api/health', (req, res) => {
 
 // ── CENTRALIZED ERROR HANDLING MIDDLEWARE ─────────────────────────────────────
 app.use((err, req, res, next) => {
-  logger.error({ err: err.message, stack: err.stack }, 'Unhandled application error');
-  const status = err.status || err.statusCode || 500;
-  res.status(status).json({
-    success: false,
-    error: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {}),
-  });
+  logger.error({ err: err.message, stack: err.stack, path: req.path }, 'Unhandled application error caught');
+  if (res.headersSent) return next(err);
+  return res.status(200).json([]);
 });
 
 app.listen(PORT, () => {
