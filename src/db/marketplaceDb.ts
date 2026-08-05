@@ -571,6 +571,7 @@ export interface ShowcaseVideo {
   title: string;
   displayOrder: number;
   status: 'Active' | 'Inactive';
+  tags?: string[];
   autoplayDuration?: number;
   createdDate: string;
 }

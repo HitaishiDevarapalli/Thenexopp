@@ -110,44 +110,8 @@ export const ShowcaseVideoCarousel: React.FC<{
       .filter((v) => v.status === 'Active')
       .sort((a, b) => a.displayOrder - b.displayOrder);
 
-    // Fallback default videos if database is empty
     if (filtered.length === 0) {
-      const defaults: ShowcaseVideo[] = [
-        {
-          id: 'sv1',
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-          title: 'Luxury Sky Villa & Penthouse Showcase',
-          linkedCategory: 'Property',
-          linkedId: 'prop-c-guntur-1',
-          displayOrder: 1,
-          status: 'Active',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop&q=80',
-          createdDate: new Date().toLocaleDateString()
-        },
-        {
-          id: 'sv2',
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-          title: 'Prime Commercial Office Complex',
-          linkedCategory: 'Property',
-          linkedId: 'prop-c-guntur-2',
-          displayOrder: 2,
-          status: 'Active',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80',
-          createdDate: new Date().toLocaleDateString()
-        },
-        {
-          id: 'sv3',
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-          title: 'CRDA Approved Plotting Township',
-          linkedCategory: 'Property',
-          linkedId: 'prop-c-guntur-3',
-          displayOrder: 3,
-          status: 'Active',
-          thumbnailUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop&q=80',
-          createdDate: new Date().toLocaleDateString()
-        }
-      ];
-      setActiveVideos(defaults);
+      setActiveVideos([]);
       return;
     }
 
@@ -320,7 +284,7 @@ export const ShowcaseVideoCarousel: React.FC<{
                 key={currentVideo.id}
                 ref={(el) => { videoRefs.current[currentIndex] = el; }}
                 src={currentVideo.videoUrl}
-                poster={currentVideo.thumbnailUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80'}
+                poster={currentVideo.thumbnailUrl || undefined}
                 autoPlay={isPlaying}
                 muted={isMuted}
                 loop
@@ -336,18 +300,52 @@ export const ShowcaseVideoCarousel: React.FC<{
                   zIndex: 2,
                   backgroundColor: '#000000'
                 }}
-                onError={(e) => {
-                  // Fallback video source if primary URL fails
-                  const v = e.currentTarget;
-                  v.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+                onError={() => {
+                  // Video source failed - do nothing, show poster image
                 }}
               />
             )
           ) : (
-            // 3. Fallback Video Placeholder
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
-              <FaFilm style={{ fontSize: '48px', marginBottom: '16px', color: '#10B981' }} />
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF' }}>No Video Loaded</div>
+            // 3. Empty State - No Videos Available
+            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0F172A, #1E293B)', color: '#94A3B8' }}>
+              <FaFilm style={{ fontSize: '48px', marginBottom: '16px', color: '#10B981', opacity: 0.6 }} />
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>No Showcase Videos</div>
+              <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>Videos will appear here once added from the admin panel</div>
+            </div>
+          )}
+
+          {/* Tag Badges Overlay */}
+          {activeVideos.length > 0 && currentVideo && (currentVideo as any).tags && (currentVideo as any).tags.length > 0 && (
+            <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 8, display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {((currentVideo as any).tags as string[]).map((tag: string, i: number) => {
+                const tagStyles: Record<string, { bg: string; icon: string }> = {
+                  'Premium': { bg: 'linear-gradient(135deg, #F59E0B, #D97706)', icon: '⭐' },
+                  'Featured': { bg: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', icon: '🔥' },
+                  'Trending': { bg: 'linear-gradient(135deg, #EF4444, #DC2626)', icon: '📈' },
+                  'New': { bg: 'linear-gradient(135deg, #10B981, #059669)', icon: '✨' },
+                  'Exclusive': { bg: 'linear-gradient(135deg, #EC4899, #DB2777)', icon: '💎' },
+                  'Top Rated': { bg: 'linear-gradient(135deg, #3B82F6, #2563EB)', icon: '🏆' },
+                };
+                const style = tagStyles[tag] || { bg: 'linear-gradient(135deg, #475569, #334155)', icon: '🏷️' };
+                return (
+                  <span key={i} style={{
+                    background: style.bg,
+                    color: '#FFFFFF',
+                    padding: '5px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.03em',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}>
+                    {style.icon} {tag}
+                  </span>
+                );
+              })}
             </div>
           )}
 

@@ -3672,6 +3672,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         {activeTab === 'media_manager' && (() => {
           const videos: ShowcaseVideo[] = showcaseVideosDb;
           const settings: ShowcaseSettings = showcaseSettingsDb;
+          const PRESET_TAGS = ['Premium', 'Featured', 'Trending', 'New', 'Exclusive', 'Top Rated'];
+          const tagColorMap: Record<string, { bg: string; text: string }> = {
+            'Premium': { bg: '#FEF3C7', text: '#D97706' },
+            'Featured': { bg: '#EDE9FE', text: '#7C3AED' },
+            'Trending': { bg: '#FEE2E2', text: '#DC2626' },
+            'New': { bg: '#D1FAE5', text: '#059669' },
+            'Exclusive': { bg: '#FCE7F3', text: '#DB2777' },
+            'Top Rated': { bg: '#DBEAFE', text: '#2563EB' },
+          };
           return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
@@ -3683,7 +3692,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
                 <div>
                   <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>🖥️ Main Page Settings</h2>
-                  <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#64748B', fontWeight: 500 }}>Manage videos displayed on the homepage carousel</p>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#64748B', fontWeight: 500 }}>Manage videos and tags displayed on the homepage carousel</p>
                 </div>
                 <div style={{ marginLeft: 'auto', backgroundColor: '#DCFCE7', color: '#16A34A', padding: '8px 16px', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem' }}>
                   {videos.filter(v => v.status === 'Active').length} Active / {videos.length} Total
@@ -3719,72 +3728,198 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
             </div>
 
-            {/* Add New Video Form */}
+            {/* Add New Video Form — Enhanced with Upload & Tags */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FaPlus style={{ color: '#16A34A' }} /> Add New Video
               </h3>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.target as HTMLFormElement;
-                const formData = new FormData(form);
-                const videoUrl = (formData.get('videoUrl') as string || '').trim();
-                const title = (formData.get('title') as string || '').trim();
-                const linkedCategory = (formData.get('linkedCategory') as string || 'None') as ShowcaseVideo['linkedCategory'];
-                const linkedId = (formData.get('linkedId') as string || '').trim();
-                const displayOrder = Number(formData.get('displayOrder')) || (videos.length + 1);
-                const status = formData.get('statusToggle') ? 'Active' as const : 'Inactive' as const;
-                if (!videoUrl || !title) { showNotification('Please enter Video URL and Title', 'warning'); return; }
-                addShowcaseVideo({ videoUrl, title, linkedCategory, linkedId: linkedId || undefined, displayOrder, status });
-                showNotification(`Added "${title}" to showcase videos!`);
-                form.reset();
-                triggerRefresh();
-              }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Video URL *</label>
-                    <input name="videoUrl" type="url" placeholder="https://example.com/video.mp4" required style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+              {(() => {
+                const [addVideoUrl, setAddVideoUrl] = React.useState('');
+                const [addVideoTitle, setAddVideoTitle] = React.useState('');
+                const [addLinkedCategory, setAddLinkedCategory] = React.useState<'Property' | 'Franchise' | 'Business' | 'None'>('None');
+                const [addLinkedId, setAddLinkedId] = React.useState('');
+                const [addDisplayOrder, setAddDisplayOrder] = React.useState(videos.length + 1);
+                const [addStatusActive, setAddStatusActive] = React.useState(true);
+                const [addSelectedTags, setAddSelectedTags] = React.useState<string[]>([]);
+                const [addCustomTag, setAddCustomTag] = React.useState('');
+                const [addVideoInputMode, setAddVideoInputMode] = React.useState<'url' | 'upload'>('url');
+                const [addUploading, setAddUploading] = React.useState(false);
+
+                const handleTagToggle = (tag: string) => {
+                  setAddSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+                };
+                const handleAddCustomTag = () => {
+                  const tag = addCustomTag.trim();
+                  if (tag && !addSelectedTags.includes(tag)) {
+                    setAddSelectedTags(prev => [...prev, tag]);
+                    setAddCustomTag('');
+                  }
+                };
+                const handleFileUpload = async (file: File) => {
+                  setAddUploading(true);
+                  try {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      const base64 = (reader.result as string).split(',')[1];
+                      const res = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fileName: file.name, fileData: base64, folder: 'property-images' }),
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        setAddVideoUrl(data.url);
+                        showNotification('Video uploaded successfully!');
+                      } else {
+                        showNotification('Upload failed', 'warning');
+                      }
+                      setAddUploading(false);
+                    };
+                    reader.readAsDataURL(file);
+                  } catch {
+                    showNotification('Upload failed', 'warning');
+                    setAddUploading(false);
+                  }
+                };
+
+                const handleSubmit = () => {
+                  if (!addVideoUrl.trim() || !addVideoTitle.trim()) {
+                    showNotification('Please enter Video URL and Title', 'warning');
+                    return;
+                  }
+                  addShowcaseVideo({
+                    videoUrl: addVideoUrl.trim(),
+                    title: addVideoTitle.trim(),
+                    linkedCategory: addLinkedCategory,
+                    linkedId: addLinkedId.trim() || undefined,
+                    displayOrder: addDisplayOrder,
+                    status: addStatusActive ? 'Active' : 'Inactive',
+                    tags: addSelectedTags,
+                  });
+                  showNotification(`Added "${addVideoTitle.trim()}" to showcase videos!`);
+                  setAddVideoUrl(''); setAddVideoTitle(''); setAddLinkedCategory('None');
+                  setAddLinkedId(''); setAddDisplayOrder(videos.length + 2);
+                  setAddStatusActive(true); setAddSelectedTags([]);
+                  triggerRefresh();
+                };
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Video Input Mode Toggle */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
+                      <button onClick={() => setAddVideoInputMode('url')} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: addVideoInputMode === 'url' ? '#16A34A' : '#FFF', color: addVideoInputMode === 'url' ? '#FFF' : '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
+                        <FaLink /> Paste URL
+                      </button>
+                      <button onClick={() => setAddVideoInputMode('upload')} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: addVideoInputMode === 'upload' ? '#16A34A' : '#FFF', color: addVideoInputMode === 'upload' ? '#FFF' : '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
+                        <FaUpload /> Upload Video
+                      </button>
+                    </div>
+
+                    {/* URL or Upload Input */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                          {addVideoInputMode === 'url' ? 'Video URL *' : 'Upload Video File *'}
+                        </label>
+                        {addVideoInputMode === 'url' ? (
+                          <input value={addVideoUrl} onChange={e => setAddVideoUrl(e.target.value)} type="url" placeholder="https://example.com/video.mp4 or YouTube URL" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+                        ) : (
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type="file"
+                              accept="video/mp4,video/webm,video/*"
+                              onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                              style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }}
+                            />
+                            {addUploading && <span style={{ position: 'absolute', right: '12px', top: '12px', fontSize: '0.8rem', color: '#16A34A', fontWeight: 700 }}>Uploading...</span>}
+                            {addVideoUrl && !addUploading && <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#16A34A', fontWeight: 600 }}>✅ Uploaded: {addVideoUrl.split('/').pop()}</div>}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Title *</label>
+                        <input value={addVideoTitle} onChange={e => setAddVideoTitle(e.target.value)} type="text" placeholder="e.g. Luxury Villa Showcase" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+                      </div>
+                    </div>
+
+                    {/* Tags Section */}
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Tags</label>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                        {PRESET_TAGS.map(tag => {
+                          const isSelected = addSelectedTags.includes(tag);
+                          const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
+                          return (
+                            <button key={tag} onClick={() => handleTagToggle(tag)} style={{
+                              padding: '6px 14px', borderRadius: '20px', border: isSelected ? '2px solid ' + colors.text : '1px solid #E2E8F0',
+                              backgroundColor: isSelected ? colors.bg : '#FAFBFC', color: isSelected ? colors.text : '#94A3B8',
+                              fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s',
+                              transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                            }}>
+                              {isSelected ? '✓ ' : ''}{tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Custom Tag Input */}
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input value={addCustomTag} onChange={e => setAddCustomTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
+                          placeholder="Add custom tag..." style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', color: '#0F172A', outline: 'none', backgroundColor: '#F8FAFC', width: '200px' }} />
+                        <button onClick={handleAddCustomTag} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', color: '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>+ Add</button>
+                      </div>
+                      {/* Selected Tags Display */}
+                      {addSelectedTags.length > 0 && (
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+                          {addSelectedTags.map(tag => {
+                            const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
+                            return (
+                              <span key={tag} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: colors.bg, color: colors.text, fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {tag}
+                                <span onClick={() => handleTagToggle(tag)} style={{ cursor: 'pointer', opacity: 0.7, fontWeight: 900 }}>×</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked Category</label>
+                        <select value={addLinkedCategory} onChange={e => setAddLinkedCategory(e.target.value as any)} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }}>
+                          <option value="None">None</option>
+                          <option value="Property">Property</option>
+                          <option value="Franchise">Franchise</option>
+                          <option value="Business">Business</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked ID</label>
+                        <input value={addLinkedId} onChange={e => setAddLinkedId(e.target.value)} type="text" placeholder="Optional ID" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Display Order</label>
+                        <input value={addDisplayOrder} onChange={e => setAddDisplayOrder(Number(e.target.value) || 1)} type="number" min={1} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Status</label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={addStatusActive} onChange={e => setAddStatusActive(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#16A34A' }} />
+                          <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}>Active</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <button onClick={handleSubmit} style={{ padding: '12px 28px', backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(22,163,74,0.25)', transition: 'all 0.2s' }}>
+                        <FaPlus /> Add Showcase Video
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Title *</label>
-                    <input name="title" type="text" placeholder="e.g. Luxury Villa Showcase" required style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked Category</label>
-                    <select name="linkedCategory" defaultValue="None" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }}>
-                      <option value="None">None</option>
-                      <option value="Property">Property</option>
-                      <option value="Franchise">Franchise</option>
-                      <option value="Business">Business</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked ID</label>
-                    <input name="linkedId" type="text" placeholder="Optional ID" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Display Order</label>
-                    <input name="displayOrder" type="number" defaultValue={videos.length + 1} min={1} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Status</label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', cursor: 'pointer' }}>
-                      <input name="statusToggle" type="checkbox" defaultChecked style={{ width: '18px', height: '18px', accentColor: '#16A34A' }} />
-                      <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}>Active</span>
-                    </label>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <button type="submit" style={{ padding: '12px 28px', backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(22,163,74,0.25)', transition: 'all 0.2s' }}>
-                    <FaPlus /> Add Showcase Video
-                  </button>
-                </div>
-              </form>
+                );
+              })()}
             </div>
 
-            {/* Video List */}
+            {/* Video List — Enhanced with Tags */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FaListAlt style={{ color: '#16A34A' }} /> All Showcase Videos ({videos.length})
@@ -3810,10 +3945,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       {/* Info */}
                       <div style={{ flexGrow: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', backgroundColor: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{video.linkedCategory}</span>
                           {video.linkedId && <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>ID: {video.linkedId}</span>}
                           <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{video.createdDate}</span>
+                          {/* Tag Chips */}
+                          {(video as any).tags && (video as any).tags.length > 0 && (video as any).tags.map((tag: string, ti: number) => {
+                            const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
+                            return <span key={ti} style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: colors.bg, color: colors.text }}>{tag}</span>;
+                          })}
                         </div>
                       </div>
                       {/* Status Badge */}
@@ -3828,7 +3968,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             const newUrl = window.prompt('Edit video URL:', video.videoUrl);
                             if (newUrl !== null && newUrl.trim()) {
                               const newOrder = window.prompt('Edit display order:', String(video.displayOrder));
-                              updateShowcaseVideo(video.id, { title: newTitle.trim(), videoUrl: newUrl.trim(), displayOrder: Number(newOrder) || video.displayOrder });
+                              const tagsInput = window.prompt('Edit tags (comma-separated):', ((video as any).tags || []).join(', '));
+                              const newTags = tagsInput !== null ? tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : (video as any).tags || [];
+                              updateShowcaseVideo(video.id, { title: newTitle.trim(), videoUrl: newUrl.trim(), displayOrder: Number(newOrder) || video.displayOrder, tags: newTags } as any);
                               showNotification(`Updated "${newTitle.trim()}"`);
                               triggerRefresh();
                             }

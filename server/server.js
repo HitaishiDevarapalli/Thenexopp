@@ -674,8 +674,21 @@ app.get('/api/showcase-videos', async (req, res, next) => {
 
 app.post('/api/showcase-videos', async (req, res, next) => {
   try {
-    const newVideo = { id: req.body.id || `sv-pg-${Date.now()}`, ...req.body };
-    const created = await prisma.showcaseVideo.create({ data: newVideo });
+    const v = req.body;
+    const created = await prisma.showcaseVideo.create({
+      data: {
+        id: v.id || `sv-pg-${Date.now()}`,
+        videoUrl: v.videoUrl,
+        thumbnailUrl: v.thumbnailUrl || null,
+        title: v.title || 'Untitled Video',
+        linkedCategory: v.linkedCategory || 'Property',
+        linkedId: v.linkedId || null,
+        displayOrder: Number(v.displayOrder) || 1,
+        status: v.status || 'Active',
+        tags: Array.isArray(v.tags) ? v.tags : [],
+        createdDate: v.createdDate || new Date().toLocaleDateString(),
+      },
+    });
     return res.status(201).json(created);
   } catch (err) {
     next(err);
@@ -685,7 +698,17 @@ app.post('/api/showcase-videos', async (req, res, next) => {
 app.put('/api/showcase-videos/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updated = await prisma.showcaseVideo.update({ where: { id }, data: req.body });
+    const v = req.body;
+    const updateData = {};
+    if (v.videoUrl !== undefined) updateData.videoUrl = v.videoUrl;
+    if (v.thumbnailUrl !== undefined) updateData.thumbnailUrl = v.thumbnailUrl;
+    if (v.title !== undefined) updateData.title = v.title;
+    if (v.linkedCategory !== undefined) updateData.linkedCategory = v.linkedCategory;
+    if (v.linkedId !== undefined) updateData.linkedId = v.linkedId;
+    if (v.displayOrder !== undefined) updateData.displayOrder = Number(v.displayOrder);
+    if (v.status !== undefined) updateData.status = v.status;
+    if (v.tags !== undefined) updateData.tags = Array.isArray(v.tags) ? v.tags : [];
+    const updated = await prisma.showcaseVideo.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) {
     next(err);
