@@ -291,7 +291,6 @@ export interface FranchiseListing {
   postal_code?: string;
   formatted_address?: string;
   fullAddress?: string;
-  google_place_id?: string;
   service_radius?: number;
   businessAddress?: string;
   googleMapsUrl?: string;
@@ -599,58 +598,22 @@ export const setSelectedCity = (city: string) => {
   window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
 };
 
-// LocalStorage Persistence Helpers with Quota Guard
-const saveLocal = (key: string, data: any) => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem(key, JSON.stringify(data));
-    }
-  } catch (err) {
-    console.warn(`Failed to save ${key} to localStorage (quota exceeded), attempting compact save:`, err);
-    try {
-      if (Array.isArray(data)) {
-        const compactData = data.map(item => {
-          if (item && typeof item === 'object') {
-            const clone = { ...item };
-            delete (clone as any).image2;
-            delete (clone as any).image3;
-            delete (clone as any).image4;
-            delete (clone as any).image5;
-            delete (clone as any).image6;
-            return clone;
-          }
-          return item;
-        });
-        window.localStorage.setItem(key, JSON.stringify(compactData));
-      }
-    } catch (e) {
-      console.error(`Compact save also failed for ${key}:`, e);
-    }
+// Clear localStorage permanently
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.clear();
   }
-};
+} catch (e) {}
 
-const getLocal = <T>(key: string): T | null => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : null;
-    }
-  } catch (err) {
-    console.warn(`Failed to load ${key} from localStorage:`, err);
-  }
-  return null;
-};
-
-// PostgreSQL Data Sync Loader with LocalStorage Cache Backup
+// PostgreSQL Data Sync Loader (No LocalStorage)
 const loadData = () => {
   try {
-    // 1. Immediately hydrate from LocalStorage cache (so created items never vanish on refresh!)
-    propertiesDb = getLocal<PropertyListing[]>('nexopp_properties_cache') || [];
-    franchiseDb = getLocal<FranchiseListing[]>('nexopp_franchises_cache') || [];
-    businessDb = getLocal<BusinessListing[]>('nexopp_businesses_cache') || [];
-    dealersDb = getLocal<Dealer[]>('nexopp_dealers_cache') || [];
-    enquiriesDb = getLocal<CustomerEnquiry[]>('nexopp_enquiries_cache') || [];
-    franchiseEnquiriesDb = getLocal<FranchiseEnquiry[]>('nexopp_franchise_enquiries_cache') || [];
+    propertiesDb = [];
+    franchiseDb = [];
+    businessDb = [];
+    dealersDb = [];
+    enquiriesDb = [];
+    franchiseEnquiriesDb = [];
     siteSettingsDb = defaultSettings;
     teamMembersDb = [];
     employeeUsersDb = [];
@@ -663,64 +626,52 @@ const loadData = () => {
       defaultPlaybackDurationSec: 10
     };
 
-    const safeFetchJson = (url: string) => {
-      return fetch(url).then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      });
-    };
-
     // Async Fetch from PostgreSQL API Backend Server
-    safeFetchJson(`${API_BASE_URL}/api/properties`)
+    fetch(`${API_BASE_URL}/api/properties`)
+      .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const apiIds = new Set(data.map(p => p.id));
-          const localOnly = propertiesDb.filter(p => !apiIds.has(p.id));
-          propertiesDb = [...data, ...localOnly];
-          saveLocal('nexopp_properties_cache', propertiesDb);
+        if (Array.isArray(data)) {
+          propertiesDb = data;
           recalculateAllDemandRegions();
           window.dispatchEvent(new Event('nexopp_data_changed'));
         }
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/franchises`)
+    fetch(`${API_BASE_URL}/api/franchises`)
+      .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const apiIds = new Set(data.map(f => f.id));
-          const localOnly = franchiseDb.filter(f => !apiIds.has(f.id));
-          franchiseDb = [...data, ...localOnly];
-          saveLocal('nexopp_franchises_cache', franchiseDb);
+        if (Array.isArray(data)) {
+          franchiseDb = data;
           recalculateAllDemandRegions();
           window.dispatchEvent(new Event('nexopp_data_changed'));
         }
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/businesses`)
+    fetch(`${API_BASE_URL}/api/businesses`)
+      .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const apiIds = new Set(data.map(b => b.id));
-          const localOnly = businessDb.filter(b => !apiIds.has(b.id));
-          businessDb = [...data, ...localOnly];
-          saveLocal('nexopp_businesses_cache', businessDb);
+        if (Array.isArray(data)) {
+          businessDb = data;
           recalculateAllDemandRegions();
           window.dispatchEvent(new Event('nexopp_data_changed'));
         }
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/enquiries`)
+    fetch(`${API_BASE_URL}/api/enquiries`)
+      .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
           enquiriesDb = data;
-          saveLocal('nexopp_enquiries_cache', enquiriesDb);
           window.dispatchEvent(new Event('nexopp_data_changed'));
         }
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/showcase-videos`)
+    fetch(`${API_BASE_URL}/api/showcase-videos`)
+      .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
           showcaseVideosDb = data;
@@ -729,7 +680,8 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/settings`)
+    fetch(`${API_BASE_URL}/api/settings`)
+      .then(res => res.json())
       .then(data => {
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           siteSettingsDb = { ...siteSettingsDb, ...data };
@@ -738,19 +690,18 @@ const loadData = () => {
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/dealers`)
+    fetch(`${API_BASE_URL}/api/dealers`)
+      .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const apiIds = new Set(data.map(d => d.id));
-          const localOnly = dealersDb.filter(d => !apiIds.has(d.id));
-          dealersDb = [...data, ...localOnly];
-          saveLocal('nexopp_dealers_cache', dealersDb);
+        if (Array.isArray(data)) {
+          dealersDb = data;
           window.dispatchEvent(new Event('nexopp_data_changed'));
         }
       })
       .catch(() => {});
 
-    safeFetchJson(`${API_BASE_URL}/api/team-members`)
+    fetch(`${API_BASE_URL}/api/team-members`)
+      .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
           teamMembersDb = data;
@@ -833,7 +784,6 @@ loadData();
 // Mutations
 export const addProperty = (item: PropertyListing) => {
   propertiesDb = [item, ...propertiesDb];
-  saveLocal('nexopp_properties_cache', propertiesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/properties`, {
     method: 'POST',
@@ -844,7 +794,6 @@ export const addProperty = (item: PropertyListing) => {
 
 export const updateProperty = (id: string, updated: Partial<PropertyListing>) => {
   propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...updated } : p);
-  saveLocal('nexopp_properties_cache', propertiesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'PUT',
@@ -856,7 +805,6 @@ export const updateProperty = (id: string, updated: Partial<PropertyListing>) =>
 export const deleteProperty = (id: string) => {
   propertiesDb = propertiesDb.filter(p => p.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Property' && v.linkedId === id));
-  saveLocal('nexopp_properties_cache', propertiesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'DELETE'
@@ -906,7 +854,6 @@ export const incrementPropertyViewCount = (id: string) => {
 
 export const addFranchise = (item: FranchiseListing) => {
   franchiseDb = [item, ...franchiseDb];
-  saveLocal('nexopp_franchises_cache', franchiseDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/franchises`, {
     method: 'POST',
@@ -917,7 +864,6 @@ export const addFranchise = (item: FranchiseListing) => {
 
 export const updateFranchise = (id: string, updated: Partial<FranchiseListing>) => {
   franchiseDb = franchiseDb.map(f => f.id === id ? { ...f, ...updated } : f);
-  saveLocal('nexopp_franchises_cache', franchiseDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/franchises/${id}`, {
     method: 'PUT',
@@ -929,7 +875,6 @@ export const updateFranchise = (id: string, updated: Partial<FranchiseListing>) 
 export const deleteFranchise = (id: string) => {
   franchiseDb = franchiseDb.filter(f => f.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Franchise' && v.linkedId === id));
-  saveLocal('nexopp_franchises_cache', franchiseDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/franchises/${id}`, {
     method: 'DELETE'
@@ -938,7 +883,6 @@ export const deleteFranchise = (id: string) => {
 
 export const addDealer = (item: Dealer) => {
   dealersDb = [item, ...dealersDb];
-  saveLocal('nexopp_dealers_cache', dealersDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/dealers`, {
     method: 'POST',
@@ -949,7 +893,6 @@ export const addDealer = (item: Dealer) => {
 
 export const updateDealer = (id: string, updated: Partial<Dealer>) => {
   dealersDb = dealersDb.map(d => d.id === id ? { ...d, ...updated } : d);
-  saveLocal('nexopp_dealers_cache', dealersDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/dealers/${id}`, {
     method: 'PUT',
@@ -960,7 +903,6 @@ export const updateDealer = (id: string, updated: Partial<Dealer>) => {
 
 export const deleteDealer = (id: string) => {
   dealersDb = dealersDb.filter(d => d.id !== id);
-  saveLocal('nexopp_dealers_cache', dealersDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/dealers/${id}`, {
     method: 'DELETE'
@@ -969,7 +911,6 @@ export const deleteDealer = (id: string) => {
 
 export const addBusiness = (item: BusinessListing) => {
   businessDb = [item, ...businessDb];
-  saveLocal('nexopp_businesses_cache', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses`, {
     method: 'POST',
@@ -980,7 +921,6 @@ export const addBusiness = (item: BusinessListing) => {
 
 export const updateBusiness = (id: string, updated: Partial<BusinessListing>) => {
   businessDb = businessDb.map(b => b.id === id ? { ...b, ...updated } : b);
-  saveLocal('nexopp_businesses_cache', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses/${id}`, {
     method: 'PUT',
@@ -992,7 +932,6 @@ export const updateBusiness = (id: string, updated: Partial<BusinessListing>) =>
 export const deleteBusiness = (id: string) => {
   businessDb = businessDb.filter(b => b.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Business' && v.linkedId === id));
-  saveLocal('nexopp_businesses_cache', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses/${id}`, {
     method: 'DELETE'

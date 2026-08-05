@@ -14,8 +14,6 @@ import {
   bulkDeleteFranchises
 } from '../db/marketplaceDb';
 import type { FranchiseListing } from '../db/marketplaceDb';
-import { AdminLocationStep } from './admin/AdminLocationStep';
-import { compressImage } from '../utils/imageCompressor';
 import {
   FaPlus,
   FaSearch,
@@ -1521,51 +1519,257 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
                       <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Space Guidelines</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
-                        Provide details on structural specifications to verify structural requirements fit standard brand blueprints cleanly.
+                        Provide details on spatial specifications to verify structural requirements fit standard brand blueprints cleanly.
                       </p>
                     </div>
                   </div>
                 )}
 
                 {modalSubTab === 'location' && (
-                  <AdminLocationStep
-                    initialData={{
-                      address: editingFranchise.fullAddress || editingFranchise.formatted_address || editingFranchise.location || '',
-                      formatted_address: editingFranchise.formatted_address || editingFranchise.fullAddress || '',
-                      fullAddress: editingFranchise.fullAddress || editingFranchise.formatted_address || '',
-                      city: editingFranchise.city,
-                      district: editingFranchise.district,
-                      state: editingFranchise.state,
-                      country: editingFranchise.country || 'India',
-                      postal_code: editingFranchise.postal_code || editingFranchise.pincode || '',
-                      pincode: editingFranchise.pincode || editingFranchise.postal_code || '',
-                      area: editingFranchise.area || editingFranchise.location || '',
-                      latitude: editingFranchise.latitude,
-                      longitude: editingFranchise.longitude,
-                      google_place_id: (editingFranchise as any).google_place_id,
-                      verified: Boolean(editingFranchise.latitude && editingFranchise.longitude),
-                    }}
-                    onChange={locData => {
-                      setEditingFranchise(prev => ({
-                        ...prev,
-                        latitude: locData.latitude,
-                        longitude: locData.longitude,
-                        city: locData.city,
-                        district: locData.district,
-                        state: locData.state,
-                        country: locData.country,
-                        postal_code: locData.postal_code,
-                        pincode: locData.pincode,
-                        area: locData.area,
-                        location: locData.area || locData.city,
-                        formatted_address: locData.formatted_address,
-                        fullAddress: locData.fullAddress,
-                        address: locData.address,
-                        google_place_id: locData.google_place_id || '',
-                      }));
-                      setMapMarkerPos({ lat: locData.latitude, lng: locData.longitude });
-                    }}
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
+                      
+                      {/* Left Column: Franchise/Business Location Details */}
+                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>5. Listing Location</h4>
+                          <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Search and select the exact location of the business/franchise</p>
+
+                          {/* Search Bar Row */}
+                          <div style={{ position: 'relative' }}>
+                            <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>Search Address</label>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                              <div style={{ flexGrow: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <FaMapMarkerAlt style={{ position: 'absolute', left: '16px', color: '#2563EB', fontSize: '1.1rem' }} />
+                                <input
+                                  type="text"
+                                  value={addressSearchQuery || editingFranchise.formatted_address || editingFranchise.fullAddress || ''}
+                                  onChange={e => {
+                                    setAddressSearchQuery(e.target.value);
+                                    setShowLocationSuggestions(true);
+                                  }}
+                                  onFocus={() => setShowLocationSuggestions(true)}
+                                  placeholder="e.g. Jubilee Hills Road No 36, Hyderabad, Telangana, India"
+                                  style={{ width: '100%', padding: '12px 40px 12px 44px', border: '1.5px solid #2563EB', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, color: '#0F172A', outline: 'none', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)', boxSizing: 'border-box' }}
+                                />
+                                {(addressSearchQuery || editingFranchise.formatted_address) && (
+                                  <button type="button" onClick={() => { setAddressSearchQuery(''); setEditingFranchise({ ...editingFranchise, formatted_address: '', fullAddress: '' }); }} style={{ position: 'absolute', right: '14px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.1rem', padding: '2px' }}>×</button>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleAdminDetectGPS}
+                                disabled={isAdminDetectingGPS}
+                                style={{ padding: '12px 22px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)', transition: 'background 0.2s' }}
+                              >
+                                <FaCrosshairs /> {isAdminDetectingGPS ? 'Detecting...' : 'Detect My Location'}
+                              </button>
+                            </div>
+
+                            {/* Autocomplete Suggestions Dropdown */}
+                            {showLocationSuggestions && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5000, backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                                {isSearchingLive && (
+                                  <div style={{ padding: '12px 16px', color: '#3B82F6', fontWeight: 600, fontSize: '0.85rem', backgroundColor: '#EFF6FF' }}>
+                                    Searching live location data...
+                                  </div>
+                                )}
+                                {liveSuggestions.map((place, idx) => (
+                                  <div
+                                    key={idx}
+                                    onClick={() => handleSelectGooglePlace(place)}
+                                    style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '12px', transition: 'background 0.2s' }}
+                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                                  >
+                                    <FaMapMarkerAlt style={{ color: '#EF4444', marginTop: '3px', flexShrink: 0 }} />
+                                    <div>
+                                      <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>{place.area}, {place.city}</div>
+                                      <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{place.formatted_address}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                                {addressSearchQuery && (
+                                  <div
+                                    onClick={async () => {
+                                      setIsSearchingLive(true);
+                                      const customPlace = await geocodeLocationOnline(addressSearchQuery);
+                                      setIsSearchingLive(false);
+                                      handleSelectGooglePlace(customPlace);
+                                    }}
+                                    style={{ padding: '12px 16px', backgroundColor: '#EFF6FF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, color: '#1E40AF', fontSize: '0.85rem' }}
+                                  >
+                                    <FaMapMarkerAlt /> Use "{addressSearchQuery}" (Auto-Geocode)
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Success Banner */}
+                          <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#16A34A', fontWeight: 700, fontSize: '0.88rem' }}>
+                            <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
+                            <span>Location verified successfully</span>
+                          </div>
+
+                          {/* Location Details (Auto-Geocoded) */}
+                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Country</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.country || '-'}</div>
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaMap style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>State</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.state || '-'}</div>
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>District</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.district || '-'}</div>
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaCity style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.city || '-'}</div>
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaCompass style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Area / Locality</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.area || '-'}</div>
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaEnvelope style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                              <div style={{ width: '100%' }}>
+                                <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Postal Code (Manual Entry)</label>
+                                <input 
+                                  type="text" 
+                                  value={editingFranchise.pincode || editingFranchise.postal_code || ''} 
+                                  onChange={e => {
+                                    const newPin = e.target.value;
+                                    const oldPin = editingFranchise.pincode || editingFranchise.postal_code;
+                                    let newAddress = editingFranchise.formatted_address || editingFranchise.fullAddress || '';
+                                    if (oldPin && newAddress.includes(oldPin)) {
+                                      newAddress = newAddress.replace(oldPin, newPin);
+                                    } else {
+                                      newAddress = newAddress.replace(/\b\d{6}\b/, newPin);
+                                    }
+                                    setEditingFranchise({ 
+                                      ...editingFranchise, 
+                                      postal_code: newPin, 
+                                      pincode: newPin,
+                                      formatted_address: newAddress,
+                                      fullAddress: newAddress
+                                    });
+                                  }} 
+                                  placeholder="Enter Pincode" 
+                                  style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1px solid #CBD5E1', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, outline: 'none' }} 
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Coordinates Row */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <FaCrosshairs style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Latitude</div>
+                                <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.latitude?.toFixed(6) || '-'}</div>
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <FaCompass style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
+                              <div>
+                                <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Longitude</div>
+                                <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.longitude?.toFixed(6) || '-'}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Formatted Address Box */}
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Full Formatted Address</span>
+                              <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{editingFranchise.formatted_address || editingFranchise.fullAddress || '-'}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(editingFranchise.formatted_address || editingFranchise.fullAddress || 'Jubilee Hills, Hyderabad');
+                                showNotification?.('Address copied to clipboard!', 'success');
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.2rem', padding: '4px', display: 'flex', alignItems: 'center' }}
+                              title="Copy Address"
+                            >
+                              <FaCopy />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Location Map Preview */}
+                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Location Preview</h4>
+                              <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag the marker to fine-tune the exact location</p>
+                            </div>
+                            <a
+                              href={`https://maps.google.com/?q=${mapMarkerPos.lat},${mapMarkerPos.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                            >
+                              Open in Google Maps <FaExternalLinkAlt style={{ fontSize: '0.75rem' }} />
+                            </a>
+                          </div>
+
+                          {/* Leaflet LocationPickerMap Container */}
+                          <div style={{ marginTop: '20px', position: 'relative', height: '380px', borderRadius: '16px', overflow: 'hidden' }}>
+                            <LocationPickerMap
+                              latitude={mapMarkerPos.lat}
+                              longitude={mapMarkerPos.lng}
+                              onChange={handleMarkerDrag}
+                              radius={editingFranchise.service_radius || 10}
+                              city={editingFranchise.city || 'Hyderabad'}
+                              height="380px"
+                            />
+
+                            {/* Fine-tune Controls Overlay */}
+                            <div style={{ position: 'absolute', bottom: '14px', left: '14px', right: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', padding: '8px 14px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0', zIndex: 1000 }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>Fine-tune Marker GPS:</span>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat + 0.0002, mapMarkerPos.lng)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>↑ N</button>
+                                <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat - 0.0002, mapMarkerPos.lng)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>↓ S</button>
+                                <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat, mapMarkerPos.lng - 0.0002)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>← W</button>
+                                <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat, mapMarkerPos.lng + 0.0002)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>→ E</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Tip Box */}
+                        <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '14px 18px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#1E40AF', fontSize: '0.88rem', fontWeight: 600 }}>
+                          <FaLightbulb style={{ color: '#2563EB', fontSize: '1.2rem', flexShrink: 0 }} />
+                          <span>Tip: Drag the marker to adjust the exact location if needed.</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {modalSubTab === 'media' && (
@@ -1593,12 +1797,15 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div
                               onDragOver={(e) => e.preventDefault()}
-                              onDrop={async (e) => {
+                              onDrop={(e) => {
                                 e.preventDefault();
                                 const file = e.dataTransfer.files?.[0];
                                 if (file) {
-                                  const base64 = await compressImage(file);
-                                  setEditingFranchise(prev => ({ ...prev, image: base64 }));
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    setEditingFranchise({ ...editingFranchise, image: ev.target?.result as string });
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                               onClick={() => document.getElementById('franchise-cover-file')?.click()}
@@ -1615,18 +1822,21 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               }}
                             >
                               <div>Drag & Drop or Click to Upload Primary Cover Image</div>
-                              <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '2px' }}>PNG, JPG, or WEBP (Auto-optimized)</div>
+                              <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '2px' }}>PNG, JPG, or WEBP</div>
                             </div>
                             <input
                               id="franchise-cover-file"
                               type="file"
                               accept="image/*"
                               style={{ display: 'none' }}
-                              onChange={async (e) => {
+                              onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const base64 = await compressImage(file);
-                                  setEditingFranchise(prev => ({ ...prev, image: base64 }));
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    setEditingFranchise({ ...editingFranchise, image: ev.target?.result as string });
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                             />
@@ -1648,12 +1858,15 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <div
                               onDragOver={(e) => e.preventDefault()}
-                              onDrop={async (e) => {
+                              onDrop={(e) => {
                                 e.preventDefault();
                                 const file = e.dataTransfer.files?.[0];
                                 if (file) {
-                                  const base64 = await compressImage(file, 400, 0.8);
-                                  setEditingFranchise(prev => ({ ...prev, logo: base64 }));
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    setEditingFranchise({ ...editingFranchise, logo: ev.target?.result as string });
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                               onClick={() => document.getElementById('franchise-logo-file')?.click()}
@@ -1677,11 +1890,14 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="file"
                               accept="image/*"
                               style={{ display: 'none' }}
-                              onChange={async (e) => {
+                              onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  const base64 = await compressImage(file, 400, 0.8);
-                                  setEditingFranchise(prev => ({ ...prev, logo: base64 }));
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    setEditingFranchise({ ...editingFranchise, logo: ev.target?.result as string });
+                                  };
+                                  reader.readAsDataURL(file);
                                 }
                               }}
                             />

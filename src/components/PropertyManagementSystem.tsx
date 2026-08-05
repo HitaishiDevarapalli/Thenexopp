@@ -10,8 +10,6 @@ import {
 import type { PropertyListing } from '../db/marketplaceDb';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
-import { AdminLocationStep } from './admin/AdminLocationStep';
-import { compressImage } from '../utils/imageCompressor';
 import { 
   FaBuilding, FaSearch, FaPlus, FaEdit, FaTrash, 
   FaCrown, FaMapMarkerAlt, FaFileExport, FaCopy, 
@@ -64,7 +62,6 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'duplicate'>('add');
   const [modalSubTab, setModalSubTab] = useState<'location' | 'basic' | 'specs' | 'pricing' | 'media' | 'review'>('location');
-  const [isLocationStepValid, setIsLocationStepValid] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewAnalyticsProperty, setViewAnalyticsProperty] = useState<PropertyListing | null>(null);
 
@@ -1293,46 +1290,297 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             {/* Modal Body Container */}
             <form onSubmit={handleSaveProperty} style={{ padding: '28px 36px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
               
-              {/* STEP 1: LOCATION (ADMIN LOCATION STEP) */}
+              {/* STEP 1: LOCATION (EXACT SCREENSHOT MATCH) */}
               {modalSubTab === 'location' && (
-                <AdminLocationStep
-                  initialData={{
-                    address: formData.fullAddress || formData.formatted_address || formData.area || '',
-                    formatted_address: formData.formatted_address || formData.fullAddress || '',
-                    fullAddress: formData.fullAddress || formData.formatted_address || '',
-                    city: formData.city,
-                    district: formData.district,
-                    state: formData.state,
-                    country: formData.country || 'India',
-                    postal_code: formData.postal_code || formData.pincode || '',
-                    pincode: formData.pincode || formData.postal_code || '',
-                    area: formData.area,
-                    latitude: formData.latitude,
-                    longitude: formData.longitude,
-                    google_place_id: formData.google_place_id,
-                    verified: Boolean(formData.latitude && formData.longitude),
-                  }}
-                  onChange={locData => {
-                    setFormData(prev => ({
-                      ...prev,
-                      latitude: locData.latitude,
-                      longitude: locData.longitude,
-                      city: locData.city,
-                      district: locData.district,
-                      state: locData.state,
-                      country: locData.country,
-                      postal_code: locData.postal_code,
-                      pincode: locData.pincode,
-                      area: locData.area,
-                      formatted_address: locData.formatted_address,
-                      fullAddress: locData.fullAddress,
-                      address: locData.address,
-                      google_place_id: locData.google_place_id || '',
-                    }));
-                    setMapMarkerPos({ lat: locData.latitude, lng: locData.longitude });
-                  }}
-                  onValidationChange={isValid => setIsLocationStepValid(isValid)}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
+                    
+                    {/* Left Column: Property Location */}
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>1. Property Location</h4>
+                        <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Search and select the exact location of your property</p>
+
+                        {/* Search Bar Row */}
+                        <div style={{ position: 'relative' }}>
+                          <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>Search Property Address</label>
+                          <div style={{ display: 'flex', gap: '12px' }}>
+                            <div style={{ flexGrow: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                              <FaMapMarkerAlt style={{ position: 'absolute', left: '16px', color: '#2563EB', fontSize: '1.1rem' }} />
+                              <input
+                                type="text"
+                                value={addressSearchQuery || formData.formatted_address || formData.fullAddress || ''}
+                                onChange={e => {
+                                  setAddressSearchQuery(e.target.value);
+                                  setShowLocationSuggestions(true);
+                                }}
+                                onFocus={() => setShowLocationSuggestions(true)}
+                                placeholder="Plot 45, HITEC City Phase 2, Hyderabad, Telangana 500081, India"
+                                style={{ width: '100%', padding: '12px 40px 12px 44px', border: '1.5px solid #2563EB', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, color: '#0F172A', outline: 'none', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)', boxSizing: 'border-box' }}
+                              />
+                              {(addressSearchQuery || formData.formatted_address) && (
+                                <button type="button" onClick={() => { setAddressSearchQuery(''); setFormData({ ...formData, formatted_address: '', fullAddress: '' }); }} style={{ position: 'absolute', right: '14px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.1rem', padding: '2px' }}>×</button>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleAdminDetectGPS}
+                              disabled={isAdminDetectingGPS}
+                              style={{ padding: '12px 22px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)', transition: 'background 0.2s' }}
+                            >
+                              <FaCrosshairs /> {isAdminDetectingGPS ? 'Detecting...' : 'Detect My Location'}
+                            </button>
+                          </div>
+
+                          {/* Autocomplete Suggestions Dropdown */}
+                          {showLocationSuggestions && (
+                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                              {isSearchingLive && (
+                                <div style={{ padding: '12px 16px', color: '#3B82F6', fontWeight: 600, fontSize: '0.85rem', backgroundColor: '#EFF6FF' }}>
+                                  Searching live location data...
+                                </div>
+                              )}
+                              {liveSuggestions.map((place, idx) => (
+                                <div
+                                  key={idx}
+                                  onClick={() => handleSelectGooglePlace(place)}
+                                  style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '12px', transition: 'background 0.2s' }}
+                                  onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                                  onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                                >
+                                  <FaMapMarkerAlt style={{ color: '#EF4444', marginTop: '3px', flexShrink: 0 }} />
+                                  <div>
+                                    <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>{place.area}, {place.city}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{place.formatted_address}</div>
+                                  </div>
+                                </div>
+                              ))}
+                              {addressSearchQuery && (
+                                <div
+                                  onClick={async () => {
+                                    setIsSearchingLive(true);
+                                    const customPlace = await geocodeLocationOnline(addressSearchQuery);
+                                    setIsSearchingLive(false);
+                                    handleSelectGooglePlace(customPlace);
+                                  }}
+                                  style={{ padding: '12px 16px', backgroundColor: '#EFF6FF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, color: '#1E40AF', fontSize: '0.85rem' }}
+                                >
+                                  <FaMapMarkerAlt /> Use "{addressSearchQuery}" (Auto-Geocode via Live GPS Engine)
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Success Banner */}
+                        <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#16A34A', fontWeight: 700, fontSize: '0.88rem' }}>
+                          <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
+                          <span>Location verified successfully from Google Maps</span>
+                        </div>
+
+                        {/* Location Details (Auto-Geocoded) */}
+                        <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Country</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.country || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <FaMap style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>State</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.state || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>District</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.district || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <FaCity style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.city || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <FaCompass style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Area / Locality</div>
+                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.area || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <FaEnvelope style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
+                            <div style={{ width: '100%' }}>
+                              <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Postal Code (Manual Entry)</label>
+                              <input 
+                                type="text" 
+                                value={formData.postal_code || formData.pincode || ''} 
+                                onChange={e => {
+                                  const newPin = e.target.value;
+                                  const oldPin = formData.postal_code || formData.pincode;
+                                  let newAddress = formData.formatted_address || formData.fullAddress || '';
+                                  if (oldPin && newAddress.includes(oldPin)) {
+                                    newAddress = newAddress.replace(oldPin, newPin);
+                                  } else {
+                                    newAddress = newAddress.replace(/\b\d{6}\b/, newPin);
+                                  }
+                                  setFormData({ 
+                                    ...formData, 
+                                    postal_code: newPin, 
+                                    pincode: newPin,
+                                    formatted_address: newAddress,
+                                    fullAddress: newAddress
+                                  });
+                                }} 
+                                placeholder="Enter Pincode" 
+                                style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1px solid #CBD5E1', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, outline: 'none' }} 
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Coordinates & Place ID Row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '12px' }}>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaCrosshairs style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Latitude</div>
+                              <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{formData.latitude?.toFixed(6) || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaCompass style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
+                            <div>
+                              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Longitude</div>
+                              <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{formData.longitude?.toFixed(6) || '-'}</div>
+                            </div>
+                          </div>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <FaList style={{ color: '#2563EB', fontSize: '1rem', flexShrink: 0 }} />
+                            <div style={{ overflow: 'hidden' }}>
+                              <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Google Place ID</div>
+                              <div style={{ fontSize: '0.82rem', color: '#2563EB', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.google_place_id || '-'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Full Formatted Address Box */}
+                      <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Full Formatted Address</span>
+                          <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{formData.formatted_address || formData.fullAddress || '-'}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(formData.formatted_address || formData.fullAddress || 'Plot 45, HITEC City Phase 2, Hyderabad');
+                            showNotification?.('Address copied to clipboard!', 'success');
+                          }}
+                          style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.2rem', padding: '4px', display: 'flex', alignItems: 'center' }}
+                          title="Copy Address"
+                        >
+                          <FaCopy />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Location Preview */}
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Location Preview</h4>
+                            <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag the marker to fine-tune the exact location</p>
+                          </div>
+                          <a
+                            href={`https://maps.google.com/?q=${mapMarkerPos.lat},${mapMarkerPos.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                          >
+                            Open in Google Maps <FaExternalLinkAlt style={{ fontSize: '0.75rem' }} />
+                          </a>
+                        </div>
+
+                        {/* Interactive Map Preview Box */}
+                        <div style={{ marginTop: '20px', position: 'relative', height: '380px', borderRadius: '16px', overflow: 'hidden' }}>
+                          <LocationPickerMap
+                            latitude={mapMarkerPos.lat}
+                            longitude={mapMarkerPos.lng}
+                            onChange={handleMarkerDrag}
+                            radius={formData.service_radius}
+                            city={formData.city}
+                            height="380px"
+                          />
+
+                          {/* Map Controls & Nudge Buttons */}
+                          <div style={{ position: 'absolute', bottom: '14px', left: '14px', right: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', padding: '8px 14px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0', zIndex: 1000 }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>Fine-tune Marker GPS:</span>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat + 0.0002, mapMarkerPos.lng)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>↑ N</button>
+                              <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat - 0.0002, mapMarkerPos.lng)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>↓ S</button>
+                              <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat, mapMarkerPos.lng - 0.0002)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>← W</button>
+                              <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat, mapMarkerPos.lng + 0.0002)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>→ E</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tip Box */}
+                      <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '14px 18px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#1E40AF', fontSize: '0.88rem', fontWeight: 600 }}>
+                        <FaLightbulb style={{ color: '#2563EB', fontSize: '1.2rem', flexShrink: 0 }} />
+                        <span>Tip: Drag the marker to adjust the exact location if needed.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Full-Width Card: Search Radius (Optional) */}
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                      <div>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Search Radius (Optional)</h4>
+                        <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Set the service or visibility radius for this property</p>
+                      </div>
+                      <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <FaLayerGroup style={{ color: '#2563EB', fontSize: '1.5rem', flexShrink: 0 }} />
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Selected Radius</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{formData.service_radius || 10} KM</div>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: '#64748B', maxWidth: '260px', lineHeight: 1.4, borderLeft: '1px solid #E2E8F0', paddingLeft: '16px' }}>
+                          Properties within this radius will be considered for search and listing.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Slider Control */}
+                    <input
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={formData.service_radius || 10}
+                      onChange={e => setFormData({ ...formData, service_radius: Number(e.target.value) })}
+                      style={{ width: '100%', marginTop: '24px', accentColor: '#2563EB', height: '6px', cursor: 'pointer' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, color: '#64748B', marginTop: '10px' }}>
+                      <span>1 KM</span>
+                      <span>5 KM</span>
+                      <span style={{ color: '#2563EB', fontWeight: 800 }}>10 KM</span>
+                      <span>20 KM</span>
+                      <span>50 KM</span>
+                      <span>100 KM</span>
+                    </div>
+                  </div>
+                </div>
               )}
 
               {/* STEP 2: BASIC DETAILS */}
@@ -1591,20 +1839,21 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     {/* Single Optional Drag & Drop Zone */}
                     <div
                       onDragOver={(e) => e.preventDefault()}
-                      onDrop={async (e) => {
+                      onDrop={(e) => {
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
                         if (file) {
-                          const base64 = await compressImage(file);
-                          setFormData(prev => {
-                            if (!prev.image) return { ...prev, image: base64 };
-                            if (!prev.image2) return { ...prev, image2: base64 };
-                            if (!prev.image3) return { ...prev, image3: base64 };
-                            if (!prev.image4) return { ...prev, image4: base64 };
-                            if (!prev.image5) return { ...prev, image5: base64 };
-                            if (!prev.image6) return { ...prev, image6: base64 };
-                            return prev;
-                          });
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            const base64 = ev.target?.result as string;
+                            if (!formData.image) setFormData({ ...formData, image: base64 });
+                            else if (!formData.image2) setFormData({ ...formData, image2: base64 });
+                            else if (!formData.image3) setFormData({ ...formData, image3: base64 });
+                            else if (!formData.image4) setFormData({ ...formData, image4: base64 });
+                            else if (!formData.image5) setFormData({ ...formData, image5: base64 });
+                            else if (!formData.image6) setFormData({ ...formData, image6: base64 });
+                          };
+                          reader.readAsDataURL(file);
                         }
                       }}
                       onClick={() => {
@@ -1629,48 +1878,54 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     >
                       <FaCamera style={{ fontSize: '2.5rem', color: '#3B82F6', marginBottom: '12px' }} />
                       <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1E3A8A' }}>Drag & Drop or Click to Upload Image</div>
-                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>PNG, JPG, or WEBP (Auto-optimized for instant save)</div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>PNG, JPG, or WEBP (Max 6 showcase images)</div>
                       <div style={{ display: 'none' }}>
-                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={async (e) => {
+                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const base64 = await compressImage(file);
-                            setFormData(prev => ({ ...prev, image: base64 }));
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setFormData({ ...formData, image: ev.target?.result as string });
+                            reader.readAsDataURL(file);
                           }
                         }} />
-                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={async (e) => {
+                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const base64 = await compressImage(file);
-                            setFormData(prev => ({ ...prev, image2: base64 }));
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setFormData({ ...formData, image2: ev.target?.result as string });
+                            reader.readAsDataURL(file);
                           }
                         }} />
-                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={async (e) => {
+                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const base64 = await compressImage(file);
-                            setFormData(prev => ({ ...prev, image3: base64 }));
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setFormData({ ...formData, image3: ev.target?.result as string });
+                            reader.readAsDataURL(file);
                           }
                         }} />
-                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={async (e) => {
+                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const base64 = await compressImage(file);
-                            setFormData(prev => ({ ...prev, image4: base64 }));
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setFormData({ ...formData, image4: ev.target?.result as string });
+                            reader.readAsDataURL(file);
                           }
                         }} />
-                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={async (e) => {
+                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const base64 = await compressImage(file);
-                            setFormData(prev => ({ ...prev, image5: base64 }));
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setFormData({ ...formData, image5: ev.target?.result as string });
+                            reader.readAsDataURL(file);
                           }
                         }} />
-                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={async (e) => {
+                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const base64 = await compressImage(file);
-                            setFormData(prev => ({ ...prev, image6: base64 }));
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setFormData({ ...formData, image6: ev.target?.result as string });
+                            reader.readAsDataURL(file);
                           }
                         }} />
                       </div>
@@ -1851,34 +2106,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 </button>
                 <button
                   type="button"
-                  disabled={modalSubTab === 'location' && !isLocationStepValid}
                   onClick={e => {
-                    if (modalSubTab === 'location') {
-                      if (!isLocationStepValid) return;
-                      setModalSubTab('basic');
-                    }
+                    if (modalSubTab === 'location') setModalSubTab('basic');
                     else if (modalSubTab === 'basic') setModalSubTab('specs');
                     else if (modalSubTab === 'specs') setModalSubTab('pricing');
                     else if (modalSubTab === 'pricing') setModalSubTab('media');
                     else if (modalSubTab === 'media') setModalSubTab('review');
                     else handleSaveProperty(e as any);
                   }}
-                  style={{
-                    padding: '12px 32px',
-                    backgroundColor: (modalSubTab === 'location' && !isLocationStepValid) ? '#94A3B8' : '#2563EB',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    cursor: (modalSubTab === 'location' && !isLocationStepValid) ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    boxShadow: (modalSubTab === 'location' && !isLocationStepValid) ? 'none' : '0 4px 14px rgba(37, 99, 235, 0.3)',
-                    transition: 'all 0.2s',
-                    opacity: (modalSubTab === 'location' && !isLocationStepValid) ? 0.6 : 1,
-                  }}
+                  style={{ padding: '12px 32px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
                 >
                   {modalSubTab === 'review' ? (
                     <>✓ Save & Publish</>

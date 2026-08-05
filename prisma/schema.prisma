@@ -28,18 +28,14 @@ enum PropertyStatus {
 model User {
   id                String   @id @default(uuid())
   email             String   @unique
-  googleId          String?  @unique
-  name              String
-  profilePhoto      String?
-  passwordHash      String?
+  passwordHash      String
+  fullName          String
   role              Role     @default(USER)
   status            String   @default("Active")
   phone             String?
-  mobile            String?
-  fullName          String?
-  avatar            String?
   gender            String?
   district          String?
+  avatar            String?
   customPermissions String[] @default([])
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -48,15 +44,6 @@ model User {
   enquiries         Enquiry[]
   favorites         Favorite[]
   tokens            AuthToken[]
-}
-
-model EmailOTP {
-  id        String   @id @default(uuid())
-  email     String
-  otpHash   String
-  attempts  Int      @default(0)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
 }
 
 model Broker {
@@ -119,8 +106,6 @@ model Property {
   district      String
   city          String
   area          String
-  pincode       String?
-  fullAddress   String?
   latitude      Float          @default(16.3067)
   longitude     Float          @default(80.4363)
   price         Float

@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb } from '../db/marketplaceDb';
-import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
-import { usePropertySearch } from '../hooks/usePropertySearch';
 import { useLocationStore } from '../context/LocationContext';
-import { LocationSearchBar } from '../components/ui/LocationSearchBar';
-import { DistanceFilterPills } from '../components/ui/DistanceFilterPills';
-import { PropertyDistanceCard } from '../components/ui/PropertyDistanceCard';
-import { EmptySearchState } from '../components/ui/EmptySearchState';
+import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
 import {
   FaBuilding,
   FaHome,
@@ -93,14 +88,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);
 
-  const spatialSearch = usePropertySearch({
-    initialLocationName: 'Hyderabad',
-    initialLat: 17.3850,
-    initialLng: 78.4867,
-    initialRadius: 50000,
-  });
-
-  const currentGlobalCity = selectedCity || 'Guntur';
+  const { location } = useLocationStore();
+  const currentGlobalCity = location?.city || location?.displayName || selectedCity || 'Guntur';
   // Hero Carousel Index State
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
@@ -203,7 +192,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
   // Featured Listings from marketplaceDb
   // Get the target region for distance calculations
-  const region = demandRegionsDb.find(r => r.name.toLowerCase() === currentGlobalCity.toLowerCase()) || null;
+  const region = demandRegionsDb.find(r => r.name.toLowerCase() === currentGlobalCity.toLowerCase()) || 
+                 (location?.lat ? { latitude: location.lat, longitude: location.lng } : null);
 
   const filterAndSortByDistance = (items: any[], isProperty = false) => {
     return items.filter(item => {
@@ -267,10 +257,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const featuredBusinesses = (rawBusinesses.length >= 2 ? rawBusinesses : businessDb).slice(0, 4);
 
   return (
-    <div className="homepage-wrapper" style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
+    <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
       
       {/* 1. HERO SECTION */}
-      <div id="hero" className="hero-section-container" style={{ maxWidth: '1360px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '50px 24px 20px 24px' }}>
         <div className="responsive-hero-grid">
           
           {/* Left Column: Headline & Value Proposition */}
@@ -1006,54 +996,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       </div>
 
       
-      {/* OLX-STYLE POSTGIS RADIUS LOCATION SEARCH SECTION */}
-      <div id="spatial-property-search-section" style={{ maxWidth: '1360px', margin: '40px auto 20px auto', padding: '0 24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0F172A', margin: 0 }}>
-            Properties Near {spatialSearch.locationName}
-          </h2>
-          <p style={{ color: '#64748B', margin: 0, fontSize: '0.95rem', fontWeight: 500 }}>
-            Explore verified properties sorted by nearest distance using PostGIS spatial intelligence.
-          </p>
-        </div>
-
-        {/* Distance Filter Pills (50km, 100km, 200km, Anywhere) */}
-        <DistanceFilterPills
-          locationName={spatialSearch.locationName}
-          selectedRadius={spatialSearch.radiusMeters}
-          onRadiusChange={spatialSearch.changeRadius}
-          totalCount={spatialSearch.totalCount}
-        />
-
-        {/* Loading State */}
-        {spatialSearch.loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', margin: '24px 0' }}>
-            {[1, 2, 3, 4].map(n => (
-              <div key={n} style={{ height: '340px', backgroundColor: '#F1F5F9', borderRadius: '16px' }} />
-            ))}
-          </div>
-        )}
-
-        {/* Property Grid or Empty State */}
-        {!spatialSearch.loading && spatialSearch.properties.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-            {spatialSearch.properties.map(p => (
-              <PropertyDistanceCard
-                key={p.id}
-                property={p}
-                onViewDetails={id => onPropertyClick ? onPropertyClick(id) : onNavigate('propertyDetails', `?propertyId=${id}`)}
-              />
-            ))}
-          </div>
-        ) : !spatialSearch.loading && spatialSearch.properties.length === 0 ? (
-          <EmptySearchState
-            locationName={spatialSearch.locationName}
-            currentRadius={spatialSearch.radiusMeters}
-            onExpandRadius={spatialSearch.changeRadius}
-          />
-        ) : null}
-      </div>
-
       {/* FEATURED PROPERTIES GRID */}
       {featuredListings.length > 0 && (
         <div style={{ maxWidth: '1360px', margin: '40px auto 20px auto', padding: '0 24px' }}>
