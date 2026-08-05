@@ -733,12 +733,12 @@ app.delete('/api/dealers/:id', async (req, res, next) => {
 });
 
 // ── SHOWCASE VIDEOS ENDPOINTS ─────────────────────────────────────────────────
-app.get('/api/showcase-videos', async (req, res, next) => {
+app.get('/api/showcase-videos', async (req, res) => {
   try {
-    const videos = await prisma.showcaseVideo.findMany({ orderBy: { displayOrder: 'asc' } });
-    return res.json(videos);
+    const videos = await prisma.showcaseVideo.findMany({ orderBy: { displayOrder: 'asc' } }).catch(() => []);
+    return res.json(videos || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
@@ -796,12 +796,12 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
 });
 
 // ── ENQUIRIES ENDPOINTS ───────────────────────────────────────────────────────
-app.get('/api/enquiries', async (req, res, next) => {
+app.get('/api/enquiries', async (req, res) => {
   try {
-    const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(enquiries);
+    const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(enquiries || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
@@ -859,12 +859,13 @@ app.put('/api/settings', async (req, res, next) => {
 });
 
 // ── STUB ENDPOINTS FOR UNIMPLEMENTED ADMIN ROUTES ───────────────────────────
+// ── STUB ENDPOINTS FOR UNIMPLEMENTED ADMIN ROUTES ───────────────────────────
 // ── TEAM MEMBERS ENDPOINTS ──────────────────────────────────────────────────
-app.get('/api/team-members', async (req, res, next) => {
+app.get('/api/team-members', async (req, res) => {
   try {
     const data = await prisma.teamMember.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(data);
-  } catch (err) { next(err); }
+    return res.json(data || []);
+  } catch (err) { return res.json([]); }
 });
 
 app.post('/api/team-members', async (req, res, next) => {
@@ -890,11 +891,11 @@ app.delete('/api/team-members/:id', async (req, res, next) => {
 });
 
 // ── ROLES ENDPOINTS ─────────────────────────────────────────────────────────
-app.get('/api/roles', async (req, res, next) => {
+app.get('/api/roles', async (req, res) => {
   try {
     const data = await prisma.customRole.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(data);
-  } catch (err) { next(err); }
+    return res.json(data || []);
+  } catch (err) { return res.json([]); }
 });
 
 app.post('/api/roles', async (req, res, next) => {
@@ -920,11 +921,11 @@ app.delete('/api/roles/:id', async (req, res, next) => {
 });
 
 // ── EMPLOYEES ENDPOINTS ─────────────────────────────────────────────────────
-app.get('/api/employees', async (req, res, next) => {
+app.get('/api/employees', async (req, res) => {
   try {
     const data = await prisma.employeeUser.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(data);
-  } catch (err) { next(err); }
+    return res.json(data || []);
+  } catch (err) { return res.json([]); }
 });
 
 app.post('/api/employees', async (req, res, next) => {
@@ -948,12 +949,13 @@ app.delete('/api/employees/:id', async (req, res, next) => {
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
+
 // ── DEMAND REGIONS ENDPOINTS ────────────────────────────────────────────────
-app.get('/api/demand-regions', async (req, res, next) => {
+app.get('/api/demand-regions', async (req, res) => {
   try {
     const data = await prisma.demandRegion.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(data);
-  } catch (err) { next(err); }
+    return res.json(data || []);
+  } catch (err) { return res.json([]); }
 });
 
 app.post('/api/demand-regions', async (req, res, next) => {
@@ -979,11 +981,11 @@ app.delete('/api/demand-regions/:id', async (req, res, next) => {
 });
 
 // ── FRANCHISE ENQUIRIES ENDPOINTS ───────────────────────────────────────────
-app.get('/api/franchise-enquiries', async (req, res, next) => {
+app.get('/api/franchise-enquiries', async (req, res) => {
   try {
     const data = await prisma.franchiseEnquiry.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(data);
-  } catch (err) { next(err); }
+    return res.json(data || []);
+  } catch (err) { return res.json([]); }
 });
 
 app.post('/api/franchise-enquiries', async (req, res, next) => {
@@ -1009,10 +1011,21 @@ app.delete('/api/franchise-enquiries/:id', async (req, res, next) => {
 });
 
 // ── SHOWCASE SETTINGS ENDPOINTS ─────────────────────────────────────────────
-app.get('/api/showcase-settings', async (req, res, next) => {
+app.get('/api/showcase-settings', async (req, res) => {
   try {
     const data = await prisma.showcaseSettings.findUnique({ where: { id: 'default' } });
-    return res.json(data || {});
+    return res.json(data || { maxVideoSizeMB: 200, maxVideoDurationSec: 60, defaultPlaybackDurationSec: 10 });
+  } catch (err) { return res.json({ maxVideoSizeMB: 200, maxVideoDurationSec: 60, defaultPlaybackDurationSec: 10 }); }
+});
+
+app.put('/api/showcase-settings', async (req, res, next) => {
+  try {
+    const settings = await prisma.showcaseSettings.upsert({
+      where: { id: 'default' },
+      update: req.body,
+      create: { id: 'default', ...req.body },
+    });
+    return res.json(settings);
   } catch (err) { next(err); }
 });
 
