@@ -1226,3 +1226,53 @@ export const geocodeLocationOnline = async (query: string): Promise<LocationInte
 
   return parseIndiaLocation(query);
 };
+
+// 5. High-Precision Reverse Geocoding Engine for Dragged Markers
+export const reverseGeocodeOnline = async (lat: number, lng: number): Promise<LocationIntelligenceResult> => {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.address) {
+        const addr = data.address;
+        const state = addr.state || 'Andhra Pradesh';
+        const district = addr.state_district || addr.county || addr.district || addr.city || 'Guntur';
+        const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || district || 'Guntur';
+        const area = addr.suburb || addr.neighbourhood || addr.road || addr.residential || addr.village || addr.amenity || city;
+        const postal_code = addr.postcode || '522002';
+        const displayName = data.display_name || `${area}, ${city}, ${state} ${postal_code}, India`;
+
+        return {
+          formatted_address: displayName,
+          google_place_id: `osm_rev_${data.place_id || Date.now()}`,
+          latitude: Number(lat),
+          longitude: Number(lng),
+          country: 'India',
+          state,
+          district,
+          city,
+          area,
+          postal_code,
+          fullAddress: displayName
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('Reverse geocode error, falling back:', err);
+  }
+
+  return {
+    formatted_address: `Locality near (${lat.toFixed(6)}, ${lng.toFixed(6)})`,
+    google_place_id: `custom_rev_${Date.now()}`,
+    latitude: Number(lat),
+    longitude: Number(lng),
+    country: 'India',
+    state: 'Andhra Pradesh',
+    district: 'Guntur',
+    city: 'Guntur',
+    area: 'Verified Locality',
+    postal_code: '522002',
+    fullAddress: `Locality near (${lat.toFixed(6)}, ${lng.toFixed(6)})`
+  };
+};
+

@@ -8,7 +8,7 @@ import {
   notifyDataChanged
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
-import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline } from '../utils/locationIntelligence';
+import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
 import { 
   FaBuilding, FaSearch, FaPlus, FaEdit, FaTrash, 
@@ -89,14 +89,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   }, [addressSearchQuery]);
 
   const handleSelectGooglePlace = (place: any) => {
+    const lat = Number(place.latitude);
+    const lng = Number(place.longitude);
     setFormData(prev => ({
       ...prev,
       google_place_id: place.google_place_id,
       formatted_address: place.formatted_address,
       fullAddress: place.fullAddress || place.formatted_address,
-      latitude: place.latitude,
-      longitude: place.longitude,
-      country: place.country,
+      latitude: lat,
+      longitude: lng,
+      country: place.country || 'India',
       state: place.state,
       district: place.district,
       city: place.city,
@@ -105,10 +107,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       pincode: place.postal_code,
       postal_code: place.postal_code
     }));
-    setMapMarkerPos({ lat: place.latitude, lng: place.longitude });
+    setMapMarkerPos({ lat, lng });
     setAddressSearchQuery(place.formatted_address);
     setShowLocationSuggestions(false);
-    showNotification?.(`Verified Google location selected: ${place.area}, ${place.city}`, "success");
+    showNotification?.(`Verified location selected: ${place.area}, ${place.city} (Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)})`, "success");
   };
 
   const [isAdminDetectingGPS, setIsAdminDetectingGPS] = useState(false);
@@ -132,21 +134,25 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     );
   };
 
-  const handleMarkerDrag = (newLat: number, newLng: number) => {
+  const handleMarkerDrag = async (newLat: number, newLng: number) => {
     setMapMarkerPos({ lat: newLat, lng: newLng });
-    const areaName = formData.area || 'Verified Locality';
-    const cityName = formData.city || 'Hyderabad';
-    const stateName = formData.state || 'Telangana';
-    const pin = formData.postal_code || formData.pincode || '500033';
-    const updatedAddress = `${areaName}, ${cityName}, ${stateName} ${pin}, India (${newLat.toFixed(4)}, ${newLng.toFixed(4)})`;
+    const revPlace = await reverseGeocodeOnline(newLat, newLng);
     setFormData(prev => ({
       ...prev,
       latitude: newLat,
       longitude: newLng,
-      formatted_address: updatedAddress,
-      fullAddress: updatedAddress
+      country: revPlace.country || prev.country || 'India',
+      state: revPlace.state || prev.state || '',
+      district: revPlace.district || prev.district || '',
+      city: revPlace.city || prev.city || '',
+      area: revPlace.area || prev.area || '',
+      locality: revPlace.area || prev.locality || '',
+      postal_code: revPlace.postal_code || prev.postal_code || '',
+      pincode: revPlace.postal_code || prev.pincode || '',
+      formatted_address: revPlace.formatted_address,
+      fullAddress: revPlace.fullAddress || revPlace.formatted_address
     }));
-    showNotification?.("Reverse Geocoding: Updated marker coordinates and address!", "success");
+    showNotification?.(`Reverse Geocoded: Marker shifted to Lat ${newLat.toFixed(6)}, Lng ${newLng.toFixed(6)}`, "success");
   };
 
   // Form State
@@ -1332,29 +1338,91 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             </button>
                           </div>
 
-                          {/* Autocomplete Suggestions Dropdown */}
+                          {/* Autocomplete Suggestions Dropdown - OLX Style */}
                           {showLocationSuggestions && (
-                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: '8px', maxHeight: '280px', overflowY: 'auto' }}>
-                              {isSearchingLive && (
-                                <div style={{ padding: '12px 16px', color: '#3B82F6', fontWeight: 600, fontSize: '0.85rem', backgroundColor: '#EFF6FF' }}>
-                                  Searching live location data...
+                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '16px', boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)', marginTop: '8px', maxHeight: '340px', overflowY: 'auto' }}>
+                              
+                              {/* Current Location (GPS) Header Button */}
+                              <div
+                                onClick={handleAdminDetectGPS}
+                                style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.2s' }}
+                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#EFF6FF'}
+                                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                              >
+                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', flexShrink: 0 }}>
+                                  <FaCrosshairs style={{ fontSize: '1rem' }} />
+                                </div>
+                                <div>
+                                  <div style={{ fontWeight: 800, color: '#2563EB', fontSize: '0.9rem' }}>Use Current Location (GPS)</div>
+                                  <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Detect exact current location & lat/lng automatically</div>
+                                </div>
+                              </div>
+
+                              {/* Popular Cities Chips (When no search query) */}
+                              {(!addressSearchQuery || addressSearchQuery.trim().length < 2) && (
+                                <div style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9', backgroundColor: '#FFFFFF' }}>
+                                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Popular Cities & Hubs</div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {['Hyderabad', 'Guntur', 'Vijayawada', 'Visakhapatnam', 'Amaravati', 'Bangalore', 'Chennai'].map(cName => {
+                                      const foundPlace = COMPREHENSIVE_INDIA_PLACES_DB.find(p => p.city.toLowerCase().includes(cName.toLowerCase()) || p.area.toLowerCase().includes(cName.toLowerCase()));
+                                      return (
+                                        <button
+                                          key={cName}
+                                          type="button"
+                                          onClick={() => {
+                                            if (foundPlace) handleSelectGooglePlace(foundPlace);
+                                            else {
+                                              setAddressSearchQuery(cName);
+                                            }
+                                          }}
+                                          style={{ padding: '6px 14px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', cursor: 'pointer', transition: 'all 0.2s' }}
+                                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#2563EB'; e.currentTarget.style.color = '#FFFFFF'; }}
+                                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F1F5F9'; e.currentTarget.style.color = '#334155'; }}
+                                        >
+                                          📍 {cName}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               )}
+
+                              {isSearchingLive && (
+                                <div style={{ padding: '12px 18px', color: '#2563EB', fontWeight: 700, fontSize: '0.85rem', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <FaSearch style={{ animation: 'spin 1s linear infinite' }} />
+                                  <span>Searching live location database & Nominatim...</span>
+                                </div>
+                              )}
+
+                              {/* Location Suggestion Cards */}
                               {liveSuggestions.map((place, idx) => (
                                 <div
                                   key={idx}
                                   onClick={() => handleSelectGooglePlace(place)}
-                                  style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', gap: '12px', transition: 'background 0.2s' }}
+                                  style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', transition: 'background 0.2s' }}
                                   onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                                   onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
                                 >
-                                  <FaMapMarkerAlt style={{ color: '#EF4444', marginTop: '3px', flexShrink: 0 }} />
-                                  <div>
-                                    <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>{place.area}, {place.city}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{place.formatted_address}</div>
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexGrow: 1 }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', backgroundColor: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', flexShrink: 0, marginTop: '2px' }}>
+                                      <FaMapMarkerAlt style={{ fontSize: '0.95rem' }} />
+                                    </div>
+                                    <div>
+                                      <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.92rem' }}>{place.area || place.city}</div>
+                                      <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>{place.formatted_address || `${place.city}, ${place.state}`}</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Exact Lat/Lng Badge */}
+                                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', padding: '3px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                                      📍 {place.latitude?.toFixed(6)}, {place.longitude?.toFixed(6)}
+                                    </div>
+                                    <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '3px', fontWeight: 600 }}>Exact GPS</div>
                                   </div>
                                 </div>
                               ))}
+
                               {addressSearchQuery && (
                                 <div
                                   onClick={async () => {
@@ -1363,9 +1431,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                     setIsSearchingLive(false);
                                     handleSelectGooglePlace(customPlace);
                                   }}
-                                  style={{ padding: '12px 16px', backgroundColor: '#EFF6FF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, color: '#1E40AF', fontSize: '0.85rem' }}
+                                  style={{ padding: '14px 18px', backgroundColor: '#EFF6FF', borderTop: '1px solid #BFDBFE', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontWeight: 700, color: '#1E40AF', fontSize: '0.85rem' }}
                                 >
-                                  <FaMapMarkerAlt /> Use "{addressSearchQuery}" (Auto-Geocode via Live GPS Engine)
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <FaMapMarkerAlt style={{ color: '#2563EB' }} />
+                                    <span>Use "{addressSearchQuery}" (Auto-Geocode Engine)</span>
+                                  </div>
+                                  <span style={{ fontSize: '0.75rem', backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '4px' }}>Live Geocode</span>
                                 </div>
                               )}
                             </div>

@@ -38,7 +38,7 @@ import {
   FaExternalLinkAlt,
   FaLightbulb
 } from 'react-icons/fa';
-import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline } from '../utils/locationIntelligence';
+import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
 
 interface FranchiseManagementSystemProps {
@@ -110,14 +110,16 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
   }, [addressSearchQuery]);
 
   const handleSelectGooglePlace = (place: any) => {
+    const lat = Number(place.latitude);
+    const lng = Number(place.longitude);
     setEditingFranchise(prev => ({
       ...prev,
       google_place_id: place.google_place_id,
       formatted_address: place.formatted_address,
       fullAddress: place.fullAddress || place.formatted_address,
-      latitude: place.latitude,
-      longitude: place.longitude,
-      country: place.country,
+      latitude: lat,
+      longitude: lng,
+      country: place.country || 'India',
       state: place.state,
       district: place.district,
       city: place.city,
@@ -126,10 +128,10 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
       pincode: place.postal_code,
       location: `${place.area}, ${place.city}`
     }));
-    setMapMarkerPos({ lat: place.latitude, lng: place.longitude });
+    setMapMarkerPos({ lat, lng });
     setAddressSearchQuery(place.formatted_address);
     setShowLocationSuggestions(false);
-    showNotification?.(`Verified location selected: ${place.area}, ${place.city}`, "success");
+    showNotification?.(`Verified location selected: ${place.area}, ${place.city} (Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)})`, "success");
   };
 
   const handleAdminDetectGPS = () => {
@@ -152,13 +154,24 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
     );
   };
 
-  const handleMarkerDrag = (newLat: number, newLng: number) => {
+  const handleMarkerDrag = async (newLat: number, newLng: number) => {
     setMapMarkerPos({ lat: newLat, lng: newLng });
+    const revPlace = await reverseGeocodeOnline(newLat, newLng);
     setEditingFranchise(prev => ({
       ...prev,
       latitude: newLat,
       longitude: newLng,
+      country: revPlace.country || prev.country || 'India',
+      state: revPlace.state || prev.state || '',
+      district: revPlace.district || prev.district || '',
+      city: revPlace.city || prev.city || '',
+      area: revPlace.area || prev.area || '',
+      pincode: revPlace.postal_code || prev.pincode || '',
+      postal_code: revPlace.postal_code || prev.postal_code || '',
+      formatted_address: revPlace.formatted_address,
+      fullAddress: revPlace.fullAddress || revPlace.formatted_address
     }));
+    showNotification?.(`Reverse Geocoded: Marker shifted to Lat ${newLat.toFixed(6)}, Lng ${newLng.toFixed(6)}`, "success");
   };
 
   // Broker Search inside Modal

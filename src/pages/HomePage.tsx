@@ -196,32 +196,46 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                  (location?.lat ? { latitude: location.lat, longitude: location.lng } : null);
 
   const filterAndSortByDistance = (items: any[], isProperty = false) => {
-    return items.filter(item => {
+    const targetLat = location?.lat || region?.latitude;
+    const targetLng = location?.lng || region?.longitude;
+    const targetLoc = (location?.city || currentGlobalCity || '').toLowerCase();
+
+    const matched = items.filter(item => {
       if (isProperty && (item.sold || item.approvalStatus === 'Sold' || item.listingStatus === 'Sold')) return false;
 
       const itemCity = (item.city || '').toLowerCase();
-      const itemLocStr = (item.location || '').toLowerCase();
+      const itemLocStr = (item.location || item.formatted_address || '').toLowerCase();
       const itemTitle = (item.title || item.brand || item.name || '').toLowerCase();
-      const targetLoc = currentGlobalCity.toLowerCase();
 
-      // Exact match
-      let exactMatch = itemCity === targetLoc || itemLocStr.includes(targetLoc) || itemTitle.includes(targetLoc);
+      // Distance match if lat/lng available
+      if (targetLat && targetLng && item.latitude && item.longitude) {
+        const dist = getDistance(targetLat, targetLng, item.latitude, item.longitude);
+        item.distanceKm = Math.round(dist * 10) / 10;
+        return dist <= 30; // 30km radius proximity filter
+      }
 
-      if (exactMatch) {
+      // Exact city string match fallback
+      if (itemCity === targetLoc || itemLocStr.includes(targetLoc) || itemTitle.includes(targetLoc)) {
         item.distanceKm = 0;
         return true;
       }
 
-      // Distance match if lat/lng available
-      if (region && region.latitude && region.longitude && item.latitude && item.longitude) {
-        const dist = getDistance(region.latitude, region.longitude, item.latitude, item.longitude);
-        item.distanceKm = dist;
-        return dist <= 300; // Return true if within 300km
-      }
-
-      // If no exact match and no coordinates available, exclude
       return false;
     }).sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+
+    // Fallback if fewer than 2 properties within 30km: return all items sorted by distance
+    if (matched.length < 2 && targetLat && targetLng) {
+      return items.filter(i => !isProperty || !(i.sold || i.approvalStatus === 'Sold' || i.listingStatus === 'Sold')).map(item => {
+        if (item.latitude && item.longitude) {
+          item.distanceKm = Math.round(getDistance(targetLat, targetLng, item.latitude, item.longitude) * 10) / 10;
+        } else {
+          item.distanceKm = 999;
+        }
+        return item;
+      }).sort((a, b) => (a.distanceKm || 0) - (b.distanceKm || 0));
+    }
+
+    return matched;
   };
 
   // Featured Listings from marketplaceDb (Ensure at least 4 items so grid is full)

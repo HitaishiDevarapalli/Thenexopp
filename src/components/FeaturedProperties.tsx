@@ -28,9 +28,10 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
     if (location && location.lat && location.lng) {
       if (prop.latitude && prop.longitude) {
         const dist = getDistance(location.lat, location.lng, prop.latitude, prop.longitude);
-        if (dist > 50) return false;
+        (prop as any).distanceKm = Math.round(dist * 10) / 10;
+        if (dist > 30) return false; // 30 KM radius proximity check
       } else {
-        const loc = location.city.toLowerCase() || location.displayName.toLowerCase();
+        const loc = (location.city || location.displayName || '').toLowerCase();
         const matchCity = prop.city?.toLowerCase().includes(loc) || prop.state?.toLowerCase().includes(loc) || prop.area?.toLowerCase().includes(loc);
         if (!matchCity) return false;
       }
@@ -39,7 +40,7 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
     if (categoryFilter === 'BuyHouse') return prop.category === 'Villa' || prop.category === 'House';
     if (categoryFilter === 'BuyLand') return prop.category === 'Plot';
     return true;
-  });
+  }).sort((a, b) => ((a as any).distanceKm || 0) - ((b as any).distanceKm || 0));
 
   return (
     <section className="section-padding featured-properties-section">
