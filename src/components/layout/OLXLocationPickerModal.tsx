@@ -802,9 +802,6 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
                     >
                       {pop.city}
                     </span>
-                    <span style={{ fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>
-                      {pop.listings} Listings
-                    </span>
                   </button>
                 ))}
               </div>
