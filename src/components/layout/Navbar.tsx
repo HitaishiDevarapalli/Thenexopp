@@ -537,7 +537,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <FaMapMarkedAlt style={{ color: '#10B981', fontSize: '18px' }} />
-                <span>{location?.city || location?.name || 'Select Location'}</span>
+                <span>{location?.city || location?.displayName || 'Select Location'}</span>
               </span>
               <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />
             </button>
