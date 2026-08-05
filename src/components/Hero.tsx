@@ -491,21 +491,6 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                       setLocationText('Guntur, AP');
                     }
                   }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#16A34A',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <FaCrosshairs />
-                  <span>Use My Location</span>
-                </button>
               </div>
 
               {/* Row 3: Popular Searches & Advanced Search */}

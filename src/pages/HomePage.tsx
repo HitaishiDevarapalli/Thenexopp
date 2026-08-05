@@ -546,45 +546,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
           {/* Filter Dropdowns Grid */}
           <div className="top-search-filter-bar-home">
-            {/* 1. Search Location */}
-            <div style={{
-              backgroundColor: '#F8FAFC',
-              border: '1.5px solid #E2E8F0',
-              borderRadius: '14px',
-              padding: '10px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center'
-            }}>
-              <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                Search Location
-              </span>
-              <select
-                value={searchLocation}
-                onChange={(e) => {
-                  setSearchLocationState(e.target.value);
-                  setSelectedCity(e.target.value);
-                }}
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  color: '#0F172A',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  paddingTop: '2px'
-                }}
-              >
-                <option value="Guntur">Guntur</option>
-                <option value="Vijayawada">Vijayawada</option>
-                <option value="Hyderabad">Hyderabad</option>
-                <option value="Visakhapatnam">Visakhapatnam</option>
-                <option value="Bengaluru">Bengaluru</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Chennai">Chennai</option>
-              </select>
-            </div>
 
             {/* 2. Dynamic Type/Category Field */}
             <div style={{
@@ -776,25 +737,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
           </div>
 
-          {/* Use My Location Checkbox */}
-          <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              fontSize: '0.88rem',
-              fontWeight: 700,
-              color: '#00A86B',
-              userSelect: 'none'
-            }}>
-              <input
-                type="checkbox"
-                style={{ width: '16px', height: '16px', accentColor: '#00A86B', cursor: 'pointer', borderRadius: '4px' }}
-              />
-              Use My Location
-            </label>
-          </div>
+
 
           {/* Popular Searches & Advanced Search Section */}
           <div style={{
