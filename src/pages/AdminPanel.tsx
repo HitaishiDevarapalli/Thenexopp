@@ -17,6 +17,7 @@ import {
   FaDesktop,
   FaVideo,
   FaUpload,
+  FaLink,
   FaChevronDown,
   FaChevronRight,
   FaHome,
