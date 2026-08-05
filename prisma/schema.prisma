@@ -293,8 +293,11 @@ model SiteSettings {
   primaryColor      String   @default("#007A55")
   themeStyle        String   @default("professional-white-green")
   availableCities   String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
+  analytics         Json?
+  mainPageStats     Json?
   updatedAt         DateTime @updatedAt
 }
+
 
 model TeamMember {
   id          String   @id @default(uuid())

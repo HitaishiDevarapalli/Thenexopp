@@ -30,6 +30,10 @@ const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const app = express();
 const PORT = process.env.PORT || 8081;
 
+// Trust first proxy (Nginx reverse proxy) — required for express-rate-limit behind Nginx
+app.set('trust proxy', 1);
+
+
 // ── SECURITY & PERFORMANCE MIDDLEWARES ───────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: false,
