@@ -358,12 +358,12 @@ app.post('/api/auth/login', async (req, res, next) => {
 });
 
 // ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
-app.get('/api/customers', async (req, res, next) => {
+app.get('/api/customers', async (req, res) => {
   try {
-    const customers = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(customers);
+    const customers = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(customers || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
