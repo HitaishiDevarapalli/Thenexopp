@@ -461,12 +461,12 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         <div className="mobile-only" style={{ display: 'none', alignItems: 'center', gap: '10px' }}>
           <div style={{ position: 'relative' }}>
             <button
-              onClick={() => setShowLocationPanel(!showLocationPanel)}
+              onClick={openLocationPicker}
               style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
-              <FaMapMarkedAlt style={{ color: '#10B981', fontSize: '16px' }} />
+              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '16px' }} />
             </button>
-            {showLocationPanel && <LocationSelectorPanel onClose={() => setShowLocationPanel(false)} />}
+            <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
           <button onClick={onOpenWishlist} style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <FaRegHeart style={{ color: '#EF4444', fontSize: '16px' }} />
