@@ -598,14 +598,33 @@ export const setSelectedCity = (city: string) => {
   window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
 };
 
-// LocalStorage Persistence Helpers
+// LocalStorage Persistence Helpers with Quota Guard
 const saveLocal = (key: string, data: any) => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.setItem(key, JSON.stringify(data));
     }
   } catch (err) {
-    console.warn(`Failed to save ${key} to localStorage:`, err);
+    console.warn(`Failed to save ${key} to localStorage (quota exceeded), attempting compact save:`, err);
+    try {
+      if (Array.isArray(data)) {
+        const compactData = data.map(item => {
+          if (item && typeof item === 'object') {
+            const clone = { ...item };
+            delete (clone as any).image2;
+            delete (clone as any).image3;
+            delete (clone as any).image4;
+            delete (clone as any).image5;
+            delete (clone as any).image6;
+            return clone;
+          }
+          return item;
+        });
+        window.localStorage.setItem(key, JSON.stringify(compactData));
+      }
+    } catch (e) {
+      console.error(`Compact save also failed for ${key}:`, e);
+    }
   }
 };
 
