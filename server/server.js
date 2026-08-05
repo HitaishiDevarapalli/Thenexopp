@@ -15,6 +15,20 @@ import { prisma, checkDatabaseConnection } from './db.js';
 import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole } from './auth.js';
 import { optimizeAndSaveImage } from './imageProcessor.js';
 import { verifyWidgetToken } from './services/msg91WidgetService.js';
+import { initLocationDatabase } from './locationDatabase.js';
+import {
+  searchLocations,
+  getPopularCities,
+  getTrendingLocations,
+  getNearbyLocations,
+  getRecentSearches,
+  saveRecentSearch,
+  getAdminLocations,
+  createAdminLocation,
+  updateAdminLocation,
+  deleteAdminLocation,
+  importBulkLocationsCsv,
+} from './locationController.js';
 import {
   userRegisterSchema,
   userLoginSchema,
@@ -89,12 +103,29 @@ subDirs.forEach(sub => {
 });
 app.use('/uploads', express.static(uploadDir, { maxAge: '30d' }));
 
-// Ensure PostgreSQL is connected
+// Ensure PostgreSQL is connected and initialize location engine
 checkDatabaseConnection().then(connected => {
   if (!connected) {
     logger.warn("Running without PostgreSQL connection.");
   }
+  initLocationDatabase();
 });
+
+// ── LOCATION SYSTEM APIS ───────────────────────────────────────────────────
+app.get('/api/location/search', searchLocations);
+app.get('/api/location/popular', getPopularCities);
+app.get('/api/location/trending', getTrendingLocations);
+app.get('/api/location/nearby', getNearbyLocations);
+app.get('/api/location/recent', getRecentSearches);
+app.post('/api/location/recent', saveRecentSearch);
+
+// ── LOCATION ADMIN MANAGEMENT APIS ─────────────────────────────────────────
+app.get('/api/admin/locations', getAdminLocations);
+app.post('/api/admin/locations', createAdminLocation);
+app.put('/api/admin/locations/:id', updateAdminLocation);
+app.delete('/api/admin/locations/:id', deleteAdminLocation);
+app.post('/api/admin/locations/import-csv', importBulkLocationsCsv);
+
 
 // ── SHARP WEBP IMAGE UPLOAD ENDPOINT ─────────────────────────────────────────
 app.post('/api/upload', async (req, res, next) => {
