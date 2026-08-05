@@ -33,21 +33,14 @@ const SEED_LOCATIONS = [
 ];
 
 /**
- * Initialize DB with pg_trgm extension & seed initial locations
+ * Initialize DB with seed locations using pure Prisma ORM
  */
 export const initLocationDb = async (prisma) => {
   try {
-    // Attempt pg_trgm extension
-    await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`).catch((err) => {
-      logger.warn({ err: err.message }, 'pg_trgm extension statement executed with notice/warning');
-    });
-
-    // Check count
     const count = await prisma.location.count();
     if (count === 0) {
       logger.info('Seeding initial location database...');
 
-      // Seed popular cities & locations
       for (const loc of [...DEFAULT_POPULAR_CITIES, ...SEED_LOCATIONS]) {
         const displayName = loc.displayName || `${loc.area ? loc.area + ', ' : ''}${loc.city}, ${loc.state}`;
         const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.district || ''} ${loc.state} ${displayName}`.toLowerCase();
@@ -77,7 +70,7 @@ export const initLocationDb = async (prisma) => {
 };
 
 /**
- * Perform fast pg_trgm fuzzy similarity search
+ * Perform fast search using Prisma ORM case-insensitive matching
  */
 export const searchLocationsService = async (prisma, query, limit = 10) => {
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -85,42 +78,7 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
   }
 
   const cleanQuery = query.trim().toLowerCase();
-  const searchPattern = `%${cleanQuery}%`;
 
-  try {
-    // Try raw PostgreSQL pg_trgm query with similarity ranking
-    const rawResults = await prisma.$queryRawUnsafe(`
-      SELECT 
-        id, 
-        country, 
-        state, 
-        district, 
-        city, 
-        area, 
-        locality, 
-        "postalCode", 
-        latitude, 
-        longitude, 
-        "displayName", 
-        popularity,
-        similarity("searchText", $1) as sim_score
-      FROM "Location"
-      WHERE "searchText" ILIKE $2 OR similarity("searchText", $1) > 0.08
-      ORDER BY 
-        CASE WHEN "searchText" ILIKE $3 THEN 1 ELSE 2 END,
-        sim_score DESC, 
-        popularity DESC
-      LIMIT $4;
-    `, cleanQuery, searchPattern, `${cleanQuery}%`, Number(limit) || 10);
-
-    if (Array.isArray(rawResults) && rawResults.length > 0) {
-      return rawResults;
-    }
-  } catch (err) {
-    logger.warn({ error: err.message }, 'Raw pg_trgm query failed, falling back to Prisma ORM search');
-  }
-
-  // Fallback to Prisma ORM filtering
   try {
     const results = await prisma.location.findMany({
       where: {
@@ -130,10 +88,12 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
           { locality: { contains: cleanQuery, mode: 'insensitive' } },
           { displayName: { contains: cleanQuery, mode: 'insensitive' } },
           { searchText: { contains: cleanQuery, mode: 'insensitive' } },
+          { state: { contains: cleanQuery, mode: 'insensitive' } },
         ],
       },
       orderBy: [
         { popularity: 'desc' },
+        { createdAt: 'desc' },
       ],
       take: Number(limit) || 10,
     });
@@ -156,7 +116,6 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
   }
 
   try {
-    // Call OpenStreetMap Nominatim Reverse Geocoding API
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=jsonv2&addressdetails=1`,
       {
@@ -185,7 +144,6 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
 
     const searchText = `${city} ${area} ${locality} ${district} ${state} ${displayName}`.toLowerCase();
 
-    // Check if location exists in database within 0.05 lat/lng radius or matching displayName
     let existing = await prisma.location.findFirst({
       where: {
         OR: [
@@ -201,7 +159,6 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
     });
 
     if (existing) {
-      // Increment popularity and return existing record
       const updated = await prisma.location.update({
         where: { id: existing.id },
         data: { popularity: existing.popularity + 1 },
@@ -209,7 +166,6 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
       return updated;
     }
 
-    // Insert new location dynamically
     const created = await prisma.location.create({
       data: {
         country,
@@ -232,7 +188,6 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
   } catch (err) {
     logger.warn({ error: err.message }, 'Reverse geocoding with Nominatim failed, using fallback location data');
     
-    // Fallback response for offline / blocked Nominatim scenarios
     return {
       id: `loc-fallback-${Date.now()}`,
       country: 'India',
@@ -271,7 +226,6 @@ export const getPopularCitiesService = async (prisma) => {
       take: 15,
     });
 
-    // Deduplicate by city name
     const cityMap = new Map();
     for (const item of popularInDb) {
       if (!cityMap.has(item.city)) {
@@ -281,7 +235,6 @@ export const getPopularCitiesService = async (prisma) => {
 
     const result = Array.from(cityMap.values());
 
-    // Ensure default popular cities exist in list
     for (const def of DEFAULT_POPULAR_CITIES) {
       if (!cityMap.has(def.city)) {
         result.push({
@@ -317,7 +270,7 @@ export const getPopularCitiesService = async (prisma) => {
  * Calculate Haversine distance in KM between two lat/lng points
  */
 const haversineKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth radius in KM
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
