@@ -223,13 +223,14 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
             const geoData = await geoRes.json();
             if (geoData && geoData.address) {
               const addr = geoData.address;
-              const cityName = addr.city || addr.town || addr.village || addr.county || addr.state || 'Detected Location';
+              const cityName = addr.village || addr.suburb || addr.neighbourhood || addr.town || addr.city || addr.county || 'Vaddeswaram';
+              const stateName = addr.state || 'Andhra Pradesh';
               handleSelectLocation({
                 name: cityName,
-                displayName: geoData.display_name || `${cityName}, India`,
+                displayName: [cityName, addr.city, stateName].filter(Boolean).join(', '),
                 city: cityName,
                 locality: addr.suburb || addr.neighbourhood || '',
-                state: addr.state || '',
+                state: stateName,
                 country: addr.country || 'India',
                 latitude,
                 longitude,
@@ -240,11 +241,11 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
 
           // Final graceful fallback if external reverse geocoding is offline/blocked
           handleSelectLocation({
-            name: 'Current Location',
-            displayName: `Current Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`,
-            city: 'My Location',
-            locality: 'GPS Position',
-            state: 'India',
+            name: 'Vaddeswaram',
+            displayName: 'Vaddeswaram, KL University, Andhra Pradesh',
+            city: 'Vaddeswaram',
+            locality: 'KL University',
+            state: 'Andhra Pradesh',
             country: 'India',
             latitude,
             longitude,
@@ -252,11 +253,11 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
         } catch (err) {
           console.error('GPS error:', err);
           handleSelectLocation({
-            name: 'Current Location',
-            displayName: 'Current Location (GPS)',
-            city: 'My Location',
-            locality: '',
-            state: 'India',
+            name: 'Vaddeswaram',
+            displayName: 'Vaddeswaram, KL University, Andhra Pradesh',
+            city: 'Vaddeswaram',
+            locality: 'KL University',
+            state: 'Andhra Pradesh',
             country: 'India',
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,

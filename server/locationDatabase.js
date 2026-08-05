@@ -688,6 +688,26 @@ export const INITIAL_LOCATIONS = [
     featured: true,
     trending: true,
   },
+  {
+    name: 'Vaddeswaram',
+    slug: 'vaddeswaram-guntur',
+    type: 'Locality',
+    latitude: 16.4422,
+    longitude: 80.6226,
+    parentName: 'Guntur',
+    city: 'Vaddeswaram',
+    district: 'Guntur',
+    state: 'Andhra Pradesh',
+    country: 'India',
+    aliases: ['KL University', 'KLU', 'K L University', 'Vaddeswaram Tadepalli'],
+    searchKeywords: ['vaddeswaram', 'kl university', 'klu', 'k l university', 'tadepalli', 'guntur', 'vijayawada'],
+    population: 35000,
+    listingCount: 420,
+    priority: 95,
+    status: 'Active',
+    featured: true,
+    trending: true,
+  },
 ];
 
 // In-Memory Index for ultra-fast query execution (<5ms)
