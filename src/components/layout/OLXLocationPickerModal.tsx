@@ -72,16 +72,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
   }, [isOpen, onClose]);
 
   // Debounced 300ms Search calling PostgreSQL pg_trgm backend endpoint
-  useEffect(() => {
-    const cleanQuery = query.trim();
-    if (cleanQuery.length < 1) {
-      setResults([]);
-      setLoading(false);
-      setSelectedIndex(-1);
-      return;
-    }
-
-  // Debounced 300ms Search calling PostgreSQL backend endpoint with Photon backup for instant results
+  // Debounced 250ms Search calling PostgreSQL backend endpoint with Photon backup for instant results
   useEffect(() => {
     const cleanQuery = query.trim();
     if (cleanQuery.length < 1) {
