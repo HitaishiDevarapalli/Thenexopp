@@ -1542,7 +1542,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       area: editingFranchise.area || editingFranchise.location || '',
                       latitude: editingFranchise.latitude,
                       longitude: editingFranchise.longitude,
-                      google_place_id: editingFranchise.google_place_id,
+                      google_place_id: (editingFranchise as any).google_place_id,
                       verified: Boolean(editingFranchise.latitude && editingFranchise.longitude),
                     }}
                     onChange={locData => {
