@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaMapMarkerAlt, FaBed, FaBath, FaRulerCombined, FaCheckCircle, FaStar, FaCrown, FaDirections } from 'react-icons/fa';
-import { PropertySearchResultItem } from '../../hooks/usePropertySearch';
+import type { PropertySearchResultItem } from '../../hooks/usePropertySearch';
 
 interface PropertyDistanceCardProps {
   property: PropertySearchResultItem;

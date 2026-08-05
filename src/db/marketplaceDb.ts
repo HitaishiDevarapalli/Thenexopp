@@ -291,6 +291,7 @@ export interface FranchiseListing {
   postal_code?: string;
   formatted_address?: string;
   fullAddress?: string;
+  google_place_id?: string;
   service_radius?: number;
   businessAddress?: string;
   googleMapsUrl?: string;

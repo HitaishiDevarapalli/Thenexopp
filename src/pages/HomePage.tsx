@@ -99,8 +99,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     initialRadius: 50000,
   });
 
-  const { location } = useLocationStore();
-  const currentGlobalCity = location?.city || location?.displayName || selectedCity || 'Guntur';
+  const currentGlobalCity = selectedCity || 'Guntur';
   // Hero Carousel Index State
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
@@ -203,8 +202,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
   // Featured Listings from marketplaceDb
   // Get the target region for distance calculations
-  const region = demandRegionsDb.find(r => r.name.toLowerCase() === currentGlobalCity.toLowerCase()) || 
-                 (location?.lat ? { latitude: location.lat, longitude: location.lng } : null);
+  const region = demandRegionsDb.find(r => r.name.toLowerCase() === currentGlobalCity.toLowerCase()) || null;
 
   const filterAndSortByDistance = (items: any[], isProperty = false) => {
     return items.filter(item => {
