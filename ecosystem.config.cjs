@@ -3,8 +3,9 @@ module.exports = {
     {
       name: 'thenexopp-api',
       script: 'server/server.js',
-      instances: 'max',
-      exec_mode: 'cluster',
+      instances: 1,
+      exec_mode: 'fork',
+      node_args: '--env-file=.env',
       env_production: {
         NODE_ENV: 'production',
         PORT: 8081,
