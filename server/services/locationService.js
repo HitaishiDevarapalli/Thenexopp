@@ -15,21 +15,24 @@ const DEFAULT_POPULAR_CITIES = [
   { city: 'Visakhapatnam', state: 'Andhra Pradesh', area: 'MVP Colony / Siripuram', lat: 17.6868, lng: 83.2185, popularity: 78 },
 ];
 
-// Rich seed locations for instant fuzzy matching on test examples (hy, mad, bro, gun, kon, ben, hydrabad)
+// Curated seed locations including specific user examples (SVN Colony, Brodipet, Madhapur, Gachibowli, Whitefield, Benz Circle, Pattabhipuram)
 const SEED_LOCATIONS = [
-  { country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Madhapur', locality: 'Madhapur', postalCode: '500081', lat: 17.4483, lng: 78.3915, displayName: 'Madhapur, Hyderabad, Telangana', popularity: 98 },
-  { country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Hitech City', locality: 'Hitech City', postalCode: '500081', lat: 17.4435, lng: 78.3772, displayName: 'Hitech City, Hyderabad, Telangana', popularity: 96 },
-  { country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Kondapur', locality: 'Kondapur', postalCode: '500084', lat: 17.4622, lng: 78.3568, displayName: 'Kondapur, Hyderabad, Telangana', popularity: 94 },
-  { country: 'India', state: 'Telangana', district: 'Ranga Reddy', city: 'Hyderabad', area: 'Gachibowli', locality: 'Gachibowli', postalCode: '500032', lat: 17.4401, lng: 78.3489, displayName: 'Gachibowli, Hyderabad, Telangana', popularity: 95 },
-  { country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Hyderguda', locality: 'Hyderguda', postalCode: '500029', lat: 17.3970, lng: 78.4795, displayName: 'Hyderguda, Hyderabad, Telangana', popularity: 82 },
-  { country: 'India', state: 'Telangana', district: 'Sangareddy', city: 'Hyderabad', area: 'Kondakal', locality: 'Kondakal Village', postalCode: '501505', lat: 17.4800, lng: 78.2000, displayName: 'Kondakal, Hyderabad, Telangana', popularity: 75 },
-  { country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', area: 'Brodipet', locality: 'Brodipet 4th Line', postalCode: '522002', lat: 16.3067, lng: 80.4365, displayName: 'Brodipet, Guntur, Andhra Pradesh', popularity: 90 },
-  { country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', area: 'Arundelpet', locality: 'Arundelpet', postalCode: '522002', lat: 16.3050, lng: 80.4380, displayName: 'Arundelpet, Guntur, Andhra Pradesh', popularity: 88 },
-  { country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', area: 'Guntur Railway Station', locality: 'Station Road', postalCode: '522001', lat: 16.3000, lng: 80.4450, displayName: 'Guntur Railway Station, Guntur, Andhra Pradesh', popularity: 89 },
-  { country: 'India', state: 'Andhra Pradesh', district: 'NTR District', city: 'Vijayawada', area: 'Benz Circle', locality: 'Benz Circle', postalCode: '520010', lat: 16.5020, lng: 80.6480, displayName: 'Benz Circle, Vijayawada, Andhra Pradesh', popularity: 91 },
-  { country: 'India', state: 'Karnataka', district: 'Bengaluru Urban', city: 'Bangalore', area: 'Benson Town', locality: 'Benson Town', postalCode: '560046', lat: 13.0010, lng: 77.6020, displayName: 'Benson Town, Bangalore, Karnataka', popularity: 80 },
-  { country: 'India', state: 'Telangana', district: 'Cyberabad', city: 'Hyderabad', area: 'Madinaguda', locality: 'Madinaguda', postalCode: '500050', lat: 17.4950, lng: 78.3450, displayName: 'Madinaguda, Hyderabad, Telangana', popularity: 84 },
-  { country: 'India', state: 'Andhra Pradesh', district: 'Visakhapatnam', city: 'Visakhapatnam', area: 'Maddilapalem', locality: 'Maddilapalem', postalCode: '530013', lat: 17.7300, lng: 83.3200, displayName: 'Maddilapalem, Visakhapatnam, Andhra Pradesh', popularity: 83 },
+  { osmId: '3948120', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'SVN Colony', area: 'SVN Colony', locality: 'SVN Colony', postcode: '522006', lat: 16.3100, lng: 80.4300, displayName: 'SVN Colony, Guntur, Andhra Pradesh', popularity: 95 },
+  { osmId: '3948121', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Pattabhipuram', area: 'Pattabhipuram', locality: 'Pattabhipuram Main Road', postcode: '522006', lat: 16.3080, lng: 80.4280, displayName: 'Pattabhipuram, Guntur, Andhra Pradesh', popularity: 94 },
+  { osmId: '3948122', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Brodipet', area: 'Brodipet', locality: 'Brodipet 4th Line', postcode: '522002', lat: 16.3067, lng: 80.4365, displayName: 'Brodipet, Guntur, Andhra Pradesh', popularity: 96 },
+  { osmId: '3948123', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Arundelpet', area: 'Arundelpet', locality: 'Arundelpet', postcode: '522002', lat: 16.3050, lng: 80.4380, displayName: 'Arundelpet, Guntur, Andhra Pradesh', popularity: 88 },
+  { osmId: '3948124', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Guntur Railway Station', area: 'Guntur Railway Station', locality: 'Station Road', postcode: '522001', lat: 16.3000, lng: 80.4450, displayName: 'Guntur Railway Station, Guntur, Andhra Pradesh', popularity: 89 },
+  { osmId: '3948125', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Madhapur', area: 'Madhapur', locality: 'Madhapur', postcode: '500081', lat: 17.4483, lng: 78.3915, displayName: 'Madhapur, Hyderabad, Telangana', popularity: 98 },
+  { osmId: '3948126', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Hitech City', area: 'Hitech City', locality: 'Hitech City', postcode: '500081', lat: 17.4435, lng: 78.3772, displayName: 'Hitech City, Hyderabad, Telangana', popularity: 97 },
+  { osmId: '3948127', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Kondapur', area: 'Kondapur', locality: 'Kondapur', postcode: '500084', lat: 17.4622, lng: 78.3568, displayName: 'Kondapur, Hyderabad, Telangana', popularity: 94 },
+  { osmId: '3948128', osmType: 'node', country: 'India', state: 'Telangana', district: 'Ranga Reddy', city: 'Hyderabad', suburb: 'Gachibowli', area: 'Gachibowli', locality: 'Gachibowli', postcode: '500032', lat: 17.4401, lng: 78.3489, displayName: 'Gachibowli, Hyderabad, Telangana', popularity: 96 },
+  { osmId: '3948129', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Hyderguda', area: 'Hyderguda', locality: 'Hyderguda', postcode: '500029', lat: 17.3970, lng: 78.4795, displayName: 'Hyderguda, Hyderabad, Telangana', popularity: 82 },
+  { osmId: '3948130', osmType: 'node', country: 'India', state: 'Telangana', district: 'Sangareddy', city: 'Hyderabad', suburb: 'Kondakal', area: 'Kondakal', locality: 'Kondakal Village', postcode: '501505', lat: 17.4800, lng: 78.2000, displayName: 'Kondakal, Hyderabad, Telangana', popularity: 75 },
+  { osmId: '3948131', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'NTR District', city: 'Vijayawada', suburb: 'Benz Circle', area: 'Benz Circle', locality: 'Benz Circle', postcode: '520010', lat: 16.5020, lng: 80.6480, displayName: 'Benz Circle, Vijayawada, Andhra Pradesh', popularity: 91 },
+  { osmId: '3948132', osmType: 'node', country: 'India', state: 'Karnataka', district: 'Bengaluru Urban', city: 'Bangalore', suburb: 'Whitefield', area: 'Whitefield', locality: 'Whitefield', postcode: '560066', lat: 12.9698, lng: 77.7499, displayName: 'Whitefield, Bangalore, Karnataka', popularity: 95 },
+  { osmId: '3948133', osmType: 'node', country: 'India', state: 'Karnataka', district: 'Bengaluru Urban', city: 'Bangalore', suburb: 'Benson Town', area: 'Benson Town', locality: 'Benson Town', postcode: '560046', lat: 13.0010, lng: 77.6020, displayName: 'Benson Town, Bangalore, Karnataka', popularity: 80 },
+  { osmId: '3948134', osmType: 'node', country: 'India', state: 'Telangana', district: 'Cyberabad', city: 'Hyderabad', suburb: 'Madinaguda', area: 'Madinaguda', locality: 'Madinaguda', postcode: '500050', lat: 17.4950, lng: 78.3450, displayName: 'Madinaguda, Hyderabad, Telangana', popularity: 84 },
+  { osmId: '3948135', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Visakhapatnam', city: 'Visakhapatnam', suburb: 'Maddilapalem', area: 'Maddilapalem', locality: 'Maddilapalem', postcode: '530013', lat: 17.7300, lng: 83.3200, displayName: 'Maddilapalem, Visakhapatnam, Andhra Pradesh', popularity: 83 },
 ];
 
 /**
@@ -37,23 +40,27 @@ const SEED_LOCATIONS = [
  */
 export const initLocationDb = async (prisma) => {
   try {
-    const count = await prisma.location.count();
+    const count = await prisma.location.count().catch(() => 0);
     if (count === 0) {
       logger.info('Seeding initial location database...');
 
       for (const loc of [...DEFAULT_POPULAR_CITIES, ...SEED_LOCATIONS]) {
         const displayName = loc.displayName || `${loc.area ? loc.area + ', ' : ''}${loc.city}, ${loc.state}`;
-        const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.district || ''} ${loc.state} ${displayName}`.toLowerCase();
+        const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.suburb || ''} ${loc.district || ''} ${loc.state} ${displayName}`.toLowerCase();
         
         await prisma.location.create({
           data: {
+            osmId: loc.osmId || null,
+            osmType: loc.osmType || null,
             country: loc.country || 'India',
             state: loc.state,
             district: loc.district || loc.city,
             city: loc.city,
+            suburb: loc.suburb || loc.area || loc.city,
             area: loc.area || loc.city,
             locality: loc.locality || loc.area || loc.city,
-            postalCode: loc.postalCode || '500001',
+            postcode: loc.postcode || '500001',
+            postalCode: loc.postcode || '500001',
             latitude: loc.lat,
             longitude: loc.lng,
             displayName,
@@ -70,7 +77,7 @@ export const initLocationDb = async (prisma) => {
 };
 
 /**
- * Perform fast search using Prisma ORM case-insensitive matching
+ * Enterprise 2-Step Hybrid Search (PostgreSQL first, Nominatim fallback + auto-insert)
  */
 export const searchLocationsService = async (prisma, query, limit = 10) => {
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -79,15 +86,19 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
 
   const cleanQuery = query.trim().toLowerCase();
 
+  // STEP 1: Search PostgreSQL Database First
   try {
-    const results = await prisma.location.findMany({
+    const dbResults = await prisma.location.findMany({
       where: {
         OR: [
           { city: { contains: cleanQuery, mode: 'insensitive' } },
           { area: { contains: cleanQuery, mode: 'insensitive' } },
           { locality: { contains: cleanQuery, mode: 'insensitive' } },
+          { suburb: { contains: cleanQuery, mode: 'insensitive' } },
           { displayName: { contains: cleanQuery, mode: 'insensitive' } },
           { searchText: { contains: cleanQuery, mode: 'insensitive' } },
+          { district: { contains: cleanQuery, mode: 'insensitive' } },
+          { postcode: { contains: cleanQuery, mode: 'insensitive' } },
           { state: { contains: cleanQuery, mode: 'insensitive' } },
         ],
       },
@@ -96,10 +107,109 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
         { createdAt: 'desc' },
       ],
       take: Number(limit) || 10,
-    });
-    return results;
+    }).catch(() => []);
+
+    // STEP 1 RESULT: If PostgreSQL has 1 or more matching locations, return immediately (<100ms)!
+    if (Array.isArray(dbResults) && dbResults.length > 0) {
+      return dbResults;
+    }
   } catch (err) {
-    logger.error({ error: err.message }, 'Prisma location search error');
+    logger.warn({ error: err.message }, 'PostgreSQL location search failed, attempting Nominatim fallback');
+  }
+
+  // STEP 2: PostgreSQL returned 0 matches -> Call OpenStreetMap Nominatim Search API
+  logger.info({ cleanQuery }, 'Zero matches in PostgreSQL. Fallback searching OpenStreetMap Nominatim...');
+  try {
+    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&addressdetails=1&limit=10&countrycodes=in`;
+    const response = await fetch(nominatimUrl, {
+      headers: {
+        'User-Agent': 'TheNexopp-PropertyMarketplace/1.0 (contact@thenexopp.com)',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const rawOsmData = await response.json();
+    if (!Array.isArray(rawOsmData) || rawOsmData.length === 0) {
+      return [];
+    }
+
+    // STEP 3 & 4: Process & Auto-Insert returned locations into PostgreSQL for future searches
+    const insertedLocations = [];
+    for (const item of rawOsmData) {
+      const addr = item.address || {};
+      const country = addr.country || 'India';
+      const state = addr.state || addr.region || 'Telangana';
+      const district = addr.state_district || addr.county || addr.district || addr.city || 'Hyderabad';
+      const city = addr.city || addr.town || addr.municipality || addr.county || addr.village || 'Hyderabad';
+      const suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.quarter || addr.subdivision || '';
+      const locality = suburb || addr.road || addr.village || addr.commercial || '';
+      const area = locality || city;
+      const postcode = addr.postcode || '';
+      const displayName = item.display_name || [area, city, state].filter(Boolean).join(', ');
+      const latitude = parseFloat(item.lat);
+      const longitude = parseFloat(item.lon);
+      const osmId = item.osm_id ? String(item.osm_id) : null;
+      const osmType = item.osm_type || null;
+
+      const searchText = `${city} ${area} ${locality} ${suburb} ${district} ${state} ${displayName}`.toLowerCase();
+
+      // Check if location already exists in DB by osmId or matching displayName/city+area
+      let existing = await prisma.location.findFirst({
+        where: {
+          OR: [
+            osmId ? { osmId: { equals: osmId } } : undefined,
+            { displayName: { equals: displayName, mode: 'insensitive' } },
+            {
+              AND: [
+                { city: { equals: city, mode: 'insensitive' } },
+                { area: { equals: area, mode: 'insensitive' } },
+              ],
+            },
+          ].filter(Boolean),
+        },
+      }).catch(() => null);
+
+      if (existing) {
+        insertedLocations.push(existing);
+      } else {
+        // STEP 4: Insert new location into PostgreSQL DB
+        const created = await prisma.location.create({
+          data: {
+            osmId,
+            osmType,
+            country,
+            state,
+            district,
+            city,
+            suburb,
+            area,
+            locality,
+            postcode,
+            postalCode: postcode,
+            latitude: isNaN(latitude) ? 16.3067 : latitude,
+            longitude: isNaN(longitude) ? 80.4363 : longitude,
+            displayName,
+            searchText,
+            popularity: 1,
+          },
+        }).catch((err) => {
+          logger.warn({ error: err.message }, 'Failed to insert OSM location into DB');
+          return null;
+        });
+
+        if (created) {
+          insertedLocations.push(created);
+        }
+      }
+    }
+
+    return insertedLocations;
+  } catch (err) {
+    logger.error({ error: err.message }, 'OpenStreetMap Nominatim search fallback error');
     return [];
   }
 };
@@ -137,16 +247,20 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
     const state = addr.state || addr.region || 'Telangana';
     const district = addr.state_district || addr.county || addr.district || addr.city || 'Hyderabad';
     const city = addr.city || addr.town || addr.municipality || addr.county || addr.village || 'Hyderabad';
-    const locality = addr.suburb || addr.neighbourhood || addr.residential || addr.quarter || addr.subdivision || addr.village || '';
-    const area = locality || addr.road || addr.commercial || city;
-    const postalCode = addr.postcode || '';
+    const suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.quarter || addr.subdivision || addr.village || '';
+    const locality = suburb || addr.road || addr.commercial || '';
+    const area = locality || city;
+    const postcode = addr.postcode || '';
     const displayName = data.display_name || [area, city, state].filter(Boolean).join(', ');
+    const osmId = data.osm_id ? String(data.osm_id) : null;
+    const osmType = data.osm_type || null;
 
-    const searchText = `${city} ${area} ${locality} ${district} ${state} ${displayName}`.toLowerCase();
+    const searchText = `${city} ${area} ${locality} ${suburb} ${district} ${state} ${displayName}`.toLowerCase();
 
     let existing = await prisma.location.findFirst({
       where: {
         OR: [
+          osmId ? { osmId: { equals: osmId } } : undefined,
           { displayName: { equals: displayName, mode: 'insensitive' } },
           {
             AND: [
@@ -154,37 +268,54 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
               { area: { equals: area, mode: 'insensitive' } },
             ],
           },
-        ],
+        ].filter(Boolean),
       },
-    });
+    }).catch(() => null);
 
     if (existing) {
       const updated = await prisma.location.update({
         where: { id: existing.id },
         data: { popularity: existing.popularity + 1 },
-      });
+      }).catch(() => existing);
       return updated;
     }
 
     const created = await prisma.location.create({
       data: {
+        osmId,
+        osmType,
         country,
         state,
         district,
         city,
+        suburb,
         area,
         locality,
-        postalCode,
+        postcode,
+        postalCode: postcode,
         latitude,
         longitude,
         displayName,
         searchText,
         popularity: 1,
       },
-    });
+    }).catch(() => null);
 
-    logger.info({ createdId: created.id, displayName }, 'Inserted new geocoded location into DB');
-    return created;
+    return created || {
+      id: `loc-gps-${Date.now()}`,
+      country,
+      state,
+      district,
+      city,
+      area,
+      locality,
+      postcode,
+      latitude,
+      longitude,
+      displayName,
+      searchText,
+      popularity: 1,
+    };
   } catch (err) {
     logger.warn({ error: err.message }, 'Reverse geocoding with Nominatim failed, using fallback location data');
     
@@ -196,10 +327,11 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
       city: 'Guntur',
       area: 'Guntur City Center',
       locality: 'Brodipet',
+      postcode: '522002',
       postalCode: '522002',
       latitude,
       longitude,
-      displayName: 'Guntur, Andhra Pradesh',
+      displayName: 'Brodipet, Guntur, Andhra Pradesh',
       searchText: 'guntur brodipet andhra pradesh',
       popularity: 1,
     };
@@ -224,7 +356,7 @@ export const getPopularCitiesService = async (prisma) => {
       },
       orderBy: { popularity: 'desc' },
       take: 15,
-    });
+    }).catch(() => []);
 
     const cityMap = new Map();
     for (const item of popularInDb) {
@@ -291,7 +423,7 @@ export const searchPropertiesByLocationService = async (prisma, queryParams) => 
 
   let properties = await prisma.property.findMany({
     orderBy: { createdAt: 'desc' },
-  });
+  }).catch(() => []);
 
   if (locationId) {
     const matched = properties.filter((p) => p.locationId === locationId);

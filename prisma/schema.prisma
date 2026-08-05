@@ -81,12 +81,16 @@ model Category {
 
 model Location {
   id          String   @id @default(uuid())
+  osmId       String?
+  osmType     String?
   country     String   @default("India")
   state       String
   district    String?
   city        String
+  suburb      String?
   area        String?
   locality    String?
+  postcode    String?
   postalCode  String?
   latitude    Float?
   longitude   Float?
@@ -101,6 +105,7 @@ model Location {
   @@index([city])
   @@index([state])
   @@index([popularity])
+  @@index([osmId])
 }
 
 model Property {

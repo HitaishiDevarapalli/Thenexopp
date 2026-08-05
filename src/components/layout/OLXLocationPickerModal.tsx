@@ -417,10 +417,10 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
                           marginBottom: '2px',
                         }}
                       >
-                        📍 {renderHighlightedText(item.area || item.locality || item.city, query)}
+                        📍 {renderHighlightedText(item.suburb || item.area || item.locality || item.city, query)}
                       </div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
-                        {renderHighlightedText(`${item.city}, ${item.state}`, query)}
+                        {renderHighlightedText(`${item.city || item.district || ''}${item.state ? ', ' + item.state : ''}`, query)}
                       </div>
                     </div>
                     <FaChevronRight style={{ color: '#CBD5E1', fontSize: '12px' }} />
