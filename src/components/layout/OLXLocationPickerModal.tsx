@@ -380,14 +380,35 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
         </div>
 
         {/* Scrollable Body Content (Two-Column Layout Grid) */}
+        <style>{`
+          .olx-modal-scroll::-webkit-scrollbar {
+            width: 8px;
+          }
+          .olx-modal-scroll::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 4px;
+          }
+          .olx-modal-scroll::-webkit-scrollbar-thumb {
+            background: #16A34A;
+            border-radius: 4px;
+          }
+          .olx-modal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #15803D;
+          }
+        `}</style>
         <div
+          className="olx-modal-scroll"
           style={{
-            flexGrow: 1,
+            flex: '1 1 auto',
+            minHeight: 0,
+            maxHeight: '60vh',
             overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
             padding: '24px 28px',
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '24px',
+            alignItems: 'start',
           }}
         >
           {/* LEFT COLUMN: SEARCH RESULTS */}
