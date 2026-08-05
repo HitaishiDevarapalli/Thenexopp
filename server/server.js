@@ -428,12 +428,12 @@ app.delete('/api/customers/:id', async (req, res, next) => {
 });
 
 // ── PROPERTY ENDPOINTS ────────────────────────────────────────────────────────
-app.get('/api/properties', async (req, res, next) => {
+app.get('/api/properties', async (req, res) => {
   try {
-    const props = await prisma.property.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(props);
+    const props = await prisma.property.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(props || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
@@ -504,12 +504,12 @@ app.delete('/api/properties/:id', async (req, res, next) => {
   }
 });
 
-app.get('/api/franchises', async (req, res, next) => {
+app.get('/api/franchises', async (req, res) => {
   try {
-    const franchises = await prisma.franchise.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(franchises);
+    const franchises = await prisma.franchise.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(franchises || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
@@ -583,12 +583,12 @@ app.delete('/api/franchises/:id', async (req, res, next) => {
   }
 });
 
-app.get('/api/businesses', async (req, res, next) => {
+app.get('/api/businesses', async (req, res) => {
   try {
-    const businesses = await prisma.business.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(businesses);
+    const businesses = await prisma.business.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(businesses || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
@@ -659,12 +659,12 @@ app.delete('/api/businesses/:id', async (req, res, next) => {
 });
 
 // ── DEALER / BROKER ENDPOINTS ─────────────────────────────────────────────────
-app.get('/api/dealers', async (req, res, next) => {
+app.get('/api/dealers', async (req, res) => {
   try {
-    const dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } });
-    return res.json(dealers);
+    const dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(dealers || []);
   } catch (err) {
-    next(err);
+    return res.json([]);
   }
 });
 
@@ -836,12 +836,12 @@ app.delete('/api/enquiries/:id', async (req, res, next) => {
 });
 
 // ── SETTINGS ENDPOINTS ────────────────────────────────────────────────────────
-app.get('/api/settings', async (req, res, next) => {
+app.get('/api/settings', async (req, res) => {
   try {
-    const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } });
-    return res.json(settings);
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
+    return res.json(settings || {});
   } catch (err) {
-    next(err);
+    return res.json({});
   }
 });
 
