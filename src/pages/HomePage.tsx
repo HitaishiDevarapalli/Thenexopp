@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb } from '../db/marketplaceDb';
 import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
 import { usePropertySearch } from '../hooks/usePropertySearch';
+import { useLocationStore } from '../context/LocationContext';
 import { LocationSearchBar } from '../components/ui/LocationSearchBar';
 import { DistanceFilterPills } from '../components/ui/DistanceFilterPills';
 import { PropertyDistanceCard } from '../components/ui/PropertyDistanceCard';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaCompass, FaGlobeAsia, FaSearchLocation } from 'react-icons/fa';
-import { DistanceRadiusOption } from '../../hooks/usePropertySearch';
+import type { DistanceRadiusOption } from '../../hooks/usePropertySearch';
 
 interface EmptySearchStateProps {
   locationName: string;

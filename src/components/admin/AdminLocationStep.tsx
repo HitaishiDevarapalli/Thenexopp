@@ -15,7 +15,8 @@ import {
   FaCrosshairs,
   FaSpinner,
 } from 'react-icons/fa';
-import { COMPREHENSIVE_INDIA_PLACES_DB, LocationIntelligenceResult } from '../../utils/locationIntelligence';
+import { COMPREHENSIVE_INDIA_PLACES_DB } from '../../utils/locationIntelligence';
+import type { LocationIntelligenceResult } from '../../utils/locationIntelligence';
 
 export interface AdminLocationData {
   address: string;
@@ -80,7 +81,7 @@ export const AdminLocationStep: React.FC<AdminLocationStepProps> = ({
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // ── 3. MAP REFS ─────────────────────────────────────────────────────────────

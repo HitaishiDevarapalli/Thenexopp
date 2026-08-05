@@ -694,7 +694,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
                   {otpDigits.map((digit, index) => (
                     <input
                       key={index}
-                      ref={(el) => (otpInputRefs.current[index] = el)}
+                      ref={(el) => { otpInputRefs.current[index] = el; }}
                       type="text"
                       inputMode="numeric"
                       maxLength={1}

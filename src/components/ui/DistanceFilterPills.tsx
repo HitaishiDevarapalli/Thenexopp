@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaMapMarkerAlt, FaCompass, FaCheckCircle, FaRegCircle } from 'react-icons/fa';
-import { DistanceRadiusOption } from '../../hooks/usePropertySearch';
+import type { DistanceRadiusOption } from '../../hooks/usePropertySearch';
 
 interface DistanceFilterPillsProps {
   locationName: string;

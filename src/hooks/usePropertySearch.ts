@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { COMPREHENSIVE_INDIA_PLACES_DB, LocationIntelligenceResult } from '../utils/locationIntelligence';
+import { COMPREHENSIVE_INDIA_PLACES_DB } from '../utils/locationIntelligence';
+import type { LocationIntelligenceResult } from '../utils/locationIntelligence';
 
 export interface PropertySearchResultItem {
   id: string;
