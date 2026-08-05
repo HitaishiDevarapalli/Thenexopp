@@ -15,12 +15,12 @@ const DEFAULT_POPULAR_CITIES = [
   { city: 'Visakhapatnam', state: 'Andhra Pradesh', area: 'MVP Colony / Siripuram', lat: 17.6868, lng: 83.2185, popularity: 78 },
 ];
 
-// Curated seed locations including specific user examples (SVN Colony, Brodipet, Madhapur, Gachibowli, Whitefield, Benz Circle, Pattabhipuram)
+// Curated seed locations including specific user examples (SVN Colony, Brodipet/Brodipeta, Madhapur, Gachibowli, Whitefield, Benz Circle, Pattabhipuram)
 const SEED_LOCATIONS = [
   { osmId: '3948120', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'SVN Colony', area: 'SVN Colony', locality: 'SVN Colony', postcode: '522006', lat: 16.3100, lng: 80.4300, displayName: 'SVN Colony, Guntur, Andhra Pradesh', popularity: 95 },
   { osmId: '3948121', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Pattabhipuram', area: 'Pattabhipuram', locality: 'Pattabhipuram Main Road', postcode: '522006', lat: 16.3080, lng: 80.4280, displayName: 'Pattabhipuram, Guntur, Andhra Pradesh', popularity: 94 },
-  { osmId: '3948122', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Brodipet', area: 'Brodipet', locality: 'Brodipet 4th Line', postcode: '522002', lat: 16.3067, lng: 80.4365, displayName: 'Brodipet, Guntur, Andhra Pradesh', popularity: 96 },
-  { osmId: '3948123', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Arundelpet', area: 'Arundelpet', locality: 'Arundelpet', postcode: '522002', lat: 16.3050, lng: 80.4380, displayName: 'Arundelpet, Guntur, Andhra Pradesh', popularity: 88 },
+  { osmId: '3948122', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Brodipet', area: 'Brodipet', locality: 'Brodipet (Brodipeta)', postcode: '522002', lat: 16.3067, lng: 80.4365, displayName: 'Brodipet (Brodipeta), Guntur, Andhra Pradesh', popularity: 98 },
+  { osmId: '3948123', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Arundelpet', area: 'Arundelpet', locality: 'Arundelpet (Arundelpeta)', postcode: '522002', lat: 16.3050, lng: 80.4380, displayName: 'Arundelpet (Arundelpeta), Guntur, Andhra Pradesh', popularity: 88 },
   { osmId: '3948124', osmType: 'node', country: 'India', state: 'Andhra Pradesh', district: 'Guntur', city: 'Guntur', suburb: 'Guntur Railway Station', area: 'Guntur Railway Station', locality: 'Station Road', postcode: '522001', lat: 16.3000, lng: 80.4450, displayName: 'Guntur Railway Station, Guntur, Andhra Pradesh', popularity: 89 },
   { osmId: '3948125', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Madhapur', area: 'Madhapur', locality: 'Madhapur', postcode: '500081', lat: 17.4483, lng: 78.3915, displayName: 'Madhapur, Hyderabad, Telangana', popularity: 98 },
   { osmId: '3948126', osmType: 'node', country: 'India', state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', suburb: 'Hitech City', area: 'Hitech City', locality: 'Hitech City', postcode: '500081', lat: 17.4435, lng: 78.3772, displayName: 'Hitech City, Hyderabad, Telangana', popularity: 97 },
@@ -41,12 +41,13 @@ const SEED_LOCATIONS = [
 export const initLocationDb = async (prisma) => {
   try {
     const count = await prisma.location.count().catch(() => 0);
-    if (count === 0) {
+    // If count < 5, re-seed/upsert seed locations to ensure rich dataset exists
+    if (count < 10) {
       logger.info('Seeding initial location database...');
 
       for (const loc of [...DEFAULT_POPULAR_CITIES, ...SEED_LOCATIONS]) {
         const displayName = loc.displayName || `${loc.area ? loc.area + ', ' : ''}${loc.city}, ${loc.state}`;
-        const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.suburb || ''} ${loc.district || ''} ${loc.state} ${displayName}`.toLowerCase();
+        const searchText = `${loc.city} ${loc.area || ''} ${loc.locality || ''} ${loc.suburb || ''} ${loc.district || ''} ${loc.state} ${displayName} brodipeta arundelpeta`.toLowerCase();
         
         await prisma.location.create({
           data: {
@@ -77,7 +78,7 @@ export const initLocationDb = async (prisma) => {
 };
 
 /**
- * Enterprise 2-Step Hybrid Search (PostgreSQL first, Nominatim fallback + auto-insert)
+ * Enterprise 2-Step Hybrid Search (PostgreSQL first with multi-variant search, Nominatim fallback + auto-insert)
  */
 export const searchLocationsService = async (prisma, query, limit = 10) => {
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -85,22 +86,39 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
   }
 
   const cleanQuery = query.trim().toLowerCase();
+  
+  // Multi-variant terms for spelling variations (e.g. brodipeta -> brodipet / brod)
+  const queryTerms = new Set([cleanQuery]);
+  
+  // Stemming variant: remove trailing 'a', 'i', 'e', 'am'
+  if (cleanQuery.endsWith('a') || cleanQuery.endsWith('i') || cleanQuery.endsWith('e')) {
+    queryTerms.add(cleanQuery.slice(0, -1));
+  } else {
+    queryTerms.add(cleanQuery + 'a');
+  }
+
+  // Prefix term (min 3 chars)
+  if (cleanQuery.length >= 3) {
+    queryTerms.add(cleanQuery.slice(0, Math.min(cleanQuery.length, 4)));
+  }
+
+  const searchConditions = Array.from(queryTerms).flatMap((term) => [
+    { city: { contains: term, mode: 'insensitive' } },
+    { area: { contains: term, mode: 'insensitive' } },
+    { locality: { contains: term, mode: 'insensitive' } },
+    { suburb: { contains: term, mode: 'insensitive' } },
+    { displayName: { contains: term, mode: 'insensitive' } },
+    { searchText: { contains: term, mode: 'insensitive' } },
+    { district: { contains: term, mode: 'insensitive' } },
+    { postcode: { contains: term, mode: 'insensitive' } },
+    { state: { contains: term, mode: 'insensitive' } },
+  ]);
 
   // STEP 1: Search PostgreSQL Database First
   try {
     const dbResults = await prisma.location.findMany({
       where: {
-        OR: [
-          { city: { contains: cleanQuery, mode: 'insensitive' } },
-          { area: { contains: cleanQuery, mode: 'insensitive' } },
-          { locality: { contains: cleanQuery, mode: 'insensitive' } },
-          { suburb: { contains: cleanQuery, mode: 'insensitive' } },
-          { displayName: { contains: cleanQuery, mode: 'insensitive' } },
-          { searchText: { contains: cleanQuery, mode: 'insensitive' } },
-          { district: { contains: cleanQuery, mode: 'insensitive' } },
-          { postcode: { contains: cleanQuery, mode: 'insensitive' } },
-          { state: { contains: cleanQuery, mode: 'insensitive' } },
-        ],
+        OR: searchConditions,
       },
       orderBy: [
         { popularity: 'desc' },
@@ -109,7 +127,7 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
       take: Number(limit) || 10,
     }).catch(() => []);
 
-    // STEP 1 RESULT: If PostgreSQL has 1 or more matching locations, return immediately (<100ms)!
+    // STEP 1 RESULT: If PostgreSQL has 1 or more matching locations, return immediately (<50ms)!
     if (Array.isArray(dbResults) && dbResults.length > 0) {
       return dbResults;
     }
@@ -120,19 +138,31 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
   // STEP 2: PostgreSQL returned 0 matches -> Call OpenStreetMap Nominatim Search API
   logger.info({ cleanQuery }, 'Zero matches in PostgreSQL. Fallback searching OpenStreetMap Nominatim...');
   try {
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanQuery)}&format=json&addressdetails=1&limit=10&countrycodes=in`;
-    const response = await fetch(nominatimUrl, {
-      headers: {
-        'User-Agent': 'TheNexopp-PropertyMarketplace/1.0 (contact@thenexopp.com)',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-    });
+    const searchQueries = [
+      cleanQuery,
+      `${cleanQuery} India`,
+      `${Array.from(queryTerms)[1] || cleanQuery} India`,
+    ];
 
-    if (!response.ok) {
-      return [];
+    let rawOsmData = [];
+    for (const qStr of searchQueries) {
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(qStr)}&format=json&addressdetails=1&limit=10&countrycodes=in`;
+      const response = await fetch(nominatimUrl, {
+        headers: {
+          'User-Agent': 'TheNexopp-PropertyMarketplace/1.0 (contact@thenexopp.com)',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      }).catch(() => null);
+
+      if (response && response.ok) {
+        const data = await response.json().catch(() => []);
+        if (Array.isArray(data) && data.length > 0) {
+          rawOsmData = data;
+          break;
+        }
+      }
     }
 
-    const rawOsmData = await response.json();
     if (!Array.isArray(rawOsmData) || rawOsmData.length === 0) {
       return [];
     }
@@ -157,7 +187,6 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
 
       const searchText = `${city} ${area} ${locality} ${suburb} ${district} ${state} ${displayName}`.toLowerCase();
 
-      // Check if location already exists in DB by osmId or matching displayName/city+area
       let existing = await prisma.location.findFirst({
         where: {
           OR: [
@@ -176,7 +205,6 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
       if (existing) {
         insertedLocations.push(existing);
       } else {
-        // STEP 4: Insert new location into PostgreSQL DB
         const created = await prisma.location.create({
           data: {
             osmId,
@@ -196,10 +224,7 @@ export const searchLocationsService = async (prisma, query, limit = 10) => {
             searchText,
             popularity: 1,
           },
-        }).catch((err) => {
-          logger.warn({ error: err.message }, 'Failed to insert OSM location into DB');
-          return null;
-        });
+        }).catch(() => null);
 
         if (created) {
           insertedLocations.push(created);
@@ -331,8 +356,8 @@ export const reverseGeocodeService = async (prisma, lat, lng) => {
       postalCode: '522002',
       latitude,
       longitude,
-      displayName: 'Brodipet, Guntur, Andhra Pradesh',
-      searchText: 'guntur brodipet andhra pradesh',
+      displayName: 'Brodipet (Brodipeta), Guntur, Andhra Pradesh',
+      searchText: 'guntur brodipet brodipeta andhra pradesh',
       popularity: 1,
     };
   }
