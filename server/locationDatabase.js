@@ -732,42 +732,44 @@ export function calculateDistanceKm(lat1, lon1, lat2, lon2) {
 // Initialize Location Database with PostgreSQL Trigram & Memory Cache
 export async function initLocationDatabase() {
   try {
-    // 1. Try seeding PostgreSQL if connected
-    const count = await prisma.locationItem.count().catch(() => null);
-    
-    if (count === 0 || count === null) {
-      logger.info('Seeding initial location items into PostgreSQL database...');
-      for (const loc of INITIAL_LOCATIONS) {
-        await prisma.locationItem.upsert({
-          where: { slug: loc.slug },
-          update: loc,
-          create: loc,
-        }).catch(() => {});
+    if (prisma && prisma.locationItem) {
+      // 1. Try seeding PostgreSQL if connected
+      const count = await prisma.locationItem.count().catch(() => null);
+      
+      if (count === 0 || count === null) {
+        logger.info('Seeding initial location items into PostgreSQL database...');
+        for (const loc of INITIAL_LOCATIONS) {
+          await prisma.locationItem.upsert({
+            where: { slug: loc.slug },
+            update: loc,
+            create: loc,
+          }).catch(() => {});
+        }
       }
-    }
 
-    // Try executing raw PostgreSQL trigram index queries
-    try {
-      await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
-      await prisma.$executeRawUnsafe(
-        `CREATE INDEX IF NOT EXISTS idx_location_name_trgm ON "LocationItem" USING gin (name gin_trgm_ops);`
-      );
-      await prisma.$executeRawUnsafe(
-        `CREATE INDEX IF NOT EXISTS idx_location_aliases_trgm ON "LocationItem" USING gin (aliases gin_trgm_ops);`
-      );
-      logger.info('PostgreSQL pg_trgm extension and GIN trigram indexes verified.');
-    } catch (dbErr) {
-      logger.warn({ err: dbErr.message }, 'PostgreSQL raw query for pg_trgm skipped (hybrid/offline database mode active).');
-    }
+      // Try executing raw PostgreSQL trigram index queries
+      try {
+        await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS idx_location_name_trgm ON "LocationItem" USING gin (name gin_trgm_ops);`
+        );
+        await prisma.$executeRawUnsafe(
+          `CREATE INDEX IF NOT EXISTS idx_location_aliases_trgm ON "LocationItem" USING gin (aliases gin_trgm_ops);`
+        );
+        logger.info('PostgreSQL pg_trgm extension and GIN trigram indexes verified.');
+      } catch (dbErr) {
+        logger.warn({ err: dbErr.message }, 'PostgreSQL raw query for pg_trgm skipped (hybrid/offline database mode active).');
+      }
 
-    // Refresh memory cache from DB if DB available, otherwise fallback to INITIAL_LOCATIONS
-    const dbLocations = await prisma.locationItem.findMany({
-      where: { status: 'Active' },
-      orderBy: [{ priority: 'desc' }, { listingCount: 'desc' }]
-    }).catch(() => []);
+      // Refresh memory cache from DB if DB available, otherwise fallback to INITIAL_LOCATIONS
+      const dbLocations = await prisma.locationItem.findMany({
+        where: { status: 'Active' },
+        orderBy: [{ priority: 'desc' }, { listingCount: 'desc' }]
+      }).catch(() => []);
 
-    if (dbLocations && dbLocations.length > 0) {
-      memoryLocationIndex = dbLocations;
+      if (dbLocations && dbLocations.length > 0) {
+        memoryLocationIndex = dbLocations;
+      }
     }
   } catch (err) {
     logger.error({ err: err.message }, 'Location database initialization completed with fallback index.');
