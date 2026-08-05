@@ -205,25 +205,28 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
           setUserCoords({ lat: latitude, lng: longitude });
 
           // Fetch nearby locations from local database API
-          const res = await fetch(`/api/location/nearby?lat=${latitude}&lng=${longitude}&radius=15`);
+          const res = await fetch(`/api/location/nearby?lat=${latitude}&lng=${longitude}&radius=50`);
           const data = await res.json();
 
-          if (data.success && data.data && data.data.length > 0) {
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
             setNearbyLocations(data.data.slice(0, 6));
-            // Auto select nearest locality
+            // Auto select nearest locality/city
             handleSelectLocation(data.data[0]);
-          } else {
-            // Fallback reverse geocoding via Nominatim
+            return;
+          }
+
+          // Fallback reverse geocoding via Nominatim
+          try {
             const geoRes = await fetch(
               `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=jsonv2`
             );
             const geoData = await geoRes.json();
             if (geoData && geoData.address) {
               const addr = geoData.address;
-              const cityName = addr.city || addr.town || addr.village || addr.county || 'Detected Location';
+              const cityName = addr.city || addr.town || addr.village || addr.county || addr.state || 'Detected Location';
               handleSelectLocation({
                 name: cityName,
-                displayName: geoData.display_name,
+                displayName: geoData.display_name || `${cityName}, India`,
                 city: cityName,
                 locality: addr.suburb || addr.neighbourhood || '',
                 state: addr.state || '',
@@ -231,18 +234,44 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
                 latitude,
                 longitude,
               });
+              return;
             }
-          }
+          } catch (e) {}
+
+          // Final graceful fallback if external reverse geocoding is offline/blocked
+          handleSelectLocation({
+            name: 'Current Location',
+            displayName: `Current Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`,
+            city: 'My Location',
+            locality: 'GPS Position',
+            state: 'India',
+            country: 'India',
+            latitude,
+            longitude,
+          });
         } catch (err) {
           console.error('GPS error:', err);
-          alert('Could not resolve address for current position.');
+          handleSelectLocation({
+            name: 'Current Location',
+            displayName: 'Current Location (GPS)',
+            city: 'My Location',
+            locality: '',
+            state: 'India',
+            country: 'India',
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
         } finally {
           setDetecting(false);
         }
       },
-      () => {
+      (err) => {
         setDetecting(false);
-        alert('Location access denied. Please search manually.');
+        if (err.code === 1) {
+          alert('Location access was denied. Please allow location permission in browser settings.');
+        } else {
+          alert('Could not retrieve GPS position. Please select location manually.');
+        }
       },
       { timeout: 10000, enableHighAccuracy: true }
     );

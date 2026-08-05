@@ -276,7 +276,7 @@ export async function getNearbyLocations(req, res) {
     for (const item of allLocations) {
       if (item.status === 'Inactive' || !item.latitude || !item.longitude) continue;
       const dist = calculateDistanceKm(userLat, userLng, item.latitude, item.longitude);
-      if (dist !== null && dist <= radiusKm) {
+      if (dist !== null) {
         nearby.push({
           id: item.id || item.slug,
           name: item.name,
@@ -295,7 +295,11 @@ export async function getNearbyLocations(req, res) {
 
     nearby.sort((a, b) => a.distanceKm - b.distanceKm);
 
-    return res.json({ success: true, data: nearby });
+    // If matches within radius exist, filter them; otherwise return top nearest
+    const withinRadius = nearby.filter(item => item.distanceKm <= radiusKm);
+    const result = withinRadius.length > 0 ? withinRadius : nearby.slice(0, 10);
+
+    return res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error in getNearbyLocations:', error);
     return res.status(500).json({ success: false, error: 'Failed to fetch nearby locations.' });
