@@ -2,20 +2,27 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { setSelectedCity } from '../db/marketplaceDb';
 
 export interface LocationData {
+  id?: string;
+  name?: string;
+  type?: string;
   displayName: string;
   city: string;
-  locality: string;
+  locality?: string;
+  district?: string;
   state: string;
   country: string;
-  pincode: string;
+  pincode?: string;
   lat: number;
   lng: number;
+  listingCount?: number;
+  distanceKm?: number | null;
 }
 
 interface LocationContextType {
   location: LocationData | null;
   setLocation: (loc: LocationData) => void;
   recentLocations: LocationData[];
+  clearRecentLocations: () => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -29,8 +36,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.city) {
-          setSelectedCity(parsed.city);
+        if (parsed && (parsed.city || parsed.displayName)) {
+          setSelectedCity(parsed.city || parsed.displayName);
           return parsed;
         }
       }
@@ -66,17 +73,37 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (e) {}
     setRecentLocations(prev => {
       const filtered = prev.filter(p => p.displayName !== loc.displayName);
-      const updated = [loc, ...filtered].slice(0, 5);
+      const updated = [loc, ...filtered].slice(0, 10);
       try {
         localStorage.setItem(RECENT_LOCATIONS_KEY, JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
+
+    // Notify backend
+    fetch('/api/location/recent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: loc.displayName,
+        locationName: loc.displayName,
+        locationId: loc.id || null,
+      }),
+    }).catch(() => {});
+
     window.dispatchEvent(new Event('nexopp_data_changed'));
+    window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
+  };
+
+  const clearRecentLocations = () => {
+    setRecentLocations([]);
+    try {
+      localStorage.removeItem(RECENT_LOCATIONS_KEY);
+    } catch (e) {}
   };
 
   return (
-    <LocationContext.Provider value={{ location, setLocation, recentLocations }}>
+    <LocationContext.Provider value={{ location, setLocation, recentLocations, clearRecentLocations }}>
       {children}
     </LocationContext.Provider>
   );
