@@ -481,18 +481,6 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => {
-                    if (navigator.geolocation) {
-                      navigator.geolocation.getCurrentPosition(() => {
-                        setLocationText('Current Location (GPS)');
-                      });
-                    } else {
-                      setLocationText('Guntur, AP');
-                    }
-                  }}
-              </div>
-
               {/* Row 3: Popular Searches & Advanced Search */}
               <div
                 style={{
