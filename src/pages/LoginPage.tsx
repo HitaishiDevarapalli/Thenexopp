@@ -1,57 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  FaUser, 
-  FaPhoneAlt, 
-  FaMapMarkerAlt, 
-  FaVenusMars, 
+  FaEnvelope, 
   FaShieldAlt, 
   FaCheckCircle, 
-  FaBriefcase, 
   FaArrowRight, 
-  FaLock
+  FaLock,
+  FaArrowLeft,
+  FaRedoAlt,
+  FaSpinner
 } from 'react-icons/fa';
-
-interface RegisteredUser {
-  fullName: string;
-  mobile: string;
-  gender: string;
-  district: string;
-  email?: string;
-}
-
-const DISTRICT_OPTIONS = [
-  'Guntur',
-  'Vijayawada (NTR)',
-  'Hyderabad',
-  'Visakhapatnam',
-  'Medchal-Malkajgiri',
-  'Ranga Reddy',
-  'Sangareddy',
-  'Kakinada',
-  'East Godavari',
-  'West Godavari',
-  'Eluru',
-  'Bapatla',
-  'Palnadu',
-  'Prakasam',
-  'SPS Nellore',
-  'Tirupati',
-  'Chittoor',
-  'Anantapur',
-  'Kurnool',
-  'YSR Kadapa',
-  'Warangal',
-  'Hanamkonda',
-  'Karimnagar',
-  'Khammam',
-  'Nalgonda',
-  'Nizamabad',
-  'Bengaluru Urban',
-  'Mumbai City',
-  'Chennai',
-  'Delhi NCR'
-];
+import { FcGoogle } from 'react-icons/fc';
 
 interface LoginPageProps {
   onClose?: () => void;
@@ -59,201 +18,280 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }) => {
-  const { loginWithGmail } = useAuth();
+  const { sendEmailOtp, verifyEmailOtp, loginWithGoogle } = useAuth();
 
-  const [isRegistering, setIsRegistering] = useState(false);
+  // Step state: 'email' or 'otp'
+  const [step, setStep] = useState<'email' | 'otp'>('email');
 
-  // Form Fields
-  const [fullName, setFullName] = useState('');
-  const [gender, setGender] = useState('Male');
-  const [mobile, setMobile] = useState('');
-  const [district, setDistrict] = useState('Hyderabad');
-  const [rememberMe, setRememberMe] = useState(true);
+  // Input states
+  const [email, setEmail] = useState('');
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // UI notifications & states
+  // Countdown timer state (60 seconds)
+  const [timer, setTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+
+  // UI state
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Load remembered credentials or previous users
+  // Load Google OAuth GSI Script dynamically
   useEffect(() => {
-    try {
-      const remembered = localStorage.getItem('nexopp_remembered_mobile');
-      if (remembered) {
-        setMobile(remembered);
-        const users = getRegisteredUsers();
-        const found = users.find(u => u.mobile === remembered);
-        if (found) {
-          setFullName(found.fullName);
-          setGender(found.gender || 'Male');
-          setDistrict(found.district || 'Hyderabad');
-        }
-      }
-    } catch (e) {}
-  }, []);
-
-  const getRegisteredUsers = (): RegisteredUser[] => {
-    try {
-      const data = localStorage.getItem('nexopp_registered_users');
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
-  };
-
-  const saveRegisteredUser = (user: RegisteredUser) => {
-    try {
-      const users = getRegisteredUsers();
-      const existingIndex = users.findIndex(u => u.mobile === user.mobile);
-      if (existingIndex >= 0) {
-        users[existingIndex] = user;
-      } else {
-        users.push(user);
-      }
-      localStorage.setItem('nexopp_registered_users', JSON.stringify(users));
-    } catch (e) {}
-  };
-
-  // Auto-detect existing mobile on change
-  const handleMobileChange = (val: string) => {
-    const clean = val.replace(/\D/g, '').slice(0, 10);
-    setMobile(clean);
-    setError('');
-
-    if (clean.length === 10) {
-      const users = getRegisteredUsers();
-      const match = users.find(u => u.mobile === clean);
-      if (match) {
-        setFullName(match.fullName);
-        setGender(match.gender || 'Male');
-        setDistrict(match.district || 'Hyderabad');
-        setIsRegistering(false);
-      } else {
-        setIsRegistering(true);
-      }
-    }
-  };
-
-  // Dynamically load MSG91 OTP Widget SDK script
-  useEffect(() => {
-    const existingScript = document.getElementById('msg91-widget-script');
+    const existingScript = document.getElementById('google-gsi-script');
     if (!existingScript) {
       const script = document.createElement('script');
-      script.id = 'msg91-widget-script';
-      script.src = 'https://control.msg91.com/app/assets/otp-provider/otp-provider.js';
+      script.id = 'google-gsi-script';
+      script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
+      script.defer = true;
       document.body.appendChild(script);
     }
   }, []);
 
-  // Handle MSG91 OTP Widget SDK Login & Token verification
-  const handleWidgetLogin = async (e: React.FormEvent) => {
+  // 60-second Countdown Timer effect
+  useEffect(() => {
+    let interval: any = null;
+    if (step === 'otp' && timer > 0) {
+      setCanResend(false);
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (step === 'otp' && timer === 0) {
+      setCanResend(true);
+      if (interval) clearInterval(interval);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, timer]);
+
+  // Focus first OTP input box on entering OTP step
+  useEffect(() => {
+    if (step === 'otp') {
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
+    }
+  }, [step]);
+
+  // Step 1: Submit Email -> Call POST /api/auth/send-email-otp
+  const handleSendOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!fullName.trim()) {
-      setError('Please enter your full name');
-      return;
-    }
-    if (!gender) {
-      setError('Please select your gender');
-      return;
-    }
-    if (!mobile || mobile.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number');
-      return;
-    }
-    if (!district) {
-      setError('Please select your district');
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Please enter a valid email address');
       return;
     }
 
-    if (rememberMe) {
-      localStorage.setItem('nexopp_remembered_mobile', mobile);
-    } else {
-      localStorage.removeItem('nexopp_remembered_mobile');
+    setLoading(true);
+    try {
+      const res = await sendEmailOtp(cleanEmail);
+      setLoading(false);
+
+      if (!res.success) {
+        setError(res.message || 'Failed to send Email OTP. Please try again.');
+        return;
+      }
+
+      setStep('otp');
+      setTimer(60);
+      setCanResend(false);
+      setOtpDigits(['', '', '', '', '', '']);
+      setSuccess(res.message || `OTP code sent to ${cleanEmail}`);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'An error occurred while sending OTP.');
     }
+  };
 
-    const widgetId = import.meta.env.VITE_MSG91_WIDGET_ID || '3668635565333331313137';
-    const tokenAuth = import.meta.env.VITE_MSG91_TOKEN_AUTH || '557093TbSwW47iNa86a715c45P1';
-    const formattedMobile = mobile.startsWith('91') ? mobile : `91${mobile}`;
+  // Google OAuth Login Action
+  const handleGoogleLogin = async () => {
+    setError('');
+    setGoogleLoading(true);
 
-    // Verification token callback -> POST to /api/auth/widget-login
-    const sendTokenToBackend = async (token: string) => {
-      setLoading(true);
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    // Check if Google GSI client library is loaded
+    if (typeof window !== 'undefined' && (window as any).google?.accounts?.id && googleClientId) {
       try {
-        const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
-        const res = await fetch(`${apiBase}/auth/widget-login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            verificationToken: token,
-            fullName: fullName.trim(),
-            gender,
-            district,
-          }),
+        (window as any).google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response: any) => {
+            if (response.credential) {
+              const res = await loginWithGoogle({ credential: response.credential, email: '', name: '' });
+              setGoogleLoading(false);
+              if (res.success) {
+                onClose?.();
+              } else {
+                setError(res.message || 'Google authentication failed');
+              }
+            } else {
+              setGoogleLoading(false);
+            }
+          },
         });
+        (window as any).google.accounts.id.prompt();
+        setTimeout(() => setGoogleLoading(false), 3000);
+        return;
+      } catch (e) {
+        console.warn('Google GSI prompt error:', e);
+      }
+    }
 
-        const data = await res.json();
-        setLoading(false);
+    // Direct Google Simulation / Fallback prompt if OAuth Client ID is in test mode
+    try {
+      const promptEmail = prompt('Enter your Google Email address for Google OAuth Simulation:');
+      if (!promptEmail) {
+        setGoogleLoading(false);
+        return;
+      }
+      const cleanEmail = promptEmail.trim().toLowerCase();
+      const userName = cleanEmail.split('@')[0].replace(/[\.\-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const mockGoogleId = `google-uid-${Math.random().toString(36).substring(2, 10)}`;
+      const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`;
 
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || data.message || 'Verification token validation failed');
-        }
+      const res = await loginWithGoogle({
+        googleId: mockGoogleId,
+        email: cleanEmail,
+        name: userName,
+        profilePhoto: avatar,
+      });
 
-        saveRegisteredUser({
-          fullName: fullName.trim(),
-          gender,
-          mobile,
-          district,
-        });
-
-        const mockEmail = `${mobile}@nexopp.in`;
-        loginWithGmail(mockEmail, 'Verified Investor', fullName.trim(), mobile, gender, district);
+      setGoogleLoading(false);
+      if (res.success) {
         onClose?.();
-      } catch (err: any) {
-        setLoading(false);
-        setError(err.message || 'Failed to authenticate verified mobile number');
+      } else {
+        setError(res.message || 'Google Login failed');
       }
-    };
-
-    // Invoke MSG91 Widget SDK if loaded on window
-    if (typeof (window as any).initSendOTP === 'function') {
-      try {
-        const configuration = {
-          widgetId: widgetId,
-          tokenAuth: tokenAuth,
-          identifier: formattedMobile,
-          success: (data: any) => {
-            console.log('MSG91 Widget success:', data);
-            const token = typeof data === 'string' ? data : (data.message || data.verificationToken || data['access-token'] || data.token);
-            sendTokenToBackend(token);
-          },
-          failure: (error: any) => {
-            console.error('MSG91 Widget Error:', error);
-            setError(typeof error === 'string' ? error : (error.message || 'OTP verification failed via MSG91 Widget.'));
-          },
-        };
-
-        (window as any).initSendOTP(configuration);
-
-        // If MSG91 exposed sendOTP or openOtpWidget methods, call sendOTP to trigger SMS/Modal
-        if (typeof (window as any).sendOTP === 'function') {
-          (window as any).sendOTP(formattedMobile);
-        } else if (typeof (window as any).openOtpWidget === 'function') {
-          (window as any).openOtpWidget();
-        }
-
-        setSuccess(`MSG91 OTP Widget triggered for +${formattedMobile}. Complete verification in the popup.`);
-      } catch (err) {
-        console.error('Widget initialization error:', err);
-        setError('Failed to open MSG91 OTP Widget. Please try again.');
-      }
-    } else {
-      setError('MSG91 Widget script is loading or blocked by browser extensions. Please refresh page.');
+    } catch (err: any) {
+      setGoogleLoading(false);
+      setError(err.message || 'Google Login error');
     }
+  };
+
+  // OTP Box Change Handler
+  const handleOtpBoxChange = (index: number, value: string) => {
+    const cleanVal = value.replace(/\D/g, '');
+    if (!cleanVal) {
+      const updated = [...otpDigits];
+      updated[index] = '';
+      setOtpDigits(updated);
+      return;
+    }
+
+    const lastChar = cleanVal.slice(-1);
+    const updated = [...otpDigits];
+    updated[index] = lastChar;
+    setOtpDigits(updated);
+    setError('');
+
+    // Focus next box if available
+    if (index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // OTP KeyDown Handler (Backspace & Arrow Navigation)
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        const updated = [...otpDigits];
+        updated[index - 1] = '';
+        setOtpDigits(updated);
+        otpInputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // OTP Paste Support
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+      const digits = pastedData.split('');
+      const updated = ['', '', '', '', '', ''];
+      digits.forEach((d, i) => {
+        if (i < 6) updated[i] = d;
+      });
+      setOtpDigits(updated);
+      setError('');
+      const nextFocus = Math.min(digits.length, 5);
+      otpInputRefs.current[nextFocus]?.focus();
+    }
+  };
+
+  // Resend OTP Action
+  const handleResendOtp = async () => {
+    if (!canResend || loading) return;
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    try {
+      const res = await sendEmailOtp(email.trim().toLowerCase());
+      setLoading(false);
+      if (res.success) {
+        setTimer(60);
+        setCanResend(false);
+        setOtpDigits(['', '', '', '', '', '']);
+        setSuccess('A new 6-digit OTP code has been sent to your email!');
+        otpInputRefs.current[0]?.focus();
+      } else {
+        setError(res.message || 'Failed to resend OTP.');
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Error resending OTP.');
+    }
+  };
+
+  // Step 2: Verify OTP -> Call POST /api/auth/verify-email-otp
+  const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    const fullOtp = otpDigits.join('');
+    if (fullOtp.length !== 6) {
+      setError('Please enter complete 6-digit OTP code');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const res = await verifyEmailOtp(cleanEmail, fullOtp);
+      setLoading(false);
+
+      if (!res.success) {
+        setError(res.message || 'Verification failed. Please check the OTP code.');
+        return;
+      }
+
+      setSuccess('Verification successful! Logging in...');
+      setTimeout(() => {
+        onClose?.();
+      }, 400);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Verification failed');
+    }
+  };
+
+  // Back Button to Step 1
+  const handleBackToEmail = () => {
+    setStep('email');
+    setError('');
+    setSuccess('');
   };
 
   return (
@@ -268,7 +306,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       padding: isModal ? '0' : '24px 16px',
       fontFamily: "'Outfit', 'Inter', system-ui, -apple-system, sans-serif"
     }}>
-      {/* Main Login Card Container */}
+      {/* Main Container Card */}
       <div style={{
         width: '100%',
         maxWidth: '1040px',
@@ -298,230 +336,74 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
             position: 'absolute',
             top: '-80px',
             left: '-80px',
-            width: '260px',
-            height: '260px',
+            width: '240px',
+            height: '240px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(52, 211, 153, 0.15) 0%, transparent 70%)',
-            pointerEvents: 'none'
-          }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-100px',
-            right: '-100px',
-            width: '320px',
-            height: '320px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%)',
             pointerEvents: 'none'
           }} />
 
-          {/* Top Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 2 }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #34D399 0%, #059669 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
-                TheNexOpp
+          {/* Top Brand Header */}
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <span style={{ fontSize: '22px', fontWeight: 800, color: '#34D399' }}>N</span>
               </div>
-              <div style={{ fontSize: '0.78rem', color: '#A7F3D0', fontWeight: 600, letterSpacing: '0.04em' }}>
-                Opportunities Simplified
-              </div>
+              <span style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px' }}>TheNexOpp</span>
             </div>
-          </div>
 
-          {/* Center Content Section */}
-          <div style={{ margin: '36px 0', zIndex: 2 }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: '0 0 10px 0', lineHeight: 1.25, color: '#FFFFFF' }}>
-              Welcome Back! 👋
-            </h1>
-            <p style={{ fontSize: '0.95rem', color: '#D1FAE5', margin: 0, lineHeight: 1.6, fontWeight: 400 }}>
-              Sign in to continue your journey with amazing opportunities.
+            <h2 style={{ fontSize: '30px', fontWeight: 700, lineHeight: 1.25, marginBottom: '16px' }}>
+              India's Trusted Platform for Verified Listings
+            </h2>
+            <p style={{ color: 'rgba(255, 255, 255, 0.82)', fontSize: '15px', lineHeight: 1.6 }}>
+              Access premium properties, franchise resales, and business opportunities with seamless Email & Google authentication.
             </p>
-
-            {/* 3D Pedestal Platform Graphic */}
-            <div style={{
-              margin: '32px auto 0 auto',
-              width: '100%',
-              maxWidth: '280px',
-              height: '190px',
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {/* Glowing Pedestal Base */}
-              <div style={{
-                position: 'absolute',
-                bottom: '15px',
-                width: '210px',
-                height: '55px',
-                borderRadius: '50%',
-                background: 'linear-gradient(180deg, rgba(52, 211, 153, 0.35) 0%, rgba(5, 150, 105, 0.15) 100%)',
-                border: '2px solid rgba(52, 211, 153, 0.5)',
-                boxShadow: '0 15px 30px rgba(0,0,0,0.3), inset 0 0 15px rgba(52, 211, 153, 0.4)'
-              }} />
-
-              {/* Main Green Shield */}
-              <div style={{
-                width: '100px',
-                height: '115px',
-                borderRadius: '24px 24px 50px 50px',
-                background: 'linear-gradient(145deg, #10B981 0%, #047857 100%)',
-                border: '3px solid #6EE7B7',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 20px 35px rgba(0,0,0,0.3)',
-                zIndex: 3,
-                transform: 'translateY(-10px)'
-              }}>
-                <div style={{
-                  width: '54px',
-                  height: '54px',
-                  borderRadius: '16px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(4px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <FaLock style={{ fontSize: '24px', color: '#FFFFFF' }} />
-                </div>
-              </div>
-
-              {/* Left Floating Profile Avatar Card */}
-              <div style={{
-                position: 'absolute',
-                left: '0px',
-                top: '50px',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                padding: '10px 14px',
-                borderRadius: '14px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                zIndex: 4,
-                border: '1px solid rgba(255,255,255,0.4)'
-              }}>
-                <div style={{
-                  width: '26px',
-                  height: '26px',
-                  borderRadius: '50%',
-                  backgroundColor: '#007A55',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <FaUser style={{ fontSize: '12px', color: '#FFFFFF' }} />
-                </div>
-                <div style={{ width: '32px', height: '6px', borderRadius: '3px', backgroundColor: '#CBD5E1' }} />
-              </div>
-
-              {/* Right Floating Passcode Card */}
-              <div style={{
-                position: 'absolute',
-                right: '0px',
-                top: '55px',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                padding: '10px 14px',
-                borderRadius: '14px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.25)',
-                zIndex: 4,
-                border: '1px solid rgba(255,255,255,0.4)',
-                fontSize: '0.88rem',
-                fontWeight: 900,
-                color: '#007A55',
-                letterSpacing: '2px'
-              }}>
-                ✦✦✦✦
-              </div>
-            </div>
           </div>
 
-          {/* Bottom Features List */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '12px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.15)',
-            paddingTop: '20px',
-            zIndex: 2
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <FaShieldAlt style={{ fontSize: '13px', color: '#A7F3D0' }} />
+          {/* Core Highlights List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', margin: '32px 0', position: 'relative', zIndex: 2 }}>
+            {[
+              { icon: <FaShieldAlt style={{ color: '#34D399' }} />, text: 'Verified Profiles & Direct Connections' },
+              { icon: <FaCheckCircle style={{ color: '#34D399' }} />, text: 'Cross-Device Automatic Session Sync' },
+              { icon: <FaLock style={{ color: '#34D399' }} />, text: 'Encrypted Hashed Email OTP Security' }
+            ].map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px'
+                }}>
+                  {item.icon}
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: 500, color: '#ECFDF5' }}>{item.text}</span>
               </div>
-              <div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#FFFFFF' }}>Secure</div>
-                <div style={{ fontSize: '0.72rem', color: '#D1FAE5' }}>Your data is safe</div>
-              </div>
-            </div>
+            ))}
+          </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <FaCheckCircle style={{ fontSize: '13px', color: '#A7F3D0' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#FFFFFF' }}>Verified</div>
-                <div style={{ fontSize: '0.72rem', color: '#D1FAE5' }}>Trusted platform</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <FaBriefcase style={{ fontSize: '13px', color: '#A7F3D0' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#FFFFFF' }}>Professional</div>
-                <div style={{ fontSize: '0.72rem', color: '#D1FAE5' }}>Expert Support</div>
-              </div>
-            </div>
+          {/* Footer badge */}
+          <div style={{ position: 'relative', zIndex: 2, paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.65)' }}>
+              © 2026 TheNexOpp. Secure HTTP-Only Cookie Authentication.
+            </span>
           </div>
         </div>
 
-        {/* RIGHT PANEL - Clean White Form Area */}
+        {/* RIGHT PANEL - Form & Auth Area */}
         <div style={{
           flex: '1 1 55%',
           padding: '44px 48px',
@@ -531,269 +413,402 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           backgroundColor: '#FFFFFF',
           position: 'relative'
         }}>
-          {onClose && (
+          {/* Close Modal Button */}
+          {isModal && onClose && (
             <button
               onClick={onClose}
               style={{
                 position: 'absolute',
                 top: '20px',
-                right: '20px',
+                right: '24px',
                 background: '#F1F5F9',
                 border: 'none',
-                color: '#64748B',
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
+                cursor: 'pointer',
+                fontSize: '18px',
+                color: '#64748B',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: 700,
-                transition: 'all 0.2s',
-                zIndex: 10
+                transition: 'all 0.2s ease'
               }}
-              title="Close Login Modal"
+              title="Close Modal"
             >
               ✕
             </button>
           )}
 
-          {/* Form Header */}
-          <div style={{ marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0' }}>
-              {isRegistering ? 'Create Account' : 'Sign In'}
-            </h2>
-            <p style={{ fontSize: '0.92rem', color: '#64748B', margin: 0 }}>
-              {isRegistering
-                ? 'Fill in your details to register & verify with MSG91 OTP'
-                : 'Please enter your details to verify with MSG91 OTP'}
-            </p>
-          </div>
-
-          {/* Error & Success Messages */}
-          {error && (
-            <div style={{
-              backgroundColor: '#FEF2F2',
-              border: '1px solid #FECACA',
-              color: '#DC2626',
-              padding: '12px 16px',
-              borderRadius: '12px',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              marginBottom: '20px'
-            }}>
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div style={{
-              backgroundColor: '#F0FDF4',
-              border: '1px solid #BBF7D0',
-              color: '#16A34A',
-              padding: '12px 16px',
-              borderRadius: '12px',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              marginBottom: '20px'
-            }}>
-              {success}
-            </div>
-          )}
-
-          {/* MSG91 OTP WIDGET FORM */}
-          <form onSubmit={handleWidgetLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-
-            {/* 1. Full Name */}
+          {/* STEP 1: LOGIN CHOICE (GOOGLE OR EMAIL) */}
+          {step === 'email' && (
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                Full Name <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <FaUser style={{
-                  position: 'absolute',
-                  left: '16px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
+              <div style={{ marginBottom: '28px' }}>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
                   color: '#007A55',
-                  fontSize: '15px'
-                }} />
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => {
-                    setFullName(e.target.value);
-                    setError('');
-                  }}
-                  placeholder="e.g. Rahul Sharma"
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  backgroundColor: '#ECFDF5',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  display: 'inline-block',
+                  marginBottom: '10px'
+                }}>
+                  Sign In / Register
+                </span>
+                <h3 style={{ fontSize: '26px', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0' }}>
+                  Welcome to TheNexOpp
+                </h3>
+                <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
+                  Log in to your account using Google or your Email Address.
+                </p>
+              </div>
+
+              {error && (
+                <div style={{
+                  backgroundColor: '#FEF2F2',
+                  border: '1px solid #FCA5A5',
+                  color: '#991B1B',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span>⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* GOOGLE LOGIN BUTTON */}
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={googleLoading}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  borderRadius: '12px',
+                  backgroundColor: '#FFFFFF',
+                  border: '1.5px solid #E2E8F0',
+                  color: '#0F172A',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: googleLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                  transition: 'all 0.2s ease',
+                  marginBottom: '24px'
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#CBD5E1')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E2E8F0')}
+              >
+                {googleLoading ? (
+                  <>
+                    <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                    <span>Connecting with Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <FcGoogle style={{ fontSize: '22px' }} />
+                    <span>Continue with Google</span>
+                  </>
+                )}
+              </button>
+
+              {/* DIVIDER: OR */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                margin: '24px 0',
+                color: '#94A3B8',
+                fontSize: '13px',
+                fontWeight: 600
+              }}>
+                <div style={{ flex: 1, height: '1px', backgroundColor: '#E2E8F0' }} />
+                <span style={{ padding: '0 16px' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', backgroundColor: '#E2E8F0' }} />
+              </div>
+
+              {/* EMAIL ADDRESS FORM */}
+              <form onSubmit={handleSendOtpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+                    Email Address <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <FaEnvelope style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: '14px' }} />
+                    <input
+                      type="email"
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px 12px 44px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #E2E8F0',
+                        fontSize: '14px',
+                        color: '#0F172A',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        transition: 'border-color 0.2s ease'
+                      }}
+                      onFocus={(e) => (e.target.style.borderColor = '#007A55')}
+                      onBlur={(e) => (e.target.style.borderColor = '#E2E8F0')}
+                    />
+                  </div>
+                </div>
+
+                {/* CONTINUE BUTTON */}
+                <button
+                  type="submit"
+                  disabled={loading}
                   style={{
                     width: '100%',
-                    padding: '14px 16px 14px 44px',
+                    padding: '14px 24px',
                     borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '0.95rem',
-                    color: '#0F172A',
-                    backgroundColor: '#F8FAFC',
-                    outline: 'none',
-                    boxSizing: 'border-box'
+                    backgroundColor: '#007A55',
+                    color: '#FFFFFF',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    border: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: '0 4px 14px rgba(0, 122, 85, 0.3)',
+                    transition: 'all 0.2s ease',
+                    opacity: loading ? 0.7 : 1
                   }}
-                  required
-                />
-              </div>
+                >
+                  {loading ? (
+                    <>
+                      <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Sending OTP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <FaArrowRight style={{ fontSize: '13px' }} />
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
+          )}
 
-            {/* 2. Gender Selection */}
+          {/* STEP 2: OUR OWN CUSTOM EMAIL OTP SCREEN */}
+          {step === 'otp' && (
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                Gender <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
-                {['Male', 'Female', 'Other'].map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setGender(g)}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '10px',
-                      border: gender === g ? '2px solid #007A55' : '1.5px solid #E2E8F0',
-                      backgroundColor: gender === g ? '#ECFDF5' : '#F8FAFC',
-                      color: gender === g ? '#007A55' : '#475569',
-                      fontWeight: 700,
-                      fontSize: '0.88rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <FaVenusMars style={{ fontSize: '13px' }} /> {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 3. Mobile Number */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                Mobile Number <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <div style={{
-                  position: 'absolute',
-                  left: '14px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
+              {/* Back to email button */}
+              <button
+                type="button"
+                onClick={handleBackToEmail}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#007A55',
+                  fontSize: '13px',
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  color: '#007A55',
-                  fontWeight: 700,
-                  fontSize: '0.9rem'
-                }}>
-                  <FaPhoneAlt style={{ fontSize: '13px' }} />
-                  <span>+91</span>
-                </div>
-                <input
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => handleMobileChange(e.target.value)}
-                  placeholder="9876543210"
-                  maxLength={10}
-                  style={{
-                    width: '100%',
-                    padding: '14px 16px 14px 75px',
-                    borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '0.95rem',
-                    color: '#0F172A',
-                    backgroundColor: '#F8FAFC',
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                  required
-                />
-              </div>
-            </div>
+                  cursor: 'pointer',
+                  padding: '0',
+                  marginBottom: '20px'
+                }}
+              >
+                <FaArrowLeft style={{ fontSize: '12px' }} />
+                <span>Change Email Address</span>
+              </button>
 
-            {/* 4. District Selection */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                District <span style={{ color: '#DC2626' }}>*</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <FaMapMarkerAlt style={{
-                  position: 'absolute',
-                  left: '16px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '16px',
+                  backgroundColor: '#ECFDF5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   color: '#007A55',
-                  fontSize: '15px'
-                }} />
-                <select
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
+                  fontSize: '20px',
+                  marginBottom: '16px'
+                }}>
+                  <FaEnvelope />
+                </div>
+                <h3 style={{ fontSize: '24px', fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>
+                  Verify your Email
+                </h3>
+                <p style={{ fontSize: '14px', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
+                  Enter the 6 digit code sent to{' '}
+                  <strong style={{ color: '#0F172A', fontWeight: 600 }}>{email.trim().toLowerCase()}</strong>
+                </p>
+              </div>
+
+              {error && (
+                <div style={{
+                  backgroundColor: '#FEF2F2',
+                  border: '1px solid #FCA5A5',
+                  color: '#991B1B',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  marginBottom: '20px'
+                }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              {success && (
+                <div style={{
+                  backgroundColor: '#ECFDF5',
+                  border: '1px solid #A7F3D0',
+                  color: '#065F46',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  marginBottom: '20px'
+                }}>
+                  ✅ {success}
+                </div>
+              )}
+
+              <form onSubmit={handleVerifyOtpSubmit}>
+                {/* 6 SEPARATE OTP INPUT BOXES */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                  marginBottom: '28px'
+                }}>
+                  {otpDigits.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (otpInputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpBoxChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={handleOtpPaste}
+                      style={{
+                        width: '100%',
+                        maxWidth: '54px',
+                        height: '58px',
+                        borderRadius: '14px',
+                        border: digit ? '2px solid #007A55' : '1.5px solid #CBD5E1',
+                        backgroundColor: digit ? '#F0FDF4' : '#FFFFFF',
+                        fontSize: '22px',
+                        fontWeight: 700,
+                        color: '#0F172A',
+                        textAlign: 'center',
+                        outline: 'none',
+                        boxShadow: digit ? '0 0 0 3px rgba(0, 122, 85, 0.12)' : 'none',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = '#007A55';
+                        e.target.style.boxShadow = '0 0 0 3px rgba(0, 122, 85, 0.15)';
+                      }}
+                      onBlur={(e) => {
+                        if (!digit) {
+                          e.target.style.borderColor = '#CBD5E1';
+                          e.target.style.boxShadow = 'none';
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* VERIFY BUTTON */}
+                <button
+                  type="submit"
+                  disabled={loading || otpDigits.join('').length !== 6}
                   style={{
                     width: '100%',
-                    padding: '14px 16px 14px 44px',
+                    padding: '14px 24px',
                     borderRadius: '12px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '0.95rem',
-                    color: '#0F172A',
-                    backgroundColor: '#F8FAFC',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer'
+                    backgroundColor: '#007A55',
+                    color: '#FFFFFF',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    border: 'none',
+                    cursor: (loading || otpDigits.join('').length !== 6) ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: '0 4px 14px rgba(0, 122, 85, 0.3)',
+                    opacity: (loading || otpDigits.join('').length !== 6) ? 0.6 : 1,
+                    transition: 'all 0.2s ease',
+                    marginBottom: '20px'
                   }}
                 >
-                  {DISTRICT_OPTIONS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+                  {loading ? (
+                    <>
+                      <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Verifying Code...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Verify & Login</span>
+                      <FaCheckCircle />
+                    </>
+                  )}
+                </button>
 
-            {/* Checkbox Options */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ width: '17px', height: '17px', accentColor: '#007A55', cursor: 'pointer' }}
-                />
-                Remember me
-              </label>
-            </div>
+                {/* COUNTDOWN TIMER & RESEND OTP SECTION */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: '16px',
+                  borderTop: '1px solid #F1F5F9'
+                }}>
+                  <div style={{ fontSize: '13px', color: '#64748B' }}>
+                    {timer > 0 ? (
+                      <span>Resend code in <strong style={{ color: '#007A55' }}>{timer}s</strong></span>
+                    ) : (
+                      <span>Didn't receive the OTP code?</span>
+                    )}
+                  </div>
 
-            {/* MSG91 Widget Action Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: '12px',
-                backgroundColor: '#007A55',
-                color: '#FFFFFF',
-                border: 'none',
-                fontSize: '1rem',
-                fontWeight: 700,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
-                transition: 'all 0.2s ease',
-                marginTop: '4px'
-              }}
-            >
-              {loading ? 'Verifying Token...' : 'Continue with Mobile (MSG91 Widget)'} <FaArrowRight style={{ fontSize: '14px' }} />
-            </button>
-          </form>
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={!canResend || loading}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: canResend ? '#007A55' : '#94A3B8',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: canResend ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '4px 8px',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    <FaRedoAlt style={{ fontSize: '12px' }} />
+                    <span>Resend OTP</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </div>

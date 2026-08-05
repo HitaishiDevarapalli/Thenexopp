@@ -26,15 +26,19 @@ export const generateTokens = (userPayload) => {
   const accessToken = jwt.sign(
     {
       id: userPayload.id,
-      email: userPayload.email,
-      role: userPayload.role,
-      fullName: userPayload.fullName,
+      mobile: userPayload.mobile || userPayload.phone,
+      name: userPayload.name || userPayload.fullName,
+      fullName: userPayload.fullName || userPayload.name,
+      email: userPayload.email || null,
+      gender: userPayload.gender || null,
+      district: userPayload.district || null,
+      role: userPayload.role || 'USER',
     },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    { expiresIn: '30d' }
   );
 
-  return { accessToken, expiresIn: '7 days' };
+  return { accessToken, expiresIn: '30 days' };
 };
 
 /**

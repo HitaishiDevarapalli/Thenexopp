@@ -5287,6 +5287,14 @@ body.modal-open {
 /* ================================================================
    MOBILE LAYOUT & OVERRIDE CLASSES (< 768px)
    ================================================================ */
+.homepage-wrapper {
+  padding-top: 85px;
+}
+
+.hero-section-container {
+  padding: 30px 24px 20px 24px;
+}
+
 .responsive-hero-grid {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -5326,6 +5334,14 @@ body.modal-open {
 }
 
 @media (max-width: 767px) {
+  .homepage-wrapper {
+    padding-top: 56px !important;
+  }
+
+  .hero-section-container {
+    padding: 12px 16px 16px 16px !important;
+  }
+
   /* --- Property Grid: OLX-style 2 columns --- */
   .responsive-property-grid {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -5370,7 +5386,7 @@ body.modal-open {
 
   /* --- Hero section fixes --- */
   #hero {
-    padding-top: 60px !important;
+    padding-top: 0px !important;
     min-height: auto !important;
   }
   #hero h1 {
@@ -5387,7 +5403,11 @@ body.modal-open {
 
   /* --- Section padding top reduction --- */
   section[style*="paddingTop: '115px'"],
-  .prop-details-page {
+  section[style*="paddingTop: '105px'"],
+  div[style*="paddingTop: '105px'"],
+  div[style*="paddingTop: '115px'"],
+  .prop-details-page,
+  .checkout-page {
     padding-top: 60px !important;
   }
 

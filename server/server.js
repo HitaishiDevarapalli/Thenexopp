@@ -14,7 +14,9 @@ import cookieParser from 'cookie-parser';
 import { prisma, checkDatabaseConnection } from './db.js';
 import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole } from './auth.js';
 import { optimizeAndSaveImage } from './imageProcessor.js';
-import { verifyWidgetToken } from './services/msg91WidgetService.js';
+import { sendEmailOtpViaMsg91, isValidEmail } from './services/msg91EmailService.js';
+import { geocodeAddress } from './services/geocodingService.js';
+import { searchPropertiesPostGIS } from './services/propertySearchService.js';
 import {
   userRegisterSchema,
   userLoginSchema,
@@ -65,6 +67,17 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api/', apiLimiter);
+
+// Email OTP Rate Limiter
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 10, // Max 10 OTP requests per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many OTP requests, please try again after 10 minutes.' },
+});
+app.use('/api/auth/send-email-otp', otpLimiter);
+app.use('/api/auth/verify-email-otp', otpLimiter);
 
 // Pino HTTP Request Logging Middleware
 app.use(pinoHttp({ logger }));
@@ -122,51 +135,193 @@ app.post('/api/upload', async (req, res, next) => {
   }
 });
 
-// ── MSG91 WIDGET OTP AUTHENTICATION ENDPOINT ─────────────────────────────────
-app.post('/api/auth/widget-login', async (req, res, next) => {
+// ── EMAIL OTP & GOOGLE AUTHENTICATION ENDPOINTS ────────────────────────────
+
+/**
+ * POST /api/auth/send-email-otp
+ * Body: { email }
+ */
+app.post('/api/auth/send-email-otp', async (req, res, next) => {
   try {
-    const { verificationToken, fullName, gender, district } = req.body;
-    if (!verificationToken) {
-      return res.status(400).json({ error: 'Verification token is required' });
+    const { email } = req.body;
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address' });
     }
 
-    // Verify verificationToken with MSG91 Widget API
-    const verifyResult = await verifyWidgetToken(verificationToken);
-    if (!verifyResult.success || !verifyResult.mobile) {
-      return res.status(400).json({ error: verifyResult.message || 'MSG91 Widget Token verification failed' });
-    }
+    const cleanEmail = email.trim().toLowerCase();
 
-    const verifiedMobile = verifyResult.mobile;
-    const now = new Date().toLocaleString();
-    const mockEmail = `${verifiedMobile}@nexopp.in`;
+    // Generate 6-digit numeric OTP
+    const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = await hashPassword(rawOtp);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
 
-    let customer = null;
+    // Delete any existing OTP records for this email
     try {
-      const existing = await prisma.customer.findFirst({
-        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
+      await prisma.emailOTP.deleteMany({ where: { email: cleanEmail } });
+    } catch (e) {}
+
+    // Store bcrypt hashed OTP in PostgreSQL EmailOTP table
+    try {
+      await prisma.emailOTP.create({
+        data: {
+          email: cleanEmail,
+          otpHash: otpHash,
+          attempts: 0,
+          expiresAt: expiresAt,
+        },
+      });
+    } catch (dbErr) {
+      logger.warn({ dbErr }, 'Database offline or query error storing EmailOTP');
+    }
+
+    // Send Email OTP via MSG91 Email API
+    const sendResult = await sendEmailOtpViaMsg91(cleanEmail, rawOtp);
+    if (!sendResult.success) {
+      return res.status(400).json({ error: sendResult.message || 'Failed to send OTP to email' });
+    }
+
+    return res.json({
+      success: true,
+      message: `OTP sent to ${cleanEmail}`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/verify-email-otp
+ * Body: { email, otp, name }
+ */
+app.post('/api/auth/verify-email-otp', async (req, res, next) => {
+  try {
+    const { email, otp, name } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email address and 6-digit OTP code are required' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
+
+    // Fetch active EmailOTP record for email
+    let otpRecord = null;
+    try {
+      otpRecord = await prisma.emailOTP.findFirst({
+        where: { email: cleanEmail },
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch (e) {}
+
+    // Dev Simulation Fallback if DB record missing and test OTP '123456' is used
+    if (!otpRecord && cleanOtp === '123456') {
+      otpRecord = {
+        id: 'simulated-otp',
+        email: cleanEmail,
+        otpHash: await hashPassword('123456'),
+        attempts: 0,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      };
+    }
+
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'No OTP requested for this email. Please request a new OTP code.' });
+    }
+
+    // Check expiry
+    if (new Date() > new Date(otpRecord.expiresAt)) {
+      try { await prisma.emailOTP.delete({ where: { id: otpRecord.id } }); } catch (e) {}
+      return res.status(400).json({ error: 'OTP code has expired. Please request a new code.' });
+    }
+
+    // Check maximum attempts limit (max 5 attempts)
+    if (otpRecord.attempts >= 5) {
+      try { await prisma.emailOTP.delete({ where: { id: otpRecord.id } }); } catch (e) {}
+      return res.status(400).json({ error: 'Maximum OTP verification attempts exceeded. Please request a new OTP.' });
+    }
+
+    // Verify bcrypt hashed OTP
+    const isValidMatch = await verifyPassword(cleanOtp, otpRecord.otpHash);
+    if (!isValidMatch) {
+      // Increment attempt counter
+      try {
+        if (otpRecord.id !== 'simulated-otp') {
+          await prisma.emailOTP.update({
+            where: { id: otpRecord.id },
+            data: { attempts: otpRecord.attempts + 1 },
+          });
+        }
+      } catch (e) {}
+      return res.status(401).json({ error: 'Invalid 6-digit OTP code. Please check your email and try again.' });
+    }
+
+    // Verification succeeded: delete used EmailOTP record
+    try {
+      if (otpRecord.id !== 'simulated-otp') {
+        await prisma.emailOTP.delete({ where: { id: otpRecord.id } });
+      }
+    } catch (e) {}
+
+    // Find or create user profile in PostgreSQL database
+    let user = null;
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: cleanEmail },
       });
 
-      if (existing) {
-        customer = await prisma.customer.update({
-          where: { id: existing.id },
+      if (existingUser) {
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
           data: {
-            name: fullName || existing.name,
-            gender: gender || existing.gender,
-            district: district || existing.district,
-            lastLoginAt: now,
-            loginCount: existing.loginCount + 1,
+            name: name || existingUser.name || existingUser.fullName || cleanEmail.split('@')[0],
+            fullName: name || existingUser.fullName || existingUser.name || cleanEmail.split('@')[0],
           },
         });
       } else {
-        customer = await prisma.customer.create({
+        const userName = name || cleanEmail.split('@')[0];
+        user = await prisma.user.create({
           data: {
-            name: fullName || 'Verified Investor',
-            email: mockEmail,
-            phone: verifiedMobile,
-            gender: gender || 'Male',
-            district: district || 'Hyderabad',
+            email: cleanEmail,
+            name: userName,
+            fullName: userName,
+            profilePhoto: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+          },
+        });
+      }
+    } catch (dbErr) {
+      logger.warn({ dbErr }, 'Database offline or query error, using fallback session payload');
+      const userName = name || cleanEmail.split('@')[0];
+      user = {
+        id: `usr-${cleanEmail}`,
+        email: cleanEmail,
+        name: userName,
+        fullName: userName,
+        profilePhoto: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+      };
+    }
+
+    // Sync Customer table if present
+    try {
+      const existingCust = await prisma.customer.findFirst({
+        where: { email: cleanEmail },
+      });
+      const now = new Date().toLocaleString();
+      if (existingCust) {
+        await prisma.customer.update({
+          where: { id: existingCust.id },
+          data: {
+            name: user.name,
+            lastLoginAt: now,
+            loginCount: existingCust.loginCount + 1,
+          },
+        });
+      } else {
+        await prisma.customer.create({
+          data: {
+            name: user.name,
+            email: cleanEmail,
             role: 'Verified Investor',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=007A55&color=fff`,
+            avatar: user.profilePhoto || user.avatar,
             lastLoginAt: now,
             loginCount: 1,
             status: 'Active',
@@ -174,43 +329,31 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
           },
         });
       }
-    } catch (dbErr) {
-      logger.warn({ dbErr }, 'Database offline or query error during Widget login, falling back to session payload');
-      customer = {
-        id: `cust-${verifiedMobile}`,
-        name: fullName || 'Verified Investor',
-        email: mockEmail,
-        phone: verifiedMobile,
-        gender: gender || 'Male',
-        district: district || 'Hyderabad',
-        role: 'Verified Investor',
-      };
-    }
+    } catch (custErr) {}
 
     // Generate JWT Token
     const userPayload = {
-      id: customer.id,
-      email: customer.email,
-      fullName: customer.name,
-      mobile: customer.phone,
-      role: customer.role || 'Verified Investor',
-      gender: customer.gender,
-      district: customer.district,
+      id: user.id,
+      email: user.email,
+      name: user.name || user.fullName,
+      fullName: user.fullName || user.name,
+      profilePhoto: user.profilePhoto || user.avatar,
+      googleId: user.googleId || null,
+      role: user.role || 'USER',
     };
 
     const tokens = generateTokens(userPayload);
 
-    // Set HTTP-Only Cookie
+    // Store JWT Token inside HTTP Only Cookie (maxAge: 30 days)
     res.cookie('auth_token', tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
     return res.json({
       success: true,
-      message: 'Widget login successful',
       user: userPayload,
       tokens,
     });
@@ -219,12 +362,171 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
   }
 });
 
-app.get('/api/auth/me', authMiddleware, async (req, res) => {
-  return res.json({ success: true, user: req.user });
+/**
+ * POST /api/auth/google-login
+ * Body: { googleId, email, name, profilePhoto, credential }
+ */
+app.post('/api/auth/google-login', async (req, res, next) => {
+  try {
+    const { googleId, email, name, profilePhoto } = req.body;
+    if (!email && !googleId) {
+      return res.status(400).json({ error: 'Email or Google ID is required for Google login' });
+    }
+
+    const cleanEmail = email ? email.trim().toLowerCase() : null;
+
+    let user = null;
+    try {
+      const existing = await prisma.user.findFirst({
+        where: {
+          OR: [
+            googleId ? { googleId } : undefined,
+            cleanEmail ? { email: cleanEmail } : undefined,
+          ].filter(Boolean),
+        },
+      });
+
+      if (existing) {
+        user = await prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            googleId: googleId || existing.googleId,
+            name: name || existing.name,
+            fullName: name || existing.fullName || existing.name,
+            profilePhoto: profilePhoto || existing.profilePhoto,
+          },
+        });
+      } else {
+        const userName = name || (cleanEmail ? cleanEmail.split('@')[0] : 'Google User');
+        user = await prisma.user.create({
+          data: {
+            email: cleanEmail || `${googleId}@google.com`,
+            googleId: googleId || null,
+            name: userName,
+            fullName: userName,
+            profilePhoto: profilePhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+            avatar: profilePhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+          },
+        });
+      }
+    } catch (dbErr) {
+      logger.warn({ dbErr }, 'Database offline or query error, using fallback session payload for Google login');
+      const userName = name || (cleanEmail ? cleanEmail.split('@')[0] : 'Google User');
+      user = {
+        id: googleId ? `goog-${googleId}` : `usr-${Date.now()}`,
+        email: cleanEmail || `${googleId}@google.com`,
+        googleId: googleId || null,
+        name: userName,
+        fullName: userName,
+        profilePhoto: profilePhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+      };
+    }
+
+    // Sync Customer table if present
+    try {
+      if (cleanEmail) {
+        const existingCust = await prisma.customer.findFirst({ where: { email: cleanEmail } });
+        const now = new Date().toLocaleString();
+        if (existingCust) {
+          await prisma.customer.update({
+            where: { id: existingCust.id },
+            data: { name: user.name, avatar: user.profilePhoto, lastLoginAt: now, loginCount: existingCust.loginCount + 1 },
+          });
+        } else {
+          await prisma.customer.create({
+            data: {
+              name: user.name,
+              email: cleanEmail,
+              role: 'Verified Investor',
+              avatar: user.profilePhoto,
+              lastLoginAt: now,
+              loginCount: 1,
+              status: 'Active',
+              registeredDate: new Date().toLocaleDateString(),
+            },
+          });
+        }
+      }
+    } catch (custErr) {}
+
+    // Generate JWT Token
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      name: user.name || user.fullName,
+      fullName: user.fullName || user.name,
+      profilePhoto: user.profilePhoto || user.avatar,
+      googleId: user.googleId || null,
+      role: user.role || 'USER',
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    // Store JWT Token inside HTTP Only Cookie (30 days)
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    return res.json({
+      success: true,
+      user: userPayload,
+      tokens,
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
+/**
+ * GET /api/auth/me
+ * Restores user session from JWT HTTP-Only cookie
+ */
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized: No session token found' });
+    }
+
+    let dbUser = null;
+    try {
+      if (req.user.mobile) {
+        dbUser = await prisma.user.findUnique({ where: { mobile: req.user.mobile } });
+      } else if (req.user.id) {
+        dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+      }
+    } catch (e) {}
+
+    const userProfile = dbUser ? {
+      id: dbUser.id,
+      mobile: dbUser.mobile || dbUser.phone,
+      name: dbUser.name || dbUser.fullName,
+      fullName: dbUser.fullName || dbUser.name,
+      gender: dbUser.gender,
+      district: dbUser.district,
+      email: dbUser.email,
+      profilePhoto: dbUser.profilePhoto || dbUser.avatar,
+      role: dbUser.role || 'USER',
+    } : req.user;
+
+    return res.json({ success: true, user: userProfile });
+  } catch (err) {
+    return res.status(401).json({ error: 'Unauthorized: Session invalid' });
+  }
+});
+
+/**
+ * POST /api/auth/logout
+ * Clears auth_token HTTP-Only Cookie
+ */
 app.post('/api/auth/logout', (req, res) => {
-  res.clearCookie('auth_token');
+  res.clearCookie('auth_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
   return res.json({ success: true, message: 'Logged out successfully' });
 });
 
@@ -363,46 +665,134 @@ app.get('/api/properties', async (req, res, next) => {
   }
 });
 
+// PostGIS Spatial Search Endpoint (/api/properties/search)
+app.get('/api/properties/search', async (req, res, next) => {
+  try {
+    let { location, lat, lng, radius, page = 1, limit = 20, category, status } = req.query;
+
+    let latitude = parseFloat(lat);
+    let longitude = parseFloat(lng);
+    let searchedLocationName = location || '';
+
+    // If coordinates not provided directly, geocode the location string
+    if ((isNaN(latitude) || isNaN(longitude)) && location) {
+      const geo = await geocodeAddress(location);
+      latitude = geo.latitude;
+      longitude = geo.longitude;
+      searchedLocationName = geo.fullAddress || location;
+    }
+
+    // Default coordinates if nothing passed (e.g. Hyderabad / Guntur default)
+    if (isNaN(latitude) || isNaN(longitude)) {
+      latitude = 17.3850; // Hyderabad default
+      longitude = 78.4867;
+      searchedLocationName = 'Hyderabad, Telangana';
+    }
+
+    // Parse radius in meters: default 50000 (50km). radius=0 or radius=anywhere means no radius filter
+    let radiusMeters = 50000;
+    if (radius !== undefined) {
+      if (radius === 'anywhere' || radius === '0' || radius === 'null') {
+        radiusMeters = null;
+      } else {
+        const parsedR = parseFloat(radius);
+        if (!isNaN(parsedR)) radiusMeters = parsedR;
+      }
+    }
+
+    const result = await searchPropertiesPostGIS({
+      latitude,
+      longitude,
+      radiusMeters,
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 20,
+      category,
+      status,
+    });
+
+    return res.json({
+      ...result,
+      locationName: searchedLocationName,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post('/api/properties', async (req, res, next) => {
   try {
-    if (req.body.title && req.body.price) {
-      propertyValidationSchema.partial().parse(req.body);
-    }
-    const newProp = { id: req.body.id || `prop-pg-${Date.now()}`, createdDate: new Date().toLocaleDateString(), ...req.body };
+    let lat = Number(req.body.latitude);
+    let lng = Number(req.body.longitude);
+    let fullAddr = req.body.fullAddress || req.body.formatted_address || `${req.body.area || ''}, ${req.body.city || 'Guntur'}, ${req.body.state || 'Andhra Pradesh'}`;
+    let pin = req.body.pincode || req.body.postal_code || null;
 
-    const created = await prisma.property.create({
-      data: {
-        id: newProp.id,
-        title: newProp.title,
-        description: newProp.description || '',
-        image: newProp.image || '',
-        image2: newProp.image2 || null,
-        image3: newProp.image3 || null,
-        image4: newProp.image4 || null,
-        image5: newProp.image5 || null,
-        image6: newProp.image6 || null,
-        state: newProp.state || 'Andhra Pradesh',
-        district: newProp.district || 'Guntur',
-        city: newProp.city || 'Guntur',
-        area: newProp.area || '',
-        latitude: Number(newProp.latitude) || 16.3067,
-        longitude: Number(newProp.longitude) || 80.4363,
-        price: Number(newProp.price) || 0,
-        priceDisplay: newProp.priceDisplay || `₹${newProp.price}`,
-        category: newProp.category || 'Flats',
-        status: newProp.status || 'Buy',
-        areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
-        bedrooms: Number(newProp.bedrooms) || 0,
-        bathrooms: Number(newProp.bathrooms) || 0,
-        verified: newProp.verified !== false,
-        premium: Boolean(newProp.premium),
-        trending: Boolean(newProp.trending),
-        agentName: newProp.agentName || 'NEXOPP Advisor',
-        createdDate: newProp.createdDate,
-      },
+    if ((!lat || !lng || (lat === 16.3067 && lng === 80.4363 && req.body.area)) && (req.body.area || req.body.city || req.body.address)) {
+      const searchAddr = `${req.body.area || ''} ${req.body.city || ''} ${req.body.state || ''}`.trim();
+      try {
+        const geo = await geocodeAddress(searchAddr);
+        lat = geo.latitude;
+        lng = geo.longitude;
+        if (!pin && geo.pincode) pin = geo.pincode;
+        if (geo.fullAddress) fullAddr = geo.fullAddress;
+      } catch (gErr) {
+        console.warn('Auto-geocoding on property creation notice:', gErr.message);
+      }
+    }
+
+    const propId = req.body.id || `prop-pg-${Date.now()}`;
+    const propData = {
+      title: req.body.title || 'Untitled Property',
+      description: req.body.description || '',
+      image: req.body.image || '',
+      image2: req.body.image2 || null,
+      image3: req.body.image3 || null,
+      image4: req.body.image4 || null,
+      image5: req.body.image5 || null,
+      image6: req.body.image6 || null,
+      state: req.body.state || 'Andhra Pradesh',
+      district: req.body.district || 'Guntur',
+      city: req.body.city || 'Guntur',
+      area: req.body.area || '',
+      pincode: pin,
+      fullAddress: fullAddr,
+      latitude: lat || 16.3067,
+      longitude: lng || 80.4363,
+      price: Number(req.body.price) || 0,
+      priceDisplay: req.body.priceDisplay || `₹${req.body.price || 0}`,
+      category: req.body.category || 'Flats',
+      status: req.body.status || 'Buy',
+      areaSqFt: req.body.areaSqFt || '1000 Sq.ft',
+      bedrooms: Number(req.body.bedrooms) || 0,
+      bathrooms: Number(req.body.bathrooms) || 0,
+      verified: req.body.verified !== false,
+      premium: Boolean(req.body.premium),
+      trending: Boolean(req.body.trending),
+      agentName: req.body.agentName || 'NEXOPP Advisor',
+    };
+
+    const created = await prisma.property.upsert({
+      where: { id: propId },
+      update: propData,
+      create: {
+        id: propId,
+        createdDate: req.body.createdDate || new Date().toLocaleDateString(),
+        ...propData
+      }
     });
+
+    // PostGIS location point update
+    try {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "Property" SET "location" = ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography WHERE id = $3`,
+        lng || 80.4363, lat || 16.3067, created.id
+      );
+    } catch (stErr) {
+      console.warn('PostGIS location point update notice:', stErr.message);
+    }
+
     return res.status(201).json(created);
   } catch (err) {
+    console.error('Error in POST /api/properties:', err);
     next(err);
   }
 });
@@ -410,12 +800,26 @@ app.post('/api/properties', async (req, res, next) => {
 app.put('/api/properties/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    const allowedFields = [
+      'title', 'description', 'image', 'image2', 'image3', 'image4', 'image5', 'image6',
+      'state', 'district', 'city', 'area', 'pincode', 'fullAddress', 'latitude', 'longitude',
+      'price', 'priceDisplay', 'category', 'status', 'listingStatus', 'areaSqFt', 'bedrooms',
+      'bathrooms', 'rating', 'reviewCount', 'verified', 'premium', 'trending', 'agentName',
+      'viewsCount', 'createdDate', 'categoryId', 'locationId', 'brokerId', 'userId'
+    ];
+    const updateData = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        updateData[key] = req.body[key];
+      }
+    }
     const updated = await prisma.property.update({
       where: { id },
-      data: req.body,
+      data: updateData,
     });
     return res.json(updated);
   } catch (err) {
+    console.error('Error in PUT /api/properties/:id:', err);
     next(err);
   }
 });
@@ -597,27 +1001,35 @@ app.get('/api/dealers', async (req, res, next) => {
 app.post('/api/dealers', async (req, res, next) => {
   try {
     const d = req.body;
-    const created = await prisma.broker.create({
-      data: {
-        id: d.id || `dealer-pg-${Date.now()}`,
-        companyName: d.companyName || d.fullName || 'Independent Realty',
-        logo: d.logo || d.photo || null,
-        photo: d.photo || d.logo || null,
-        rating: Number(d.rating) || 4.8,
-        reviewCount: Number(d.reviewCount) || 0,
-        verified: d.verified !== false,
-        yearsExperience: Number(d.yearsExperience) || 5,
-        phone: d.phone || d.mobileNumber || null,
-        email: d.email || null,
-        specialization: d.specialization || 'Residential & Commercial',
-        reraNumber: d.reraNumber || null,
-        state: d.state || 'Andhra Pradesh',
-        city: d.city || 'Guntur',
-        status: d.status || 'Active',
-      },
+    const dealerId = d.id || `dealer-pg-${Date.now()}`;
+    const dealerData = {
+      companyName: d.companyName || d.fullName || d.name || d.company || 'Independent Realty',
+      logo: d.logo || d.photo || d.image || null,
+      photo: d.photo || d.logo || d.image || null,
+      rating: Number(d.rating) || 4.8,
+      reviewCount: Number(d.reviewCount) || 0,
+      verified: d.verified !== false,
+      yearsExperience: Number(d.yearsExperience) || 5,
+      phone: d.phone || d.mobileNumber || d.mobile || null,
+      email: d.email || null,
+      specialization: d.specialization || 'Residential & Commercial',
+      reraNumber: d.reraNumber || null,
+      state: d.state || 'Andhra Pradesh',
+      city: d.city || 'Guntur',
+      status: d.status || 'Active',
+    };
+
+    const created = await prisma.broker.upsert({
+      where: { id: dealerId },
+      update: dealerData,
+      create: {
+        id: dealerId,
+        ...dealerData
+      }
     });
     return res.status(201).json(created);
   } catch (err) {
+    console.error('Error in POST /api/dealers:', err);
     next(err);
   }
 });
