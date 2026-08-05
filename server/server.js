@@ -99,7 +99,11 @@ app.use('/uploads', express.static(uploadDir, { maxAge: '30d' }));
 // Ensure PostgreSQL is connected & initialize Location DB
 checkDatabaseConnection().then(async (connected) => {
   if (connected) {
-    await initLocationDb(prisma);
+    try {
+      await initLocationDb(prisma);
+    } catch (err) {
+      logger.warn({ error: err.message }, "Location DB initialization notice (non-fatal)");
+    }
   } else {
     logger.warn("Running without PostgreSQL connection.");
   }
