@@ -343,7 +343,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
             <input
               ref={inputRef}
               type="text"
-              placeholder='Search "Madhapur", "SVN Colony", "Brodipet"...'
+              placeholder="Search city, area or locality..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleInputKeyDown}
