@@ -16,6 +16,13 @@ import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRo
 import { optimizeAndSaveImage } from './imageProcessor.js';
 import { verifyWidgetToken } from './services/msg91WidgetService.js';
 import {
+  initLocationDb,
+  searchLocationsService,
+  reverseGeocodeService,
+  getPopularCitiesService,
+  searchPropertiesByLocationService,
+} from './services/locationService.js';
+import {
   userRegisterSchema,
   userLoginSchema,
   propertyValidationSchema,
@@ -89,10 +96,69 @@ subDirs.forEach(sub => {
 });
 app.use('/uploads', express.static(uploadDir, { maxAge: '30d' }));
 
-// Ensure PostgreSQL is connected
-checkDatabaseConnection().then(connected => {
-  if (!connected) {
+// Ensure PostgreSQL is connected & initialize Location DB
+checkDatabaseConnection().then(async (connected) => {
+  if (connected) {
+    await initLocationDb(prisma);
+  } else {
     logger.warn("Running without PostgreSQL connection.");
+  }
+});
+
+// ── LOCATION & GEOLOCATION ENDPOINTS ──────────────────────────────────────────
+app.get('/api/locations/search', async (req, res, next) => {
+  try {
+    const { q = '', limit = 10 } = req.query;
+    const locations = await searchLocationsService(prisma, q, limit);
+    return res.json(locations);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/locations/reverse-geocode', async (req, res, next) => {
+  try {
+    const { lat, lng } = req.body;
+    if (lat === undefined || lng === undefined) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+    const location = await reverseGeocodeService(prisma, lat, lng);
+    return res.json(location);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/locations/popular', async (req, res, next) => {
+  try {
+    const popular = await getPopularCitiesService(prisma);
+    return res.json(popular);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/locations/select', async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    if (id) {
+      await prisma.location.update({
+        where: { id },
+        data: { popularity: { increment: 1 } },
+      }).catch(() => {});
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/properties/search', async (req, res, next) => {
+  try {
+    const properties = await searchPropertiesByLocationService(prisma, req.query);
+    return res.json(properties);
+  } catch (err) {
+    next(err);
   }
 });
 

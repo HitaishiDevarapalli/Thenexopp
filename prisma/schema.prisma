@@ -80,16 +80,27 @@ model Category {
 }
 
 model Location {
-  id        String   @id @default(uuid())
-  name      String
-  city      String
-  district  String
-  state     String
-  latitude  Float?
-  longitude Float?
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  country     String   @default("India")
+  state       String
+  district    String?
+  city        String
+  area        String?
+  locality    String?
+  postalCode  String?
+  latitude    Float?
+  longitude   Float?
+  displayName String
+  searchText  String   @default("")
+  popularity  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
 
   properties Property[]
+
+  @@index([city])
+  @@index([state])
+  @@index([popularity])
 }
 
 model Property {

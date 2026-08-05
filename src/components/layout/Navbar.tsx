@@ -29,8 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const [currentCity, setCurrentCityState] = useState(selectedCity);
 
   // Location Context & Panel State
-  const { location } = useLocationStore();
-  const [showLocationPanel, setShowLocationPanel] = useState(false);
+  const { location, isLocationPickerOpen, openLocationPicker, closeLocationPicker } = useLocationStore();
 
 
 
@@ -387,17 +386,32 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         }}>
           <div style={{ width: '1px', height: '28px', backgroundColor: '#E2E8F0', marginRight: '8px' }} />
 
-          {/* Location */}
+          {/* Location Button */}
           <div style={{ position: 'relative' }}>
             <button
-              onClick={() => setShowLocationPanel(!showLocationPanel)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: showLocationPanel ? '#F8FAFC' : '#FFFFFF', border: '1px solid', borderColor: showLocationPanel ? '#CBD5E1' : '#E2E8F0', height: '42px', padding: '0 16px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+              onClick={openLocationPicker}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: isLocationPickerOpen ? '#F0FDF4' : '#FFFFFF',
+                border: '1px solid',
+                borderColor: isLocationPickerOpen ? '#16A34A' : '#E2E8F0',
+                height: '42px',
+                padding: '0 16px',
+                borderRadius: '21px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: isLocationPickerOpen ? '0 0 0 3px rgba(22,163,74,0.1)' : 'none',
+              }}
             >
-              <FaMapMarkedAlt style={{ color: '#10B981', fontSize: '15px' }} />
-              <span style={{ color: '#1E293B', fontWeight: 600, fontSize: '13.5px' }}>{location?.city || 'Location'}</span>
-              <FaChevronDown style={{ color: '#64748B', fontSize: '11px', marginLeft: '2px', transition: 'transform 0.2s', transform: showLocationPanel ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '15px' }} />
+              <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13.5px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                📍 {location?.area || location?.locality || location?.city || 'Select Location'}
+              </span>
+              <FaChevronDown style={{ color: '#64748B', fontSize: '11px', marginLeft: '2px', transition: 'transform 0.2s', transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
             </button>
-            {showLocationPanel && <LocationSelectorPanel onClose={() => setShowLocationPanel(false)} />}
+            <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
 
           {/* Saved */}
