@@ -292,33 +292,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
 
           {/* Row of Filter Inputs */}
           <div className="top-search-filter-bar-5">
-            {/* Location Input */}
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
-                Location
-              </label>
-              <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FaSearch style={{ color: '#94A3B8', fontSize: '14px', flexShrink: 0 }} />
-                <input
-                  type="text"
-                  placeholder="Search locality or city"
-                  value={locationText}
-                  onChange={(e) => setLocationText(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}
-                />
-              </div>
-              <button
-                onClick={() => {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(() => setLocationText('Current Location (GPS)'));
-                  }
-                }}
-                style={{ background: 'none', border: 'none', color: '#16A34A', fontWeight: 700, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', padding: 0 }}
-              >
-                <FaCrosshairs />
-                <span>Use My Current Location</span>
-              </button>
-            </div>
+
 
             {/* Industry Dropdown */}
             <div>
