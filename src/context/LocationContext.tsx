@@ -4,6 +4,8 @@ export interface LocationData {
   id?: string;
   displayName: string;
   city: string;
+  district?: string;
+  suburb?: string;
   area?: string;
   locality?: string;
   state: string;
