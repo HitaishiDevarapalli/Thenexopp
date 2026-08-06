@@ -1,36 +1,16 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 import pino from 'pino';
 
 const logger = pino({ name: 'PrismaDatabase' });
 
-let prismaInstance;
-let pgPool;
-try {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not set');
-  }
-  
-  // Try standard PrismaClient initialization first (most stable for PostgreSQL)
-  prismaInstance = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-  });
-} catch (e) {
-  logger.error({ error: e.message }, 'Failed to initialize standard PrismaClient, trying driver adapter fallback');
-  try {
-    const connectionString = process.env.DATABASE_URL;
-    pgPool = new pg.Pool({ connectionString, max: 5 });
-    const adapter = new PrismaPg({ pool: pgPool });
-    prismaInstance = new PrismaClient({ adapter });
-  } catch (e2) {
-    logger.error({ error: e2.message }, 'Prisma fallback initialization also failed');
-    process.exit(1);
-  }
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  logger.error('DATABASE_URL environment variable is not set');
 }
 
-export const prisma = prismaInstance;
+export const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+});
 
 // Test and handle database connection gracefully
 export const checkDatabaseConnection = async () => {
@@ -44,13 +24,12 @@ export const checkDatabaseConnection = async () => {
   }
 };
 
-// Graceful shutdown — handles PM2 SIGINT/SIGTERM signals (beforeExit does NOT fire on kill signals)
+// Graceful shutdown — handles PM2 SIGINT/SIGTERM signals
 const gracefulShutdown = async (signal) => {
-  logger.info(`Received ${signal}. Disconnecting Prisma and closing pool...`);
+  logger.info(`Received ${signal}. Disconnecting Prisma...`);
   try {
     await prisma.$disconnect();
-    if (pgPool) await pgPool.end();
-    logger.info('Prisma and pg pool disconnected gracefully.');
+    logger.info('Prisma disconnected gracefully.');
   } catch (e) {
     logger.error({ error: e.message }, 'Error during graceful shutdown');
   }
