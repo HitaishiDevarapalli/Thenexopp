@@ -593,48 +593,73 @@ const defaultShowcaseVideos: ShowcaseVideo[] = [];
 const defaultDemandRegions: DemandRegion[] = [];
 
 // Reactive Selected City State (Stored in Memory)
-export let selectedCity: string = 'Guntur';
+export let selectedCity: string = '';
 export const setSelectedCity = (city: string) => {
   selectedCity = city;
   window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
 };
 
-// Clear localStorage permanently
-try {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    window.localStorage.clear();
-  }
-} catch (e) {}
+// Storage helpers for permanent persistence across reloads
+const saveToStorage = (key: string, data: any) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, JSON.stringify(data));
+    }
+  } catch (e) {}
+};
 
-// PostgreSQL Data Sync Loader (No LocalStorage)
+const loadFromStorage = <T>(key: string, fallback: T): T => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem(key);
+      if (saved) return JSON.parse(saved);
+    }
+  } catch (e) {}
+  return fallback;
+};
+
+export const persistAllToStorage = () => {
+  saveToStorage('nexopp_properties_db', propertiesDb);
+  saveToStorage('nexopp_franchise_db', franchiseDb);
+  saveToStorage('nexopp_business_db', businessDb);
+  saveToStorage('nexopp_dealers_db', dealersDb);
+  saveToStorage('nexopp_enquiries_db', enquiriesDb);
+  saveToStorage('nexopp_franchise_enquiries_db', franchiseEnquiriesDb);
+  saveToStorage('nexopp_site_settings_db', siteSettingsDb);
+  saveToStorage('nexopp_team_members_db', teamMembersDb);
+  saveToStorage('nexopp_employee_users_db', employeeUsersDb);
+  saveToStorage('nexopp_roles_db', rolesDb);
+  saveToStorage('nexopp_demand_regions_db', demandRegionsDb);
+  saveToStorage('nexopp_showcase_videos_db', showcaseVideosDb);
+};
+
+// PostgreSQL Data Sync Loader & LocalStorage Fallback Persistence
 const loadData = () => {
   try {
-    propertiesDb = [];
-    franchiseDb = [];
-    businessDb = [];
-    dealersDb = [];
-    enquiriesDb = [];
-    franchiseEnquiriesDb = [];
-    siteSettingsDb = defaultSettings;
-    teamMembersDb = [];
-    employeeUsersDb = [];
-    rolesDb = [];
-    demandRegionsDb = [];
-    showcaseVideosDb = [];
-    showcaseSettingsDb = {
-      maxVideoSizeMB: 200,
-      maxVideoDurationSec: 60,
-      defaultPlaybackDurationSec: 10
-    };
+    // 1. Restore from permanent local storage immediately on startup
+    propertiesDb = loadFromStorage('nexopp_properties_db', []);
+    franchiseDb = loadFromStorage('nexopp_franchise_db', []);
+    businessDb = loadFromStorage('nexopp_business_db', []);
+    dealersDb = loadFromStorage('nexopp_dealers_db', []);
+    enquiriesDb = loadFromStorage('nexopp_enquiries_db', []);
+    franchiseEnquiriesDb = loadFromStorage('nexopp_franchise_enquiries_db', []);
+    siteSettingsDb = loadFromStorage('nexopp_site_settings_db', defaultSettings);
+    teamMembersDb = loadFromStorage('nexopp_team_members_db', []);
+    employeeUsersDb = loadFromStorage('nexopp_employee_users_db', []);
+    rolesDb = loadFromStorage('nexopp_roles_db', []);
+    demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);
+    showcaseVideosDb = loadFromStorage('nexopp_showcase_videos_db', []);
 
-    // Async Fetch from PostgreSQL API Backend Server
+    // 2. Fetch from backend server API if available, merging remote data
     fetch(`${API_BASE_URL}/api/properties`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          propertiesDb = data;
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(propertiesDb.map(p => [p.id, p]));
+          data.forEach(p => map.set(p.id, p));
+          propertiesDb = Array.from(map.values());
           recalculateAllDemandRegions();
-          window.dispatchEvent(new Event('nexopp_data_changed'));
+          notifyDataChanged();
         }
       })
       .catch(() => {});
@@ -642,10 +667,12 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/franchises`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          franchiseDb = data;
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(franchiseDb.map(f => [f.id, f]));
+          data.forEach(f => map.set(f.id, f));
+          franchiseDb = Array.from(map.values());
           recalculateAllDemandRegions();
-          window.dispatchEvent(new Event('nexopp_data_changed'));
+          notifyDataChanged();
         }
       })
       .catch(() => {});
@@ -653,10 +680,72 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/businesses`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          businessDb = data;
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(businessDb.map(b => [b.id, b]));
+          data.forEach(b => map.set(b.id, b));
+          businessDb = Array.from(map.values());
           recalculateAllDemandRegions();
-          window.dispatchEvent(new Event('nexopp_data_changed'));
+          notifyDataChanged();
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/dealers`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(dealersDb.map(d => [d.id, d]));
+          data.forEach(d => map.set(d.id, d));
+          dealersDb = Array.from(map.values());
+          notifyDataChanged();
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/employees`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(employeeUsersDb.map(u => [u.id, u]));
+          data.forEach(u => map.set(u.id, u));
+          employeeUsersDb = Array.from(map.values());
+          notifyDataChanged();
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/roles`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(rolesDb.map(r => [r.id, r]));
+          data.forEach(r => map.set(r.id, r));
+          rolesDb = Array.from(map.values());
+          notifyDataChanged();
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/team-members`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(teamMembersDb.map(t => [t.id, t]));
+          data.forEach(t => map.set(t.id, t));
+          teamMembersDb = Array.from(map.values());
+          notifyDataChanged();
+        }
+      })
+      .catch(() => {});
+
+    fetch(`${API_BASE_URL}/api/demand-regions`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(demandRegionsDb.map(dr => [dr.id, dr]));
+          data.forEach(dr => map.set(dr.id, dr));
+          demandRegionsDb = Array.from(map.values());
+          notifyDataChanged();
         }
       })
       .catch(() => {});
@@ -664,19 +753,23 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/enquiries`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          enquiriesDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(enquiriesDb.map(e => [e.id, e]));
+          data.forEach(e => map.set(e.id, e));
+          enquiriesDb = Array.from(map.values());
+          notifyDataChanged();
         }
       })
       .catch(() => {});
 
-    fetch(`${API_BASE_URL}/api/showcase-videos`)
+    fetch(`${API_BASE_URL}/api/franchise-enquiries`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          showcaseVideosDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
+        if (Array.isArray(data) && data.length > 0) {
+          const map = new Map(franchiseEnquiriesDb.map(fe => [fe.id, fe]));
+          data.forEach(fe => map.set(fe.id, fe));
+          franchiseEnquiriesDb = Array.from(map.values());
+          notifyDataChanged();
         }
       })
       .catch(() => {});
@@ -686,92 +779,23 @@ const loadData = () => {
       .then(data => {
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           siteSettingsDb = { ...siteSettingsDb, ...data };
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/dealers`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          dealersDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/team-members`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          teamMembersDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/employees`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          employeeUsersDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/roles`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          rolesDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/demand-regions`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          demandRegionsDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/franchise-enquiries`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          franchiseEnquiriesDb = data;
-          window.dispatchEvent(new Event('nexopp_data_changed'));
-        }
-      })
-      .catch(() => {});
-
-    fetch(`${API_BASE_URL}/api/showcase-settings`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && typeof data === 'object') {
-          showcaseSettingsDb = { ...showcaseSettingsDb, ...data };
-          window.dispatchEvent(new Event('nexopp_data_changed'));
+          notifyDataChanged();
         }
       })
       .catch(() => {});
 
   } catch (err) {
-    console.error("Error initializing PostgreSQL marketplace data:", err);
+    console.error("Error initializing marketplace data:", err);
   }
 };
 
 
 import { queryClient } from '../api/queryClient';
 
-// Dispatch Data Changed Event (No LocalStorage)
+// Dispatch Data Changed Event and Persist State
 export const notifyDataChanged = () => {
   try {
+    persistAllToStorage();
     window.dispatchEvent(new Event('nexopp_data_changed'));
     queryClient.invalidateQueries();
   } catch (err) {

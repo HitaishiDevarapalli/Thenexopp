@@ -34,28 +34,13 @@ const LocationContext = createContext<LocationContextType | undefined>(undefined
 const STORAGE_KEY = 'nexopp_selected_location';
 const RECENT_LOCATIONS_KEY = 'nexopp_recent_locations';
 
-const DEFAULT_LOCATION: LocationData = {
-  id: 'loc-default-guntur',
-  displayName: 'Brodipet, Guntur, Andhra Pradesh',
-  city: 'Guntur',
-  area: 'Brodipet',
-  locality: 'Brodipet',
-  state: 'Andhra Pradesh',
-  country: 'India',
-  postalCode: '522002',
-  pincode: '522002',
-  lat: 16.3067,
-  lng: 80.4365,
-  radiusKm: 10,
-};
-
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [location, setLocationState] = useState<LocationData | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return DEFAULT_LOCATION;
+    return null;
   });
 
   const [recentLocations, setRecentLocations] = useState<LocationData[]>(() => {

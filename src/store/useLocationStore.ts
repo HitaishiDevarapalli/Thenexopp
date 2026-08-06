@@ -13,11 +13,11 @@ interface LocationState {
 }
 
 export const useLocationStore = create<LocationState>((set) => ({
-  selectedCity: 'Guntur',
-  selectedDistrict: 'Guntur',
+  selectedCity: '',
+  selectedDistrict: '',
   selectedArea: '',
-  latitude: 16.3067,
-  longitude: 80.4363,
+  latitude: null,
+  longitude: null,
 
   setSelectedCity: (city: string) => set({ selectedCity: city }),
   setSelectedDistrict: (district: string) => set({ selectedDistrict: district }),

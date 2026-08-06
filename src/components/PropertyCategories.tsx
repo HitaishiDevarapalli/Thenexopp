@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance } from '../db/marketplaceDb';
 import {
   FaSearch,
@@ -148,6 +148,81 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const sliderMin = 0.01;
   const sliderMax = isRent ? 10 : 100;
 
+  const formatPriceVal = useCallback((valLakhs: number) => {
+    if (valLakhs < 1) {
+      const thousand = Math.round(valLakhs * 100);
+      return thousand > 0 ? `${thousand} K` : '1 K';
+    }
+    if (valLakhs >= 100) {
+      const cr = valLakhs / 100;
+      return `${cr % 1 === 0 ? cr : cr.toFixed(1)} Cr`;
+    }
+    return `${valLakhs % 1 === 0 ? valLakhs : valLakhs.toFixed(1)} Lac`;
+  }, []);
+
+  const [minInputText, setMinInputText] = useState(formatPriceVal(minBudget));
+  const [maxInputText, setMaxInputText] = useState(formatPriceVal(maxBudget));
+
+  useEffect(() => {
+    setMinInputText(formatPriceVal(minBudget));
+  }, [minBudget, formatPriceVal]);
+
+  useEffect(() => {
+    setMaxInputText(formatPriceVal(maxBudget));
+  }, [maxBudget, formatPriceVal]);
+
+  const parseAndSetMin = (str: string) => {
+    setMinInputText(str);
+    const clean = str.toLowerCase().replace(/,/g, '').trim();
+    if (!clean) return;
+    let lakhs: number | null = null;
+    if (clean.endsWith('cr') || clean.endsWith('crore') || clean.endsWith('crores')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num * 100;
+    } else if (clean.endsWith('k') || clean.endsWith('thousand')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num / 100;
+    } else if (clean.endsWith('l') || clean.endsWith('lac') || clean.endsWith('lakh') || clean.endsWith('lakhs')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num;
+    } else {
+      const rawNum = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(rawNum)) {
+        if (rawNum >= 1000) lakhs = rawNum / 100000;
+        else lakhs = rawNum;
+      }
+    }
+    if (lakhs !== null && lakhs >= sliderMin) {
+      setMinBudget(Math.min(lakhs, maxBudget - 0.01));
+    }
+  };
+
+  const parseAndSetMax = (str: string) => {
+    setMaxInputText(str);
+    const clean = str.toLowerCase().replace(/,/g, '').trim();
+    if (!clean) return;
+    let lakhs: number | null = null;
+    if (clean.endsWith('cr') || clean.endsWith('crore') || clean.endsWith('crores')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num * 100;
+    } else if (clean.endsWith('k') || clean.endsWith('thousand')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num / 100;
+    } else if (clean.endsWith('l') || clean.endsWith('lac') || clean.endsWith('lakh') || clean.endsWith('lakhs')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num;
+    } else {
+      const rawNum = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(rawNum)) {
+        if (rawNum >= 1000) lakhs = rawNum / 100000;
+        else lakhs = rawNum;
+      }
+    }
+    if (lakhs !== null) {
+      setMaxBudget(Math.max(lakhs, minBudget + 0.01));
+    }
+  };
+
   // Synchronize dropdown selects and sidebar multiselect states
   const handleBudgetSelectChange = (val: string) => {
     setBudget(val);
@@ -279,14 +354,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     }
   }, [activeTab]);
 
-  // Draggable logic for double budget range slider
+  // Draggable & touch logic for double budget range slider
   useEffect(() => {
     if (!dragging) return;
-    const handleMouseMove = (e: MouseEvent) => {
+
+    const handlePointerMove = (clientX: number) => {
       const slider = document.getElementById('budget-slider-track');
       if (!slider) return;
       const rect = slider.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       const rawVal = sliderMin + pct * (sliderMax - sliderMin);
       const val = parseFloat(rawVal.toFixed(2));
       if (dragging === 'min') {
@@ -295,16 +371,45 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         setMaxBudget(Math.max(val, minBudget + 0.01));
       }
     };
-    const handleMouseUp = () => {
-      setDragging(null);
+
+    const handleMouseMove = (e: MouseEvent) => handlePointerMove(e.clientX);
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches[0]) {
+        handlePointerMove(e.touches[0].clientX);
+      }
     };
+    const handleEnd = () => setDragging(null);
+
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleEnd);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
     };
   }, [dragging, minBudget, maxBudget, sliderMin, sliderMax]);
+
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const slider = document.getElementById('budget-slider-track');
+    if (!slider) return;
+    const rect = slider.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const rawVal = sliderMin + pct * (sliderMax - sliderMin);
+    const val = parseFloat(rawVal.toFixed(2));
+    
+    const distMin = Math.abs(val - minBudget);
+    const distMax = Math.abs(val - maxBudget);
+    
+    if (distMin < distMax) {
+      setMinBudget(Math.min(val, maxBudget - 0.01));
+    } else {
+      setMaxBudget(Math.max(val, minBudget + 0.01));
+    }
+  };
 
   // Right Results State
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
@@ -790,60 +895,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               </div>
             </div>
 
-            {/* Budget Dropdown */}
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
-                Budget
-              </label>
-              <div
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #CBD5E1',
-                  borderRadius: '12px',
-                  padding: '10px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-                  <span style={{ fontWeight: 800, color: '#64748B', fontSize: '14px' }}>₹</span>
-                  <select
-                    value={budget}
-                    onChange={(e) => handleBudgetSelectChange(e.target.value)}
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      outline: 'none',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: '#0F172A',
-                      cursor: 'pointer',
-                      width: '100%',
-                    }}
-                  >
-                    {activeTab === 'Rent' ? (
-                      <>
-                        <option value="₹ 5K - 10L+">₹ 5K - 10L+</option>
-                        <option value="Under ₹ 15K">Under ₹ 15K</option>
-                        <option value="₹ 15K - ₹ 35K">₹ 15K - ₹ 35K</option>
-                        <option value="₹ 35K - ₹ 75K">₹ 35K - ₹ 75K</option>
-                        <option value="₹ 75K+">₹ 75K+</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="₹ 1K - 1Cr+">₹ 1K - 1Cr+</option>
-                        <option value="Under ₹ 5L">Under ₹ 5L</option>
-                        <option value="₹ 5L - ₹ 25L">₹ 5L - ₹ 25L</option>
-                        <option value="₹ 25L - ₹ 75L">₹ 25L - ₹ 75L</option>
-                        <option value="₹ 75L - ₹ 1Cr">₹ 75L - ₹ 1Cr</option>
-                      </>
-                    )}
-                  </select>
-                </div>
-              </div>
-            </div>
-
             {/* BHK / Spec Dropdown */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
@@ -1000,22 +1051,57 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             </div>
 
             {/* Budget Section */}
-            <div style={{ paddingBottom: '4px' }}>
+            <div style={{ paddingBottom: '8px' }}>
               <div
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}
               >
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Budget</span>
+                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Budget Range</span>
               </div>
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '10px' }}>
+                {/* Direct Min & Max Price Inputs */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Min Price</span>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', padding: '6px 10px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#16A34A', marginRight: '4px' }}>₹</span>
+                      <input
+                        type="text"
+                        value={minInputText}
+                        onChange={(e) => parseAndSetMin(e.target.value)}
+                        onBlur={() => setMinInputText(formatPriceVal(minBudget))}
+                        placeholder="Min ₹"
+                        style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '12.5px', fontWeight: 800, color: '#0F172A' }}
+                      />
+                    </div>
+                  </div>
+                  <span style={{ color: '#94A3B8', fontWeight: 700, marginTop: '16px' }}>—</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Max Price</span>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', padding: '6px 10px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#16A34A', marginRight: '4px' }}>₹</span>
+                      <input
+                        type="text"
+                        value={maxInputText}
+                        onChange={(e) => parseAndSetMax(e.target.value)}
+                        onBlur={() => setMaxInputText(formatPriceVal(maxBudget))}
+                        placeholder="Max ₹"
+                        style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '12.5px', fontWeight: 800, color: '#0F172A' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, color: '#64748B', marginBottom: '6px' }}>
                   <span>{isRent ? '₹ 1K' : '₹ 1K'}</span>
                   <span>{isRent ? '₹ 10 Lac+' : '₹ 1 Cr+'}</span>
                 </div>
-                {/* Range Bar Graphic */}
+
+                {/* Range Bar Graphic with Dragging & Track Clicking */}
                 <div
                   id="budget-slider-track"
-                  style={{ position: 'relative', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', margin: '14px 6px' }}
+                  onClick={handleTrackClick}
+                  style={{ position: 'relative', height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', margin: '14px 6px', cursor: 'pointer' }}
                 >
                   {/* Active green range fill */}
                   <div
@@ -1026,46 +1112,53 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       top: 0,
                       bottom: 0,
                       backgroundColor: '#16A34A',
-                      borderRadius: '3px',
+                      borderRadius: '4px',
                     }}
                   />
                   {/* Min thumb */}
                   <div
-                    onMouseDown={() => setDragging('min')}
+                    onMouseDown={(e) => { e.stopPropagation(); setDragging('min'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); setDragging('min'); }}
                     style={{
                       position: 'absolute',
-                      left: `calc(${((minBudget - sliderMin) / (sliderMax - sliderMin)) * 100}% - 9px)`,
+                      left: `calc(${((minBudget - sliderMin) / (sliderMax - sliderMin)) * 100}% - 10px)`,
                       top: '-6px',
-                      width: '18px',
-                      height: '18px',
+                      width: '20px',
+                      height: '20px',
                       borderRadius: '50%',
                       backgroundColor: '#FFFFFF',
-                      border: '3px solid #16A34A',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                      cursor: 'ew-resize',
+                      border: '3.5px solid #16A34A',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      cursor: 'grab',
                       zIndex: 2,
+                      transform: dragging === 'min' ? 'scale(1.25)' : 'scale(1)',
+                      transition: dragging === 'min' ? 'none' : 'transform 0.1s',
                     }}
                   />
                   {/* Max thumb */}
                   <div
-                    onMouseDown={() => setDragging('max')}
+                    onMouseDown={(e) => { e.stopPropagation(); setDragging('max'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); setDragging('max'); }}
                     style={{
                       position: 'absolute',
-                      left: `calc(${((maxBudget - sliderMin) / (sliderMax - sliderMin)) * 100}% - 9px)`,
+                      left: `calc(${((maxBudget - sliderMin) / (sliderMax - sliderMin)) * 100}% - 10px)`,
                       top: '-6px',
-                      width: '18px',
-                      height: '18px',
+                      width: '20px',
+                      height: '20px',
                       borderRadius: '50%',
                       backgroundColor: '#FFFFFF',
-                      border: '3px solid #16A34A',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                      cursor: 'ew-resize',
+                      border: '3.5px solid #16A34A',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      cursor: 'grab',
                       zIndex: 2,
+                      transform: dragging === 'max' ? 'scale(1.25)' : 'scale(1)',
+                      transition: dragging === 'max' ? 'none' : 'transform 0.1s',
                     }}
                   />
                 </div>
-                <div style={{ fontSize: '11px', color: '#16A34A', fontWeight: 800, marginTop: '8px', textAlign: 'center' }}>
-                  Selected: {minBudget < 1 ? `₹ ${Math.round(minBudget * 1000)}` : minBudget >= 100 ? `₹ ${(minBudget / 100).toFixed(1)} Cr` : `₹ ${minBudget.toFixed(1)} Lac`} - {maxBudget >= sliderMax ? (isRent ? '₹ 10 Lac+' : '₹ 1 Cr+') : maxBudget >= 100 ? `₹ ${(maxBudget / 100).toFixed(1)} Cr` : maxBudget < 1 ? `₹ ${Math.round(maxBudget * 1000)}` : `₹ ${maxBudget.toFixed(1)} Lac`}
+
+                <div style={{ fontSize: '12px', color: '#16A34A', fontWeight: 800, marginTop: '12px', textAlign: 'center', backgroundColor: '#F0FDF4', padding: '6px 12px', borderRadius: '8px', border: '1px solid #DCFCE7' }}>
+                  Selected: {formatPriceVal(minBudget)} – {maxBudget >= sliderMax ? (isRent ? '₹ 10 Lac+' : '₹ 1 Cr+') : formatPriceVal(maxBudget)}
                 </div>
               </div>
             </div>

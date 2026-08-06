@@ -45,13 +45,13 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
 
     const effectiveCity = localSearchLocation && localSearchLocation.trim() !== '' && !localSearchLocation.toLowerCase().includes('current location') && !localSearchLocation.toLowerCase().includes('gps') 
       ? localSearchLocation 
-      : (localStorage.getItem('nexopp_selected_city') || dbSelectedCity || 'Guntur');
+      : (localStorage.getItem('nexopp_selected_city') || dbSelectedCity || '');
       
     const cityGeo = parseIndiaLocation(effectiveCity);
     return {
       lat: cityGeo.latitude,
       lng: cityGeo.longitude,
-      label: effectiveCity,
+      label: effectiveCity || cityGeo.area || cityGeo.city || 'All Locations',
     };
   }, [userGps, navbarLocation, localSearchLocation]);
 
@@ -64,12 +64,12 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       center: [mapCenter.lat, mapCenter.lng],
       zoom: 14,
       zoomControl: false,
-      dragging: true,
-      scrollWheelZoom: true,
-      touchZoom: true,
-      doubleClickZoom: true,
-      boxZoom: true,
-      keyboard: true,
+      dragging: false,
+      scrollWheelZoom: false,
+      touchZoom: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

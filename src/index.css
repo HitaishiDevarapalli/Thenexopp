@@ -5176,7 +5176,7 @@ body.modal-open {
 }
 @media (min-width: 1024px) {
   .top-search-filter-bar {
-    grid-template-columns: 2.2fr 1.3fr 1.3fr 1.1fr 1.3fr auto;
+    grid-template-columns: 2fr 1.5fr 1.5fr auto;
   }
 }
 @media (min-width: 640px) and (max-width: 1023px) {

@@ -843,7 +843,23 @@ export const COMPREHENSIVE_INDIA_PLACES_DB: LocationIntelligenceResult[] = [
 
 // 2. Intelligent Synchronous Keyword & Substring Parser (Instant Fallback)
 export const parseIndiaLocation = (query: string, defaultLat = 16.3067, defaultLng = 80.4365): LocationIntelligenceResult => {
-  const q = query.toLowerCase().trim();
+  const q = query ? query.toLowerCase().trim() : '';
+
+  if (!q) {
+    return {
+      formatted_address: 'All Locations',
+      google_place_id: 'all_locations',
+      latitude: defaultLat,
+      longitude: defaultLng,
+      country: 'India',
+      state: '',
+      district: '',
+      city: '',
+      area: '',
+      postal_code: '',
+      fullAddress: 'All Locations'
+    };
+  }
 
   // Tier 1: Check for EXACT city, area, district, or address match
   const exactMatch = COMPREHENSIVE_INDIA_PLACES_DB.find(

@@ -32,7 +32,7 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
   const [activeTab, setActiveTab] = useState<'Property' | 'Franchise' | 'Business' | 'Plots/Land' | 'Commercial'>('Property');
-  const [locationText, setLocationText] = useState(selectedCity || 'Guntur, Andhra Pradesh');
+  const [locationText, setLocationText] = useState(selectedCity || '');
   const [radius, setRadius] = useState('5 KM');
   const [budget, setBudget] = useState('₹10L - ₹5 Cr');
   const [propertyType, setPropertyType] = useState('All Types');

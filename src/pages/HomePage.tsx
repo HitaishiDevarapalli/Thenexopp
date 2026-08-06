@@ -89,7 +89,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   }, []);
 
   const { location } = useLocationStore();
-  const currentGlobalCity = location?.city || location?.displayName || selectedCity || 'Guntur';
+  const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
   // Hero Carousel Index State
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
@@ -113,7 +113,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
   // Search Bar Filter States
   const [activeSearchTab, setActiveSearchTab] = useState<'Property' | 'Franchise' | 'Business' | 'Plots/Land' | 'Commercial'>('Property');
-  const [searchLocation, setSearchLocationState] = useState(selectedCity || 'Guntur');
+  const [searchLocation, setSearchLocationState] = useState(selectedCity || '');
   const [propertyTypeFilter, setPropertyTypeFilter] = useState('BHK');
   const [budgetFilter, setBudgetFilter] = useState('₹5L - ₹5 Cr');
   const [priceRangeFilter, setPriceRangeFilter] = useState('Any');

@@ -484,9 +484,39 @@ app.post('/api/properties', async (req, res, next) => {
 app.put('/api/properties/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    const d = req.body;
+    const updateData = {};
+    if (d.title !== undefined) updateData.title = String(d.title);
+    if (d.description !== undefined) updateData.description = String(d.description);
+    if (d.image !== undefined) updateData.image = String(d.image);
+    if (d.image2 !== undefined) updateData.image2 = d.image2;
+    if (d.image3 !== undefined) updateData.image3 = d.image3;
+    if (d.image4 !== undefined) updateData.image4 = d.image4;
+    if (d.image5 !== undefined) updateData.image5 = d.image5;
+    if (d.image6 !== undefined) updateData.image6 = d.image6;
+    if (d.state !== undefined) updateData.state = String(d.state);
+    if (d.district !== undefined) updateData.district = String(d.district);
+    if (d.city !== undefined) updateData.city = String(d.city);
+    if (d.area !== undefined) updateData.area = String(d.area);
+    if (d.latitude !== undefined) updateData.latitude = Number(d.latitude);
+    if (d.longitude !== undefined) updateData.longitude = Number(d.longitude);
+    if (d.price !== undefined) updateData.price = Number(d.price);
+    if (d.priceDisplay !== undefined) updateData.priceDisplay = String(d.priceDisplay);
+    if (d.category !== undefined) updateData.category = String(d.category);
+    if (d.status !== undefined) updateData.status = String(d.status);
+    if (d.areaSqFt !== undefined) updateData.areaSqFt = String(d.areaSqFt);
+    if (d.bedrooms !== undefined) updateData.bedrooms = Number(d.bedrooms);
+    if (d.bathrooms !== undefined) updateData.bathrooms = Number(d.bathrooms);
+    if (d.verified !== undefined) updateData.verified = Boolean(d.verified);
+    if (d.premium !== undefined) updateData.premium = Boolean(d.premium);
+    if (d.trending !== undefined) updateData.trending = Boolean(d.trending);
+    if (d.agentName !== undefined) updateData.agentName = d.agentName;
+    if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
+    if (d.listingStatus !== undefined) updateData.listingStatus = d.listingStatus;
+
     const updated = await prisma.property.update({
       where: { id },
-      data: req.body,
+      data: updateData,
     });
     return res.json(updated);
   } catch (err) {
@@ -900,15 +930,27 @@ app.get('/api/roles', async (req, res) => {
 
 app.post('/api/roles', async (req, res, next) => {
   try {
-    const data = { id: req.body.id || `role-${Date.now()}`, ...req.body };
-    const created = await prisma.customRole.create({ data });
+    const { id, name, permissions } = req.body;
+    const created = await prisma.customRole.create({
+      data: {
+        id: id || `role-${Date.now()}`,
+        name: String(name || 'Custom Role'),
+        permissions: Array.isArray(permissions) ? permissions : [],
+      },
+    });
     return res.status(201).json(created);
   } catch (err) { next(err); }
 });
 
 app.put('/api/roles/:id', async (req, res, next) => {
   try {
-    const updated = await prisma.customRole.update({ where: { id: req.params.id }, data: req.body });
+    const { id } = req.params;
+    const updateData = {};
+    if (req.body.name !== undefined) updateData.name = String(req.body.name);
+    if (req.body.permissions !== undefined && Array.isArray(req.body.permissions)) {
+      updateData.permissions = req.body.permissions;
+    }
+    const updated = await prisma.customRole.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) { next(err); }
 });
@@ -930,15 +972,36 @@ app.get('/api/employees', async (req, res) => {
 
 app.post('/api/employees', async (req, res, next) => {
   try {
-    const data = { id: req.body.id || `emp-${Date.now()}`, ...req.body };
-    const created = await prisma.employeeUser.create({ data });
+    const d = req.body;
+    const created = await prisma.employeeUser.create({
+      data: {
+        id: d.id || `emp-${Date.now()}`,
+        fullName: String(d.fullName || d.name || 'Employee User'),
+        email: String(d.email || `emp_${Date.now()}@nexopp.com`),
+        password: String(d.password || 'password123'),
+        role: String(d.role || 'Property Editor'),
+        status: String(d.status || 'Active'),
+        customPermissions: Array.isArray(d.customPermissions) ? d.customPermissions : [],
+      },
+    });
     return res.status(201).json(created);
   } catch (err) { next(err); }
 });
 
 app.put('/api/employees/:id', async (req, res, next) => {
   try {
-    const updated = await prisma.employeeUser.update({ where: { id: req.params.id }, data: req.body });
+    const { id } = req.params;
+    const d = req.body;
+    const updateData = {};
+    if (d.fullName !== undefined || d.name !== undefined) updateData.fullName = String(d.fullName || d.name);
+    if (d.email !== undefined) updateData.email = String(d.email);
+    if (d.password !== undefined) updateData.password = String(d.password);
+    if (d.role !== undefined) updateData.role = String(d.role);
+    if (d.status !== undefined) updateData.status = String(d.status);
+    if (d.customPermissions !== undefined && Array.isArray(d.customPermissions)) {
+      updateData.customPermissions = d.customPermissions;
+    }
+    const updated = await prisma.employeeUser.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) { next(err); }
 });
