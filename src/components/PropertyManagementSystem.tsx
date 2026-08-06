@@ -1725,7 +1725,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                     <div>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PURPOSE</label>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PURPOSE *</label>
                       <select value={formData.propertyPurpose || 'Sale'} onChange={e => setFormData({ ...formData, propertyPurpose: e.target.value as any, status: e.target.value === 'Sale' ? 'Buy' : 'Rent' })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
                         <option value="Sale">Sale (Buy)</option>
                         <option value="Rent">Rent</option>
@@ -1733,7 +1733,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>MAJOR CATEGORY</label>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>MAJOR CATEGORY *</label>
                       <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value as any })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
                         <option value="Villa">Villa</option>
                         <option value="Apartment">Apartment</option>
@@ -1743,7 +1743,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       </select>
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>APPROVAL PIPELINE</label>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>APPROVAL PIPELINE *</label>
                       <select value={formData.approvalStatus || 'Published'} onChange={e => setFormData({ ...formData, approvalStatus: e.target.value as any, listingStatus: e.target.value as any, sold: e.target.value === 'Sold', soldDate: e.target.value === 'Sold' ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined })} style={{ width: '100%', padding: '14px', border: '1.5px solid #059669', borderRadius: '12px', fontWeight: 700, color: '#059669', backgroundColor: '#FFFFFF' }}>
                         <option value="Published">Published Immediately</option>
                         <option value="Pending Approval">Pending Approval</option>
