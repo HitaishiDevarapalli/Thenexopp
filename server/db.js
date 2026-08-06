@@ -12,20 +12,13 @@ try {
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set');
   }
-  // Create a pg Pool with a limited connection count to prevent exhaustion
-  pgPool = new pg.Pool({
-    connectionString,
-    max: 5,                   // Max 5 connections (prevents hitting PostgreSQL limit)
-    idleTimeoutMillis: 30000, // Close idle connections after 30s
-    connectionTimeoutMillis: 10000,
-  });
-  const adapter = new PrismaPg({ pool: pgPool });
+  
+  // Try standard PrismaClient initialization first (most stable for PostgreSQL)
   prismaInstance = new PrismaClient({
-    adapter,
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
 } catch (e) {
-  logger.error({ error: e.message }, 'Failed to initialize Prisma with driver adapter');
+  logger.error({ error: e.message }, 'Failed to initialize standard PrismaClient, trying driver adapter fallback');
   try {
     const connectionString = process.env.DATABASE_URL;
     pgPool = new pg.Pool({ connectionString, max: 5 });
