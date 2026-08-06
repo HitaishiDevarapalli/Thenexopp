@@ -192,7 +192,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     google_place_id: '',
     latitude: 0,
     longitude: 0,
-    description: 'An exquisitely designed property featuring premium architectural fittings, high ceilings, natural ventilation, and superior connectivity.',
+    description: '',
     amenities: [],
     image: '',
     image2: '',
@@ -342,7 +342,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       service_radius: 10,
       latitude: 0,
       longitude: 0,
-      description: 'Brand new luxury residence designed with modern ventilation, private landscaping, and premium security systems.',
+      description: '',
       amenities: [],
       image: '',
       image2: '',
@@ -594,9 +594,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEE2E2', border: '1px solid #FECACA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626', marginBottom: '10px' }}>
               <FaCheckCircle style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#DC2626' }}>Total Sold Properties</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#DC2626' }}>Total Reserved Properties</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#991B1B', margin: '2px 0 4px 0' }}>{stats.totalSold}</div>
-            <div style={{ fontSize: '0.7rem', color: '#DC2626', fontWeight: 600 }}>Marked as Sold</div>
+            <div style={{ fontSize: '0.7rem', color: '#DC2626', fontWeight: 600 }}>Marked as Reserved</div>
           </div>
 
           {/* Recently Sold (30 Days) */}
@@ -604,7 +604,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaChartBar style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669' }}>Recently Sold (30 Days)</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669' }}>Recently Reserved (30 Days)</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#059669', margin: '2px 0 4px 0' }}>{stats.recentlySold30Days}</div>
             <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>Last 30 days</div>
           </div>
@@ -748,7 +748,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => handleBulkStatusChange('Published')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Publish Selected</button>
                 <button onClick={() => handleBulkStatusChange('Approved')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Approve Selected</button>
-                <button onClick={() => handleBulkStatusChange('Sold')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Mark as Sold</button>
+                <button onClick={() => handleBulkStatusChange('Sold')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Mark as Reserved</button>
                 <button onClick={() => handleBulkStatusChange('Archived')} style={{ padding: '6px 14px', backgroundColor: '#64748B', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Archive Selected</button>
                 <button onClick={handleBulkDelete} style={{ padding: '6px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Delete Selected</button>
               </div>
@@ -1175,7 +1175,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
-              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>Sold Out Properties</h2>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>Reserved Properties</h2>
               <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>Manage properties that have been marked as sold out and push them to the main page.</p>
             </div>
           </div>
@@ -1212,7 +1212,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </td>
                     <td style={{ padding: '16px' }}>
                       <span style={{ padding: '4px 8px', backgroundColor: '#FEE2E2', color: '#EF4444', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
-                        Sold
+                        Reserved
                       </span>
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }}>
@@ -1748,21 +1748,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <option value="Published">Published Immediately</option>
                         <option value="Pending Approval">Pending Approval</option>
                         <option value="Draft">Save as Draft</option>
-                        <option value="Sold">Mark as Sold</option>
-                        <option value="Reserved">Mark as Reserved</option>
+                        <option value="Sold">Mark as Reserved</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Mark as Sold Toggle Switch Component */}
+                  {/* Mark as Reserved Toggle Switch Component */}
                   <div style={{ backgroundColor: formData.sold ? '#FEF2F2' : '#F8FAFC', border: `1.5px solid ${formData.sold ? '#EF4444' : '#CBD5E1'}`, borderRadius: '14px', padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '1rem', fontWeight: 800, color: formData.sold ? '#DC2626' : '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span>Mark Property as Sold</span>
-                        {formData.sold && <span style={{ backgroundColor: '#DC2626', color: '#FFF', fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, letterSpacing: '0.5px' }}>SOLD ACTIVE</span>}
+                        <span>Mark Property as Reserved</span>
+                        {formData.sold && <span style={{ backgroundColor: '#DC2626', color: '#FFF', fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, letterSpacing: '0.5px' }}>RESERVED</span>}
                       </div>
                       <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '4px' }}>
-                        When enabled, a prominent red <strong>SOLD</strong> badge will appear on all property cards, search listings, and detail pages.
+                        When enabled, a prominent red <strong>RESERVED</strong> badge will appear on all property cards, search listings, and detail pages.
                       </div>
                     </div>
                     <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px', cursor: 'pointer' }}>
