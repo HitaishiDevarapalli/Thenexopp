@@ -663,7 +663,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/franchises`)
       .then(res => res.json())
@@ -676,7 +676,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/businesses`)
       .then(res => res.json())
@@ -689,7 +689,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/dealers`)
       .then(res => res.json())
@@ -701,7 +701,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/employees`)
       .then(res => res.json())
@@ -713,7 +713,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/roles`)
       .then(res => res.json())
@@ -725,7 +725,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/team-members`)
       .then(res => res.json())
@@ -737,7 +737,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/demand-regions`)
       .then(res => res.json())
@@ -749,7 +749,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/enquiries`)
       .then(res => res.json())
@@ -761,7 +761,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/franchise-enquiries`)
       .then(res => res.json())
@@ -773,7 +773,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
     fetch(`${API_BASE_URL}/api/settings`)
       .then(res => res.json())
@@ -783,7 +783,7 @@ const loadData = () => {
           notifyDataChanged();
         }
       })
-      .catch(() => {});
+      .catch(err => console.error('API Sync Error:', err));
 
   } catch (err) {
     console.error("Error initializing marketplace data:", err);
@@ -885,7 +885,7 @@ export const addFranchise = (item: FranchiseListing) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateFranchise = (id: string, updated: Partial<FranchiseListing>) => {
@@ -895,7 +895,7 @@ export const updateFranchise = (id: string, updated: Partial<FranchiseListing>) 
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteFranchise = (id: string) => {
@@ -904,7 +904,7 @@ export const deleteFranchise = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/franchises/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addDealer = (item: Dealer) => {
@@ -914,7 +914,7 @@ export const addDealer = (item: Dealer) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateDealer = (id: string, updated: Partial<Dealer>) => {
@@ -924,7 +924,7 @@ export const updateDealer = (id: string, updated: Partial<Dealer>) => {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteDealer = (id: string) => {
@@ -932,7 +932,7 @@ export const deleteDealer = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/dealers/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addBusiness = (item: BusinessListing) => {
@@ -942,7 +942,7 @@ export const addBusiness = (item: BusinessListing) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateBusiness = (id: string, updated: Partial<BusinessListing>) => {
@@ -952,7 +952,7 @@ export const updateBusiness = (id: string, updated: Partial<BusinessListing>) =>
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteBusiness = (id: string) => {
@@ -961,7 +961,7 @@ export const deleteBusiness = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 // Showcase Video Mutations
@@ -977,7 +977,7 @@ export const addShowcaseVideo = (video: Omit<ShowcaseVideo, 'id' | 'createdDate'
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(newVideo)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateShowcaseVideo = (id: string, updated: Partial<ShowcaseVideo>) => {
@@ -987,7 +987,7 @@ export const updateShowcaseVideo = (id: string, updated: Partial<ShowcaseVideo>)
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteShowcaseVideo = (id: string) => {
@@ -995,7 +995,7 @@ export const deleteShowcaseVideo = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/showcase-videos/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
@@ -1005,7 +1005,7 @@ export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteEnquiry = (id: string) => {
@@ -1013,7 +1013,7 @@ export const deleteEnquiry = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'Follow-up' | 'Closed') => {
@@ -1023,7 +1023,7 @@ export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'F
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateSiteSettings = (settings: Partial<SiteSettings>) => {
@@ -1033,7 +1033,7 @@ export const updateSiteSettings = (settings: Partial<SiteSettings>) => {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const clearAllStaticData = () => {
@@ -1055,7 +1055,7 @@ export const bulkPublishProperties = (ids: string[]) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ listingStatus: 'Published' })
     })
-  )).catch(() => {});
+  )).catch(err => console.error('API Sync Error:', err));
 };
 
 export const bulkHideProperties = (ids: string[]) => {
@@ -1067,7 +1067,7 @@ export const bulkHideProperties = (ids: string[]) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ listingStatus: 'Hidden' })
     })
-  )).catch(() => {});
+  )).catch(err => console.error('API Sync Error:', err));
 };
 
 export const bulkDeleteProperties = (ids: string[]) => {
@@ -1075,7 +1075,7 @@ export const bulkDeleteProperties = (ids: string[]) => {
   notifyDataChanged();
   Promise.all(ids.map(id => 
     fetch(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' })
-  )).catch(() => {});
+  )).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addTeamMember = (item: TeamMember) => {
@@ -1085,7 +1085,7 @@ export const addTeamMember = (item: TeamMember) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateTeamMember = (id: string, updated: Partial<TeamMember>) => {
@@ -1095,7 +1095,7 @@ export const updateTeamMember = (id: string, updated: Partial<TeamMember>) => {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteTeamMember = (id: string) => {
@@ -1103,7 +1103,7 @@ export const deleteTeamMember = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/team-members/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addEmployeeUser = (item: EmployeeUser) => {
@@ -1113,7 +1113,7 @@ export const addEmployeeUser = (item: EmployeeUser) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateEmployeeUser = (id: string, updated: Partial<EmployeeUser>) => {
@@ -1123,7 +1123,7 @@ export const updateEmployeeUser = (id: string, updated: Partial<EmployeeUser>) =
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteEmployeeUser = (id: string) => {
@@ -1131,7 +1131,7 @@ export const deleteEmployeeUser = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/employees/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateRole = (id: string, permissions: string[]) => {
@@ -1141,7 +1141,7 @@ export const updateRole = (id: string, permissions: string[]) => {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ permissions })
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addRole = (role: Role) => {
@@ -1151,7 +1151,7 @@ export const addRole = (role: Role) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(role)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteRole = (id: string) => {
@@ -1159,7 +1159,7 @@ export const deleteRole = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/roles/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addFranchiseEnquiry = (item: FranchiseEnquiry) => {
@@ -1169,7 +1169,7 @@ export const addFranchiseEnquiry = (item: FranchiseEnquiry) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateFranchiseEnquiryStatus = (id: string, status: FranchiseEnquiry['status']) => {
@@ -1179,7 +1179,7 @@ export const updateFranchiseEnquiryStatus = (id: string, status: FranchiseEnquir
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const assignFranchiseEnquiryBroker = (id: string, brokerId: string, brokerName: string) => {
@@ -1189,7 +1189,7 @@ export const assignFranchiseEnquiryBroker = (id: string, brokerId: string, broke
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ assignedBrokerId: brokerId, assignedBrokerName: brokerName })
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteFranchiseEnquiry = (id: string) => {
@@ -1197,7 +1197,7 @@ export const deleteFranchiseEnquiry = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/franchise-enquiries/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const bulkPublishFranchises = (ids: string[]) => {
@@ -1209,7 +1209,7 @@ export const bulkPublishFranchises = (ids: string[]) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ approvalStatus: 'Published', status: 'Active' })
     })
-  )).catch(() => {});
+  )).catch(err => console.error('API Sync Error:', err));
 };
 
 export const bulkArchiveFranchises = (ids: string[]) => {
@@ -1221,7 +1221,7 @@ export const bulkArchiveFranchises = (ids: string[]) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ approvalStatus: 'Archived' })
     })
-  )).catch(() => {});
+  )).catch(err => console.error('API Sync Error:', err));
 };
 
 export const bulkDeleteFranchises = (ids: string[]) => {
@@ -1229,7 +1229,7 @@ export const bulkDeleteFranchises = (ids: string[]) => {
   notifyDataChanged();
   Promise.all(ids.map(id => 
     fetch(`${API_BASE_URL}/api/franchises/${id}`, { method: 'DELETE' })
-  )).catch(() => {});
+  )).catch(err => console.error('API Sync Error:', err));
 };
 
 export const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -1358,7 +1358,7 @@ export const addDemandRegion = (item: Omit<DemandRegion, 'id' | 'demandScore' | 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(finalRegion)
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const updateDemandRegion = (id: string, updated: Partial<DemandRegion>) => {
@@ -1386,7 +1386,7 @@ export const updateDemandRegion = (id: string, updated: Partial<DemandRegion>) =
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedRegion)
-    }).catch(() => {});
+    }).catch(err => console.error('API Sync Error:', err));
   }
 };
 
@@ -1395,5 +1395,5 @@ export const deleteDemandRegion = (id: string) => {
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/demand-regions/${id}`, {
     method: 'DELETE'
-  }).catch(() => {});
+  }).catch(err => console.error('API Sync Error:', err));
 };
