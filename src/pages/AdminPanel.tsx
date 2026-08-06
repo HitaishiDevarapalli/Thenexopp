@@ -821,14 +821,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 setExpandedMenu(null);
               }}
               style={{
-                display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
-                fontSize: '0.9rem', fontWeight: activeTab === 'overview' ? 700 : 500,
-                backgroundColor: activeTab === 'overview' ? '#16A34A' : 'transparent',
-                color: activeTab === 'overview' ? '#FFFFFF' : '#475569',
-                transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
+                fontSize: '0.88rem', fontWeight: activeTab === 'overview' ? 700 : 500,
+                backgroundColor: activeTab === 'overview' ? '#ECFDF5' : 'transparent',
+                color: activeTab === 'overview' ? '#059669' : '#475569',
+                border: activeTab === 'overview' ? '1px solid #A7F3D0' : '1px solid transparent',
+                transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
+                fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
               }}
             >
-              <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}><FaHome /></span>
+              <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', color: activeTab === 'overview' ? '#059669' : '#64748B' }}><FaHome /></span>
               <span style={{ flexGrow: 1 }}>Dashboard</span>
             </button>
           )}
@@ -848,10 +850,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   setExpandedMenu(expandedMenu === 'properties' ? null : 'properties');
                 }}
                 style={{
-                  padding: '12px 16px', backgroundColor: activeTab === 'properties' ? '#DCFCE7' : 'transparent', color: activeTab === 'properties' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  padding: '11px 16px', backgroundColor: activeTab === 'properties' ? '#ECFDF5' : 'transparent', color: activeTab === 'properties' ? '#059669' : '#475569', border: activeTab === 'properties' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBuilding /> Property Management</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBuilding style={{ color: activeTab === 'properties' ? '#059669' : '#64748B' }} /> Property Management</div>
                 <FaChevronDown style={{ transform: expandedMenu === 'properties' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
               </button>
               
@@ -869,7 +871,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                         }}
                         style={{
-                          padding: '8px 12px', backgroundColor: propertySubTab === sub.id && activeTab === 'properties' ? '#F1F5F9' : 'transparent', color: propertySubTab === sub.id && activeTab === 'properties' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: propertySubTab === sub.id && activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                          padding: '8px 12px', backgroundColor: propertySubTab === sub.id && activeTab === 'properties' ? '#F0FDF4' : 'transparent', color: propertySubTab === sub.id && activeTab === 'properties' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: propertySubTab === sub.id && activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
                         }}
                       >
                         {sub.icon} {sub.label}
@@ -888,10 +890,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   setExpandedMenu(expandedMenu === 'franchises' ? null : 'franchises');
                 }}
                 style={{
-                  padding: '12px 16px', backgroundColor: activeTab === 'franchises' ? '#DCFCE7' : 'transparent', color: activeTab === 'franchises' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  padding: '11px 16px', backgroundColor: activeTab === 'franchises' ? '#ECFDF5' : 'transparent', color: activeTab === 'franchises' ? '#059669' : '#475569', border: activeTab === 'franchises' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaStore /> Franchise Management</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaStore style={{ color: activeTab === 'franchises' ? '#059669' : '#64748B' }} /> Franchise Management</div>
                 <FaChevronDown style={{ transform: expandedMenu === 'franchises' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
               </button>
 
@@ -909,7 +911,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                         }}
                         style={{
-                          padding: '8px 12px', backgroundColor: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#F1F5F9' : 'transparent', color: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: franchiseSubTab === sub.id && activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                          padding: '8px 12px', backgroundColor: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#F0FDF4' : 'transparent', color: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: franchiseSubTab === sub.id && activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
                         }}
                       >
                         {sub.icon} {sub.label}
@@ -928,10 +930,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   setExpandedMenu(expandedMenu === 'businesses' ? null : 'businesses');
                 }}
                 style={{
-                  padding: '12px 16px', backgroundColor: activeTab === 'businesses' ? '#DCFCE7' : 'transparent', color: activeTab === 'businesses' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  padding: '11px 16px', backgroundColor: activeTab === 'businesses' ? '#ECFDF5' : 'transparent', color: activeTab === 'businesses' ? '#059669' : '#475569', border: activeTab === 'businesses' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBriefcase /> Business Management</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBriefcase style={{ color: activeTab === 'businesses' ? '#059669' : '#64748B' }} /> Business Management</div>
                 <FaChevronDown style={{ transform: expandedMenu === 'businesses' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
               </button>
 
@@ -949,7 +951,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                         }}
                         style={{
-                          padding: '8px 12px', backgroundColor: businessSubTab === sub.id && activeTab === 'businesses' ? '#F1F5F9' : 'transparent', color: businessSubTab === sub.id && activeTab === 'businesses' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: businessSubTab === sub.id && activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                          padding: '8px 12px', backgroundColor: businessSubTab === sub.id && activeTab === 'businesses' ? '#F0FDF4' : 'transparent', color: businessSubTab === sub.id && activeTab === 'businesses' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: businessSubTab === sub.id && activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
                         }}
                       >
                         {sub.icon} {sub.label}
@@ -967,10 +969,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 setExpandedMenu(null);
               }}
               style={{
-                padding: '12px 16px', backgroundColor: activeTab === 'demand_regions' ? '#DCFCE7' : 'transparent', color: activeTab === 'demand_regions' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'demand_regions' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                padding: '11px 16px', backgroundColor: activeTab === 'demand_regions' ? '#ECFDF5' : 'transparent', color: activeTab === 'demand_regions' ? '#059669' : '#475569', border: activeTab === 'demand_regions' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'demand_regions' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
               }}
             >
-              <FaMapMarkerAlt /> Demand Regions
+              <FaMapMarkerAlt style={{ color: activeTab === 'demand_regions' ? '#059669' : '#64748B' }} /> Demand Regions
             </button>
           )}
 
@@ -989,10 +991,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   setExpandedMenu(expandedMenu === 'brokers' ? null : 'brokers');
                 }}
                 style={{
-                  padding: '12px 16px', backgroundColor: activeTab === 'brokers' ? '#DCFCE7' : 'transparent', color: activeTab === 'brokers' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                  padding: '11px 16px', backgroundColor: activeTab === 'brokers' ? '#ECFDF5' : 'transparent', color: activeTab === 'brokers' ? '#059669' : '#475569', border: activeTab === 'brokers' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaUserTie /> Broker Management</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaUserTie style={{ color: activeTab === 'brokers' ? '#059669' : '#64748B' }} /> Broker Management</div>
                 <FaChevronDown style={{ transform: expandedMenu === 'brokers' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
               </button>
               
@@ -1010,7 +1012,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           if (window.innerWidth < 1024) setIsSidebarOpen(false);
                         }}
                         style={{
-                          padding: '10px 12px', backgroundColor: brokerSubTab === sub.id && activeTab === 'brokers' ? '#F1F5F9' : 'transparent', color: brokerSubTab === sub.id && activeTab === 'brokers' ? '#0D9488' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.85rem', fontWeight: brokerSubTab === sub.id && activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
+                          padding: '10px 12px', backgroundColor: brokerSubTab === sub.id && activeTab === 'brokers' ? '#F0FDF4' : 'transparent', color: brokerSubTab === sub.id && activeTab === 'brokers' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.85rem', fontWeight: brokerSubTab === sub.id && activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
                         }}
                       >
                         {sub.icon} {sub.label}
@@ -1029,10 +1031,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     setExpandedMenu(null);
                   }}
                   style={{
-                    padding: '12px 16px', backgroundColor: activeTab === 'users' ? '#DCFCE7' : 'transparent', color: activeTab === 'users' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'users' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                    padding: '11px 16px', backgroundColor: activeTab === 'users' ? '#ECFDF5' : 'transparent', color: activeTab === 'users' ? '#059669' : '#475569', border: activeTab === 'users' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'users' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                   }}
                 >
-                  <FaUsers /> User Management
+                  <FaUsers style={{ color: activeTab === 'users' ? '#059669' : '#64748B' }} /> User Management
                 </button>
                 <button
                   onClick={() => {
@@ -1040,10 +1042,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     setExpandedMenu(null);
                   }}
                   style={{
-                    padding: '12px 16px', backgroundColor: activeTab === 'team' ? '#DCFCE7' : 'transparent', color: activeTab === 'team' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'team' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                    padding: '11px 16px', backgroundColor: activeTab === 'team' ? '#ECFDF5' : 'transparent', color: activeTab === 'team' ? '#059669' : '#475569', border: activeTab === 'team' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'team' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                   }}
                 >
-                  <FaUserShield /> Team Members
+                  <FaUserShield style={{ color: activeTab === 'team' ? '#059669' : '#64748B' }} /> Team Members
                 </button>
                 <button
                   onClick={() => {
@@ -1051,10 +1053,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     setExpandedMenu(null);
                   }}
                   style={{
-                    padding: '12px 16px', backgroundColor: activeTab === 'roles' ? '#DCFCE7' : 'transparent', color: activeTab === 'roles' ? '#0D9488' : '#334155', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '8px', fontWeight: activeTab === 'roles' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif"
+                    padding: '11px 16px', backgroundColor: activeTab === 'roles' ? '#ECFDF5' : 'transparent', color: activeTab === 'roles' ? '#059669' : '#475569', border: activeTab === 'roles' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'roles' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                   }}
                 >
-                  <FaCog /> Roles & Permissions
+                  <FaCog style={{ color: activeTab === 'roles' ? '#059669' : '#64748B' }} /> Roles & Permissions
                 </button>
               </>
             )}
@@ -1095,14 +1097,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         setExpandedMenu(null);
                       }}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
                         fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                        backgroundColor: isActive ? '#DCFCE7' : 'transparent',
-                        color: isActive ? '#16A34A' : '#475569',
-                        transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+                        backgroundColor: isActive ? '#ECFDF5' : 'transparent',
+                        color: isActive ? '#059669' : '#475569',
+                        border: isActive ? '1px solid #A7F3D0' : '1px solid transparent',
+                        transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
+                        fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                       }}
                     >
-                      <span style={{ fontSize: '1rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+                      <span style={{ fontSize: '1rem', color: isActive ? '#059669' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
                       <span style={{ flexGrow: 1 }}>{item.label}</span>
                     </button>
                   );
@@ -1129,21 +1133,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   setExpandedMenu(null);
                 }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
                   fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                  backgroundColor: isActive ? '#DCFCE7' : 'transparent',
-                  color: isActive ? '#16A34A' : '#475569',
-                  transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+                  backgroundColor: isActive ? '#ECFDF5' : 'transparent',
+                  color: isActive ? '#059669' : '#475569',
+                  border: isActive ? '1px solid #A7F3D0' : '1px solid transparent',
+                  transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
+                  fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                 }}
               >
-                <span style={{ fontSize: '1rem', color: isActive ? '#16A34A' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+                <span style={{ fontSize: '1rem', color: isActive ? '#059669' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
                 <span style={{ flexGrow: 1 }}>{item.label}</span>
               </button>
             );
           })}
 
           {/* VERY BOTTOM OPTION: Users Data (Registered Customers) */}
-          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#16A34A', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#059669', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             CUSTOMER DATA
           </div>
           <button
@@ -1152,17 +1158,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               setExpandedMenu(null);
             }}
             style={{
-              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', border: 'none', borderRadius: '12px', cursor: 'pointer',
-              fontSize: '0.9rem', fontWeight: (activeTab as string) === 'users_data' ? 800 : 600,
-              backgroundColor: (activeTab as string) === 'users_data' ? '#16A34A' : '#ECFDF5',
-              color: (activeTab as string) === 'users_data' ? '#FFFFFF' : '#047857',
-              boxShadow: (activeTab as string) === 'users_data' ? '0 4px 14px rgba(22, 163, 74, 0.3)' : 'none',
-              transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
+              fontSize: '0.88rem', fontWeight: (activeTab as string) === 'users_data' ? 700 : 500,
+              backgroundColor: (activeTab as string) === 'users_data' ? '#ECFDF5' : 'transparent',
+              color: (activeTab as string) === 'users_data' ? '#059669' : '#475569',
+              border: (activeTab as string) === 'users_data' ? '1px solid #A7F3D0' : '1px solid transparent',
+              transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
+              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
             }}
           >
-            <span style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}><FaUsers /></span>
+            <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', color: (activeTab as string) === 'users_data' ? '#059669' : '#64748B' }}><FaUsers /></span>
             <span style={{ flexGrow: 1 }}>Users Data</span>
-            <span style={{ backgroundColor: (activeTab as string) === 'users_data' ? '#FFFFFF' : '#10B981', color: (activeTab as string) === 'users_data' ? '#16A34A' : '#FFFFFF', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 800 }}>
+            <span style={{ backgroundColor: '#ECFDF5', color: '#059669', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 800, border: '1px solid #A7F3D0' }}>
               {registeredCustomers.length}
             </span>
           </button>
@@ -1222,157 +1229,157 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           
           {/* ================= CATEGORY 0: GRAND OVERVIEW ================= */}
           {activeTab === 'overview' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}>
               {/* ROW 1: Top 6 Stat Cards with SVG Sparkline Graphs */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
                 {/* Card 1: TOTAL PROPERTIES */}
                 <div
                   onClick={() => setStatModalTopic('properties')}
                   title="Click to view interactive graph & real database statistics"
-                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                       <FaHome />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>PROPERTIES</span>
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL PROPERTIES</span>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {propertiesDb.length.toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>Real-Time DB</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 16 C 14 16, 24 6, 36 10 C 48 14, 52 4, 58 6" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {propertiesDb.length.toLocaleString()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>🟢 Real-Time DB</span>
-                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d={propertiesDb.length === 0 ? "M2 18 L58 18" : "M2 18 C 12 14, 20 20, 32 10 C 44 2, 50 14, 58 6"} stroke="#16A34A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
 
-              {/* Card 2: FRANCHISES */}
-              <div
-                onClick={() => setStatModalTopic('franchises')}
-                title="Click to view interactive graph & real database statistics"
-                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DBEAFE', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                    <FaStore />
+                {/* Card 2: FRANCHISES */}
+                <div
+                  onClick={() => setStatModalTopic('franchises')}
+                  title="Click to view interactive graph & real database statistics"
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaStore />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>FRANCHISES</span>
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>FRANCHISES</span>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {franchiseDb.length.toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>Real-Time DB</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 18 C 14 18, 22 8, 34 14 C 46 18, 50 6, 58 8" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {franchiseDb.length.toLocaleString()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563EB' }}>🟢 Real-Time DB</span>
-                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d={franchiseDb.length === 0 ? "M2 18 L58 18" : "M2 16 C 14 18, 22 8, 34 14 C 46 20, 50 6, 58 8"} stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
 
-              {/* Card 3: BUSINESSES */}
-              <div
-                onClick={() => setStatModalTopic('businesses')}
-                title="Click to view interactive graph & real database statistics"
-                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F3E8FF', color: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                    <FaBriefcase />
+                {/* Card 3: BUSINESSES */}
+                <div
+                  onClick={() => setStatModalTopic('businesses')}
+                  title="Click to view interactive graph & real database statistics"
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaBriefcase />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>BUSINESSES</span>
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>BUSINESSES</span>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {businessDb.length.toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>Real-Time DB</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 18 C 16 10, 24 16, 34 8 C 44 4, 50 12, 58 6" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {businessDb.length.toLocaleString()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#9333EA' }}>🟢 Real-Time DB</span>
-                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d={businessDb.length === 0 ? "M2 18 L58 18" : "M2 18 C 16 10, 24 18, 34 8 C 44 -2, 50 14, 58 6"} stroke="#9333EA" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
 
-              {/* Card 4: LEAD ENQUIRIES */}
-              <div
-                onClick={() => setStatModalTopic('enquiries')}
-                title="Click to view interactive graph & real database statistics"
-                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FFEDD5', color: '#EA580C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                    <FaEnvelope />
+                {/* Card 4: LEAD ENQUIRIES */}
+                <div
+                  onClick={() => setStatModalTopic('enquiries')}
+                  title="Click to view interactive graph & real database statistics"
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaEnvelope />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>LEAD ENQUIRIES</span>
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>LEAD ENQUIRIES</span>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {enquiriesDb.length.toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>Active Leads</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 16 C 14 16, 24 10, 36 12 C 48 14, 52 6, 58 8" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {enquiriesDb.length.toLocaleString()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EA580C' }}>📥 Active Leads</span>
-                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d={enquiriesDb.length === 0 ? "M2 18 L58 18" : "M2 16 C 14 16, 24 10, 36 12 C 48 14, 52 6, 58 8"} stroke="#EA580C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
 
-              {/* Card 5: TOTAL USERS */}
-              <div
-                onClick={() => setStatModalTopic('users')}
-                title="Click to view interactive graph & real database statistics"
-                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#CCFBF1', color: '#0D9488', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                    <FaUsers />
+                {/* Card 5: TOTAL USERS */}
+                <div
+                  onClick={() => setStatModalTopic('users')}
+                  title="Click to view interactive graph & real database statistics"
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaUsers />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL USERS</span>
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL USERS</span>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {registeredCustomers.length.toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>Customer DB</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 18 C 14 18, 24 12, 36 15 C 48 16, 52 6, 58 10" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {registeredCustomers.length.toLocaleString()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0D9488' }}>👤 Customer DB</span>
-                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d={registeredCustomers.length === 0 ? "M2 18 L58 18" : "M2 18 C 14 18, 24 12, 36 15 C 48 18, 52 6, 58 10"} stroke="#0D9488" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
 
-              {/* Card 6: TOTAL SOLD DATA */}
-              <div
-                onClick={() => setStatModalTopic('sold')}
-                title="Click to view interactive graph & real database statistics"
-                style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F0FDF4', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                    <FaCheckCircle />
+                {/* Card 6: TOTAL SOLD DATA */}
+                <div
+                  onClick={() => setStatModalTopic('sold')}
+                  title="Click to view interactive graph & real database statistics"
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaCheckCircle />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>SOLD DATA</span>
                   </div>
-                  <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL SOLD DATA</span>
-                </div>
-                <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
-                  {(
-                    propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length +
-                    franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length +
-                    businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length
-                  ).toLocaleString()}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A' }}>🏷️ Closed Deals</span>
-                  <svg width="60" height="22" viewBox="0 0 60 22" fill="none">
-                    <path d="M2 18 C 14 18, 24 12, 36 15 C 48 18, 52 6, 58 10" stroke="#16A34A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {(
+                      propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length +
+                      franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length +
+                      businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length
+                    ).toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>Closed Deals</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 18 C 14 18, 24 12, 36 15 C 48 18, 52 6, 58 10" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* ROW 2: 3 Columns Grid (Overview Analytics Line Chart, Recent Activity, Top Performing Locations Pie Chart) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '20px', alignItems: 'stretch' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', alignItems: 'stretch' }}>
               
               {/* Col 1: Overview Analytics (Bar Graph showing listings by category with Slide navigation) */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', border: '1px solid #F1F5F9', boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '340px' }}>
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '340px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', display: 'block' }}>Overview Analytics</span>
@@ -1410,9 +1417,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Tabs Row for quick selection */}
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
                   {[
-                    { id: 'property', label: 'Properties', color: '#16A34A', bgClass: '#DCFCE7' },
-                    { id: 'franchise', label: 'Franchises', color: '#2563EB', bgClass: '#DBEAFE' },
-                    { id: 'business', label: 'Businesses', color: '#9333EA', bgClass: '#F3E8FF' }
+                    { id: 'property', label: 'Properties' },
+                    { id: 'franchise', label: 'Franchises' },
+                    { id: 'business', label: 'Businesses' }
                   ].map(tab => {
                     const active = activeAnalyticsSlide === tab.id;
                     return (
@@ -1421,15 +1428,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         onClick={() => setActiveAnalyticsSlide(tab.id as any)}
                         style={{
                           flex: 1,
-                          padding: '6px 10px',
-                          border: active ? `2px solid ${tab.color}` : '1px solid #E2E8F0',
-                          backgroundColor: active ? tab.bgClass : '#F8FAFC',
-                          color: active ? tab.color : '#475569',
+                          padding: '7px 12px',
+                          border: active ? '1px solid #059669' : '1px solid #E2E8F0',
+                          backgroundColor: active ? '#059669' : '#FFFFFF',
+                          color: active ? '#FFFFFF' : '#475569',
                           fontWeight: 700,
-                          fontSize: '0.75rem',
+                          fontSize: '0.78rem',
                           cursor: 'pointer',
                           borderRadius: '8px',
-                          transition: 'all 0.2s'
+                          transition: 'all 0.2s',
+                          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                         }}
                       >
                         {tab.label}
@@ -1466,13 +1474,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         {data.map((item, idx) => {
                           const barWidth = 32;
                           const x = 50 + idx * 60;
-                          const barHeight = (item.val / maxVal) * 110;
+                          const calculatedHeight = (item.val / maxVal) * 110;
+                          const barHeight = item.val === 0 ? 8 : Math.max(calculatedHeight, 14);
                           const y = 140 - barHeight;
                           return (
                             <g key={idx}>
-                              <rect x={x} y={y} width={barWidth} height={barHeight} fill="#16A34A" rx="4" ry="4" style={{ transition: 'all 0.5s ease' }} />
-                              <text x={x + barWidth/2} y={y - 6} fontSize="8" fontWeight="700" fill="#16A34A" textAnchor="middle">{item.val}</text>
-                              <text x={x + barWidth/2} y="154" fontSize="8" fontWeight="600" fill="#475569" textAnchor="middle">{item.label}</text>
+                              <rect x={x} y={y} width={barWidth} height={barHeight} fill={item.val > 0 ? "#059669" : "#E2E8F0"} rx="6" ry="6" style={{ transition: 'all 0.4s ease' }} />
+                              <text x={x + barWidth/2} y={y - 6} fontSize="9" fontWeight="800" fill={item.val > 0 ? "#059669" : "#94A3B8"} textAnchor="middle">{item.val}</text>
+                              <text x={x + barWidth/2} y="156" fontSize="9" fontWeight="600" fill="#475569" textAnchor="middle">{item.label}</text>
                             </g>
                           );
                         })}
@@ -1557,10 +1566,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               {/* Col 2: Recent Activity */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', border: '1px solid #F1F5F9', boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                   <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>Recent Activity</span>
-                  <button onClick={() => setActiveTab('inquiries')} style={{ fontSize: '0.78rem', fontWeight: 700, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <button onClick={() => setActiveTab('inquiries')} style={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                     View All
                   </button>
                 </div>
@@ -1634,10 +1643,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               {/* Col 3: Top Performing Locations (Donut / Pie Chart) */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', border: '1px solid #F1F5F9', boxShadow: '0 4px 12px -2px rgba(0, 0, 0, 0.03)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '22px 24px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>Top Performing Locations</span>
-                  <button onClick={() => setActiveTab('properties')} style={{ fontSize: '0.78rem', fontWeight: 700, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <button onClick={() => setActiveTab('properties')} style={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                     View All
                   </button>
                 </div>
