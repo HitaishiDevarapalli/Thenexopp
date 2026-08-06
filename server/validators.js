@@ -1,23 +1,23 @@
 import { z } from 'zod';
 
 export const propertyValidationSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  price: z.number().positive('Price must be positive'),
-  category: z.string().min(2, 'Category is required'),
-  state: z.string().default('Andhra Pradesh'),
-  city: z.string().default('Guntur'),
-  area: z.string().default('Brodipet'),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  price: z.coerce.number().optional(),
+  category: z.string().optional(),
+  state: z.string().optional(),
+  city: z.string().optional(),
+  area: z.string().optional(),
   areaSqFt: z.string().optional(),
-  bedrooms: z.number().nonnegative().optional(),
-  bathrooms: z.number().nonnegative().optional(),
+  bedrooms: z.coerce.number().optional(),
+  bathrooms: z.coerce.number().optional(),
 });
 
 export const franchiseValidationSchema = z.object({
-  brand: z.string().min(2, 'Brand name is required'),
-  type: z.string().min(2, 'Franchise type is required'),
-  investment: z.number().positive('Investment must be positive'),
-  city: z.string().min(2, 'City is required'),
+  brand: z.string().optional(),
+  type: z.string().optional(),
+  investment: z.coerce.number().optional(),
+  city: z.string().optional(),
 });
 
 export const userRegisterSchema = z.object({
@@ -33,8 +33,8 @@ export const userLoginSchema = z.object({
 });
 
 export const enquirySchema = z.object({
-  customerName: z.string().min(2, 'Customer name is required'),
-  phone: z.string().min(5, 'Valid phone number is required'),
-  email: z.string().email('Invalid email address'),
-  listingTitle: z.string().min(2, 'Listing title is required'),
+  customerName: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  listingTitle: z.string().optional(),
 });

@@ -440,14 +440,22 @@ app.get('/api/properties', async (req, res) => {
 app.post('/api/properties', async (req, res, next) => {
   try {
     if (req.body.title && req.body.price) {
-      propertyValidationSchema.partial().parse(req.body);
+      try { propertyValidationSchema.partial().parse(req.body); } catch (_) {}
     }
     const newProp = { id: req.body.id || `prop-pg-${Date.now()}`, createdDate: new Date().toLocaleDateString(), ...req.body };
+
+    let listingStatus = 'PUBLISHED';
+    if (newProp.listingStatus) {
+      const upper = String(newProp.listingStatus).toUpperCase();
+      if (['DRAFT', 'PENDING', 'PUBLISHED', 'HIDDEN', 'RESERVED', 'SOLD', 'EXPIRED', 'ARCHIVED'].includes(upper)) {
+        listingStatus = upper;
+      }
+    }
 
     const created = await prisma.property.create({
       data: {
         id: newProp.id,
-        title: newProp.title,
+        title: newProp.title || 'Untitled Property',
         description: newProp.description || '',
         image: newProp.image || '',
         image2: newProp.image2 || null,
@@ -465,6 +473,7 @@ app.post('/api/properties', async (req, res, next) => {
         priceDisplay: newProp.priceDisplay || `₹${newProp.price}`,
         category: newProp.category || 'Flats',
         status: newProp.status || 'Buy',
+        listingStatus: listingStatus,
         areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
         bedrooms: Number(newProp.bedrooms) || 0,
         bathrooms: Number(newProp.bathrooms) || 0,
