@@ -420,7 +420,7 @@ app.post('/api/customers', async (req, res, next) => {
 
 app.delete('/api/customers/:id', async (req, res, next) => {
   try {
-    await prisma.customer.delete({ where: { id: req.params.id } });
+    await prisma.customer.deleteMany({ where: { id: req.params.id } });
     return res.json({ success: true, id: req.params.id });
   } catch (err) {
     next(err);
@@ -527,7 +527,7 @@ app.put('/api/properties/:id', async (req, res, next) => {
 app.delete('/api/properties/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.property.delete({ where: { id } });
+    await prisma.property.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);
@@ -606,7 +606,7 @@ app.put('/api/franchises/:id', async (req, res, next) => {
 app.delete('/api/franchises/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.franchise.delete({ where: { id } });
+    await prisma.franchise.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);
@@ -681,7 +681,7 @@ app.put('/api/businesses/:id', async (req, res, next) => {
 app.delete('/api/businesses/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.business.delete({ where: { id } });
+    await prisma.business.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);
@@ -755,7 +755,7 @@ app.put('/api/dealers/:id', async (req, res, next) => {
 app.delete('/api/dealers/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.broker.delete({ where: { id } });
+    await prisma.broker.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);
@@ -818,7 +818,7 @@ app.put('/api/showcase-videos/:id', async (req, res, next) => {
 app.delete('/api/showcase-videos/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.showcaseVideo.delete({ where: { id } });
+    await prisma.showcaseVideo.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);
@@ -858,7 +858,7 @@ app.put('/api/enquiries/:id', async (req, res, next) => {
 app.delete('/api/enquiries/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.enquiry.delete({ where: { id } });
+    await prisma.enquiry.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);
@@ -915,7 +915,7 @@ app.put('/api/team-members/:id', async (req, res, next) => {
 
 app.delete('/api/team-members/:id', async (req, res, next) => {
   try {
-    await prisma.teamMember.delete({ where: { id: req.params.id } });
+    await prisma.teamMember.deleteMany({ where: { id: req.params.id } });
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
@@ -957,7 +957,7 @@ app.put('/api/roles/:id', async (req, res, next) => {
 
 app.delete('/api/roles/:id', async (req, res, next) => {
   try {
-    await prisma.customRole.delete({ where: { id: req.params.id } });
+    await prisma.customRole.deleteMany({ where: { id: req.params.id } });
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
@@ -1008,7 +1008,7 @@ app.put('/api/employees/:id', async (req, res, next) => {
 
 app.delete('/api/employees/:id', async (req, res, next) => {
   try {
-    await prisma.employeeUser.delete({ where: { id: req.params.id } });
+    await prisma.employeeUser.deleteMany({ where: { id: req.params.id } });
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
@@ -1038,7 +1038,7 @@ app.put('/api/demand-regions/:id', async (req, res, next) => {
 
 app.delete('/api/demand-regions/:id', async (req, res, next) => {
   try {
-    await prisma.demandRegion.delete({ where: { id: req.params.id } });
+    await prisma.demandRegion.deleteMany({ where: { id: req.params.id } });
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
@@ -1068,7 +1068,7 @@ app.put('/api/franchise-enquiries/:id', async (req, res, next) => {
 
 app.delete('/api/franchise-enquiries/:id', async (req, res, next) => {
   try {
-    await prisma.franchiseEnquiry.delete({ where: { id: req.params.id } });
+    await prisma.franchiseEnquiry.deleteMany({ where: { id: req.params.id } });
     return res.json({ success: true, id: req.params.id });
   } catch (err) { next(err); }
 });
