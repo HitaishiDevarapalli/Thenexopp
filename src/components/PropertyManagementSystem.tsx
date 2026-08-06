@@ -226,6 +226,27 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     }
   });
 
+  // Auto-generate Property ID in Add Mode
+  useEffect(() => {
+    if (modalMode === 'add') {
+      const num = propertiesDb.length + 1;
+      const stateCode = formData.state ? formData.state.substring(0, 2).toUpperCase() : 'XX';
+      const typeCode = formData.propertyPurpose === 'Rent' ? 'R' : 'S';
+      let catCode = 'O';
+      if (formData.category?.includes('Apartment') || formData.category?.includes('Flat')) catCode = 'F';
+      else if (formData.category?.includes('Villa')) catCode = 'V';
+      else if (formData.category?.includes('House')) catCode = 'H';
+      else if (formData.category?.includes('Plot') || formData.category?.includes('Land')) catCode = 'P';
+      else if (formData.category?.includes('Commercial')) catCode = 'C';
+      
+      const newId = `nexopp-${num}-${stateCode}-${typeCode}-${catCode}`;
+      if (formData.id !== newId) {
+        setFormData(prev => ({ ...prev, id: newId }));
+      }
+    }
+  }, [formData.state, formData.propertyPurpose, formData.category, modalMode, propertiesDb.length]);
+
+
   // Location Hierarchy Manager State
   const [selectedHierarchyState, setSelectedHierarchyState] = useState<string>('Telangana');
   const [selectedHierarchyDistrict, setSelectedHierarchyDistrict] = useState<string>('Hyderabad');
@@ -1693,8 +1714,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
                     <div>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PROPERTY ID *</label>
-                      <input type="text" value={formData.id || ''} onChange={e => setFormData({ ...formData, id: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 700, color: '#0F172A' }} required />
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PROPERTY ID (Auto-Generated) *</label>
+                      <input type="text" value={formData.id || ''} readOnly style={{ width: '100%', padding: '14px', border: '1px solid #E2E8F0', borderRadius: '12px', fontWeight: 700, color: '#64748B', backgroundColor: '#F8FAFC', outline: 'none' }} required />
                     </div>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PROPERTY TITLE *</label>
