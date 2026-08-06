@@ -642,6 +642,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     : (userRoleData ? userRoleData.permissions : []);
 
   const hasPermission = (permKey: string) => {
+    if (permKey === 'overview' || permKey === 'dashboard') {
+      return currentUserRole === 'Super Admin' || currentUserRole === 'Admin';
+    }
     if (currentUserRole === 'Super Admin' || activePermissions.includes('all')) return true;
     if (activePermissions.includes(permKey)) return true;
 
@@ -656,6 +659,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
     return false;
   };
+
+  // Redirect non-admin employees away from Dashboard tab automatically
+  useEffect(() => {
+    if (isAuthenticated && !hasPermission('overview') && activeTab === 'overview') {
+      if (hasPermission('properties')) {
+        setActiveTab('properties');
+        setExpandedMenu('properties');
+      } else if (hasPermission('franchises')) {
+        setActiveTab('franchises');
+        setExpandedMenu('franchises');
+      } else if (hasPermission('businesses')) {
+        setActiveTab('businesses');
+        setExpandedMenu('businesses');
+      } else if (hasPermission('demand_regions')) {
+        setActiveTab('demand_regions');
+        setExpandedMenu(null);
+      } else if (hasPermission('brokers')) {
+        setActiveTab('brokers');
+        setExpandedMenu('brokers');
+      } else if (hasPermission('users')) {
+        setActiveTab('users');
+        setExpandedMenu(null);
+      } else if (hasPermission('inquiries')) {
+        setActiveTab('inquiries');
+        setExpandedMenu(null);
+      } else if (hasPermission('media_manager')) {
+        setActiveTab('media_manager');
+        setExpandedMenu(null);
+      } else if (hasPermission('site_settings')) {
+        setActiveTab('customization');
+        setExpandedMenu(null);
+      }
+    }
+  }, [isAuthenticated, currentUserRole, activeTab]);
 
   const getHeaderInfo = () => {
     switch (activeTab) {
@@ -770,22 +807,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         <nav data-lenis-prevent="true" style={{ display: 'flex', flexDirection: 'column', padding: '10px 14px', gap: '4px', overflowY: 'auto', flexGrow: 1 }}>
           
           {/* Active Item: Dashboard */}
-          <button
-            onClick={() => {
-              setActiveTab('overview');
-              setExpandedMenu(null);
-            }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
-              fontSize: '0.9rem', fontWeight: activeTab === 'overview' ? 700 : 500,
-              backgroundColor: activeTab === 'overview' ? '#16A34A' : 'transparent',
-              color: activeTab === 'overview' ? '#FFFFFF' : '#475569',
-              transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
-            }}
-          >
-            <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}><FaHome /></span>
-            <span style={{ flexGrow: 1 }}>Dashboard</span>
-          </button>
+          {hasPermission('overview') && (
+            <button
+              onClick={() => {
+                setActiveTab('overview');
+                setExpandedMenu(null);
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', border: 'none', borderRadius: '10px', cursor: 'pointer',
+                fontSize: '0.9rem', fontWeight: activeTab === 'overview' ? 700 : 500,
+                backgroundColor: activeTab === 'overview' ? '#16A34A' : 'transparent',
+                color: activeTab === 'overview' ? '#FFFFFF' : '#475569',
+                transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box'
+              }}
+            >
+              <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center' }}><FaHome /></span>
+              <span style={{ flexGrow: 1 }}>Dashboard</span>
+            </button>
+          )}
 
           {/* Section: CONTENT MANAGEMENT */}
           {(hasPermission('properties') || hasPermission('franchises') || hasPermission('businesses') || hasPermission('demand_regions')) && (
