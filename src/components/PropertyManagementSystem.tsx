@@ -977,42 +977,72 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
               <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 16px 0', fontSize: '1.1rem' }}>Category Distribution</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {['Villa', 'Apartment', 'House', 'Plot', 'Commercial'].map(cat => {
-                  const count = propertiesDb.filter(p => p.category === cat).length;
-                  const pct = propertiesDb.length > 0 ? Math.round((count / propertiesDb.length) * 100) : 0;
-                  return (
-                    <div key={cat}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>
-                        <span>{cat}</span>
-                        <span>{count} Listings ({pct}%)</span>
+                {(() => {
+                  const categoryCounts = propertiesDb.reduce((acc, p) => {
+                    const cat = p.category || 'Unknown';
+                    acc[cat] = (acc[cat] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+                  
+                  const topCategories = Object.entries(categoryCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+                    
+                  if (topCategories.length === 0) {
+                    return <div style={{ color: '#64748B', fontSize: '0.85rem' }}>No listings available to determine category distribution.</div>;
+                  }
+
+                  return topCategories.map(([cat, count]) => {
+                    const pct = propertiesDb.length > 0 ? Math.round((count / propertiesDb.length) * 100) : 0;
+                    return (
+                      <div key={cat}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>
+                          <span>{cat}</span>
+                          <span>{count} Listings ({pct}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669' }} />
+                        </div>
                       </div>
-                      <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
 
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
               <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 16px 0', fontSize: '1.1rem' }}>Top Selling Cities</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi NCR', 'Pune'].map(city => {
-                  const count = propertiesDb.filter(p => p.city === city).length;
-                  const pct = propertiesDb.length > 0 ? Math.round((count / propertiesDb.length) * 100) : 0;
-                  return (
-                    <div key={city}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>
-                        <span>{city}</span>
-                        <span>{count} Listings</span>
+                {(() => {
+                  const cityCounts = propertiesDb.reduce((acc, p) => {
+                    const city = p.city || 'Unknown';
+                    acc[city] = (acc[city] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>);
+                  
+                  const topCities = Object.entries(cityCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+                    
+                  if (topCities.length === 0) {
+                    return <div style={{ color: '#64748B', fontSize: '0.85rem' }}>No listings available to determine top cities.</div>;
+                  }
+
+                  return topCities.map(([city, count]) => {
+                    const pct = propertiesDb.length > 0 ? Math.round((count / propertiesDb.length) * 100) : 0;
+                    return (
+                      <div key={city}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>
+                          <span>{city}</span>
+                          <span>{count} Listings</span>
+                        </div>
+                        <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669' }} />
+                        </div>
                       </div>
-                      <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669' }} />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
