@@ -72,7 +72,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   const [liveSuggestions, setLiveSuggestions] = useState<typeof GOOGLE_PLACES_SUGGESTIONS>(GOOGLE_PLACES_SUGGESTIONS);
   const [isSearchingLive, setIsSearchingLive] = useState(false);
   const [priceUnit, setPriceUnit] = useState<'Thousands' | 'Lakhs' | 'Crores'>('Lakhs');
-
+  const [newCustomFieldLabel, setNewCustomFieldLabel] = useState('');
+  const [newCustomFieldValue, setNewCustomFieldValue] = useState('');
+  const [newAmenity, setNewAmenity] = useState('');
   useEffect(() => {
     if (!addressSearchQuery || addressSearchQuery.trim().length < 2) {
       setLiveSuggestions(GOOGLE_PLACES_SUGGESTIONS.slice(0, 15));
@@ -1844,6 +1846,36 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         </select>
                       </div>
                     </div>
+
+                    {/* Custom Specifications */}
+                    <div style={{ marginTop: '24px' }}>
+                      <h5 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Custom Specifications</h5>
+                      {formData.customFields && formData.customFields.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                          {formData.customFields.map((field, idx) => (
+                            <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <div style={{ flex: 1, padding: '10px 14px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem' }}>{field.label}: {field.value}</div>
+                              <button type="button" onClick={() => {
+                                const newFields = [...(formData.customFields || [])];
+                                newFields.splice(idx, 1);
+                                setFormData({ ...formData, customFields: newFields });
+                              }} style={{ padding: '8px', backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', borderRadius: '8px', cursor: 'pointer' }}><FaTrash /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <input type="text" value={newCustomFieldLabel} onChange={e => setNewCustomFieldLabel(e.target.value)} placeholder="Field Name (e.g. Balcony Size)" style={{ flex: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} />
+                        <input type="text" value={newCustomFieldValue} onChange={e => setNewCustomFieldValue(e.target.value)} placeholder="Value (e.g. 200 Sq.Ft)" style={{ flex: 1, padding: '12px', border: '1px solid #CBD5E1', borderRadius: '8px' }} />
+                        <button type="button" onClick={() => {
+                          if (newCustomFieldLabel && newCustomFieldValue) {
+                            setFormData({ ...formData, customFields: [...(formData.customFields || []), { label: newCustomFieldLabel, value: newCustomFieldValue }] });
+                            setNewCustomFieldLabel('');
+                            setNewCustomFieldValue('');
+                          }
+                        }} style={{ padding: '0 20px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>Add Field</button>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Amenities Section */}
@@ -1869,6 +1901,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           </label>
                         );
                       })}
+                    </div>
+                    {/* Custom Amenities */}
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                      <input type="text" value={newAmenity} onChange={e => setNewAmenity(e.target.value)} placeholder="Add a custom amenity (e.g. Helipad)" style={{ flex: 1, padding: '12px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, outline: 'none' }} />
+                      <button type="button" onClick={() => {
+                        if (newAmenity && !formData.amenities?.includes(newAmenity)) {
+                          setFormData({ ...formData, amenities: [...(formData.amenities || []), newAmenity] });
+                          setNewAmenity('');
+                        }
+                      }} style={{ padding: '0 24px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>Add Amenity</button>
                     </div>
                   </div>
                 </div>
