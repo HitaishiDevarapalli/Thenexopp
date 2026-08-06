@@ -284,8 +284,24 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const sold = propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length;
     const reserved = propertiesDb.filter(p => p.approvalStatus === 'Reserved' || p.listingStatus === 'Reserved').length;
     const featuredCount = propertiesDb.filter(p => p.featured || p.highlightPropertyCard).length;
-    const totalValue = propertiesDb.reduce((acc, curr) => acc + (curr.price || 0), 0);
-    const avgPrice = total > 0 ? (totalValue / total).toFixed(2) : '0.00';
+    const totalValueInRupees = propertiesDb.reduce((acc, curr) => {
+      let absolutePrice = curr.price || 0;
+      const display = (curr.priceDisplay || '').toLowerCase();
+      // If the user typed "75" and selected Lakhs, absolutePrice is 75, so we need to multiply.
+      // If the absolutePrice is already very large (e.g. > 10000), it's likely they typed the full amount manually.
+      if (absolutePrice > 0 && absolutePrice < 100000) {
+        if (display.includes('cr') || display.includes('crore')) {
+          absolutePrice *= 10000000;
+        } else if (display.includes('lakh') || display.includes('lac')) {
+          absolutePrice *= 100000;
+        } else if (display.includes('k') || display.includes('thousand')) {
+          absolutePrice *= 1000;
+        }
+      }
+      return acc + absolutePrice;
+    }, 0);
+    const totalValueInCr = totalValueInRupees / 10000000;
+    const avgPriceInCr = total > 0 ? (totalValueInCr / total).toFixed(2) : '0.00';
     const sponsoredCount = propertiesDb.filter(p => p.premium || p.luxury).length;
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -300,7 +316,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       total, totalProperties: total, published, activeListings: published, 
       pending, pendingCount: pending, sold, totalSold: sold, 
       recentlySold30Days, reserved, featuredCount, sponsoredCount, 
-      totalValue: totalValue.toFixed(2), avgPrice 
+      totalValue: totalValueInCr.toFixed(2), avgPrice: avgPriceInCr
     };
   }, [propertiesDb]);
 
