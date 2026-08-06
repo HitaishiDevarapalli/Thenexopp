@@ -111,6 +111,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
     return sessionStorage.getItem('nexopp_admin_role') || 'Super Admin';
   });
+  const [currentUserName, setCurrentUserName] = useState<string>(() => {
+    return sessionStorage.getItem('nexopp_admin_user_name') || 'Super Admin';
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -266,6 +269,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       sessionStorage.setItem('nexopp_admin_user_email', cleanEmail);
       setIsAuthenticated(true);
       setCurrentUserRole('Super Admin');
+      setCurrentUserName('Super Admin');
       setError(null);
       return;
     }
@@ -283,6 +287,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       sessionStorage.setItem('nexopp_admin_user_email', employee.email);
       setIsAuthenticated(true);
       setCurrentUserRole(employee.role);
+      setCurrentUserName(employee.fullName);
       setError(null);
 
       // Evaluate permissions to set active tab
@@ -323,6 +328,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     sessionStorage.removeItem('nexopp_admin_user_name');
     sessionStorage.removeItem('nexopp_admin_user_email');
     setIsAuthenticated(false);
+    setCurrentUserRole('Super Admin');
+    setCurrentUserName('Super Admin');
     setActiveTab('overview');
   };
 
@@ -707,7 +714,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
       case 'media_manager': return { title: '🖥️ Main Page Settings', sub: 'Manage videos and settings displayed on the homepage carousel' };
       case 'users_data': return { title: '👥 Users Data (Registered Customers)', sub: 'Database of all registered and logged-in customers across AP & Telangana' };
-      default: return { title: 'Welcome back, Super Admin', sub: "Here's what's happening with your marketplace today." };
+      default: return { title: `Welcome back, ${currentUserName}`, sub: `Role: ${currentUserRole} — Here's what's happening with your marketplace today.` };
     }
   };
 
@@ -1169,10 +1176,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           <div style={{ height: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
             <h1 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-              {getHeaderInfo().title}
+              {activeTab === 'overview' ? `Welcome back, ${currentUserName}` : getHeaderInfo().title}
             </h1>
             <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#64748B', fontWeight: 500 }}>
-              {getHeaderInfo().sub}
+              <span style={{ fontWeight: 700, color: '#059669', marginRight: '6px' }}>{currentUserRole}</span> • {getHeaderInfo().sub}
             </p>
           </div>
 
@@ -1191,11 +1198,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid #E2E8F0' }}>
               <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#059669', fontSize: '0.85rem', letterSpacing: '0.5px' }}>
-                {currentUserRole === 'Super Admin' ? 'SA' : currentUserRole.substring(0, 2).toUpperCase()}
+                {currentUserName ? currentUserName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'SA'}
               </div>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>
-                  {sessionStorage.getItem('nexopp_admin_user_name') || 'Administrator'}
+                  {currentUserName}
                 </div>
                 <div style={{ fontWeight: 600, fontSize: '0.72rem', color: '#059669' }}>{currentUserRole}</div>
               </div>
