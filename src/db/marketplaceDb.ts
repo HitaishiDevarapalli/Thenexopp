@@ -651,14 +651,12 @@ const loadData = () => {
     demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);
     showcaseVideosDb = loadFromStorage('nexopp_showcase_videos_db', []);
 
-    // 2. Fetch from backend server API if available, merging remote data
+    // 2. Fetch from backend server API if available, replacing with server state as source of truth
     fetch(`${API_BASE_URL}/api/properties`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(propertiesDb.map(p => [p.id, p]));
-          data.forEach(p => map.set(p.id, p));
-          propertiesDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          propertiesDb = data;
           recalculateAllDemandRegions();
           notifyDataChanged();
         }
@@ -668,10 +666,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/franchises`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(franchiseDb.map(f => [f.id, f]));
-          data.forEach(f => map.set(f.id, f));
-          franchiseDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          franchiseDb = data;
           recalculateAllDemandRegions();
           notifyDataChanged();
         }
@@ -681,10 +677,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/businesses`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(businessDb.map(b => [b.id, b]));
-          data.forEach(b => map.set(b.id, b));
-          businessDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          businessDb = data;
           recalculateAllDemandRegions();
           notifyDataChanged();
         }
@@ -694,10 +688,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/dealers`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(dealersDb.map(d => [d.id, d]));
-          data.forEach(d => map.set(d.id, d));
-          dealersDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          dealersDb = data;
           notifyDataChanged();
         }
       })
@@ -706,10 +698,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/employees`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(employeeUsersDb.map(u => [u.id, u]));
-          data.forEach(u => map.set(u.id, u));
-          employeeUsersDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          employeeUsersDb = data;
           notifyDataChanged();
         }
       })
@@ -718,10 +708,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/roles`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(rolesDb.map(r => [r.id, r]));
-          data.forEach(r => map.set(r.id, r));
-          rolesDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          rolesDb = data;
           notifyDataChanged();
         }
       })
@@ -730,10 +718,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/team-members`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(teamMembersDb.map(t => [t.id, t]));
-          data.forEach(t => map.set(t.id, t));
-          teamMembersDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          teamMembersDb = data;
           notifyDataChanged();
         }
       })
@@ -742,10 +728,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/demand-regions`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(demandRegionsDb.map(dr => [dr.id, dr]));
-          data.forEach(dr => map.set(dr.id, dr));
-          demandRegionsDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          demandRegionsDb = data;
           notifyDataChanged();
         }
       })
@@ -754,10 +738,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/enquiries`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(enquiriesDb.map(e => [e.id, e]));
-          data.forEach(e => map.set(e.id, e));
-          enquiriesDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          enquiriesDb = data;
           notifyDataChanged();
         }
       })
@@ -766,10 +748,8 @@ const loadData = () => {
     fetch(`${API_BASE_URL}/api/franchise-enquiries`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const map = new Map(franchiseEnquiriesDb.map(fe => [fe.id, fe]));
-          data.forEach(fe => map.set(fe.id, fe));
-          franchiseEnquiriesDb = Array.from(map.values());
+        if (Array.isArray(data)) {
+          franchiseEnquiriesDb = data;
           notifyDataChanged();
         }
       })
