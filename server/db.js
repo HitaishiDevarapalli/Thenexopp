@@ -11,6 +11,9 @@ if (!connectionString) {
 }
 
 const pool = new pg.Pool({ connectionString });
+pool.on('error', (err) => {
+  logger.error({ error: err.message }, 'Unexpected PostgreSQL pool error');
+});
 const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient({

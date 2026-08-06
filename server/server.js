@@ -1126,6 +1126,15 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ── GLOBAL PROCESS CRASH PROTECTION ──────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+  logger.error({ err: err.message, stack: err.stack }, 'CRITICAL: Caught uncaughtException to prevent process crash');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error({ reason, promise }, 'CRITICAL: Caught unhandledRejection to prevent process crash');
+});
+
 app.listen(PORT, () => {
   logger.info(`[NEXOPP Enterprise API] Server running on port ${PORT} (${process.env.NODE_ENV || 'production'})`);
 });
