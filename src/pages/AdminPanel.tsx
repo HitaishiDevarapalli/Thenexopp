@@ -3023,42 +3023,50 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         )}
 
         {activeTab === 'roles' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}>
             
-            {/* Neat & Classy White Header Card */}
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '14px', padding: '28px 32px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px -4px rgba(0,0,0,0.03)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <span style={{ backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', color: '#0F172A', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  ROLE & PERMISSION CONTROL
-                </span>
-                <span style={{ backgroundColor: '#DCFCE7', color: '#15803D', padding: '4px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '0.75rem' }}>
-                  REAL-TIME PORTAL SYNC
-                </span>
-              </div>
+            {/* Professional White Header Card */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px 28px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                    <span style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, fontSize: '0.72rem', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                      ACCESS & PERMISSIONS CONTROL
+                    </span>
+                    <span style={{ backgroundColor: '#DCFCE7', color: '#15803D', padding: '3px 10px', borderRadius: '6px', fontWeight: 700, fontSize: '0.72rem' }}>
+                      LIVE DATABASE SYNC
+                    </span>
+                  </div>
 
-              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A' }}>
-                User Access Control & Sub-Option Manager
-              </h2>
-              <p style={{ margin: 0, color: '#64748B', fontSize: '0.92rem', maxWidth: '750px', lineHeight: 1.5 }}>
-                Configure exact module visibility and granular feature sub-options per employee user. When saved, only selected options will appear in their portal.
-              </p>
+                  <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif", margin: '0 0 6px 0', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A' }}>
+                    Role & Permissions Access Manager
+                  </h2>
+                  <p style={{ margin: 0, color: '#64748B', fontSize: '0.88rem', maxWidth: '750px', lineHeight: 1.5, fontWeight: 500 }}>
+                    Configure exact module visibility and granular feature sub-options per employee user. When saved, only authorized tabs will be accessible in their admin portal.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>Total Accounts: <strong style={{ color: '#0F172A' }}>{employeeUsersDb.length}</strong></span>
+                </div>
+              </div>
             </div>
 
             {/* Direct User Permission Assignment Suite */}
-            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '14px', boxShadow: '0 4px 16px -4px rgba(0,0,0,0.03)' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', border: '1px solid #E2E8F0', borderRadius: '16px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
               
               {/* Step 1: Select Employee Header */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '24px' }}>
-                <div style={{ maxWidth: '520px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '0.82rem', marginBottom: '8px', color: '#0F172A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
-                    <FaUserShield style={{ color: '#2563EB' }} /> SELECT EMPLOYEE USER *
+                <div style={{ maxWidth: '540px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800, fontSize: '0.8rem', marginBottom: '8px', color: '#0F172A', letterSpacing: '0.04em', textTransform: 'uppercase', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}>
+                    <FaUserShield style={{ color: '#059669' }} /> SELECT EMPLOYEE USER TO CONFIGURE
                   </label>
                   <select
                     value={selectedUserForPerms}
                     onChange={(e) => handleSelectUserForPerms(e.target.value)}
-                    style={{ width: '100%', padding: '14px 16px', border: '1.5px solid #CBD5E1', borderRadius: '10px', outline: 'none', backgroundColor: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', transition: 'all 0.2s', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '12px 16px', border: '1px solid #E2E8F0', borderRadius: '8px', outline: 'none', backgroundColor: '#FFFFFF', fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', transition: 'all 0.2s', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}
                   >
-                    <option value="">-- Choose an Employee User --</option>
+                    <option value="">-- Select Employee Account --</option>
                     {employeeUsersDb.map(emp => (
                       <option key={emp.id} value={emp.id}>
                         {emp.fullName} ({emp.email}) - {emp.role}
@@ -3068,24 +3076,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
 
                 {selectedUserForPerms && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '20px 24px', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '18px 22px', borderRadius: '12px' }}>
                     
                     {/* Active Employee Header Bar */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ width: '44px', height: '44px', borderRadius: '10px', backgroundColor: '#0F172A', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem' }}>
+                        <div style={{ width: '42px', height: '42px', borderRadius: '8px', backgroundColor: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.05rem', border: '1px solid #A7F3D0' }}>
                           {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.fullName.substring(0, 1).toUpperCase()}
                         </div>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}>
                               {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.fullName}
                             </h3>
-                            <span style={{ backgroundColor: '#E0F2FE', color: '#0369A1', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.78rem' }}>
+                            <span style={{ backgroundColor: '#DCFCE7', color: '#059669', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, fontSize: '0.75rem' }}>
                               {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.role}
                             </span>
                           </div>
-                          <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 500, marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 500, marginTop: '2px' }}>
                             {employeeUsersDb.find(u => u.id === selectedUserForPerms)?.email}
                           </div>
                         </div>
@@ -3097,21 +3105,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         onClick={handleSaveUserPermissions}
                         disabled={isSavingUserPerms}
                         style={{
-                          padding: '12px 28px',
-                          backgroundColor: savedUserSuccess ? '#059669' : (isSavingUserPerms ? '#6EE7B7' : '#10B981'),
+                          padding: '10px 24px',
+                          backgroundColor: savedUserSuccess ? '#059669' : (isSavingUserPerms ? '#6EE7B7' : '#059669'),
                           color: '#FFFFFF',
                           border: 'none',
                           borderRadius: '8px',
-                          fontWeight: 800,
-                          fontSize: '0.9rem',
+                          fontWeight: 700,
+                          fontSize: '0.88rem',
                           cursor: isSavingUserPerms ? 'not-allowed' : 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '10px',
-                          boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                          gap: '8px',
+                          boxShadow: '0 2px 6px rgba(5,150,105,0.2)',
                           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                          transform: isSavingUserPerms ? 'scale(0.96)' : (savedUserSuccess ? 'scale(1.02)' : 'scale(1)'),
-                          letterSpacing: '0.02em'
+                          letterSpacing: '0.01em',
+                          fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
                         }}
                       >
                         {isSavingUserPerms ? (
@@ -3125,8 +3133,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     </div>
 
                     {savedUserSuccess && (
-                      <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #10B981', color: '#065F46', padding: '12px 18px', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <FaCheckCircle style={{ color: '#10B981', fontSize: '1.2rem' }} />
+                      <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #10B981', color: '#065F46', padding: '10px 16px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FaCheckCircle style={{ color: '#10B981', fontSize: '1.1rem' }} />
                         {savedUserSuccess}
                       </div>
                     )}
