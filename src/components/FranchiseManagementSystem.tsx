@@ -1619,11 +1619,18 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             )}
                           </div>
 
-                          {/* Success Banner */}
-                          <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#059669', fontWeight: 700, fontSize: '0.88rem' }}>
-                            <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
-                            <span>Location verified successfully</span>
-                          </div>
+                          {/* Success/Warning Banner */}
+                          {formData.latitude && formData.latitude !== 0 ? (
+                            <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#059669', fontWeight: 700, fontSize: '0.88rem' }}>
+                              <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
+                              <span>Location verified successfully</span>
+                            </div>
+                          ) : (
+                            <div style={{ backgroundColor: '#FFFBEB', border: '1px solid #FEF3C7', borderRadius: '8px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#B45309', fontWeight: 700, fontSize: '0.88rem' }}>
+                              <FaMapMarkerAlt style={{ fontSize: '1.1rem', flexShrink: 0 }} />
+                              <span>Please search for a location or drag the marker on the map</span>
+                            </div>
+                          )}
 
                           {/* Location Details (Auto-Geocoded) */}
                           <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#059669', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
