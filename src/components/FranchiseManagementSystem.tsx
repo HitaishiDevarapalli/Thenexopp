@@ -315,7 +315,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
       availableBranchCount: 3,
       image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
       images: ['https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80'],
-      logo: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=200&q=80',
+      logo: 'https://images.unsplash.com/photo-15144323-a09d9b4aefdd?auto=format&fit=crop&w=200&q=80',
       trustScore: 95,
       assignedBrokerIds: [dealersDb[0]?.id || 'D1'],
       dealerId: dealersDb[0]?.id || 'D1',
@@ -414,7 +414,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
         </div>
         <button
           onClick={openAddModal}
-          style={{ padding: '12px 24px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", letterSpacing: '0.04em', boxShadow: '0 4px 12px rgba(30, 64, 175, 0.2)' }}
+          style={{ padding: '12px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", letterSpacing: '0.04em', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
         >
           <FaPlus /> {mode === 'business' ? '+ ADD NEW BUSINESS' : '+ ADD NEW FRANCHISE OPPORTUNITY'}
         </button>
@@ -473,15 +473,15 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
 
           {/* Bulk Action Controls */}
           {selectedIds.length > 0 && (
-            <div style={{ backgroundColor: '#EFF6FF', padding: '14px 20px', border: '1px solid #BFDBFE', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, color: '#1E40AF', fontSize: '0.95rem' }}>
+            <div style={{ backgroundColor: '#ECFDF5', padding: '14px 20px', border: '1px solid #A7F3D0', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.95rem' }}>
                 ✓ Selected {selectedIds.length} Franchise Opportunity {selectedIds.length === 1 ? 'Listing' : 'Listings'}
               </span>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={handleBulkPublish} style={{ padding: '8px 16px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
+                <button onClick={handleBulkPublish} style={{ padding: '8px 16px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
                   PUBLISH SELECTED
                 </button>
-                <button onClick={handleBulkArchive} style={{ padding: '8px 16px', backgroundColor: '#F59E0B', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
+                <button onClick={handleBulkArchive} style={{ padding: '8px 16px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
                   ARCHIVE SELECTED
                 </button>
                 <button onClick={handleBulkDelete} style={{ padding: '8px 16px', backgroundColor: '#EF4444', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
@@ -535,20 +535,20 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <img src={fran.logo || fran.image} alt={fran.brand} style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #CBD5E1' }} />
                             <div>
                               <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0F172A', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
-                                {fran.brand} {fran.featured && <span style={{ fontSize: '0.7rem', padding: '2px 6px', backgroundColor: '#FEF3C7', color: '#D97706', border: '1px solid #FDE68A', marginLeft: '6px', fontWeight: 700 }}>★ FEATURED</span>}
+                                {fran.brand} {fran.featured && <span style={{ fontSize: '0.7rem', padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', marginLeft: '6px', fontWeight: 700 }}>★ FEATURED</span>}
                               </div>
                               <div style={{ color: '#64748B', fontSize: '0.8rem' }}>ID: {fran.id} • 📍 {fran.location}</div>
                             </div>
                           </div>
                         </td>
                         <td style={{ padding: '16px' }}>
-                          <span style={{ padding: '4px 10px', backgroundColor: '#EFF6FF', color: '#1E40AF', fontWeight: 700, fontSize: '0.78rem', border: '1px solid #BFDBFE' }}>
+                          <span style={{ padding: '4px 10px', backgroundColor: '#ECFDF5', color: '#059669', fontWeight: 700, fontSize: '0.78rem', border: '1px solid #A7F3D0' }}>
                             {fran.category || 'Food & Beverage'}
                           </span>
                           <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '4px' }}>{fran.opportunityType || 'New Franchise'}</div>
                         </td>
                         <td style={{ padding: '16px' }}>
-                          <div style={{ fontWeight: 800, color: '#10B981', fontSize: '0.95rem' }}>{fran.investmentDisplay || `₹${fran.investment} Lakhs`}</div>
+                          <div style={{ fontWeight: 800, color: '#059669', fontSize: '0.95rem' }}>{fran.investmentDisplay || `₹${fran.investment} Lakhs`}</div>
                           <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Expected ROI: <strong>{fran.expectedRoi || '35% - 45%'}</strong></div>
                         </td>
                         <td style={{ padding: '16px' }}>
@@ -569,8 +569,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             padding: '4px 10px',
                             fontWeight: 700,
                             fontSize: '0.75rem',
-                            backgroundColor: (fran.approvalStatus || 'Published') === 'Published' ? '#D1FAE5' : (fran.approvalStatus === 'Draft' ? '#FEF3C7' : '#FEE2E2'),
-                            color: (fran.approvalStatus || 'Published') === 'Published' ? '#065F46' : (fran.approvalStatus === 'Draft' ? '#92400E' : '#991B1B'),
+                            backgroundColor: (fran.approvalStatus || 'Published') === 'Published' ? '#ECFDF5' : (fran.approvalStatus === 'Draft' ? '#ECFDF5' : '#FEE2E2'),
+                            color: (fran.approvalStatus || 'Published') === 'Published' ? '#059669' : (fran.approvalStatus === 'Draft' ? '#059669' : '#991B1B'),
                             border: '1px solid currentColor'
                           }}>
                             {(fran.approvalStatus || 'Published').toUpperCase()}
@@ -582,7 +582,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               <button
                                 onClick={() => openEditModal(fran)}
                                 title="Edit Franchise"
-                                style={{ padding: '8px 12px', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                                style={{ padding: '8px 12px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
                               >
                                 <FaEdit /> Edit
                               </button>
@@ -641,7 +641,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0F172A', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
                       {stage.toUpperCase()} ({items.length})
                     </span>
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: stage === 'Published' ? '#10B981' : (stage === 'Pending Approval' ? '#F59E0B' : '#64748B') }}></span>
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: stage === 'Published' ? '#059669' : (stage === 'Pending Approval' ? '#059669' : '#64748B') }}></span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -657,7 +657,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             {stage !== 'Published' && (
                               <button
                                 onClick={() => { updateFranchise(f.id, { approvalStatus: 'Published', status: 'Active' }); showNotification(`Published '${f.brand}'!`, 'success'); }}
-                                style={{ padding: '6px 10px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
+                                style={{ padding: '6px 10px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
                               >
                                 ✓ PUBLISH
                               </button>
@@ -665,7 +665,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             {stage !== 'Pending Approval' && (
                               <button
                                 onClick={() => { updateFranchise(f.id, { approvalStatus: 'Pending Approval' }); showNotification(`Moved '${f.brand}' to Pending Review.`, 'info'); }}
-                                style={{ padding: '6px 10px', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
+                                style={{ padding: '6px 10px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
                               >
                                 → TO REVIEW
                               </button>
@@ -673,7 +673,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             {stage !== 'Archived' && (
                               <button
                                 onClick={() => { updateFranchise(f.id, { approvalStatus: 'Archived' }); showNotification(`Archived '${f.brand}'.`, 'warning'); }}
-                                style={{ padding: '6px 10px', backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
+                                style={{ padding: '6px 10px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
                               >
                                 ARCHIVE
                               </button>
@@ -719,7 +719,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       onClick={() => { updateFranchise(f.id, { featured: !f.featured }); showNotification(`Toggled featured status for '${f.brand}'.`, 'success'); }}
                       style={{
                         padding: '6px 14px',
-                        backgroundColor: f.featured ? '#10B981' : '#F1F5F9',
+                        backgroundColor: f.featured ? '#059669' : '#F1F5F9',
                         color: f.featured ? '#FFFFFF' : '#64748B',
                         border: 'none',
                         fontWeight: 700,
@@ -735,7 +735,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       onClick={() => { updateFranchise(f.id, { premiumFranchise: !f.premiumFranchise }); showNotification(`Toggled premium badge for '${f.brand}'.`, 'success'); }}
                       style={{
                         padding: '6px 14px',
-                        backgroundColor: f.premiumFranchise ? '#1E40AF' : '#F1F5F9',
+                        backgroundColor: f.premiumFranchise ? '#059669' : '#F1F5F9',
                         color: f.premiumFranchise ? '#FFFFFF' : '#64748B',
                         border: 'none',
                         fontWeight: 700,
@@ -772,21 +772,21 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* KPI Summary Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #1E40AF' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #059669' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.05em' }}>TOTAL FRANCHISE LISTINGS</div>
               <div style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.total}</div>
             </div>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #10B981' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #059669' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.05em' }}>ACTIVE OPPORTUNITIES</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.active}</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.active}</div>
             </div>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #F59E0B' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #059669' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.05em' }}>PREMIUM / FEATURED</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#D97706', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.premiumCount}</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.premiumCount}</div>
             </div>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #8B5CF6' }}>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderLeft: '4px solid #059669' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.05em' }}>TOTAL LEADS / ENQUIRIES</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#6D28D9', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.totalEnquiries}</div>
+              <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669', marginTop: '6px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{stats.totalEnquiries}</div>
             </div>
           </div>
 
@@ -806,7 +806,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       <span>{count} Listings ({pct}%)</span>
                     </div>
                     <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${Math.max(pct, 15)}%`, height: '100%', backgroundColor: idx === 0 ? '#1E40AF' : (idx === 1 ? '#10B981' : '#F59E0B') }}></div>
+                      <div style={{ width: `${Math.max(pct, 15)}%`, height: '100%', backgroundColor: idx === 0 ? '#059669' : (idx === 1 ? '#059669' : '#059669') }}></div>
                     </div>
                   </div>
                 );
@@ -828,7 +828,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • Rating: {dealer.rating}★</div>
                       </div>
                     </div>
-                    <span style={{ padding: '4px 12px', backgroundColor: '#EFF6FF', color: '#1E40AF', fontWeight: 800, fontSize: '0.8rem', border: '1px solid #BFDBFE' }}>
+                    <span style={{ padding: '4px 12px', backgroundColor: '#ECFDF5', color: '#059669', fontWeight: 800, fontSize: '0.8rem', border: '1px solid #A7F3D0' }}>
                       {assignedCount} Franchises
                     </span>
                   </div>
@@ -864,7 +864,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     setNewCatName('');
                   }
                 }}
-                style={{ padding: '10px 16px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
+                style={{ padding: '10px 16px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
               >
                 + ADD
               </button>
@@ -935,7 +935,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       setNewAreaInput('');
                       showNotification('Area added to location master.', 'success');
                     }}
-                    style={{ padding: '10px 16px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '10px 16px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
                   >
                     + ADD AREA
                   </button>
@@ -945,7 +945,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {areasList.map(area => (
-                <span key={area} style={{ padding: '6px 12px', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span key={area} style={{ padding: '6px 12px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   📍 {area}
                   <button onClick={() => setAreasList(areasList.filter(a => a !== area))} style={{ background: 'none', border: 'none', color: '#991B1B', cursor: 'pointer', fontWeight: 800 }}>×</button>
                 </span>
@@ -1013,9 +1013,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       <div style={{ fontWeight: 800, color: '#0F172A' }}>{enq.customerName}</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B' }}>📞 {enq.mobileNumber} • {enq.email}</div>
                     </td>
-                    <td style={{ padding: '14px', fontWeight: 700, color: '#1E40AF' }}>{enq.interestedFranchise}</td>
+                    <td style={{ padding: '14px', fontWeight: 700, color: '#059669' }}>{enq.interestedFranchise}</td>
                     <td style={{ padding: '14px' }}>
-                      <div style={{ fontWeight: 700, color: '#10B981' }}>{enq.investmentBudget}</div>
+                      <div style={{ fontWeight: 700, color: '#059669' }}>{enq.investmentBudget}</div>
                       <div style={{ fontSize: '0.78rem', color: '#64748B' }}>📍 {enq.preferredLocation}</div>
                     </td>
                     <td style={{ padding: '14px' }}>
@@ -1043,8 +1043,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           border: '1px solid #CBD5E1',
                           fontWeight: 700,
                           fontSize: '0.8rem',
-                          backgroundColor: enq.status === 'New' ? '#FEF3C7' : '#EFF6FF',
-                          color: enq.status === 'New' ? '#92400E' : '#1E40AF'
+                          backgroundColor: enq.status === 'New' ? '#ECFDF5' : '#ECFDF5',
+                          color: enq.status === 'New' ? '#059669' : '#059669'
                         }}
                       >
                         <option value="New">New Lead</option>
@@ -1110,7 +1110,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     setNewImageUrl('');
                   }
                 }}
-                style={{ padding: '10px 20px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
+                style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
               >
                 + ATTACH MEDIA
               </button>
@@ -1164,10 +1164,10 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 <h4 style={{ margin: '0 0 8px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>{rep.title}</h4>
                 <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#64748B' }}>{rep.desc}</p>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => exportReport('Excel')} style={{ padding: '8px 14px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={() => exportReport('Excel')} style={{ padding: '8px 14px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <FaFileExcel /> EXCEL
                   </button>
-                  <button onClick={() => exportReport('CSV')} style={{ padding: '8px 14px', backgroundColor: '#3B82F6', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={() => exportReport('CSV')} style={{ padding: '8px 14px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <FaFileCsv /> CSV
                   </button>
                   <button onClick={() => exportReport('PDF')} style={{ padding: '8px 14px', backgroundColor: '#EF4444', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -1184,12 +1184,12 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
       {/* ================= REDESIGNED STEP-BY-STEP MODAL (MATCHING Master Property DESIGN SYSTEM) ================= */}
       {isModalOpen && (
         <div data-lenis-prevent="true" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.82)', backdropFilter: 'blur(6px)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '24px' }}>
-          <div style={{ backgroundColor: '#F8FAFC', width: '100%', maxWidth: '1280px', height: '92vh', display: 'flex', flexDirection: 'column', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)', border: '1px solid #E2E8F0' }}>
+          <div style={{ backgroundColor: '#F8FAFC', width: '100%', maxWidth: '1280px', height: '92vh', display: 'flex', flexDirection: 'column', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', border: '1px solid #E2E8F0' }}>
             
             {/* Modal Header */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 32px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#2563EB', flexShrink: 0 }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '8px', backgroundColor: '#ECFDF5', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#059669', flexShrink: 0 }}>
                   <FaBuilding />
                 </div>
                 <div>
@@ -1199,7 +1199,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         ? (mode === 'business' ? 'Add New Business' : 'Add New Franchise Opportunity') 
                         : (mode === 'business' ? 'Edit Business Listing' : 'Edit Franchise Opportunity')}
                     </h3>
-                    <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                    <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '4px 14px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
                       {editingFranchise.id || 'NEW'}
                     </span>
                   </div>
@@ -1230,20 +1230,20 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     >
                       <div style={{
                         width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.95rem',
-                        backgroundColor: isActive ? '#2563EB' : isCompleted ? '#10B981' : '#F1F5F9',
+                        backgroundColor: isActive ? '#059669' : isCompleted ? '#059669' : '#F1F5F9',
                         color: isActive || isCompleted ? '#FFFFFF' : '#64748B',
-                        boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
+                        boxShadow: isActive ? '0 2px 6px rgba(5,150,105,0.2)' : 'none',
                         transition: 'all 0.2s'
                       }}>
                         {isCompleted ? <FaCheck style={{ fontSize: '0.85rem' }} /> : step.num}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                        <span style={{ fontWeight: 800, fontSize: '0.92rem', color: isActive ? '#1E3A8A' : isCompleted ? '#0F172A' : '#475569' }}>{step.label}</span>
+                        <span style={{ fontWeight: 800, fontSize: '0.92rem', color: isActive ? '#059669' : isCompleted ? '#0F172A' : '#475569' }}>{step.label}</span>
                         <span style={{ fontWeight: 500, fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>{step.sub}</span>
                       </div>
                     </button>
                     {idx < arr.length - 1 && (
-                      <div style={{ flexGrow: 1, height: '1.5px', backgroundColor: isCompleted ? '#10B981' : '#E2E8F0', minWidth: '24px', margin: '0 16px', transition: 'background 0.2s' }} />
+                      <div style={{ flexGrow: 1, height: '1.5px', backgroundColor: isCompleted ? '#059669' : '#E2E8F0', minWidth: '24px', margin: '0 16px', transition: 'background 0.2s' }} />
                     )}
                   </React.Fragment>
                 );
@@ -1257,9 +1257,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 {modalSubTab === 'basic' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     {/* Left Column: Form Card */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>1. Basic Information</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>1. Basic Information</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Provide essential details about the opportunity</p>
                       </div>
 
@@ -1272,7 +1272,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             value={editingFranchise.brand || ''}
                             onChange={e => setEditingFranchise({ ...editingFranchise, brand: e.target.value })}
                             placeholder={mode === 'business' ? "e.g. Premium Coffee Shop & Lounge" : "e.g. Starbucks Coffee Franchise"}
-                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                           />
                         </div>
                         <div>
@@ -1283,7 +1283,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             value={editingFranchise.type || ''}
                             onChange={e => setEditingFranchise({ ...editingFranchise, type: e.target.value })}
                             placeholder="e.g. Artisanal Coffee & Bakery Chain"
-                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                           />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1292,7 +1292,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <select
                               value={editingFranchise.category || 'Food & Beverage'}
                               onChange={e => setEditingFranchise({ ...editingFranchise, category: e.target.value })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
                             >
                               {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                             </select>
@@ -1302,7 +1302,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <select
                               value={editingFranchise.opportunityType || (mode === 'business' ? 'Existing Business' : 'New Franchise')}
                               onChange={e => setEditingFranchise({ ...editingFranchise, opportunityType: e.target.value as any })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
                             >
                               <option value="New Franchise">New Franchise Opportunity</option>
                               <option value="Existing Business">Existing Running Business for Sale</option>
@@ -1316,19 +1316,19 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             value={editingFranchise.detailedDescription || ''}
                             onChange={e => setEditingFranchise({ ...editingFranchise, detailedDescription: e.target.value })}
                             placeholder="Provide a rich, compelling overview of the business architecture, operational margins, views, surroundings, and exclusive features..."
-                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', lineHeight: 1.6, outline: 'none' }}
+                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', lineHeight: 1.6, outline: 'none' }}
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* Right Column: Guide Card */}
-                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
-                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Listing Guidelines</h5>
+                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669', margin: 0 }}>Listing Guidelines</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
                         Provide clear, precise descriptions of the operational model and brand parameters. Standardizing the title and subtype formatting makes your listings highly searchable for prospective brokers and investors.
                       </p>
-                      <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '16px', display: 'flex', gap: '12px', color: '#1E40AF', fontSize: '0.85rem', fontWeight: 600 }}>
+                      <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px', color: '#059669', fontSize: '0.85rem', fontWeight: 600 }}>
                         <span style={{ fontSize: '1.25rem' }}>★</span>
                         <span>Ensure brand name matches registered trade name exactly to ensure successful verification.</span>
                       </div>
@@ -1339,9 +1339,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 {modalSubTab === 'investment' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     {/* Left Column: Form Card */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>2. Investment & ROI Terms</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>2. Investment & ROI Terms</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Provide financial parameters and capital requirements</p>
                       </div>
 
@@ -1353,7 +1353,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="number"
                               value={editingFranchise.minInvestment || 25}
                               onChange={e => setEditingFranchise({ ...editingFranchise, minInvestment: Number(e.target.value), investmentDisplay: `₹${e.target.value} - ₹${editingFranchise.maxInvestment || 45} Lakhs` })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                           <div>
@@ -1362,7 +1362,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="number"
                               value={editingFranchise.maxInvestment || 45}
                               onChange={e => setEditingFranchise({ ...editingFranchise, maxInvestment: Number(e.target.value), investmentDisplay: `₹${editingFranchise.minInvestment || 25} - ₹${e.target.value} Lakhs` })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                         </div>
@@ -1375,7 +1375,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               placeholder="e.g. 35% - 45%"
                               value={editingFranchise.expectedRoi || ''}
                               onChange={e => setEditingFranchise({ ...editingFranchise, expectedRoi: e.target.value })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                           <div>
@@ -1385,7 +1385,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               placeholder="e.g. 14 - 18 Months"
                               value={editingFranchise.paybackPeriod || ''}
                               onChange={e => setEditingFranchise({ ...editingFranchise, paybackPeriod: e.target.value })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                         </div>
@@ -1398,7 +1398,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               placeholder="e.g. ₹5 Lakhs"
                               value={editingFranchise.franchiseFee || ''}
                               onChange={e => setEditingFranchise({ ...editingFranchise, franchiseFee: e.target.value })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                           <div>
@@ -1408,7 +1408,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               placeholder="e.g. 6% of monthly revenue"
                               value={editingFranchise.royaltyFee || ''}
                               onChange={e => setEditingFranchise({ ...editingFranchise, royaltyFee: e.target.value })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                         </div>
@@ -1416,8 +1416,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     </div>
 
                     {/* Right Column: Guide Card */}
-                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
-                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Investment Verification</h5>
+                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669', margin: 0 }}>Investment Verification</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
                         Provide transparent financial projections. Minimum and maximum capital thresholds will help filter candidates effectively based on their budget profiles.
                       </p>
@@ -1428,9 +1428,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 {modalSubTab === 'business' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     {/* Left Column: Form Card */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>3. Company & Operational Details</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>3. Company & Operational Details</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Provide company background and historical parameters</p>
                       </div>
 
@@ -1442,7 +1442,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             value={editingFranchise.companyName || ''}
                             onChange={e => setEditingFranchise({ ...editingFranchise, companyName: e.target.value })}
                             placeholder="e.g. Coffee Labs Private Limited"
-                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                           />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1452,7 +1452,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="number"
                               value={editingFranchise.yearEstablished || 2020}
                               onChange={e => setEditingFranchise({ ...editingFranchise, yearEstablished: Number(e.target.value) })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                           <div>
@@ -1461,7 +1461,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="number"
                               value={editingFranchise.existingOutletsCount || 10}
                               onChange={e => setEditingFranchise({ ...editingFranchise, existingOutletsCount: Number(e.target.value) })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                         </div>
@@ -1472,15 +1472,15 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             placeholder="FOFO / FOCO / COCO"
                             value={editingFranchise.businessModel || 'FOFO'}
                             onChange={e => setEditingFranchise({ ...editingFranchise, businessModel: e.target.value })}
-                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                            style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* Right Column: Guide Card */}
-                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
-                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Operational Models</h5>
+                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669', margin: 0 }}>Operational Models</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
                         Select the correct operational model category:
                         <br />• <strong>FOFO</strong>: Franchise Owned Franchise Operated
@@ -1494,9 +1494,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 {modalSubTab === 'space' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     {/* Left Column: Form Card */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>4. Space Specifications</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>4. Space Specifications</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Provide structural and layout requirements</p>
                       </div>
 
@@ -1508,7 +1508,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               type="number"
                               value={editingFranchise.minAreaSqFt || 500}
                               onChange={e => setEditingFranchise({ ...editingFranchise, minAreaSqFt: Number(e.target.value) })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                             />
                           </div>
                           <div>
@@ -1516,7 +1516,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <select
                               value={editingFranchise.shopType || 'High Street'}
                               onChange={e => setEditingFranchise({ ...editingFranchise, shopType: e.target.value as any })}
-                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
+                              style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
                             >
                               <option value="High Street">High Street Frontage</option>
                               <option value="Mall">Shopping Mall</option>
@@ -1529,8 +1529,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     </div>
 
                     {/* Right Column: Guide Card */}
-                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
-                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Space Guidelines</h5>
+                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669', margin: 0 }}>Space Guidelines</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
                         Provide details on spatial specifications to verify structural requirements fit standard brand blueprints cleanly.
                       </p>
@@ -1543,9 +1543,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                       
                       {/* Left Column: Franchise/Business Location Details */}
-                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
-                          <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>5. Listing Location</h4>
+                          <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>5. Listing Location</h4>
                           <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Search and select the exact location of the business/franchise</p>
 
                           {/* Search Bar Row */}
@@ -1553,7 +1553,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>Search Address</label>
                             <div style={{ display: 'flex', gap: '12px' }}>
                               <div style={{ flexGrow: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                <FaMapMarkerAlt style={{ position: 'absolute', left: '16px', color: '#2563EB', fontSize: '1.1rem' }} />
+                                <FaMapMarkerAlt style={{ position: 'absolute', left: '16px', color: '#059669', fontSize: '1.1rem' }} />
                                 <input
                                   type="text"
                                   value={addressSearchQuery || editingFranchise.formatted_address || editingFranchise.fullAddress || ''}
@@ -1563,7 +1563,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                   }}
                                   onFocus={() => setShowLocationSuggestions(true)}
                                   placeholder="e.g. Jubilee Hills Road No 36, Hyderabad, Telangana, India"
-                                  style={{ width: '100%', padding: '12px 40px 12px 44px', border: '1.5px solid #2563EB', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, color: '#0F172A', outline: 'none', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)', boxSizing: 'border-box' }}
+                                  style={{ width: '100%', padding: '12px 40px 12px 44px', border: '1.5px solid #059669', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, color: '#0F172A', outline: 'none', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', boxSizing: 'border-box' }}
                                 />
                                 {(addressSearchQuery || editingFranchise.formatted_address) && (
                                   <button type="button" onClick={() => { setAddressSearchQuery(''); setEditingFranchise({ ...editingFranchise, formatted_address: '', fullAddress: '' }); }} style={{ position: 'absolute', right: '14px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.1rem', padding: '2px' }}>×</button>
@@ -1573,7 +1573,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                 type="button"
                                 onClick={handleAdminDetectGPS}
                                 disabled={isAdminDetectingGPS}
-                                style={{ padding: '12px 22px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)', transition: 'background 0.2s' }}
+                                style={{ padding: '12px 22px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(5,150,105,0.2)', transition: 'background 0.2s' }}
                               >
                                 <FaCrosshairs /> {isAdminDetectingGPS ? 'Detecting...' : 'Detect My Location'}
                               </button>
@@ -1581,9 +1581,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
 
                             {/* Autocomplete Suggestions Dropdown */}
                             {showLocationSuggestions && (
-                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5000, backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', marginTop: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5000, backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', marginTop: '8px', maxHeight: '280px', overflowY: 'auto' }}>
                                 {isSearchingLive && (
-                                  <div style={{ padding: '12px 16px', color: '#3B82F6', fontWeight: 600, fontSize: '0.85rem', backgroundColor: '#EFF6FF' }}>
+                                  <div style={{ padding: '12px 16px', color: '#059669', fontWeight: 600, fontSize: '0.85rem', backgroundColor: '#ECFDF5' }}>
                                     Searching live location data...
                                   </div>
                                 )}
@@ -1610,7 +1610,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                       setIsSearchingLive(false);
                                       handleSelectGooglePlace(customPlace);
                                     }}
-                                    style={{ padding: '12px 16px', backgroundColor: '#EFF6FF', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, color: '#1E40AF', fontSize: '0.85rem' }}
+                                    style={{ padding: '12px 16px', backgroundColor: '#ECFDF5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 600, color: '#059669', fontSize: '0.85rem' }}
                                   >
                                     <FaMapMarkerAlt /> Use "{addressSearchQuery}" (Auto-Geocode)
                                   </div>
@@ -1620,50 +1620,50 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           </div>
 
                           {/* Success Banner */}
-                          <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#16A34A', fontWeight: 700, fontSize: '0.88rem' }}>
+                          <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#059669', fontWeight: 700, fontSize: '0.88rem' }}>
                             <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
                             <span>Location verified successfully</span>
                           </div>
 
                           {/* Location Details (Auto-Geocoded) */}
-                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
+                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#059669', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Country</div>
                                 <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.country || '-'}</div>
                               </div>
                             </div>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaMap style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>State</div>
                                 <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.state || '-'}</div>
                               </div>
                             </div>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>District</div>
                                 <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.district || '-'}</div>
                               </div>
                             </div>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaCity style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City</div>
                                 <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.city || '-'}</div>
                               </div>
                             </div>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaCompass style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Area / Locality</div>
                                 <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.area || '-'}</div>
                               </div>
                             </div>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaEnvelope style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div style={{ width: '100%' }}>
                                 <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Postal Code (Manual Entry)</label>
@@ -1696,14 +1696,14 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
 
                           {/* Coordinates Row */}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginTop: '12px' }}>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <FaCrosshairs style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Latitude</div>
                                 <div style={{ fontSize: '0.88rem', color: '#059669', fontWeight: 800 }}>{editingFranchise.latitude?.toFixed(6) || '-'}</div>
                               </div>
                             </div>
-                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <FaCompass style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Longitude</div>
@@ -1713,7 +1713,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           </div>
 
                           {/* Formatted Address Box */}
-                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '16px 18px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                               <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '4px' }}>Full Formatted Address</span>
                               <span style={{ fontSize: '0.88rem', color: '#0F172A', fontWeight: 700 }}>{editingFranchise.formatted_address || editingFranchise.fullAddress || '-'}</span>
@@ -1734,18 +1734,18 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       </div>
 
                       {/* Right Column: Location Map Preview */}
-                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                              <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Location Preview</h4>
+                              <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>Location Preview</h4>
                               <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag the marker to fine-tune the exact location</p>
                             </div>
                             <a
                               href={`https://maps.google.com/?q=${mapMarkerPos.lat},${mapMarkerPos.lng}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                              style={{ padding: '8px 16px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
                             >
                               Open in Google Maps <FaExternalLinkAlt style={{ fontSize: '0.75rem' }} />
                             </a>
@@ -1763,7 +1763,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             />
 
                             {/* Fine-tune Controls Overlay */}
-                            <div style={{ position: 'absolute', bottom: '14px', left: '14px', right: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', padding: '8px 14px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #E2E8F0', zIndex: 1000 }}>
+                            <div style={{ position: 'absolute', bottom: '14px', left: '14px', right: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', padding: '8px 14px', borderRadius: '8px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', border: '1px solid #E2E8F0', zIndex: 1000 }}>
                               <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>Fine-tune Marker GPS:</span>
                               <div style={{ display: 'flex', gap: '6px' }}>
                                 <button type="button" onClick={() => handleMarkerDrag(mapMarkerPos.lat + 0.0002, mapMarkerPos.lng)} style={{ padding: '6px 12px', backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', color: '#1E293B' }}>↑ N</button>
@@ -1776,8 +1776,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         </div>
 
                         {/* Tip Box */}
-                        <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '14px 18px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#1E40AF', fontSize: '0.88rem', fontWeight: 600 }}>
-                          <FaLightbulb style={{ color: '#2563EB', fontSize: '1.2rem', flexShrink: 0 }} />
+                        <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '14px 18px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#059669', fontSize: '0.88rem', fontWeight: 600 }}>
+                          <FaLightbulb style={{ color: '#059669', fontSize: '1.2rem', flexShrink: 0 }} />
                           <span>Tip: Drag the marker to adjust the exact location if needed.</span>
                         </div>
                       </div>
@@ -1788,9 +1788,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 {modalSubTab === 'media' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     {/* Left Column: Form Card */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>6. Media & Creative Uploads</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>6. Media & Creative Uploads</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Upload brand cover and logo images</p>
                       </div>
 
@@ -1798,12 +1798,12 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         {/* Primary Cover Image */}
                         <div style={{ backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1E40AF' }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#059669' }}>
                               PRIMARY COVER IMAGE
                             </span>
                           </div>
                           {editingFranchise.image && (
-                            <div style={{ width: '100%', height: '180px', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#E2E8F0' }}>
+                            <div style={{ width: '100%', height: '180px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#E2E8F0' }}>
                               <img src={editingFranchise.image} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
                           )}
@@ -1824,7 +1824,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               onClick={() => document.getElementById('franchise-cover-file')?.click()}
                               style={{
                                 border: '2px dashed #CBD5E1',
-                                borderRadius: '12px',
+                                borderRadius: '8px',
                                 padding: '16px',
                                 textAlign: 'center',
                                 cursor: 'pointer',
@@ -1859,12 +1859,12 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         {/* Brand Logo */}
                         <div style={{ backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1E40AF' }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#059669' }}>
                               BRAND LOGO
                             </span>
                           </div>
                           {editingFranchise.logo && (
-                            <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#E2E8F0', border: '2px solid #1E40AF', alignSelf: 'center' }}>
+                            <div style={{ width: '100px', height: '100px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#E2E8F0', border: '2px solid #059669', alignSelf: 'center' }}>
                               <img src={editingFranchise.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             </div>
                           )}
@@ -1885,7 +1885,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               onClick={() => document.getElementById('franchise-logo-file')?.click()}
                               style={{
                                 border: '2px dashed #CBD5E1',
-                                borderRadius: '12px',
+                                borderRadius: '8px',
                                 padding: '16px',
                                 textAlign: 'center',
                                 cursor: 'pointer',
@@ -1920,8 +1920,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     </div>
 
                     {/* Right Column: Guide Card */}
-                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
-                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Creative Requirements</h5>
+                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669', margin: 0 }}>Creative Requirements</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
                         High-quality cover assets increase click-through rates by up to 4x. Make sure the cover is a landscape image, and logo is a square layout.
                       </p>
@@ -1932,9 +1932,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 {modalSubTab === 'broker' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     {/* Left Column: Form Card */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>7. Broker Assignments</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>7. Broker Assignments</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Assign sales representatives or advisors to handle leads</p>
                       </div>
 
@@ -1944,7 +1944,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           placeholder="Search broker by name or company..."
                           value={brokerSearch}
                           onChange={e => setBrokerSearch(e.target.value)}
-                          style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
+                          style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 600, outline: 'none' }}
                         />
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px', maxHeight: '300px', overflowY: 'auto' }}>
@@ -1958,13 +1958,13 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                   onClick={() => toggleBrokerAssignment(dealer.id)}
                                   style={{
                                     padding: '14px',
-                                    border: isAssigned ? '2px solid #10B981' : '1px solid #CBD5E1',
+                                    border: isAssigned ? '2px solid #059669' : '1px solid #CBD5E1',
                                     backgroundColor: isAssigned ? '#ECFDF5' : '#FFFFFF',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
-                                    borderRadius: '12px',
+                                    borderRadius: '8px',
                                     transition: 'all 0.2s',
                                   }}
                                 >
@@ -1975,7 +1975,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                       <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • {dealer.rating}★</div>
                                     </div>
                                   </div>
-                                  <span style={{ fontWeight: 800, color: isAssigned ? '#10B981' : '#94A3B8', fontSize: '0.85rem' }}>{isAssigned ? '✓ ASSIGNED' : '+ Assign'}</span>
+                                  <span style={{ fontWeight: 800, color: isAssigned ? '#059669' : '#94A3B8', fontSize: '0.85rem' }}>{isAssigned ? '✓ ASSIGNED' : '+ Assign'}</span>
                                 </div>
                               );
                             })}
@@ -1984,8 +1984,8 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     </div>
 
                     {/* Right Column: Guide Card */}
-                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
-                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Broker CRM Workflows</h5>
+                    <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                      <h5 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669', margin: 0 }}>Broker CRM Workflows</h5>
                       <p style={{ color: '#475569', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
                         Assigning active brokers gives them access to leads, client inquiries, and transaction pipelines linked to this marketplace listing.
                       </p>
@@ -1999,14 +1999,14 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  style={{ padding: '12px 24px', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                  style={{ padding: '12px 24px', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', color: '#475569', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
                 >
                   CANCEL
                 </button>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
                     type="submit"
-                    style={{ padding: '12px 28px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px rgba(30, 64, 175, 0.25)', transition: 'all 0.2s' }}
+                    style={{ padding: '12px 28px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)', transition: 'all 0.2s' }}
                   >
                     {modalMode === 'add' ? '✓ SAVE & PUBLISH' : '✓ SAVE CHANGES'}
                   </button>

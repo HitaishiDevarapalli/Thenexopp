@@ -530,14 +530,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
         <button
           onClick={exportToCSV}
-          style={{ padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#4F46E5', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}
+          style={{ padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#059669', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}
         >
           <FaFileExport /> Export CSV
         </button>
         {activeModuleTab === 'listings' && (
           <button
             onClick={openAddModal}
-            style={{ padding: '10px 22px', backgroundColor: '#4F46E5', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)' }}
+            style={{ padding: '10px 22px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
           >
             <FaPlus /> + Add New Property
           </button>
@@ -549,8 +549,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '14px' }}>
           
           {/* Total Properties */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaBuilding style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total Properties</div>
@@ -559,18 +559,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           </div>
 
           {/* Active Listings */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaCheckCircle style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Active Listings</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.activeListings}</div>
-            <div style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 600 }}>Live on marketplace</div>
+            <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>Live on marketplace</div>
           </div>
 
           {/* Total Sold Properties */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #FEF2F2', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #FEF2F2', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEE2E2', border: '1px solid #FECACA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626', marginBottom: '10px' }}>
               <FaCheckCircle style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#DC2626' }}>Total Sold Properties</div>
@@ -579,18 +579,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           </div>
 
           {/* Recently Sold (30 Days) */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #FFEDD5', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FFEDD5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C2410C', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaChartBar style={{ fontSize: '1.1rem' }} />
             </div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#C2410C' }}>Recently Sold (30 Days)</div>
-            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#9A3412', margin: '2px 0 4px 0' }}>{stats.recentlySold30Days}</div>
-            <div style={{ fontSize: '0.7rem', color: '#C2410C', fontWeight: 600 }}>Last 30 days</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669' }}>Recently Sold (30 Days)</div>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#059669', margin: '2px 0 4px 0' }}>{stats.recentlySold30Days}</div>
+            <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>Last 30 days</div>
           </div>
 
           {/* Pending Approval */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaChartBar style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Pending Approval</div>
@@ -599,8 +599,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           </div>
 
           {/* Featured */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FCE7F3', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EC4899', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaCrown style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Featured</div>
@@ -609,23 +609,23 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           </div>
 
           {/* Premium */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F3E8FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333EA', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaCrown style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Premium</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>{stats.sponsoredCount}</div>
-            <div style={{ fontSize: '0.7rem', color: '#9333EA', fontWeight: 600 }}>Premium badge active</div>
+            <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>Premium badge active</div>
           </div>
 
           {/* Total Value */}
-          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#CCFBF1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0D9488', marginBottom: '10px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '10px' }}>
               <FaChartBar style={{ fontSize: '1.1rem' }} />
             </div>
             <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total Value</div>
             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: '2px 0 4px 0' }}>₹{stats.totalValue} Cr</div>
-            <div style={{ fontSize: '0.7rem', color: '#0D9488', fontWeight: 600 }}>Total portfolio value</div>
+            <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600 }}>Total portfolio value</div>
           </div>
 
         </div>
@@ -636,7 +636,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Search & Filter Card matching screenshot exactly */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #F1F5F9', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             
             {/* Row 1: Search & Filter buttons */}
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -720,25 +720,25 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
           {/* Bulk Actions Bar if any items selected */}
           {selectedIds.length > 0 && (
-            <div style={{ backgroundColor: '#FEF3C7', border: '1px solid #F59E0B', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #F59E0B', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, color: '#92400E', fontSize: '0.88rem' }}>
                 ✓ {selectedIds.length} property items selected
               </span>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => handleBulkStatusChange('Published')} style={{ padding: '6px 14px', backgroundColor: '#10B981', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Publish Selected</button>
-                <button onClick={() => handleBulkStatusChange('Approved')} style={{ padding: '6px 14px', backgroundColor: '#3B82F6', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Approve Selected</button>
-                <button onClick={() => handleBulkStatusChange('Sold')} style={{ padding: '6px 14px', backgroundColor: '#6366F1', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Mark as Sold</button>
-                <button onClick={() => handleBulkStatusChange('Archived')} style={{ padding: '6px 14px', backgroundColor: '#64748B', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Archive Selected</button>
-                <button onClick={handleBulkDelete} style={{ padding: '6px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Delete Selected</button>
+                <button onClick={() => handleBulkStatusChange('Published')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Publish Selected</button>
+                <button onClick={() => handleBulkStatusChange('Approved')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Approve Selected</button>
+                <button onClick={() => handleBulkStatusChange('Sold')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Mark as Sold</button>
+                <button onClick={() => handleBulkStatusChange('Archived')} style={{ padding: '6px 14px', backgroundColor: '#64748B', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Archive Selected</button>
+                <button onClick={handleBulkDelete} style={{ padding: '6px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Delete Selected</button>
               </div>
             </div>
           )}
 
           {/* Table / List Grid matching screenshot exactly */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #F1F5F9', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #F1F5F9' }}>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
                   <th style={{ padding: '16px', width: '40px' }}>
                     <input
                       type="checkbox"
@@ -765,7 +765,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     <td colSpan={8} style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
                       <p style={{ fontSize: '1.05rem', fontWeight: 600, margin: '0 0 12px 0' }}>No property listings matched your filters.</p>
                       {activeModuleTab === 'listings' && (
-                        <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#4F46E5', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}>+ Add New Property</button>
+                        <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}>+ Add New Property</button>
                       )}
                     </td>
                   </tr>
@@ -774,7 +774,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     const assignedBroker = dealersDb.find(d => d.id === prop.dealerId);
                     const isSelected = selectedIds.includes(prop.id);
                     return (
-                      <tr key={prop.id} style={{ borderBottom: '1px solid #F1F5F9', backgroundColor: isSelected ? '#FEF9C3' : '#FFFFFF', transition: 'background 0.15s' }}>
+                      <tr key={prop.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: isSelected ? '#FEF9C3' : '#FFFFFF', transition: 'background 0.15s' }}>
                         <td style={{ padding: '16px' }}>
                           <input
                             type="checkbox"
@@ -792,7 +792,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             <div>
                               <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px' }}>{prop.title}</div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{prop.id}</div>
-                              <span style={{ padding: '2px 8px', backgroundColor: '#DCFCE7', color: '#166534', fontSize: '0.7rem', fontWeight: 600, borderRadius: '6px' }}>
+                              <span style={{ padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
                                 {prop.category}
                               </span>
                             </div>
@@ -811,7 +811,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <td style={{ padding: '16px' }}>
                           {assignedBroker ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5', fontWeight: 700, fontSize: '0.78rem' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', fontWeight: 700, fontSize: '0.78rem' }}>
                                 {assignedBroker.companyName?.substring(0, 2).toUpperCase()}
                               </div>
                               <div>
@@ -819,7 +819,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                                   <span style={{ fontSize: '0.72rem', color: '#F59E0B', fontWeight: 600 }}>⭐ {assignedBroker.rating} (124)</span>
                                   {assignedBroker.premiumPartner && (
-                                    <span style={{ padding: '1px 6px', backgroundColor: '#EEF2FF', color: '#4F46E5', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>Premium</span>
+                                    <span style={{ padding: '1px 6px', backgroundColor: '#ECFDF5', color: '#059669', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>Premium</span>
                                   )}
                                 </div>
                               </div>
@@ -834,21 +834,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         </td>
                         <td style={{ padding: '16px' }}>
                           <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '8px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
                             fontSize: '0.72rem',
                             fontWeight: 600,
                             display: 'inline-block',
                             backgroundColor: 
-                              (prop.approvalStatus === 'Published' || prop.listingStatus === 'Published') ? '#DCFCE7' :
-                              (prop.approvalStatus === 'Pending Approval') ? '#DBEAFE' :
-                              (prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#FEE2E2' : 
-                              (prop.approvalStatus === 'Reserved' || prop.listingStatus === 'Reserved') ? '#FEF3C7' : '#F1F5F9',
+                              (prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#FEE2E2' : '#ECFDF5',
                             color:
-                              (prop.approvalStatus === 'Published' || prop.listingStatus === 'Published') ? '#166534' :
-                              (prop.approvalStatus === 'Pending Approval') ? '#1E40AF' :
-                              (prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#EF4444' : 
-                              (prop.approvalStatus === 'Reserved' || prop.listingStatus === 'Reserved') ? '#D97706' : '#475569'
+                              (prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#EF4444' : '#059669'
                           }}>
                             {prop.approvalStatus || prop.listingStatus || 'Published'}
                           </span>
@@ -878,7 +872,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
             {/* Dynamic Pagination Footer */}
             {filteredProperties.length > 0 && (
-              <div style={{ padding: '16px 20px', borderTop: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+              <div style={{ padding: '16px 20px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
                 <div style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 500 }}>
                   Showing {Math.min(1, filteredProperties.length)} to {filteredProperties.length} of {propertiesDb.length} properties
                 </div>
@@ -927,9 +921,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '100px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                   <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E40AF' }}>{prop.id} • {prop.area}</div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669' }}>{prop.id} • {prop.area}</div>
                     <h4 style={{ margin: '2px 0', fontSize: '1rem', color: '#0F172A' }}>{prop.title}</h4>
-                    <div style={{ fontWeight: 800, color: '#10B981', fontSize: '0.9rem' }}>{prop.priceDisplay}</div>
+                    <div style={{ fontWeight: 800, color: '#059669', fontSize: '0.9rem' }}>{prop.priceDisplay}</div>
                   </div>
                 </div>
 
@@ -993,7 +987,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <span>{count} Listings ({pct}%)</span>
                       </div>
                       <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#1E40AF' }} />
+                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669' }} />
                       </div>
                     </div>
                   );
@@ -1014,7 +1008,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <span>{count} Listings</span>
                       </div>
                       <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#10B981' }} />
+                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669' }} />
                       </div>
                     </div>
                   );
@@ -1035,7 +1029,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
               {Object.entries(CATEGORY_SUBTYPES).map(([catName, sublist]) => (
                 <div key={catName} style={{ backgroundColor: '#F8FAFC', padding: '20px', border: '1px solid #CBD5E1' }}>
-                  <h4 style={{ margin: '0 0 12px 0', color: '#1E40AF', fontSize: '1.1rem' }}>{catName}</h4>
+                  <h4 style={{ margin: '0 0 12px 0', color: '#059669', fontSize: '1.1rem' }}>{catName}</h4>
                   <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {sublist.map(sub => (
                       <li key={sub} style={{ fontSize: '0.9rem', color: '#334155', fontWeight: 600 }}>{sub}</li>
@@ -1107,7 +1101,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         showNotification?.("Added new locality to master.", "success");
                       }
                     }}
-                    style={{ padding: '8px 16px', backgroundColor: '#1E40AF', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
+                    style={{ padding: '8px 16px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
                   >
                     + Add Area
                   </button>
@@ -1115,7 +1109,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                 {hierarchyAreas.map(area => (
-                  <span key={area} style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1E40AF', fontWeight: 700, fontSize: '0.88rem', borderRadius: '20px' }}>
+                  <span key={area} style={{ padding: '8px 16px', backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', color: '#059669', fontWeight: 700, fontSize: '0.88rem', borderRadius: '16px' }}>
                     {area}
                   </span>
                 ))}
@@ -1183,7 +1177,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         }}
                         style={{
                           padding: '8px 16px',
-                          backgroundColor: prop.showSoldOnHomepage ? '#F1F5F9' : '#10B981',
+                          backgroundColor: prop.showSoldOnHomepage ? '#F1F5F9' : '#059669',
                           color: prop.showSoldOnHomepage ? '#475569' : '#FFFFFF',
                           border: prop.showSoldOnHomepage ? '1px solid #CBD5E1' : 'none',
                           borderRadius: '6px',
@@ -1217,10 +1211,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       {activeModuleTab === 'reports' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '30px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
-            <FaFileExport style={{ fontSize: '3rem', color: '#1E40AF', marginBottom: '12px' }} />
+            <FaFileExport style={{ fontSize: '3rem', color: '#059669', marginBottom: '12px' }} />
             <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0' }}>Export Complete Property Reports</h3>
             <p style={{ color: '#64748B', maxWidth: '600px', margin: '0 auto 20px auto' }}>Download real-time datasets including broker allocations, sales conversions, and specifications in formatted Excel or CSV files.</p>
-            <button onClick={exportToCSV} style={{ padding: '14px 32px', backgroundColor: '#1E40AF', color: '#FFF', border: 'none', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+            <button onClick={exportToCSV} style={{ padding: '14px 32px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
               DOWNLOAD MASTER EXCEL / CSV
             </button>
           </div>
@@ -1235,7 +1229,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             {/* Modal Header */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 32px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, borderBottom: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#2563EB', flexShrink: 0 }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '14px', backgroundColor: '#ECFDF5', border: '1px solid #ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', color: '#059669', flexShrink: 0 }}>
                   <FaBuilding />
                 </div>
                 <div>
@@ -1243,7 +1237,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
                       {modalMode === 'add' ? 'Add New Property' : modalMode === 'edit' ? 'Edit Property' : 'Duplicate Property'}
                     </h3>
-                    <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
+                    <span style={{ backgroundColor: '#F1F5F9', color: '#475569', padding: '4px 14px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.5px' }}>
                       {formData.id || 'P-NEW'}
                     </span>
                   </div>
@@ -1273,20 +1267,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     >
                       <div style={{
                         width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.95rem',
-                        backgroundColor: isActive ? '#2563EB' : isCompleted ? '#10B981' : '#F1F5F9',
+                        backgroundColor: isActive ? '#059669' : isCompleted ? '#059669' : '#F1F5F9',
                         color: isActive || isCompleted ? '#FFFFFF' : '#64748B',
-                        boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none',
+                        boxShadow: isActive ? '0 2px 6px rgba(5,150,105,0.2)' : 'none',
                         transition: 'all 0.2s'
                       }}>
                         {isCompleted ? <FaCheck style={{ fontSize: '0.85rem' }} /> : step.num}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                        <span style={{ fontWeight: 800, fontSize: '0.92rem', color: isActive ? '#1E3A8A' : isCompleted ? '#0F172A' : '#475569' }}>{step.label}</span>
+                        <span style={{ fontWeight: 800, fontSize: '0.92rem', color: isActive ? '#059669' : isCompleted ? '#0F172A' : '#475569' }}>{step.label}</span>
                         <span style={{ fontWeight: 500, fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>{step.sub}</span>
                       </div>
                     </button>
                     {idx < arr.length - 1 && (
-                      <div style={{ flexGrow: 1, height: '1.5px', backgroundColor: isCompleted ? '#10B981' : '#E2E8F0', minWidth: '24px', margin: '0 16px', transition: 'background 0.2s' }} />
+                      <div style={{ flexGrow: 1, height: '1.5px', backgroundColor: isCompleted ? '#059669' : '#E2E8F0', minWidth: '24px', margin: '0 16px', transition: 'background 0.2s' }} />
                     )}
                   </React.Fragment>
                 );
@@ -1302,9 +1296,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 1fr)', gap: '24px', alignItems: 'stretch' }}>
                     
                     {/* Left Column: Property Location */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>1. Property Location</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>1. Property Location</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 20px 0' }}>Search and select the exact location of your property</p>
 
                         {/* Search Bar Row */}
@@ -1312,7 +1306,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px' }}>Search Property Address</label>
                           <div style={{ display: 'flex', gap: '12px' }}>
                             <div style={{ flexGrow: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-                              <FaMapMarkerAlt style={{ position: 'absolute', left: '16px', color: '#2563EB', fontSize: '1.1rem' }} />
+                              <FaMapMarkerAlt style={{ position: 'absolute', left: '16px', color: '#059669', fontSize: '1.1rem' }} />
                               <input
                                 type="text"
                                 value={addressSearchQuery || formData.formatted_address || formData.fullAddress || ''}
@@ -1322,7 +1316,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 }}
                                 onFocus={() => setShowLocationSuggestions(true)}
                                 placeholder="Plot 45, HITEC City Phase 2, Hyderabad, Telangana 500081, India"
-                                style={{ width: '100%', padding: '12px 40px 12px 44px', border: '1.5px solid #2563EB', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, color: '#0F172A', outline: 'none', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)', boxSizing: 'border-box' }}
+                                style={{ width: '100%', padding: '12px 40px 12px 44px', border: '1.5px solid #059669', borderRadius: '12px', fontSize: '0.95rem', fontWeight: 600, color: '#0F172A', outline: 'none', boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)', boxSizing: 'border-box' }}
                               />
                               {(addressSearchQuery || formData.formatted_address) && (
                                 <button type="button" onClick={() => { setAddressSearchQuery(''); setFormData({ ...formData, formatted_address: '', fullAddress: '' }); }} style={{ position: 'absolute', right: '14px', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.1rem', padding: '2px' }}>×</button>
@@ -1332,7 +1326,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               type="button"
                               onClick={handleAdminDetectGPS}
                               disabled={isAdminDetectingGPS}
-                              style={{ padding: '12px 22px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)', transition: 'background 0.2s' }}
+                              style={{ padding: '12px 22px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)', transition: 'background 0.2s' }}
                             >
                               <FaCrosshairs /> {isAdminDetectingGPS ? 'Detecting...' : 'Detect My Location'}
                             </button>
@@ -1346,21 +1340,21 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               <div
                                 onClick={handleAdminDetectGPS}
                                 style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: 'background 0.2s' }}
-                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#EFF6FF'}
+                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#ECFDF5'}
                                 onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                               >
-                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', flexShrink: 0 }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', flexShrink: 0 }}>
                                   <FaCrosshairs style={{ fontSize: '1rem' }} />
                                 </div>
                                 <div>
-                                  <div style={{ fontWeight: 800, color: '#2563EB', fontSize: '0.9rem' }}>Use Current Location (GPS)</div>
+                                  <div style={{ fontWeight: 800, color: '#059669', fontSize: '0.9rem' }}>Use Current Location (GPS)</div>
                                   <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Detect exact current location & lat/lng automatically</div>
                                 </div>
                               </div>
 
                               {/* Popular Cities Chips (When no search query) */}
                               {(!addressSearchQuery || addressSearchQuery.trim().length < 2) && (
-                                <div style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9', backgroundColor: '#FFFFFF' }}>
+                                <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
                                   <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Popular Cities & Hubs</div>
                                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                     {['Hyderabad', 'Guntur', 'Vijayawada', 'Visakhapatnam', 'Amaravati', 'Bangalore', 'Chennai'].map(cName => {
@@ -1375,8 +1369,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                               setAddressSearchQuery(cName);
                                             }
                                           }}
-                                          style={{ padding: '6px 14px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', cursor: 'pointer', transition: 'all 0.2s' }}
-                                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#2563EB'; e.currentTarget.style.color = '#FFFFFF'; }}
+                                          style={{ padding: '6px 14px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: '16px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', cursor: 'pointer', transition: 'all 0.2s' }}
+                                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#059669'; e.currentTarget.style.color = '#FFFFFF'; }}
                                           onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F1F5F9'; e.currentTarget.style.color = '#334155'; }}
                                         >
                                           📍 {cName}
@@ -1388,7 +1382,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               )}
 
                               {isSearchingLive && (
-                                <div style={{ padding: '12px 18px', color: '#2563EB', fontWeight: 700, fontSize: '0.85rem', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ padding: '12px 18px', color: '#059669', fontWeight: 700, fontSize: '0.85rem', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                   <FaSearch style={{ animation: 'spin 1s linear infinite' }} />
                                   <span>Searching live location database & Nominatim...</span>
                                 </div>
@@ -1399,7 +1393,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 <div
                                   key={idx}
                                   onClick={() => handleSelectGooglePlace(place)}
-                                  style={{ padding: '14px 18px', borderBottom: '1px solid #F1F5F9', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', transition: 'background 0.2s' }}
+                                  style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', cursor: 'pointer', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', transition: 'background 0.2s' }}
                                   onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                                   onMouseLeave={e => e.currentTarget.style.backgroundColor = '#FFFFFF'}
                                 >
@@ -1431,13 +1425,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                     setIsSearchingLive(false);
                                     handleSelectGooglePlace(customPlace);
                                   }}
-                                  style={{ padding: '14px 18px', backgroundColor: '#EFF6FF', borderTop: '1px solid #BFDBFE', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontWeight: 700, color: '#1E40AF', fontSize: '0.85rem' }}
+                                  style={{ padding: '14px 18px', backgroundColor: '#ECFDF5', borderTop: '1px solid #BFDBFE', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', fontWeight: 700, color: '#059669', fontSize: '0.85rem' }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <FaMapMarkerAlt style={{ color: '#2563EB' }} />
+                                    <FaMapMarkerAlt style={{ color: '#059669' }} />
                                     <span>Use "{addressSearchQuery}" (Auto-Geocode Engine)</span>
                                   </div>
-                                  <span style={{ fontSize: '0.75rem', backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '2px 8px', borderRadius: '4px' }}>Live Geocode</span>
+                                  <span style={{ fontSize: '0.75rem', backgroundColor: '#ECFDF5', color: '#059669', padding: '2px 8px', borderRadius: '4px' }}>Live Geocode</span>
                                 </div>
                               )}
                             </div>
@@ -1445,13 +1439,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         </div>
 
                         {/* Success Banner */}
-                        <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#16A34A', fontWeight: 700, fontSize: '0.88rem' }}>
+                        <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#059669', fontWeight: 700, fontSize: '0.88rem' }}>
                           <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
                           <span>Location verified successfully from Google Maps</span>
                         </div>
 
                         {/* Location Details (Auto-Geocoded) */}
-                        <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E3A8A', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
+                        <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#059669', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
@@ -1536,10 +1530,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <FaList style={{ color: '#2563EB', fontSize: '1rem', flexShrink: 0 }} />
+                            <FaList style={{ color: '#059669', fontSize: '1rem', flexShrink: 0 }} />
                             <div style={{ overflow: 'hidden' }}>
                               <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700 }}>Google Place ID</div>
-                              <div style={{ fontSize: '0.82rem', color: '#2563EB', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.google_place_id || '-'}</div>
+                              <div style={{ fontSize: '0.82rem', color: '#059669', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{formData.google_place_id || '-'}</div>
                             </div>
                           </div>
                         </div>
@@ -1566,18 +1560,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </div>
 
                     {/* Right Column: Location Preview */}
-                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Location Preview</h4>
+                            <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>Location Preview</h4>
                             <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag the marker to fine-tune the exact location</p>
                           </div>
                           <a
                             href={`https://maps.google.com/?q=${mapMarkerPos.lat},${mapMarkerPos.lng}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ padding: '8px 16px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
+                            style={{ padding: '8px 16px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #BFDBFE', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}
                           >
                             Open in Google Maps <FaExternalLinkAlt style={{ fontSize: '0.75rem' }} />
                           </a>
@@ -1608,22 +1602,22 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       </div>
 
                       {/* Tip Box */}
-                      <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '14px 18px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#1E40AF', fontSize: '0.88rem', fontWeight: 600 }}>
-                        <FaLightbulb style={{ color: '#2563EB', fontSize: '1.2rem', flexShrink: 0 }} />
+                      <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '14px 18px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#059669', fontSize: '0.88rem', fontWeight: 600 }}>
+                        <FaLightbulb style={{ color: '#059669', fontSize: '1.2rem', flexShrink: 0 }} />
                         <span>Tip: Drag the marker to adjust the exact location if needed.</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Bottom Full-Width Card: Search Radius (Optional) */}
-                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>Search Radius (Optional)</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>Search Radius (Optional)</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Set the service or visibility radius for this property</p>
                       </div>
                       <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <FaLayerGroup style={{ color: '#2563EB', fontSize: '1.5rem', flexShrink: 0 }} />
+                        <FaLayerGroup style={{ color: '#059669', fontSize: '1.5rem', flexShrink: 0 }} />
                         <div>
                           <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Selected Radius</div>
                           <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{formData.service_radius || 10} KM</div>
@@ -1641,12 +1635,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       max="100"
                       value={formData.service_radius || 10}
                       onChange={e => setFormData({ ...formData, service_radius: Number(e.target.value) })}
-                      style={{ width: '100%', marginTop: '24px', accentColor: '#2563EB', height: '6px', cursor: 'pointer' }}
+                      style={{ width: '100%', marginTop: '24px', accentColor: '#059669', height: '6px', cursor: 'pointer' }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, color: '#64748B', marginTop: '10px' }}>
                       <span>1 KM</span>
                       <span>5 KM</span>
-                      <span style={{ color: '#2563EB', fontWeight: 800 }}>10 KM</span>
+                      <span style={{ color: '#059669', fontWeight: 800 }}>10 KM</span>
                       <span>20 KM</span>
                       <span>50 KM</span>
                       <span>100 KM</span>
@@ -1657,8 +1651,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
               {/* STEP 2: BASIC DETAILS */}
               {modalSubTab === 'basic' && (
-                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '22px' }}>
-                  <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0, borderBottom: '1px solid #F1F5F9', paddingBottom: '16px' }}>2. Basic Property Information</h4>
+                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>2. Basic Property Information</h4>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
                     <div>
@@ -1692,7 +1686,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </div>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>APPROVAL PIPELINE</label>
-                      <select value={formData.approvalStatus || 'Published'} onChange={e => setFormData({ ...formData, approvalStatus: e.target.value as any, listingStatus: e.target.value as any, sold: e.target.value === 'Sold', soldDate: e.target.value === 'Sold' ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined })} style={{ width: '100%', padding: '14px', border: '1.5px solid #2563EB', borderRadius: '12px', fontWeight: 700, color: '#1E40AF', backgroundColor: '#FFFFFF' }}>
+                      <select value={formData.approvalStatus || 'Published'} onChange={e => setFormData({ ...formData, approvalStatus: e.target.value as any, listingStatus: e.target.value as any, sold: e.target.value === 'Sold', soldDate: e.target.value === 'Sold' ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined })} style={{ width: '100%', padding: '14px', border: '1.5px solid #059669', borderRadius: '12px', fontWeight: 700, color: '#059669', backgroundColor: '#FFFFFF' }}>
                         <option value="Published">Published Immediately</option>
                         <option value="Pending Approval">Pending Approval</option>
                         <option value="Draft">Save as Draft</option>
@@ -1745,8 +1739,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               {/* STEP 3: SPECIFICATIONS & AMENITIES */}
               {modalSubTab === 'specs' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: '0 0 20px 0', borderBottom: '1px solid #F1F5F9', paddingBottom: '16px' }}>3. Technical Specifications & Dimensions</h4>
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 20px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>3. Technical Specifications & Dimensions</h4>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                       <div>
@@ -1796,14 +1790,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </div>
 
                   {/* Amenities Section */}
-                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: '0 0 16px 0' }}>Available Amenities & Features</h4>
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 16px 0' }}>Available Amenities & Features</h4>
                     <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '0 0 20px 0' }}>Select all amenities available in this property project</p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
                       {ALL_AMENITIES.map(am => {
                         const isChecked = formData.amenities?.includes(am);
                         return (
-                          <label key={am} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', backgroundColor: isChecked ? '#EFF6FF' : '#F8FAFC', border: isChecked ? '1.5px solid #2563EB' : '1px solid #E2E8F0', cursor: 'pointer', borderRadius: '12px', fontWeight: 700, color: isChecked ? '#1E40AF' : '#334155', transition: 'all 0.2s' }}>
+                          <label key={am} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', backgroundColor: isChecked ? '#ECFDF5' : '#F8FAFC', border: isChecked ? '1.5px solid #059669' : '1px solid #E2E8F0', cursor: 'pointer', borderRadius: '12px', fontWeight: 700, color: isChecked ? '#059669' : '#334155', transition: 'all 0.2s' }}>
                             <input
                               type="checkbox"
                               checked={!!isChecked}
@@ -1812,7 +1806,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 if (e.target.checked) setFormData({ ...formData, amenities: [...curr, am] });
                                 else setFormData({ ...formData, amenities: curr.filter(x => x !== am) });
                               }}
-                              style={{ width: '18px', height: '18px', accentColor: '#2563EB' }}
+                              style={{ width: '18px', height: '18px', accentColor: '#059669' }}
                             />
                             {am}
                           </label>
@@ -1825,8 +1819,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
               {/* STEP 4: PRICING */}
               {modalSubTab === 'pricing' && (
-                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0, borderBottom: '1px solid #F1F5F9', paddingBottom: '16px' }}>4. Price & Financial Terms</h4>
+                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0, borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>4. Price & Financial Terms</h4>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
                     <div>
@@ -1849,7 +1843,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             setFormData({ ...formData, price: val, priceDisplay: label });
                           }}
                           placeholder="e.g. 75"
-                          style={{ flexGrow: 1, padding: '14px', border: '1.5px solid #2563EB', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 800, color: '#1E40AF', outline: 'none' }}
+                          style={{ flexGrow: 1, padding: '14px', border: '1.5px solid #059669', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 800, color: '#059669', outline: 'none' }}
                           required
                         />
                         <select
@@ -1868,7 +1862,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             }
                             setFormData({ ...formData, priceDisplay: label });
                           }}
-                          style={{ padding: '14px', border: '1.5px solid #2563EB', borderRadius: '12px', fontSize: '1.05rem', fontWeight: 700, backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}
+                          style={{ padding: '14px', border: '1.5px solid #059669', borderRadius: '12px', fontSize: '1.05rem', fontWeight: 700, backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}
                         >
                           <option value="Thousands">Thousands (₹)</option>
                           <option value="Lakhs">Lakhs (₹)</option>
@@ -1885,7 +1879,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </div>
 
                   <div style={{ backgroundColor: '#F8FAFC', padding: '20px', borderRadius: '14px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <FaMoneyBillWave style={{ fontSize: '2rem', color: '#10B981', flexShrink: 0 }} />
+                    <FaMoneyBillWave style={{ fontSize: '2rem', color: '#059669', flexShrink: 0 }} />
                     <div>
                       <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '1rem' }}>Transparent Valuation Guarantee</div>
                       <div style={{ color: '#64748B', fontSize: '0.85rem', marginTop: '4px' }}>All property prices on TheNexOpp are verified directly with sellers/builders with zero hidden markups.</div>
@@ -1897,13 +1891,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               {/* STEP 5: MEDIA & PHOTOS */}
               {modalSubTab === 'media' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F1F5F9', paddingBottom: '16px', marginBottom: '24px' }}>
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '24px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>5. Media Gallery</h4>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>5. Media Gallery</h4>
                         <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag & drop or upload showcase images for your property listing (Optional)</p>
                       </div>
-                      <span style={{ padding: '6px 14px', backgroundColor: '#EFF6FF', color: '#2563EB', borderRadius: '20px', fontWeight: 700, fontSize: '0.8rem' }}>
+                      <span style={{ padding: '6px 14px', backgroundColor: '#ECFDF5', color: '#059669', borderRadius: '16px', fontWeight: 700, fontSize: '0.8rem' }}>
                         {((formData.image ? 1 : 0) + (formData.image2 ? 1 : 0) + (formData.image3 ? 1 : 0) + (formData.image4 ? 1 : 0) + (formData.image5 ? 1 : 0) + (formData.image6 ? 1 : 0))} / 6 Photos Uploaded
                       </span>
                     </div>
@@ -1937,8 +1931,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         else if (!formData.image6) document.getElementById('optional-file-input-5')?.click();
                       }}
                       style={{
-                        border: '2.5px dashed #3B82F6',
-                        borderRadius: '20px',
+                        border: '2.5px dashed #059669',
+                        borderRadius: '16px',
                         padding: '40px',
                         textAlign: 'center',
                         cursor: 'pointer',
@@ -1948,8 +1942,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                       }}
                     >
-                      <FaCamera style={{ fontSize: '2.5rem', color: '#3B82F6', marginBottom: '12px' }} />
-                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1E3A8A' }}>Drag & Drop or Click to Upload Image</div>
+                      <FaCamera style={{ fontSize: '2.5rem', color: '#059669', marginBottom: '12px' }} />
+                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#059669' }}>Drag & Drop or Click to Upload Image</div>
                       <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>PNG, JPG, or WEBP (Max 6 showcase images)</div>
                       <div style={{ display: 'none' }}>
                         <input id="optional-file-input-0" type="file" accept="image/*" onChange={(e) => {
@@ -2018,7 +2012,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           return (
                             <div key={idx} style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.01)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: idx === 0 ? '#2563EB' : '#334155' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: idx === 0 ? '#059669' : '#334155' }}>
                                   {item.label}
                                 </span>
                                 <button
@@ -2046,8 +2040,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </div>
 
                   {/* 360 Virtual Tour Box */}
-                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: '0 0 8px 0' }}>360° Virtual Tour & Video Walkthrough</h4>
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 8px 0' }}>360° Virtual Tour & Video Walkthrough</h4>
                     <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '0 0 20px 0' }}>Embed Matterport 3D tours or YouTube walkthrough links for immersive client exploration</p>
                     <input
                       type="text"
@@ -2065,8 +2059,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   
                   {/* Assigned Broker Section */}
-                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E3A8A', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <FaUserTie /> Assign Verified Broker Partner
                     </h4>
                     <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '0 0 20px 0' }}>Select the authorized realty advisor responsible for client inquiries and site visits</p>
@@ -2091,7 +2085,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                   setFormData({ ...formData, assignedBrokerIds: [...curr, broker.id], dealerId: broker.id });
                                 }
                               }}
-                              style={{ padding: '16px 20px', backgroundColor: isAssigned ? '#EFF6FF' : '#F8FAFC', border: isAssigned ? '2px solid #2563EB' : '1px solid #E2E8F0', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s', boxShadow: isAssigned ? '0 4px 12px rgba(37, 99, 235, 0.15)' : 'none' }}
+                              style={{ padding: '16px 20px', backgroundColor: isAssigned ? '#ECFDF5' : '#F8FAFC', border: isAssigned ? '2px solid #059669' : '1px solid #E2E8F0', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s', boxShadow: isAssigned ? '0 4px 12px rgba(37, 99, 235, 0.15)' : 'none' }}
                             >
                               <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
                                 <img src={broker.photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&q=80'} alt={broker.companyName} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
@@ -2102,9 +2096,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               </div>
                               <div>
                                 {isAssigned ? (
-                                  <span style={{ padding: '6px 14px', backgroundColor: '#2563EB', color: '#FFF', fontWeight: 800, fontSize: '0.78rem', borderRadius: '20px' }}>✓ ASSIGNED</span>
+                                  <span style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', fontWeight: 800, fontSize: '0.78rem', borderRadius: '16px' }}>✓ ASSIGNED</span>
                                 ) : (
-                                  <span style={{ padding: '6px 14px', backgroundColor: '#E2E8F0', color: '#475569', fontWeight: 700, fontSize: '0.78rem', borderRadius: '20px' }}>SELECT</span>
+                                  <span style={{ padding: '6px 14px', backgroundColor: '#E2E8F0', color: '#475569', fontWeight: 700, fontSize: '0.78rem', borderRadius: '16px' }}>SELECT</span>
                                 )}
                               </div>
                             </div>
@@ -2135,7 +2129,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         setIsModalOpen(false);
                         setTimeout(() => setViewAnalyticsProperty(formData as any), 100);
                       }}
-                      style={{ padding: '10px 16px', backgroundColor: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      style={{ padding: '10px 16px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #BFDBFE', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                       title="View Property Analytics"
                     >
                       <FaEye /> Views
@@ -2172,7 +2166,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <button
                   type="button"
                   onClick={handleSaveDraft}
-                  style={{ padding: '12px 28px', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#2563EB', cursor: 'pointer', transition: 'all 0.2s' }}
+                  style={{ padding: '12px 28px', backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#059669', cursor: 'pointer', transition: 'all 0.2s' }}
                 >
                   Save as Draft
                 </button>
@@ -2186,7 +2180,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     else if (modalSubTab === 'media') setModalSubTab('review');
                     else handleSaveProperty(e as any);
                   }}
-                  style={{ padding: '12px 32px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
+                  style={{ padding: '12px 32px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
                 >
                   {modalSubTab === 'review' ? (
                     <>✓ Save & Publish</>
@@ -2204,7 +2198,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       {viewAnalyticsProperty && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', maxWidth: '460px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #E2E8F0', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
-            <div style={{ backgroundColor: '#1E3A8A', padding: '24px', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ backgroundColor: '#059669', padding: '24px', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
                   👁️
@@ -2227,9 +2221,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginBottom: '20px' }}>
-                <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Views</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1E3A8A', marginTop: '4px' }}>👁️ {viewAnalyticsProperty.viewsCount || 0}</div>
+                <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Views</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#059669', marginTop: '4px' }}>👁️ {viewAnalyticsProperty.viewsCount || 0}</div>
                   <div style={{ display: 'flex', gap: '4px', marginTop: '10px' }}>
                     <button
                       onClick={() => {
@@ -2240,7 +2234,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           notifyDataChanged();
                         }
                       }}
-                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#1E40AF', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#059669', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
                     >
                       Edit
                     </button>
@@ -2257,7 +2251,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unique Visitors</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unique Visitors</div>
                   <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#14532D', marginTop: '4px' }}>👤 {viewAnalyticsProperty.uniqueVisitorsCount || Math.max(0, Math.floor((viewAnalyticsProperty.viewsCount || 0) * 0.75))}</div>
                   <div style={{ display: 'flex', gap: '4px', marginTop: '10px' }}>
                     <button
@@ -2269,7 +2263,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           notifyDataChanged();
                         }
                       }}
-                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#166534', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
+                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#059669', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
                     >
                       Edit
                     </button>
@@ -2294,7 +2288,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             </div>
 
             <div style={{ padding: '16px 24px', backgroundColor: '#F1F5F9', borderTop: '1px solid #E2E8F0', textAlign: 'right' }}>
-              <button onClick={() => setViewAnalyticsProperty(null)} style={{ padding: '10px 24px', backgroundColor: '#1E3A8A', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
+              <button onClick={() => setViewAnalyticsProperty(null)} style={{ padding: '10px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
             </div>
           </div>
         </div>

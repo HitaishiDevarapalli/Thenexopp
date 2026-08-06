@@ -2714,7 +2714,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     recalculateAllDemandRegions();
                     showNotification("AI calculations updated for all regions!", "success");
                   }}
-                  style={{ padding: '10px 18px', backgroundColor: '#1E3A8A', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  style={{ padding: '10px 18px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
                 >
                   🔄 AI Refresh Calculations
                 </button>
@@ -2746,7 +2746,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   });
                   showNotification("New demand region added successfully!", "success");
                 }}
-                style={{ padding: '10px 18px', backgroundColor: '#16A34A', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                style={{ padding: '10px 18px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
               >
                 ➕ Add New Region
               </button>
@@ -2803,7 +2803,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                               showNotification("Radius updated successfully!", "success");
                             }
                           }}
-                          style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', borderRadius: '4px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                          style={{ padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', borderRadius: '4px', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                         >
                           Radius
                         </button>
