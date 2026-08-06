@@ -115,6 +115,23 @@ input[type=number] {
     padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left)) !important;
     min-height: 56px !important;
   }
+
+  /* Universal Mobile Safety Rules - Prevent all clipping and horizontal overflow */
+  body, #root {
+    overflow-x: hidden !important;
+    width: 100vw !important;
+  }
+  div, section, form, input, select, button {
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  img, video, iframe, canvas, svg {
+    max-width: 100% !important;
+  }
+  .leaflet-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
 
 /* Admin Panel Responsive Drawer for Mobile & Tablet (iOS/Android) */
@@ -3678,6 +3695,10 @@ p {
 .landscape-card {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 @media (min-width: 992px) {

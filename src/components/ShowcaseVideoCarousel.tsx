@@ -243,7 +243,7 @@ export const ShowcaseVideoCarousel: React.FC<{
       }}
     >
       {/* Container */}
-      <div ref={containerRef} style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+      <div ref={containerRef} style={{ maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '0 16px', boxSizing: 'border-box' }}>
 
         {/* 16:9 Video Box (No black glare or text blocking video) */}
         <div
