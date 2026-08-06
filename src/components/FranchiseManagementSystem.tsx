@@ -1620,7 +1620,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           </div>
 
                           {/* Success/Warning Banner */}
-                          {formData.latitude && formData.latitude !== 0 ? (
+                          {editingFranchise.latitude && editingFranchise.latitude !== 0 ? (
                             <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '14px 18px', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', color: '#059669', fontWeight: 700, fontSize: '0.88rem' }}>
                               <FaCheckCircle style={{ fontSize: '1.1rem', flexShrink: 0 }} />
                               <span>Location verified successfully</span>
