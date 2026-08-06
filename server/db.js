@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import pino from 'pino';
 
 const logger = pino({ name: 'PrismaDatabase' });
@@ -8,7 +10,11 @@ if (!connectionString) {
   logger.error('DATABASE_URL environment variable is not set');
 }
 
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
 export const prisma = new PrismaClient({
+  adapter,
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
 });
 
@@ -29,6 +35,7 @@ const gracefulShutdown = async (signal) => {
   logger.info(`Received ${signal}. Disconnecting Prisma...`);
   try {
     await prisma.$disconnect();
+    await pool.end();
     logger.info('Prisma disconnected gracefully.');
   } catch (e) {
     logger.error({ error: e.message }, 'Error during graceful shutdown');
