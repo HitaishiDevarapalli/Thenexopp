@@ -164,7 +164,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     propertySubtype: 'Villas',
     propertyPurpose: 'Sale',
     status: 'Buy',
-    price: 0,
+    price: undefined,
     priceDisplay: '',
     areaSqFt: '',
     superBuiltUpArea: '',
@@ -312,7 +312,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       propertySubtype: 'Villas',
       propertyPurpose: 'Sale',
       status: 'Buy',
-      price: 0,
+      price: undefined,
       priceDisplay: '',
       areaSqFt: '',
       superBuiltUpArea: '',
@@ -442,6 +442,47 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       showNotification?.(`Property '${preparedProperty.title}' saved as Draft!`, "success");
     }
     setIsModalOpen(false);
+  };
+
+  // Step Validation
+  const validateStep = (step: string): boolean => {
+    if (step === 'location') {
+      if (!formData.latitude || formData.latitude === 0 || !formData.fullAddress) {
+        showNotification?.('Please search and verify a valid location first.', 'error');
+        return false;
+      }
+      return true;
+    }
+    if (step === 'basic') {
+      if (!formData.title || !formData.propertyPurpose || !formData.category || !formData.approvalStatus) {
+        showNotification?.('Please fill all mandatory fields in Basic Details.', 'error');
+        return false;
+      }
+      return true;
+    }
+    if (step === 'specs') {
+      if (!formData.superBuiltUpArea || !formData.carpetArea || !formData.bedrooms || !formData.bathrooms || !formData.parkingSlots || !formData.ownershipType || !formData.facing) {
+        showNotification?.('Please fill all mandatory fields in Specifications.', 'error');
+        return false;
+      }
+      return true;
+    }
+    if (step === 'pricing') {
+      if (!formData.price || formData.price <= 0) {
+        showNotification?.('Please enter a valid price.', 'error');
+        return false;
+      }
+      return true;
+    }
+    if (step === 'media') {
+      const imgCount = [formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].filter(Boolean).length;
+      if (imgCount === 0) {
+        showNotification?.('Please upload at least 1 image in Media Gallery.', 'error');
+        return false;
+      }
+      return true;
+    }
+    return true;
   };
 
   // Save Modal
@@ -1313,10 +1354,32 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 const isCompleted = arr.findIndex(x => x.id === modalSubTab) > idx;
                 return (
                   <React.Fragment key={step.id}>
-                    <button
+                      <button
                       type="button"
-                      onClick={() => setModalSubTab(step.id as any)}
-                      style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
+                      onClick={() => {
+                        const stepOrder = ['location', 'basic', 'specs', 'pricing', 'media', 'review'];
+                        const currentIndex = stepOrder.indexOf(modalSubTab);
+                        const targetIndex = stepOrder.indexOf(step.id);
+                        
+                        // Can always go back to previous steps
+                        if (targetIndex <= currentIndex) {
+                          setModalSubTab(step.id as any);
+                          return;
+                        }
+                        
+                        // Can only go forward if all steps up to target-1 are valid
+                        let isValid = true;
+                        for (let i = currentIndex; i < targetIndex; i++) {
+                          if (!validateStep(stepOrder[i])) {
+                            isValid = false;
+                            break;
+                          }
+                        }
+                        if (isValid) {
+                          setModalSubTab(step.id as any);
+                        }
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap', opacity: arr.findIndex(x => x.id === modalSubTab) >= idx ? 1 : 0.6 }}
                     >
                       <div style={{
                         width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.95rem',
@@ -1993,8 +2056,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '24px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>5. Media Gallery</h4>
-                        <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag & drop or upload showcase images for your property listing (Optional)</p>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>5. Media Gallery *</h4>
+                        <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag & drop or upload showcase images for your property listing (Mandatory)</p>
                       </div>
                       <span style={{ padding: '6px 14px', backgroundColor: '#ECFDF5', color: '#059669', borderRadius: '16px', fontWeight: 700, fontSize: '0.8rem' }}>
                         {((formData.image ? 1 : 0) + (formData.image2 ? 1 : 0) + (formData.image3 ? 1 : 0) + (formData.image4 ? 1 : 0) + (formData.image5 ? 1 : 0) + (formData.image6 ? 1 : 0))} / 6 Photos Uploaded
@@ -2272,6 +2335,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <button
                   type="button"
                   onClick={e => {
+                    if (!validateStep(modalSubTab)) return;
                     if (modalSubTab === 'location') setModalSubTab('basic');
                     else if (modalSubTab === 'basic') setModalSubTab('specs');
                     else if (modalSubTab === 'specs') setModalSubTab('pricing');
