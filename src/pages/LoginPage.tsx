@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Logo } from '../components/common/Logo';
 import { useAuth } from '../context/AuthContext';
 import { 
   FaUser, 
@@ -317,30 +318,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
           {/* Top Brand Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', zIndex: 2 }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #34D399 0%, #059669 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                <line x1="12" y1="22.08" x2="12" y2="12" />
-              </svg>
-            </div>
-            <div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
-                TheNexOpp
-              </div>
-              <div style={{ fontSize: '0.78rem', color: '#A7F3D0', fontWeight: 600, letterSpacing: '0.04em' }}>
-                Opportunities Simplified
-              </div>
-            </div>
+            <Logo size="lg" dark={true} />
           </div>
 
           {/* Center Content Section */}
