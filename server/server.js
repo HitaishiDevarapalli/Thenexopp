@@ -80,8 +80,8 @@ app.use('/api/', apiLimiter);
 // Pino HTTP Request Logging Middleware
 app.use(pinoHttp({ logger }));
 
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+app.use(express.json({ limit: '1000mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1000mb' }));
 app.use(cookieParser());
 
 // ── FILE STORAGE SUBDIRECTORIES ──────────────────────────────────────────────
