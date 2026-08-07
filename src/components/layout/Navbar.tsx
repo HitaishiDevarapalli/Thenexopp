@@ -95,7 +95,6 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
     ]},
     { id: 'finance', label: 'Finance', icon: <FaCoins />, dropdown: [
       { name: 'Loans', link: '#finance', subIcon: <FaHandHoldingUsd /> },
-      { name: 'Finance', link: '#finance', subIcon: <FaChartLine /> },
       { name: 'Insurance', link: '#finance', subIcon: <FaShieldAlt /> },
     ]},
     { id: 'about', label: 'About Us', icon: <FaInfoCircle /> },

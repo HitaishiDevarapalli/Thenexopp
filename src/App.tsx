@@ -459,33 +459,29 @@ export const App: React.FC = () => {
 
       ) : currentPage === 'financePage' ? (
         <>
-          <SubpageHeader title="Finance & Insurance" onBack={navigateBack} />
+          <SubpageHeader title="Loans & Insurance Solutions" onBack={navigateBack} />
           <FinanceSection 
             onCategorySelect={(cat) => {
               if (cat === 'loans') navigateTo('loansPage');
-              else if (cat === 'finance') navigateTo('financeServicePage');
               else if (cat === 'insurance') navigateTo('insurancePage');
             }}
           />
         </>
 
-      ) : (currentPage === 'loansPage' || currentPage === 'financeServicePage' || currentPage === 'insurancePage') ? (
+      ) : (currentPage === 'loansPage' || currentPage === 'insurancePage') ? (
         <>
           <SubpageHeader 
             title={
-              currentPage === 'loansPage' ? 'Loans & Funding' :
-              currentPage === 'financeServicePage' ? 'Finance & Advisory' : 'Insurance & Protection'
+              currentPage === 'loansPage' ? 'Loans — Real Estate & Business Finance' : 'Insurance — Insurance Solutions'
             } 
             onBack={navigateBack} 
           />
           <FinanceSection 
             initialCategory={
-              currentPage === 'loansPage' ? 'loans' :
-              currentPage === 'financeServicePage' ? 'finance' : 'insurance'
+              currentPage === 'loansPage' ? 'loans' : 'insurance'
             }
             onCategorySelect={(cat) => {
               if (cat === 'loans') navigateTo('loansPage');
-              else if (cat === 'finance') navigateTo('financeServicePage');
               else if (cat === 'insurance') navigateTo('insurancePage');
             }}
           />
