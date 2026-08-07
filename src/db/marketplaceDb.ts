@@ -483,6 +483,7 @@ export interface SiteSettings {
   defaultCity?: string;
   promotionalVideoUrl?: string;
   mainPageStats?: MainPageStats;
+  showFranchiseSection?: boolean;
 }
 
 export interface DemandRegion {
@@ -533,6 +534,7 @@ const defaultSettings: SiteSettings = {
   availableCities: [],
   defaultCity: '',
   promotionalVideoUrl: '',
+  showFranchiseSection: true,
   mainPageStats: {
     propertiesListed: '0',
     franchisesCount: '0',

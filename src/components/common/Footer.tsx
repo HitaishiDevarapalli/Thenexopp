@@ -171,10 +171,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
         <div>
           <h4 style={columnHeaderStyle}>EXPLORE</h4>
           <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('propertiesPage'))} style={linkStyle}>Property</a>
-          <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('franchisePage'))} style={linkStyle}>Franchise</a>
+          {siteSettingsDb.showFranchiseSection !== false && (
+            <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('franchisePage'))} style={linkStyle}>Franchise</a>
+          )}
           <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('financePage'))} style={linkStyle}>Finance</a>
           <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('insurancePage'))} style={linkStyle}>Insurance</a>
-          <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('financeServicePage'))} style={linkStyle}>Investments</a>
+          <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('loansPage'))} style={linkStyle}>Loans</a>
         </div>
 
         {/* Column 3 - COMPANY */}

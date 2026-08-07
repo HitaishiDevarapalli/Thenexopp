@@ -309,10 +309,11 @@ model SiteSettings {
   heroSubtitle      String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
   primaryColor      String   @default("#007A55")
   themeStyle        String   @default("professional-white-green")
-  availableCities   String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
-  analytics         Json?
-  mainPageStats     Json?
-  updatedAt         DateTime @updatedAt
+  availableCities       String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
+  showFranchiseSection  Boolean  @default(true)
+  analytics             Json?
+  mainPageStats         Json?
+  updatedAt             DateTime @updatedAt
 }
 
 

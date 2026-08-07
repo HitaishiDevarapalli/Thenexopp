@@ -420,21 +420,29 @@ export const App: React.FC = () => {
         />
 
       ) : currentPage === 'franchisePage' ? (
-        <FranchiseMarketplace 
-          title="Franchise Marketplace"
-          subtitle="Explore top brand franchises, resales, and new commercial opportunities across India"
-          onBack={navigateBack}
-          onExploreResales={() => navigateTo('franchiseResales')} 
-          onExploreNew={() => navigateTo('newFranchise')}
-          onPropertyClick={(id) => {
-            setSelectedPropertyId(id);
-            navigateTo('propertyDetails', { propertyId: id });
-          }}
-          onBuyProperty={(id) => {
-            setSelectedBuyPropertyId(id);
-            navigateTo('closeDeal', { propertyId: id });
-          }}
-        />
+        siteSettingsDb.showFranchiseSection === false ? (
+          <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Franchise Section Temporarily Offline</h2>
+            <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently undergoing maintenance. Please explore our verified properties and business listings.</p>
+            <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
+          </div>
+        ) : (
+          <FranchiseMarketplace 
+            title="Franchise Marketplace"
+            subtitle="Explore top brand franchises, resales, and new commercial opportunities across India"
+            onBack={navigateBack}
+            onExploreResales={() => navigateTo('franchiseResales')} 
+            onExploreNew={() => navigateTo('newFranchise')}
+            onPropertyClick={(id) => {
+              setSelectedPropertyId(id);
+              navigateTo('propertyDetails', { propertyId: id });
+            }}
+            onBuyProperty={(id) => {
+              setSelectedBuyPropertyId(id);
+              navigateTo('closeDeal', { propertyId: id });
+            }}
+          />
+        )
 
       ) : currentPage === 'businessPage' ? (
         <BusinessMarketplace 
