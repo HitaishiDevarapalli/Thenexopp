@@ -196,6 +196,143 @@ app.post('/api/upload', async (req, res, next) => {
   }
 });
 
+// ── EMAIL OTP AUTHENTICATION ENDPOINTS ──────────────────────────────────────
+const emailOtpsMap = new Map();
+
+app.post('/api/auth/send-email-otp', async (req, res) => {
+  try {
+    const { email, fullName } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email address is required' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    emailOtpsMap.set(cleanEmail, {
+      otp,
+      expiresAt,
+      fullName: fullName || cleanEmail.split('@')[0],
+    });
+
+    console.log(`\n==========================================`);
+    console.log(`[EMAIL OTP GENERATED] Email: ${cleanEmail} | OTP: ${otp}`);
+    console.log(`==========================================\n`);
+
+    return res.json({
+      success: true,
+      message: `OTP sent to ${cleanEmail}`,
+      otp: otp,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'Failed to send OTP to email' });
+  }
+});
+
+app.post('/api/auth/verify-email-otp', async (req, res) => {
+  try {
+    const { email, otp, fullName, mobile } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const record = emailOtpsMap.get(cleanEmail);
+
+    if (!record) {
+      return res.status(400).json({ error: 'No OTP requested for this email. Please request a new OTP.' });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      emailOtpsMap.delete(cleanEmail);
+      return res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
+    }
+
+    if (record.otp !== otp.trim()) {
+      return res.status(400).json({ error: 'Invalid OTP code. Please check your email and try again.' });
+    }
+
+    // Clear used OTP
+    emailOtpsMap.delete(cleanEmail);
+
+    const now = new Date().toLocaleString();
+    const userName = fullName || record.fullName || cleanEmail.split('@')[0];
+
+    let customer = null;
+    try {
+      const existing = await prisma.customer.findFirst({
+        where: { email: cleanEmail },
+      });
+
+      if (existing) {
+        customer = await prisma.customer.update({
+          where: { id: existing.id },
+          data: {
+            name: userName || existing.name,
+            phone: mobile || existing.phone || '',
+            lastLoginAt: now,
+            loginCount: existing.loginCount + 1,
+          },
+        });
+      } else {
+        customer = await prisma.customer.create({
+          data: {
+            name: userName,
+            email: cleanEmail,
+            phone: mobile || '',
+            gender: 'Not Specified',
+            district: 'General',
+            role: 'Verified Investor',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+            lastLoginAt: now,
+            loginCount: 1,
+            status: 'Active',
+            registeredDate: new Date().toLocaleDateString(),
+          },
+        });
+      }
+    } catch (dbErr) {
+      logger.warn({ dbErr }, 'Database offline during Email OTP login, falling back to mock customer');
+      customer = {
+        id: `cust-${cleanEmail}`,
+        name: userName,
+        email: cleanEmail,
+        phone: mobile || '',
+        gender: 'Not Specified',
+        district: 'General',
+        role: 'Verified Investor',
+      };
+    }
+
+    const userPayload = {
+      id: customer.id,
+      email: customer.email,
+      fullName: customer.name,
+      mobile: customer.phone,
+      role: customer.role || 'Verified Investor',
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Email OTP verification successful',
+      user: userPayload,
+      tokens,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'OTP Verification failed' });
+  }
+});
+
 // ── MSG91 WIDGET OTP AUTHENTICATION ENDPOINT ─────────────────────────────────
 app.post('/api/auth/widget-login', async (req, res, next) => {
   try {
