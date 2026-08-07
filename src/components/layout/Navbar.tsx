@@ -80,7 +80,6 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const showFranchise = siteSettingsDb.showFranchiseSection !== false;
 
   const rawMenuItems = [
-    { id: 'hero', label: 'Home', icon: <FaHome /> },
     { id: 'properties', label: 'Property', icon: <FaHome />, dropdown: [
       { name: 'Flats', link: '#properties', subIcon: <FaBuilding /> },
       { name: 'Individual Houses', link: '#properties', subIcon: <FaHome /> },
@@ -224,7 +223,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       }}>
 
         {/* Left: Mobile Hamburger + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginRight: '28px', flexShrink: 0 }}>
           <button
             className="mobile-only"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
