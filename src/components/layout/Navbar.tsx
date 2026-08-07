@@ -155,7 +155,12 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       setOpenDropdown(null);
       return;
     }
-    // For contact, scroll on the homepage
+    if (itemId === 'contact' && onNavigateToPage) {
+      onNavigateToPage('contactUsPage');
+      setOpenDropdown(null);
+      return;
+    }
+    // Fallback scroll
     handleScrollTo(itemId);
   };
 

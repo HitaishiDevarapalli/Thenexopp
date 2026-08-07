@@ -27,7 +27,7 @@ import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/forms/LoginModal';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 
-type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage';
+type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -62,6 +62,7 @@ const routeMap: Record<string, PageType> = {
   '/favourites': 'wishlist',
   '/admin': 'adminPortal',
   '/about': 'aboutUsPage',
+  '/contact': 'contactUsPage',
   '/secret-admin': 'adminPortal',
   '/portal': 'adminPortal',
   '/nexopp-admin': 'adminPortal',
@@ -463,6 +464,12 @@ export const App: React.FC = () => {
         <>
           <SubpageHeader title="About Us & Leadership" onBack={navigateBack} />
           <AboutUs />
+        </>
+
+      ) : currentPage === 'contactUsPage' ? (
+        <>
+          <SubpageHeader title="Contact Us & Inquiry Desk" onBack={navigateBack} />
+          <ContactUs />
         </>
 
       ) : currentPage === 'financePage' ? (

@@ -184,7 +184,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
           <h4 style={columnHeaderStyle}>COMPANY</h4>
           <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('aboutUsPage'))} style={linkStyle}>About Us</a>
           <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('aboutUsPage'))} style={linkStyle}>Blog</a>
-          <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Contact Us</a>
+          <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('contactUsPage'))} style={linkStyle}>Contact Us</a>
         </div>
 
         {/* Column 4 - SUPPORT */}
