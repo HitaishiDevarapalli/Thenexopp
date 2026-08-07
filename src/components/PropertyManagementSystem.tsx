@@ -626,7 +626,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
       {/* 8-Card KPI Summary Strip with Sold Statistics */}
       {activeModuleTab === 'listings' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '14px' }}>
           
           {/* Total Properties */}
           <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>

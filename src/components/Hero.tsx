@@ -136,10 +136,10 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.1fr 1fr',
-            gap: '40px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '30px',
             alignItems: 'center',
-            marginBottom: '50px',
+            marginBottom: '40px',
           }}
         >
           {/* Left Column: Typography & Search Card */}
@@ -761,13 +761,13 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
           </div>
         </div>
 
-        {/* Stats Row (6 Cards in a spacious 3x2 Grid) */}
+        {/* Stats Row (6 Cards in a responsive Grid) */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '20px',
-            marginTop: '28px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+            gap: '16px',
+            marginTop: '24px',
           }}
         >
           {stats.map((stat, idx) => {

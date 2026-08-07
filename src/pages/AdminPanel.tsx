@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
+  FaBars,
   FaBuilding, 
   FaStore, 
   FaEnvelope, 
@@ -787,26 +788,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   return (
     <div data-lenis-prevent="true" style={{ backgroundColor: '#F8FAFC', height: '100vh', width: '100%', overflow: 'hidden', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: '#0F172A', display: 'flex' }}>
       
-      {/* Sidebar Navigation matching user screenshot exactly */}
-      <div style={{ width: '265px', height: '100%', backgroundColor: '#FFFFFF', borderRight: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10 }}>
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isSidebarOpen && (
+        <div 
+          onClick={() => setIsSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 9998 }}
+        />
+      )}
+
+      {/* Sidebar Navigation */}
+      <div className={`admin-sidebar-drawer ${isSidebarOpen ? 'admin-sidebar-open' : 'admin-sidebar-closed'}`} style={{ width: '265px', height: '100%', backgroundColor: '#FFFFFF', borderRight: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10 }}>
         
         {/* Top Brand Box */}
-        <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 800, color: '#16A34A' }}>
-              ✦
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '-0.02em', color: '#0F172A', lineHeight: 1.1 }}>
-                THENEXOPP
-              </div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 600, color: '#64748B', letterSpacing: '0.02em', marginTop: '2px' }}>
-                Marketplace Control Center
-              </div>
-            </div>
-          </div>
-          <button style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '1.25rem', cursor: 'pointer', padding: '4px' }}>
-            ≡
+        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9' }}>
+          <Logo size="sm" showTagline={false} />
+          <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '1.25rem', cursor: 'pointer', padding: '4px' }}>
+            ✕
           </button>
         </div>
 
@@ -1180,18 +1177,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         
         {/* Top Navbar */}
-          <div style={{ height: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0 36px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div>
-            <h1 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-              {activeTab === 'overview' ? `Welcome back, ${currentUserName}` : getHeaderInfo().title}
-            </h1>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#64748B', fontWeight: 500 }}>
-              <span style={{ fontWeight: 700, color: '#059669', marginRight: '6px' }}>{currentUserRole}</span> • {getHeaderInfo().sub}
-            </p>
+        <div style={{ minHeight: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+              className="mobile-sidebar-toggle-btn"
+              style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', fontSize: '1.2rem', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px', marginRight: '12px', display: 'none' }}
+            >
+              <FaBars />
+            </button>
+            <div>
+              <h1 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                {activeTab === 'overview' ? `Welcome back, ${currentUserName}` : getHeaderInfo().title}
+              </h1>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#64748B', fontWeight: 500 }}>
+                <span style={{ fontWeight: 700, color: '#059669', marginRight: '6px' }}>{currentUserRole}</span> • {getHeaderInfo().sub}
+              </p>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ position: 'relative', width: '260px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', minWidth: '200px', maxWidth: '260px' }}>
               <FaSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: '0.85rem' }} />
               <input
                 type="text"
@@ -1225,13 +1231,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         </div>
 
         {/* Scrollable Content Area */}
-        <div data-lenis-prevent="true" style={{ padding: '32px 36px', overflowY: 'auto', flexGrow: 1, backgroundColor: '#F8FAFC' }}>
+        <div className="admin-content-area" data-lenis-prevent="true" style={{ padding: '32px 36px', overflowY: 'auto', flexGrow: 1, backgroundColor: '#F8FAFC' }}>
           
           {/* ================= CATEGORY 0: GRAND OVERVIEW ================= */}
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" }}>
               {/* ROW 1: Top 6 Stat Cards with SVG Sparkline Graphs */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 {/* Card 1: TOTAL PROPERTIES */}
                 <div
                   onClick={() => setStatModalTopic('properties')}

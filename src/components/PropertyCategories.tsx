@@ -1226,7 +1226,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               </div>
 
               {/* Count & Sort */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', maxWidth: '100%' }}>
                 <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
                   Showing <strong style={{ color: '#0F172A' }}>{displayProperties.length} properties</strong>
                 </span>

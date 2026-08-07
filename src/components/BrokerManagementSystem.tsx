@@ -834,7 +834,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
           </div>
 
           {/* Podium Display for Top 3 */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
             {locationRankedBrokers.slice(0, 3).map((broker, idx) => {
               const medal = idx === 0 ? '🏆 1st Place (Gold)' : idx === 1 ? '🥈 2nd Place (Silver)' : '🥉 3rd Place (Bronze)';
               const borderColor = idx === 0 ? '#F59E0B' : idx === 1 ? '#94A3B8' : '#D97706';

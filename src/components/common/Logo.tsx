@@ -5,6 +5,7 @@ interface LogoProps {
   dark?: boolean;
   showTagline?: boolean;
   style?: React.CSSProperties;
+  className?: string;
 }
 
 export const Logo: React.FC<LogoProps> = ({
@@ -12,127 +13,122 @@ export const Logo: React.FC<LogoProps> = ({
   dark = false,
   showTagline = true,
   style,
+  className = '',
 }) => {
-  const sizeConfig = {
-    sm: { icon: 32, text: '18px', tagline: '9px', gap: '8px' },
-    md: { icon: 42, text: '23px', tagline: '11px', gap: '10px' },
-    lg: { icon: 52, text: '28px', tagline: '12.5px', gap: '12px' },
-    xl: { icon: 64, text: '34px', tagline: '14px', gap: '14px' },
+  const heightConfig = {
+    sm: 36,
+    md: 48,
+    lg: 60,
+    xl: 76,
   };
 
-  const config = sizeConfig[size] || sizeConfig.md;
+  const h = heightConfig[size] || heightConfig.md;
 
   return (
     <div
+      className={`nexopp-logo-container ${className}`}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: config.gap,
+        display: 'inline-flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
         textDecoration: 'none',
         userSelect: 'none',
+        cursor: 'pointer',
         ...style,
       }}
     >
-      {/* Crisp Vector Emblem */}
-      <div
-        style={{
-          width: `${config.icon}px`,
-          height: `${config.icon}px`,
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+      {/* Official Brand Logo SVG */}
+      <svg
+        viewBox="0 0 480 230"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ height: `${h}px`, width: 'auto', display: 'block' }}
       >
-        <svg
-          viewBox="0 0 44 44"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ width: '100%', height: '100%', filter: 'drop-shadow(0 4px 6px rgba(22, 163, 74, 0.25))' }}
+        {/* Dark Blue Primary House Roof */}
+        <path
+          d="M 135 90 L 205 28 L 275 90 H 260 L 205 42 L 150 90 Z"
+          fill="#002B66"
+        />
+
+        {/* 4-Pane Window on Blue House */}
+        <rect x="194" y="65" width="10" height="10" fill="#002B66" />
+        <rect x="207" y="65" width="10" height="10" fill="#002B66" />
+        <rect x="194" y="78" width="10" height="10" fill="#002B66" />
+        <rect x="207" y="78" width="10" height="10" fill="#002B66" />
+
+        {/* Gold/Yellow Secondary House Roof */}
+        <path
+          d="M 270 72 L 300 45 L 335 90 H 322 L 300 58 L 278 80 Z"
+          fill="#D97706"
+        />
+
+        {/* Text "The" (Black / White for dark mode) */}
+        <text
+          x="30"
+          y="155"
+          fill={dark ? "#FFFFFF" : "#000000"}
+          fontFamily="'Plus Jakarta Sans', 'Inter', 'Roboto', sans-serif"
+          fontWeight="900"
+          fontSize="66"
+          letterSpacing="-1px"
         >
-          <defs>
-            <linearGradient id="nexOppGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10B981" />
-              <stop offset="100%" stopColor="#059669" />
-            </linearGradient>
-            <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6EE7B7" />
-              <stop offset="100%" stopColor="#A7F3D0" />
-            </linearGradient>
-          </defs>
+          The
+        </text>
 
-          {/* Background Circle Badge */}
-          <circle cx="22" cy="22" r="22" fill="url(#nexOppGrad)" />
+        {/* Text "Nex" (Green #059669) */}
+        <text
+          x="152"
+          y="155"
+          fill="#059669"
+          fontFamily="'Plus Jakarta Sans', 'Inter', 'Roboto', sans-serif"
+          fontWeight="800"
+          fontSize="66"
+          letterSpacing="-1px"
+        >
+          Nex
+        </text>
 
-          {/* Inner subtle glow ring */}
-          <circle cx="22" cy="22" r="20.5" stroke="#34D399" strokeWidth="0.75" strokeOpacity="0.5" fill="none" />
+        {/* Magnifying Glass 'O' */}
+        <circle cx="318" cy="132" r="22" stroke="#059669" strokeWidth="10" fill="none" />
+        <line x1="332" y1="147" x2="348" y2="168" stroke="#059669" strokeWidth="10" strokeLinecap="round" />
+        <circle cx="312" cy="125" r="14" stroke="#059669" strokeWidth="3" fill="none" strokeDasharray="16 8" />
 
-          {/* Ascending Investment/Franchise Bars */}
-          <rect x="10.5" y="24" width="5.5" height="10" rx="1.5" fill="#FFFFFF" fillOpacity="0.85" />
-          <rect x="18" y="17" width="5.5" height="17" rx="1.5" fill="#FFFFFF" />
-          <rect x="25.5" y="11" width="5.5" height="23" rx="1.5" fill="#FFFFFF" />
+        {/* Text "pp" (Green #059669) */}
+        <text
+          x="354"
+          y="155"
+          fill="#059669"
+          fontFamily="'Plus Jakarta Sans', 'Inter', 'Roboto', sans-serif"
+          fontWeight="800"
+          fontSize="66"
+          letterSpacing="-1px"
+        >
+          pp
+        </text>
 
-          {/* Dynamic Upward Growth Arrow */}
-          <path
-            d="M 10 27 Q 19 19, 33 11"
-            stroke="url(#accentGrad)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path
-            d="M 26.5 11 L 33 11 L 33 17.5"
-            stroke="url(#accentGrad)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-          />
-        </svg>
-      </div>
+        {/* Dynamic Curved Green Swoop Underline */}
+        <path
+          d="M 40 188 Q 240 162 430 188 Q 240 174 40 188 Z"
+          fill="#059669"
+        />
+      </svg>
 
-      {/* Brand Text + Tagline */}
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', lineHeight: 1 }}>
-          <span
-            style={{
-              fontSize: config.text,
-              fontWeight: 800,
-              color: dark ? '#FFFFFF' : '#0F172A',
-              letterSpacing: '-0.03em',
-              fontFamily: "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            }}
-          >
-            TheNex
-          </span>
-          <span
-            style={{
-              fontSize: config.text,
-              fontWeight: 800,
-              color: '#16A34A',
-              letterSpacing: '-0.03em',
-              fontFamily: "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            }}
-          >
-            Oop
-          </span>
-        </div>
-
-        {showTagline && (
-          <span
-            style={{
-              fontSize: config.tagline,
-              fontWeight: 600,
-              color: dark ? '#94A3B8' : '#64748B',
-              letterSpacing: '0.04em',
-              marginTop: size === 'xl' ? '4px' : size === 'lg' ? '3px' : '2px',
-              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-            }}
-          >
-            — Find. Invest. Grow.
-          </span>
-        )}
-      </div>
+      {/* Optional Tagline */}
+      {showTagline && (
+        <span
+          style={{
+            fontSize: `${Math.max(9, Math.round(h * 0.2))}px`,
+            fontWeight: 700,
+            color: dark ? '#94A3B8' : '#475569',
+            letterSpacing: '0.04em',
+            marginTop: '-4px',
+            marginLeft: '12px',
+            fontFamily: "'Inter', -apple-system, sans-serif",
+          }}
+        >
+          — Find. Invest. Grow.
+        </span>
+      )}
     </div>
   );
 };
