@@ -316,7 +316,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
                 }}
               >
                 <span>{item.label}</span>
-                {activeSection === item.id && (
+                {activeSection === item.id && item.id !== 'hero' && (
                   <div style={{
                     position: 'absolute',
                     bottom: '0px',
