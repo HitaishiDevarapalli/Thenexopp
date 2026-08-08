@@ -103,12 +103,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   };
 
   const stats = [
-    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed' },
-    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount, label: 'Franchises' },
-    { icon: FaUsers, color: '#16A34A', bg: '#DCFCE7', value: s.verifiedBrokers, label: 'Verified Brokers' },
-    { icon: FaCity, color: '#0D9488', bg: '#CCFBF1', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value' },
-    { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
+    { icon: FaHome, color: '#059669', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed' },
+    { icon: FaStore, color: '#D97706', bg: '#FEF3C7', value: s.franchisesCount, label: 'Franchises' },
+    { icon: FaUsers, color: '#002B66', bg: '#EFF6FF', value: s.verifiedBrokers, label: 'Verified Brokers' },
+    { icon: FaCity, color: '#059669', bg: '#ECFDF5', value: s.citiesCovered, label: 'Cities Covered' },
+    { icon: FaCoins, color: '#D97706', bg: '#FEF3C7', value: s.totalPropertyValue, label: 'Total Property Value' },
+    { icon: FaSmile, color: '#002B66', bg: '#EFF6FF', value: s.happyClients, label: 'Happy Clients' },
   ];
 
   // Search Bar Filter States
@@ -158,14 +158,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
   const currentSlide = HERO_SLIDES[currentSlideIndex];
 
-  // Category Cards List matching the unified Emerald theme
+  // Category Cards List matching brand tri-color theme
   const popularCategories = [
-    { title: 'Residential', subtitle: 'Find your dream home', icon: FaHome, bg: '#ECFDF5', color: '#10B981', page: 'flatsPage' },
-    { title: 'Commercial', subtitle: 'Office, Shops & Spaces', icon: FaBuilding, bg: '#E6F4EA', color: '#059669', page: 'propertiesPage' },
-    { title: 'Plots & Land', subtitle: 'Invest in Prime Land', icon: FaLeaf, bg: '#DCFCE7', color: '#16A34A', page: 'landPage' },
-    { title: 'Franchise', subtitle: 'Start your Business', icon: FaStore, bg: '#ECFDF5', color: '#059669', page: 'franchisePage' },
-    { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#CCFBF1', color: '#0D9488', page: 'businessPage' },
-    { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#DCFCE7', color: '#10B981', page: 'financePage' },
+    { title: 'Residential', subtitle: 'Find your dream home', icon: FaHome, bg: '#EFF6FF', color: '#002B66', page: 'flatsPage' },
+    { title: 'Commercial', subtitle: 'Office, Shops & Spaces', icon: FaBuilding, bg: '#FEF3C7', color: '#D97706', page: 'propertiesPage' },
+    { title: 'Plots & Land', subtitle: 'Invest in Prime Land', icon: FaLeaf, bg: '#ECFDF5', color: '#059669', page: 'landPage' },
+    { title: 'Franchise', subtitle: 'Start your Business', icon: FaStore, bg: '#FEF3C7', color: '#D97706', page: 'franchisePage' },
+    { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#EFF6FF', color: '#002B66', page: 'businessPage' },
+    { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#ECFDF5', color: '#059669', page: 'financePage' },
   ];
 
   // Recently Sold properties (Latest 8 ordered by soldDate descending)
@@ -508,11 +508,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             paddingBottom: '16px'
           }}>
             {[
-              { id: 'Property', label: 'Property', icon: FaHome },
-              { id: 'Franchise', label: 'Franchise', icon: FaStore },
-              { id: 'Business', label: 'Business', icon: FaBriefcase },
-              { id: 'Plots/Land', label: 'Plots/Land', icon: FaMapMarkerAlt },
-              { id: 'Commercial', label: 'Commercial', icon: FaBuilding },
+              { id: 'Property', label: 'Property', icon: FaHome, color: '#002B66', bg: '#EFF6FF' },
+              { id: 'Franchise', label: 'Franchise', icon: FaStore, color: '#D97706', bg: '#FEF3C7' },
+              { id: 'Business', label: 'Business', icon: FaBriefcase, color: '#002B66', bg: '#EFF6FF' },
+              { id: 'Plots/Land', label: 'Plots/Land', icon: FaMapMarkerAlt, color: '#059669', bg: '#ECFDF5' },
+              { id: 'Commercial', label: 'Commercial', icon: FaBuilding, color: '#D97706', bg: '#FEF3C7' },
             ].map((tab) => {
               const TabIcon = tab.icon;
               const isActive = activeSearchTab === tab.id;
@@ -526,18 +526,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     gap: '8px',
                     padding: '10px 20px',
                     borderRadius: '30px',
-                    border: isActive ? 'none' : '1px solid #E2E8F0',
-                    backgroundColor: isActive ? '#00A86B' : '#F8FAFC',
+                    border: isActive ? `1.5px solid ${tab.color}` : '1px solid #E2E8F0',
+                    backgroundColor: isActive ? tab.color : '#F8FAFC',
                     color: isActive ? '#FFFFFF' : '#475569',
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: isActive ? '0 4px 14px rgba(0, 168, 107, 0.3)' : 'none',
+                    boxShadow: isActive ? `0 4px 14px ${tab.color}40` : 'none',
                     whiteSpace: 'nowrap'
                   }}
                 >
-                  <TabIcon style={{ fontSize: '14px' }} />
+                  <TabIcon style={{ fontSize: '14px', color: isActive ? '#FFFFFF' : tab.color }} />
                   {tab.label}
                 </button>
               );
@@ -718,7 +718,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               style={{
                 padding: '16px 28px',
                 borderRadius: '14px',
-                backgroundColor: '#00A86B',
+                background: 'linear-gradient(135deg, #002B66 0%, #059669 100%)',
                 color: '#FFFFFF',
                 border: 'none',
                 fontWeight: 800,
@@ -728,11 +728,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
+                boxShadow: '0 8px 24px rgba(0, 43, 102, 0.25)',
                 whiteSpace: 'nowrap',
-                boxShadow: '0 6px 18px rgba(0, 168, 107, 0.3)'
+                transition: 'all 0.2s ease'
               }}
             >
-              <FaSearch /> Search Properties
+              <FaSearch style={{ color: '#FDE68A' }} />
+              <span>Search {activeSearchTab}</span>
             </button>
 
           </div>

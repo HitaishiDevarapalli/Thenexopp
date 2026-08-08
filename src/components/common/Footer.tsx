@@ -49,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
   };
 
   const linkStyle: React.CSSProperties = {
-    color: '#475569',
+    color: '#94A3B8',
     textDecoration: 'none',
     fontSize: '0.9rem',
     lineHeight: '2',
@@ -59,23 +59,23 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
   };
 
   const columnHeaderStyle: React.CSSProperties = {
-    color: '#0F172A',
+    color: '#F59E0B',
     textTransform: 'uppercase',
-    fontSize: '0.8rem',
-    fontWeight: 700,
+    fontSize: '0.82rem',
+    fontWeight: 800,
     letterSpacing: '1.5px',
     marginBottom: '16px',
   };
 
   const socialIconStyle: React.CSSProperties = {
-    color: '#64748B',
+    color: '#CBD5E1',
     fontSize: '1.1rem',
     cursor: 'pointer',
     transition: 'color 0.2s',
   };
 
   return (
-    <footer style={{ backgroundColor: '#FFFFFF', color: '#0F172A', borderTop: '1px solid #E2E8F0', padding: '60px 0 0 0' }}>
+    <footer style={{ backgroundColor: '#001E46', color: '#F8FAFC', borderTop: '4px solid #059669', padding: '60px 0 0 0' }}>
       {/* Top Row */}
       <div className="responsive-footer-grid" style={{
         maxWidth: '1200px',
@@ -89,8 +89,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
           </div>
           <h3
             style={{
-              color: '#0F172A',
-              fontWeight: 700,
+              color: '#FFFFFF',
+              fontWeight: 800,
               fontSize: '1.2rem',
               margin: '0 0 10px 0',
               lineHeight: '1.4',
@@ -227,7 +227,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
       {/* Bottom Row */}
       <div
         style={{
-          borderTop: '1px solid #E2E8F0',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           marginTop: '48px',
           padding: '20px 24px',
           maxWidth: '1200px',
@@ -243,10 +243,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
             gap: '12px',
           }}
         >
-          <p style={{ color: '#64748B', fontSize: '0.85rem', margin: 0 }}>
+          <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
             © 2026 TheNexOpp. All Rights Reserved.
           </p>
-          <p style={{ color: '#64748B', fontSize: '0.85rem', margin: 0 }}>
+          <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>
             Made with ❤️ for Your Next Opportunity
           </p>
         </div>

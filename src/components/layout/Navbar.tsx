@@ -464,8 +464,8 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               )}
             </div>
           ) : (
-            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', color: '#16A34A', border: '1px solid #16A34A', padding: '7px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s' }}>
-              <FaUser style={{ fontSize: '12px' }} />
+            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '9px 18px', borderRadius: '21px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,43,102,0.2)' }}>
+              <FaUser style={{ fontSize: '12px', color: '#FDE68A' }} />
               <span>Login / Register</span>
             </button>
           )}
