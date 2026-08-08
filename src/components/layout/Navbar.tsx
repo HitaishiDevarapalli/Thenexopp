@@ -80,6 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const showFranchise = siteSettingsDb.showFranchiseSection !== false;
 
   const rawMenuItems = [
+    { id: 'hero', label: 'Home', icon: <FaHome /> },
     { id: 'properties', label: 'Property', icon: <FaHome />, dropdown: [
       { name: 'Flats', link: '#properties', subIcon: <FaBuilding /> },
       { name: 'Individual Houses', link: '#properties', subIcon: <FaHome /> },
@@ -105,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const menuItems = rawMenuItems.filter(item => item.id !== 'franchise' || showFranchise);
 
   const handleScrollTo = (id: string) => {
-    if (onGoHome) {
+    if (window.location.pathname !== '/' && onGoHome) {
       onGoHome();
     }
     setTimeout(() => {
@@ -118,6 +119,12 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   };
 
   const handleNavItemClick = (itemId: string) => {
+    if (itemId === 'hero') {
+      if (onGoHome) onGoHome();
+      else handleScrollTo('hero');
+      setOpenDropdown(null);
+      return;
+    }
     // For category pages, navigate to the dedicated page instead of scrolling
     if (itemId === 'properties' && onNavigateProperties) {
       onNavigateProperties();
