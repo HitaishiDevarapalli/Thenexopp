@@ -223,9 +223,9 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       transition: 'box-shadow 0.3s ease',
     }}>
       <div className="navbar-container" style={{
-        maxWidth: '1400px',
+        maxWidth: '100%',
         margin: '0 auto',
-        padding: '12px 28px',
+        padding: '12px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -235,7 +235,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       }}>
 
         {/* Left: Mobile Hamburger + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginRight: '32px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '16px', flexShrink: 0 }}>
           <button
             className="mobile-only"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -279,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         <ul className="navbar-menu desktop-only" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '20px',
+          gap: '12px',
           listStyle: 'none',
           margin: 0,
           padding: 0,
@@ -302,12 +302,12 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  padding: '8px 6px',
-                  fontSize: '15.5px',
+                  padding: '6px 4px',
+                  fontSize: '14.5px',
                   fontWeight: 700,
                   color: getNavTextColor(item.id),
                   transition: 'color 0.2s ease',
@@ -394,11 +394,11 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         <div className="desktop-only" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '8px',
           flexShrink: 0,
-          marginLeft: '8px',
+          marginLeft: '4px',
         }}>
-          <div style={{ width: '1px', height: '28px', backgroundColor: '#E2E8F0', marginRight: '8px' }} />
+          <div style={{ width: '1px', height: '24px', backgroundColor: '#E2E8F0', marginRight: '4px' }} />
 
           {/* Location Button */}
           <div style={{ position: 'relative' }}>
@@ -407,31 +407,31 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '6px',
                 backgroundColor: isLocationPickerOpen ? '#F0FDF4' : '#FFFFFF',
                 border: '1px solid',
                 borderColor: isLocationPickerOpen ? '#16A34A' : '#E2E8F0',
-                height: '46px',
-                padding: '0 18px',
-                borderRadius: '23px',
+                height: '42px',
+                padding: '0 12px',
+                borderRadius: '21px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: isLocationPickerOpen ? '0 0 0 3px rgba(22,163,74,0.1)' : 'none',
               }}
             >
-              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '16px' }} />
-              <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '14px', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '14px' }} />
+              <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13px', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 📍 {location?.area || location?.locality || location?.city || 'Select Location'}
               </span>
-              <FaChevronDown style={{ color: '#64748B', fontSize: '12px', marginLeft: '2px', transition: 'transform 0.2s', transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              <FaChevronDown style={{ color: '#64748B', fontSize: '10px', marginLeft: '2px', transition: 'transform 0.2s', transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
             </button>
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
 
           {/* Saved */}
-          <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '46px', padding: '0 18px', borderRadius: '23px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-            <FaRegHeart style={{ color: '#EF4444', fontSize: '16px' }} />
-            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '14px' }}>Saved</span>
+          <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '42px', padding: '0 12px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
+            <FaRegHeart style={{ color: '#EF4444', fontSize: '14px' }} />
+            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13px' }}>Saved</span>
           </button>
 
           {/* Login / Profile */}
@@ -439,13 +439,13 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '46px', padding: '0 14px 0 8px', borderRadius: '23px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '42px', padding: '0 12px 0 6px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}
               >
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#10B981', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#10B981', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700 }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '14px' }}>{user.name}</span>
-                <FaChevronDown style={{ fontSize: '12px', color: '#64748B', marginLeft: '2px' }} />
+                <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13px' }}>{user.name}</span>
+                <FaChevronDown style={{ fontSize: '11px', color: '#64748B', marginLeft: '2px' }} />
               </button>
               {openDropdown === 'user' && (
                 <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', minWidth: '220px', zIndex: 50, overflow: 'hidden', padding: '6px 0' }}>
@@ -464,8 +464,8 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               )}
             </div>
           ) : (
-            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '12px 22px', borderRadius: '23px', fontWeight: 800, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)' }}>
-              <FaUser style={{ fontSize: '13px', color: '#FDE68A' }} />
+            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '10px 20px', borderRadius: '21px', fontWeight: 800, fontSize: '13.5px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <FaUser style={{ fontSize: '12px', color: '#FDE68A' }} />
               <span>Login / Register</span>
             </button>
           )}
