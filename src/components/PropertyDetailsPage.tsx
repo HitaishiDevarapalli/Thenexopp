@@ -139,11 +139,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
   const handleOpenContactModal = (mode: 'contact' | 'book' = 'contact') => {
-    const lenis = (window as any).lenis;
-    if (lenis) {
-      lenis.scrollTo(0, { immediate: true });
-    }
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setModalMode(mode);
     setContactName('');
     setContactPhone('');
@@ -1270,7 +1265,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       )}
       {/* Contact Enquiry Modal */}
       {showContactModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 11000 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.35)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 11000, padding: '20px' }}>
           <div style={{ backgroundColor: '#FFFFFF', padding: '0', borderRadius: '24px', width: '90%', maxWidth: '460px', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', margin: 'auto', textAlign: 'left', overflow: 'hidden' }}>
             <div style={{ padding: '24px 32px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
               <div>

@@ -89,11 +89,6 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
   };
 
   const handleOpenModal = (mode: 'contact' | 'book' = 'contact') => {
-    const lenis = (window as any).lenis;
-    if (lenis) {
-      lenis.scrollTo(0, { immediate: true });
-    }
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setModalMode(mode);
     setIsEnquiryModalOpen(true);
   };
@@ -401,7 +396,7 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
 
       {/* Enquiry Form Modal */}
       {isEnquiryModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.35)', backdropFilter: 'blur(3px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ backgroundColor: '#FFFFFF', width: '100%', maxWidth: '520px', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             <div style={{ padding: '20px 24px', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif", fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
