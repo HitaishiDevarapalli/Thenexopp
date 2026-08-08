@@ -234,173 +234,171 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         height: '96px'
       }}>
 
-        {/* Left Side Group: Logo + Menu Items grouped naturally */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexGrow: 1, minWidth: 0 }}>
-          {/* Logo & Mobile Hamburger */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <button
-              className="mobile-only"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '24px',
-                color: '#1E293B',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <FaBars />
-            </button>
+        {/* Left: Mobile Hamburger + Logo (Fixed position on left) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginRight: '16px' }}>
+          <button
+            className="mobile-only"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              color: '#1E293B',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <FaBars />
+          </button>
 
-            <a
-              href="#hero"
-              onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                if (onNavigateToPage) onNavigateToPage('adminPortal');
-                else window.location.href = '/secret-admin';
-              }}
-              title="Double-click for Admin Portal"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              <Logo size="lg" />
-            </a>
-          </div>
-
-          {/* Desktop Nav Items (positioned next to logo) */}
-          <ul className="navbar-menu desktop-only" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            listStyle: 'none',
-            margin: 0,
-            padding: 0,
-          }}>
-            {menuItems.map((item) => (
-              <li
-                key={item.id}
-                style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '96px' }}
-                onMouseEnter={() => {
-                  setHoveredItem(item.id);
-                  if (item.dropdown) setOpenDropdown(item.id);
-                }}
-                onMouseLeave={() => {
-                  setHoveredItem(null);
-                  setOpenDropdown(null);
-                }}
-              >
-                <button
-                  onClick={() => handleNavItemClick(item.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    fontSize: '13.5px',
-                    fontWeight: 700,
-                    color: getNavTextColor(item.id),
-                    transition: 'all 0.2s ease',
-                    whiteSpace: 'nowrap',
-                    position: 'relative'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (activeSection !== item.id) (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <span>{item.label}</span>
-                  {activeSection === item.id && item.id !== 'hero' && (
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '0px',
-                      left: '0',
-                      width: '100%',
-                      height: '2px',
-                      backgroundColor: '#16A34A',
-                      borderRadius: '2px'
-                    }} />
-                  )}
-                  {item.dropdown && (
-                    <FaChevronDown style={{
-                      fontSize: '10px',
-                      transition: 'transform 0.2s ease',
-                      transform: openDropdown === item.id ? 'rotate(180deg)' : 'rotate(0deg)',
-                      opacity: 0.7,
-                    }} />
-                  )}
-                </button>
-
-                {item.dropdown && openDropdown === item.id && (
-                  <ul style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: '0',
-                    backgroundColor: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '10px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                    padding: '8px 0',
-                    minWidth: '200px',
-                    listStyle: 'none',
-                    margin: 0,
-                    zIndex: 1001,
-                    animation: 'fadeIn 0.15s ease',
-                  }}>
-                    {item.dropdown.map((sub, idx) => (
-                      <li key={idx}>
-                        <a
-                          href="#"
-                          onClick={(e) => handleDropdownClick(item.id, sub.name, sub.link, e)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '10px 18px',
-                            color: '#374151',
-                            textDecoration: 'none',
-                            fontSize: '14px',
-                            fontWeight: 500,
-                            transition: 'background-color 0.15s ease, color 0.15s ease',
-                            cursor: 'pointer',
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.backgroundColor = '#F0FDF4';
-                            (e.currentTarget as HTMLElement).style.color = '#16A34A';
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                            (e.currentTarget as HTMLElement).style.color = '#374151';
-                          }}
-                        >
-                          {sub.subIcon && <span style={{ fontSize: '15px', opacity: 0.75, display: 'flex', alignItems: 'center' }}>{sub.subIcon}</span>}
-                          <span>{sub.name}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
+          <a
+            href="#hero"
+            onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              if (onNavigateToPage) onNavigateToPage('adminPortal');
+              else window.location.href = '/secret-admin';
+            }}
+            title="Double-click for Admin Portal"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <Logo size="lg" />
+          </a>
         </div>
 
-        {/* Right Side Group: DESKTOP ONLY — Location, Saved, Login */}
+        {/* Center: Desktop Nav Items (Spread evenly in middle with same spacing gap) */}
+        <ul className="navbar-menu desktop-only" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-evenly',
+          flexGrow: 1,
+          listStyle: 'none',
+          margin: '0 12px',
+          padding: 0,
+        }}>
+          {menuItems.map((item) => (
+            <li
+              key={item.id}
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '96px' }}
+              onMouseEnter={() => {
+                setHoveredItem(item.id);
+                if (item.dropdown) setOpenDropdown(item.id);
+              }}
+              onMouseLeave={() => {
+                setHoveredItem(null);
+                setOpenDropdown(null);
+              }}
+            >
+              <button
+                onClick={() => handleNavItemClick(item.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: getNavTextColor(item.id),
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeSection !== item.id) (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                }}
+              >
+                <span>{item.label}</span>
+                {activeSection === item.id && item.id !== 'hero' && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '0px',
+                    left: '0',
+                    width: '100%',
+                    height: '2px',
+                    backgroundColor: '#16A34A',
+                    borderRadius: '2px'
+                  }} />
+                )}
+                {item.dropdown && (
+                  <FaChevronDown style={{
+                    fontSize: '10px',
+                    transition: 'transform 0.2s ease',
+                    transform: openDropdown === item.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                    opacity: 0.7,
+                  }} />
+                )}
+              </button>
+
+              {item.dropdown && openDropdown === item.id && (
+                <ul style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '0',
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '10px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                  padding: '8px 0',
+                  minWidth: '200px',
+                  listStyle: 'none',
+                  margin: 0,
+                  zIndex: 1001,
+                  animation: 'fadeIn 0.15s ease',
+                }}>
+                  {item.dropdown.map((sub, idx) => (
+                    <li key={idx}>
+                      <a
+                        href="#"
+                        onClick={(e) => handleDropdownClick(item.id, sub.name, sub.link, e)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 18px',
+                          color: '#374151',
+                          textDecoration: 'none',
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          transition: 'background-color 0.15s ease, color 0.15s ease',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLElement).style.backgroundColor = '#F0FDF4';
+                          (e.currentTarget as HTMLElement).style.color = '#16A34A';
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                          (e.currentTarget as HTMLElement).style.color = '#374151';
+                        }}
+                      >
+                        {sub.subIcon && <span style={{ fontSize: '15px', opacity: 0.75, display: 'flex', alignItems: 'center' }}>{sub.subIcon}</span>}
+                        <span>{sub.name}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {/* Right Side Group: DESKTOP ONLY — Location, Saved, Login (Fixed position on right) */}
         <div className="desktop-only" style={{
           display: 'flex',
           alignItems: 'center',
