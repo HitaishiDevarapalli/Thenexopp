@@ -262,6 +262,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
       >
         {/* Header Bar */}
         <div
+          className="olx-modal-header"
           style={{
             padding: '24px 28px 18px 28px',
             borderBottom: '1px solid #F1F5F9',
@@ -327,7 +328,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
         </div>
 
         {/* Search Input Box */}
-        <div style={{ padding: '16px 28px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #F1F5F9' }}>
+        <div className="olx-modal-search" style={{ padding: '16px 28px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #F1F5F9' }}>
           <div style={{ position: 'relative', width: '100%' }}>
             <FaSearch
               style={{
@@ -811,6 +812,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
 
         {/* Footer Bar */}
         <div
+          className="olx-modal-footer"
           style={{
             padding: '14px 28px',
             backgroundColor: '#F8FAFC',
