@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance } from '../db/marketplaceDb';
+import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -420,9 +421,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
+  const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
+
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
+    globalToggleWishlist(id);
   };
 
   const toggleBhk = (val: string) => {
@@ -1344,7 +1347,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 
                 const showSeparator = currentTier > 0 && currentTier > prevTier && targetCity;
 
-                const isFav = !!wishlisted[prop.id];
+                const isFav = isWishlisted(prop.id);
                 let badgeBg = '#DCFCE7';
                 let badgeColor = '#16A34A';
                 let BadgeIcon = FaCheckCircle;

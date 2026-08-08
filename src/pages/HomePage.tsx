@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
+import { useWishlist } from '../context/WishlistContext';
 import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
 import {
   FaBuilding,
@@ -118,11 +119,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const [budgetFilter, setBudgetFilter] = useState('₹5L - ₹5 Cr');
   const [priceRangeFilter, setPriceRangeFilter] = useState('Any');
   const [selectedTag, setSelectedTag] = useState('Villa');
-  const [wishlisted, setWishlisted] = useState<Record<string, boolean>>({});
+  const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
+    globalToggleWishlist(id);
   };
 
   const handleSearch = () => {
@@ -1002,7 +1003,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                       zIndex: 5
                     }}
                   >
-                    {wishlisted[prop.id] ? (
+                    {isWishlisted(prop.id) ? (
                       <FaHeart style={{ color: '#EF4444', fontSize: '14px' }} />
                     ) : (
                       <FaRegHeart style={{ color: '#0F172A', fontSize: '14px' }} />

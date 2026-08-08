@@ -5,6 +5,7 @@ import { searchLivePlaces, geocodeLocationOnline } from '../../utils/locationInt
 import { Logo } from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationStore } from '../../context/LocationContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { LocationSelectorPanel } from './LocationSelectorPanel';
 
 interface NavbarProps {
@@ -21,6 +22,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpenWishlist, onNavigateBusiness, onNavigateProperties, onNavigateFranchise, onNavigateFinance, onGoHome, isSubpage: _isSubpage, onNavigateToPage }) => {
   const { user, openLoginModal, logout } = useAuth();
+  const { wishlistItems } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -438,7 +440,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
           {/* Saved */}
           <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '40px', padding: '0 10px', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
             <FaRegHeart style={{ color: '#EF4444', fontSize: '14px' }} />
-            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '12.5px' }}>Saved</span>
+            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '12.5px' }}>Saved {wishlistItems.length > 0 && `(${wishlistItems.length})`}</span>
           </button>
 
           {/* Login / Profile */}

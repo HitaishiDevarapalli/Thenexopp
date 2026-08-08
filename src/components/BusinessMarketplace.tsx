@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb } from '../db/marketplaceDb';
+import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -95,9 +96,11 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
+  const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
+
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
+    globalToggleWishlist(id);
   };
 
   const toggleInd = (val: string) => {
@@ -584,7 +587,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                 </div>
               ) : (
                 paginatedBusinesses.map((item) => {
-                const isFav = !!wishlisted[item.id];
+                const isFav = isWishlisted(item.id);
                 let badgeBg = '#DCFCE7';
                 let badgeColor = '#16A34A';
                 let BadgeIcon = FaCheckCircle;

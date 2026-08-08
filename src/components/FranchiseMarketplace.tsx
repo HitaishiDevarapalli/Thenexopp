@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { franchiseDb } from '../db/marketplaceDb';
+import { franchiseDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb } from '../db/marketplaceDb';
+import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -84,13 +85,13 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
   const [sortBy, setSortBy] = useState('Relevance');
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
-  const [wishlisted, setWishlisted] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
+  const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
+    globalToggleWishlist(id);
   };
 
   const toggleCat = (val: string) => {
@@ -583,7 +584,7 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
                 </div>
               ) : (
                 paginatedFranchises.map((item) => {
-                const isFav = !!wishlisted[item.id];
+                const isFav = isWishlisted(item.id);
                 let badgeBg = '#DCFCE7';
                 let badgeColor = '#16A34A';
                 let BadgeIcon = FaCheckCircle;
