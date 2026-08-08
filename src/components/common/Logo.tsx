@@ -93,7 +93,6 @@ export const Logo: React.FC<LogoProps> = ({
         {/* Magnifying Glass 'O' */}
         <circle cx="320" cy="132" r="22" stroke="#059669" strokeWidth="10" fill="none" />
         <line x1="334" y1="147" x2="350" y2="168" stroke="#059669" strokeWidth="10" strokeLinecap="round" />
-        <circle cx="314" cy="125" r="14" stroke="#059669" strokeWidth="3" fill="none" strokeDasharray="16 8" />
 
         {/* Text "pp" (Emerald Green #059669) */}
         <text
