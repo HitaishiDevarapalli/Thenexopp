@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import { 
   propertiesDb, franchiseDb, businessDb, demandRegionsDb, 
-  dealersDb, siteSettingsDb, getDistance 
+  dealersDb, siteSettingsDb, getDistance, isModuleActive 
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
@@ -889,6 +889,8 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       }
     ]);
   };
+
+  if (!isModuleActive('ai_assistant')) return null;
 
   return (
     <>

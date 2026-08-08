@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, FaChevronDown, FaMapMarkedAlt, FaStore, FaHandHoldingUsd, FaChartLine, FaShieldAlt, FaEnvelope, FaUtensils, FaMedkit, FaSearch, FaRegHeart, FaUser, FaBars } from 'react-icons/fa';
-import { selectedCity, setSelectedCity, siteSettingsDb } from '../../db/marketplaceDb';
+import { selectedCity, setSelectedCity, siteSettingsDb, isModuleActive } from '../../db/marketplaceDb';
 import { searchLivePlaces, geocodeLocationOnline } from '../../utils/locationIntelligence';
 import { Logo } from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
@@ -103,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
     { id: 'contact', label: 'Contact Us', icon: <FaEnvelope /> },
   ];
 
-  const menuItems = rawMenuItems.filter(item => item.id !== 'franchise' || showFranchise);
+  const menuItems = rawMenuItems.filter(item => item.id === 'hero' || item.id === 'about' || item.id === 'contact' || isModuleActive(item.id));
 
   const handleScrollTo = (id: string) => {
     if (window.location.pathname !== '/' && onGoHome) {

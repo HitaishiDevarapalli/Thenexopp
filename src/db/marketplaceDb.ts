@@ -550,6 +550,28 @@ const defaultSettings: SiteSettings = {
   }
 };
 
+export interface AdminModuleItem {
+  id: string;
+  label: string;
+  category: 'CONTENT MANAGEMENT' | 'USER MANAGEMENT' | 'SITE MANAGEMENT';
+  isActive: boolean;
+  custom?: boolean;
+}
+
+export const defaultAdminModules: AdminModuleItem[] = [
+  { id: 'properties', label: 'Property Management', category: 'CONTENT MANAGEMENT', isActive: true },
+  { id: 'franchises', label: 'Franchise Management', category: 'CONTENT MANAGEMENT', isActive: true },
+  { id: 'business', label: 'Business Management', category: 'CONTENT MANAGEMENT', isActive: true },
+  { id: 'demand_regions', label: 'Demand Regions', category: 'CONTENT MANAGEMENT', isActive: true },
+  { id: 'master_filters', label: 'Filters & Categories Control', category: 'CONTENT MANAGEMENT', isActive: true },
+  { id: 'brokers', label: 'Broker Management', category: 'USER MANAGEMENT', isActive: true },
+  { id: 'users_data', label: 'User Management', category: 'USER MANAGEMENT', isActive: true },
+  { id: 'team_members', label: 'Team Members', category: 'USER MANAGEMENT', isActive: true },
+  { id: 'roles_permissions', label: 'Roles & Permissions', category: 'USER MANAGEMENT', isActive: true },
+  { id: 'ai_assistant', label: 'AI Assistant', category: 'SITE MANAGEMENT', isActive: true },
+  { id: 'main_page_settings', label: 'Main Page Settings', category: 'SITE MANAGEMENT', isActive: true },
+];
+
 // Exported Reactive Data Variables
 export let dealersDb: Dealer[] = [];
 export let propertiesDb: PropertyListing[] = [];
@@ -564,6 +586,7 @@ export let teamMembersDb: TeamMember[] = [];
 export let employeeUsersDb: EmployeeUser[] = [];
 export let rolesDb: Role[] = [];
 export let demandRegionsDb: DemandRegion[] = [];
+export let adminModulesDb: AdminModuleItem[] = [...defaultAdminModules];
 
 export interface ShowcaseVideo {
   id: string;
@@ -621,6 +644,37 @@ const loadFromStorage = <T>(key: string, fallback: T): T => {
   return fallback;
 };
 
+export const isModuleActive = (moduleId: string): boolean => {
+  const item = adminModulesDb.find(m => m.id === moduleId || (moduleId === 'franchise' && m.id === 'franchises') || (moduleId === 'property' && m.id === 'properties'));
+  return item ? item.isActive !== false : true;
+};
+
+export const saveAdminModules = (modules: AdminModuleItem[]) => {
+  adminModulesDb = modules;
+  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
+  notifyDataChanged();
+};
+
+export const toggleAdminModuleActive = (id: string) => {
+  adminModulesDb = adminModulesDb.map(m => m.id === id ? { ...m, isActive: !m.isActive } : m);
+  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
+  notifyDataChanged();
+};
+
+export const deleteAdminModule = (id: string) => {
+  adminModulesDb = adminModulesDb.filter(m => m.id !== id);
+  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
+  notifyDataChanged();
+};
+
+export const addAdminModule = (label: string, category: AdminModuleItem['category']) => {
+  const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  const newItem: AdminModuleItem = { id, label, category, isActive: true, custom: true };
+  adminModulesDb = [...adminModulesDb, newItem];
+  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
+  notifyDataChanged();
+};
+
 export const persistAllToStorage = () => {
   saveToStorage('nexopp_properties_db', propertiesDb);
   saveToStorage('nexopp_franchise_db', franchiseDb);
@@ -634,6 +688,7 @@ export const persistAllToStorage = () => {
   saveToStorage('nexopp_roles_db', rolesDb);
   saveToStorage('nexopp_demand_regions_db', demandRegionsDb);
   saveToStorage('nexopp_showcase_videos_db', showcaseVideosDb);
+  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
 };
 
 // PostgreSQL Data Sync Loader & LocalStorage Fallback Persistence
@@ -648,6 +703,11 @@ const loadData = () => {
     franchiseEnquiriesDb = loadFromStorage('nexopp_franchise_enquiries_db', []);
     siteSettingsDb = loadFromStorage('nexopp_site_settings_db', defaultSettings);
     teamMembersDb = loadFromStorage('nexopp_team_members_db', []);
+    employeeUsersDb = loadFromStorage('nexopp_employee_users_db', []);
+    rolesDb = loadFromStorage('nexopp_roles_db', []);
+    demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);
+    showcaseVideosDb = loadFromStorage('nexopp_showcase_videos_db', []);
+    adminModulesDb = loadFromStorage('nexopp_admin_modules_db', defaultAdminModules);
     employeeUsersDb = loadFromStorage('nexopp_employee_users_db', []);
     rolesDb = loadFromStorage('nexopp_roles_db', []);
     demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);

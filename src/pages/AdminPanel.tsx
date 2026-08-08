@@ -87,6 +87,11 @@ import {
   toggleFilterMasterItemActive,
   deleteFilterMasterItem,
   editFilterMasterItem,
+  adminModulesDb,
+  toggleAdminModuleActive,
+  deleteAdminModule,
+  addAdminModule,
+  isModuleActive,
   API_BASE_URL
 } from '../db/marketplaceDb';
 import { BrokerManagementSystem } from '../components/BrokerManagementSystem';
@@ -4517,6 +4522,121 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* ── ADMIN SIDEBAR HEADINGS & MODULE VISIBILITY CONTROL PANEL ── */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', marginTop: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaFolder style={{ color: '#059669' }} /> Admin Side Headings & Module Control
+                  </h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+                    Add, Delete, or Hide/Show any side heading module. Hiding a module removes it from Admin sidebar AND public website.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Groups */}
+              {['CONTENT MANAGEMENT', 'USER MANAGEMENT', 'SITE MANAGEMENT'].map((categoryName) => {
+                const modules = adminModulesDb.filter(m => m.category === categoryName);
+                return (
+                  <div key={categoryName} style={{ marginBottom: '24px' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid #ECFDF5' }}>
+                      {categoryName}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+                      {modules.map((mod) => (
+                        <div key={mod.id} style={{ padding: '16px 18px', borderRadius: '12px', border: '1.5px solid #E2E8F0', backgroundColor: mod.isActive ? '#FFFFFF' : '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: mod.isActive ? '#0F172A' : '#94A3B8' }}>{mod.label}</div>
+                            <div style={{ fontSize: '0.72rem', color: mod.isActive ? '#059669' : '#DC2626', fontWeight: 600, marginTop: '2px' }}>
+                              {mod.isActive ? '● Visible on Admin & Web' : '○ Hidden from Web & Admin'}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {/* Toggle Button */}
+                            <button
+                              onClick={() => {
+                                toggleAdminModuleActive(mod.id);
+                                showNotification(`"${mod.label}" is now ${mod.isActive ? 'Hidden' : 'Visible'}`);
+                                triggerRefresh();
+                              }}
+                              style={{
+                                padding: '6px 14px', borderRadius: '20px', border: 'none',
+                                backgroundColor: mod.isActive ? '#DCFCE7' : '#FEE2E2',
+                                color: mod.isActive ? '#15803D' : '#DC2626',
+                                fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer'
+                              }}
+                            >
+                              {mod.isActive ? 'Hide' : 'Show'}
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Delete module "${mod.label}" permanently?`)) {
+                                  deleteAdminModule(mod.id);
+                                  showNotification(`Deleted "${mod.label}"`, 'warning');
+                                  triggerRefresh();
+                                }
+                              }}
+                              title="Delete Module"
+                              style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #FEE2E2', backgroundColor: '#FFFFFF', color: '#DC2626', cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Add New Module Form */}
+              <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px dashed #CBD5E1' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>➕ Add Custom Side Heading / Module</h4>
+                {(() => {
+                  const [newModName, setNewModName] = React.useState('');
+                  const [newModCat, setNewModCat] = React.useState<'CONTENT MANAGEMENT' | 'USER MANAGEMENT' | 'SITE MANAGEMENT'>('CONTENT MANAGEMENT');
+
+                  const handleAdd = () => {
+                    if (!newModName.trim()) return;
+                    addAdminModule(newModName.trim(), newModCat);
+                    showNotification(`Module "${newModName.trim()}" added!`);
+                    setNewModName('');
+                    triggerRefresh();
+                  };
+
+                  return (
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. Real Estate Auctions"
+                        value={newModName}
+                        onChange={e => setNewModName(e.target.value)}
+                        style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.88rem', flexGrow: 1, minWidth: '200px' }}
+                      />
+                      <select
+                        value={newModCat}
+                        onChange={e => setNewModCat(e.target.value as any)}
+                        style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}
+                      >
+                        <option value="CONTENT MANAGEMENT">CONTENT MANAGEMENT</option>
+                        <option value="USER MANAGEMENT">USER MANAGEMENT</option>
+                        <option value="SITE MANAGEMENT">SITE MANAGEMENT</option>
+                      </select>
+                      <button
+                        onClick={handleAdd}
+                        style={{ padding: '10px 22px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer' }}
+                      >
+                        + Add Module
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
           </div>
