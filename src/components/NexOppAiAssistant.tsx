@@ -897,6 +897,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       {/* ================= 1. FLOATING SPEECH BUBBLE ================= */}
       {showBubble && !isOpen && (
         <div 
+          className="ai-speech-bubble-wrap"
           onClick={() => setIsOpen(true)}
           style={{
             position: 'fixed',
@@ -1006,6 +1007,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       {/* ================= 3. CHAT WINDOW MODAL ================= */}
       {isOpen && (
         <div
+          className="ai-chat-modal-wrap"
           style={{
             position: 'fixed',
             bottom: '96px',
