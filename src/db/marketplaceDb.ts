@@ -1379,3 +1379,122 @@ export const deleteDemandRegion = (id: string) => {
     method: 'DELETE'
   }).catch(err => console.error('API Sync Error:', err));
 };
+
+// ── DYNAMIC FILTERS & CATEGORIES MASTER DATA (is_active toggle support) ──────
+export interface FilterMasterItem {
+  id: string;
+  name: string;
+  is_active: boolean;
+  type: 'category' | 'location' | 'business_type';
+  displayOrder?: number;
+}
+
+const defaultMasterCategories: FilterMasterItem[] = [
+  { id: 'cat_1', name: 'Retail & Stores', is_active: true, type: 'category' },
+  { id: 'cat_2', name: 'Manufacturing & Industrial', is_active: true, type: 'category' },
+  { id: 'cat_3', name: 'Restaurants & Cafés', is_active: true, type: 'category' },
+  { id: 'cat_4', name: 'Hotels & Resorts', is_active: true, type: 'category' },
+  { id: 'cat_5', name: 'Healthcare & Clinics', is_active: true, type: 'category' },
+  { id: 'cat_6', name: 'Education & Training', is_active: true, type: 'category' },
+  { id: 'cat_7', name: 'IT & Technology', is_active: true, type: 'category' },
+  { id: 'cat_8', name: 'Services & Consulting', is_active: true, type: 'category' },
+  { id: 'cat_9', name: 'Wholesale & Distribution', is_active: true, type: 'category' },
+  { id: 'cat_10', name: 'Agriculture & Organic', is_active: true, type: 'category' },
+];
+
+const defaultMasterLocations: FilterMasterItem[] = [
+  { id: 'loc_1', name: 'Guntur', is_active: true, type: 'location' },
+  { id: 'loc_2', name: 'Vijayawada', is_active: true, type: 'location' },
+  { id: 'loc_3', name: 'Hyderabad', is_active: true, type: 'location' },
+  { id: 'loc_4', name: 'Visakhapatnam', is_active: true, type: 'location' },
+  { id: 'loc_5', name: 'Bengaluru', is_active: true, type: 'location' },
+  { id: 'loc_6', name: 'Chennai', is_active: true, type: 'location' },
+  { id: 'loc_7', name: 'Mumbai', is_active: true, type: 'location' },
+  { id: 'loc_8', name: 'Delhi NCR', is_active: true, type: 'location' },
+];
+
+const defaultMasterBusinessTypes: FilterMasterItem[] = [
+  { id: 'bt_1', name: 'Proprietorship', is_active: true, type: 'business_type' },
+  { id: 'bt_2', name: 'Partnership', is_active: true, type: 'business_type' },
+  { id: 'bt_3', name: 'LLP', is_active: true, type: 'business_type' },
+  { id: 'bt_4', name: 'Private Limited', is_active: true, type: 'business_type' },
+  { id: 'bt_5', name: 'Public Limited', is_active: true, type: 'business_type' },
+];
+
+const loadFilterMasterItems = (key: string, defaults: FilterMasterItem[]): FilterMasterItem[] => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return defaults;
+};
+
+export let masterCategoriesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_categories', defaultMasterCategories);
+export let masterLocationsDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_locations', defaultMasterLocations);
+export let masterBusinessTypesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_business_types', defaultMasterBusinessTypes);
+
+const saveFilterMasterItems = (key: string, items: FilterMasterItem[]) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch (e) {}
+  notifyDataChanged();
+};
+
+export const addFilterMasterItem = (type: 'category' | 'location' | 'business_type', name: string) => {
+  const newItem: FilterMasterItem = {
+    id: `${type}_${Date.now()}`,
+    name,
+    is_active: true,
+    type,
+  };
+  if (type === 'category') {
+    masterCategoriesDb = [...masterCategoriesDb, newItem];
+    saveFilterMasterItems('nexopp_master_categories', masterCategoriesDb);
+  } else if (type === 'location') {
+    masterLocationsDb = [...masterLocationsDb, newItem];
+    saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'business_type') {
+    masterBusinessTypesDb = [...masterBusinessTypesDb, newItem];
+    saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
+  }
+};
+
+export const toggleFilterMasterItemActive = (id: string, type: 'category' | 'location' | 'business_type') => {
+  if (type === 'category') {
+    masterCategoriesDb = masterCategoriesDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
+    saveFilterMasterItems('nexopp_master_categories', masterCategoriesDb);
+  } else if (type === 'location') {
+    masterLocationsDb = masterLocationsDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
+    saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'business_type') {
+    masterBusinessTypesDb = masterBusinessTypesDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
+    saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
+  }
+};
+
+export const deleteFilterMasterItem = (id: string, type: 'category' | 'location' | 'business_type') => {
+  if (type === 'category') {
+    masterCategoriesDb = masterCategoriesDb.filter(i => i.id !== id);
+    saveFilterMasterItems('nexopp_master_categories', masterCategoriesDb);
+  } else if (type === 'location') {
+    masterLocationsDb = masterLocationsDb.filter(i => i.id !== id);
+    saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'business_type') {
+    masterBusinessTypesDb = masterBusinessTypesDb.filter(i => i.id !== id);
+    saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
+  }
+};
+
+export const editFilterMasterItem = (id: string, type: 'category' | 'location' | 'business_type', newName: string) => {
+  if (type === 'category') {
+    masterCategoriesDb = masterCategoriesDb.map(i => i.id === id ? { ...i, name: newName } : i);
+    saveFilterMasterItems('nexopp_master_categories', masterCategoriesDb);
+  } else if (type === 'location') {
+    masterLocationsDb = masterLocationsDb.map(i => i.id === id ? { ...i, name: newName } : i);
+    saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'business_type') {
+    masterBusinessTypesDb = masterBusinessTypesDb.map(i => i.id === id ? { ...i, name: newName } : i);
+    saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
+  }
+};
+

@@ -81,7 +81,21 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     markersLayerRef.current = layerGroup;
     mapInstanceRef.current = map;
 
+    // Trigger Leaflet invalidateSize so map tile recalculations fit container 100% on mobile
+    const resizeTimer = setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -212,7 +226,18 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height, borderRadius: '24px', overflow: 'hidden', border: '1px solid #E2E8F0', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
+    <div style={{ 
+      position: 'relative', 
+      width: '100%', 
+      maxWidth: '100%', 
+      boxSizing: 'border-box',
+      minHeight: '280px', 
+      height: height || '380px', 
+      borderRadius: '24px', 
+      overflow: 'hidden', 
+      border: '1px solid #E2E8F0', 
+      boxShadow: '0 10px 30px rgba(0,0,0,0.06)' 
+    }}>
       <style>{`
         @keyframes pulse {
           0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }

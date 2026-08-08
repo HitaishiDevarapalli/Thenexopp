@@ -5207,6 +5207,28 @@ body.modal-open {
   display: grid;
   gap: 20px;
 }
+
+/* Mobile Map & Responsive Filter Safety Rules */
+@media (max-width: 768px) {
+  .leaflet-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 280px !important;
+    border-radius: 16px !important;
+  }
+
+  .top-search-filter-bar-5 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .layout-sidebar-main {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+}
 @media (min-width: 1200px) {
   .responsive-property-grid {
     grid-template-columns: repeat(4, 1fr);

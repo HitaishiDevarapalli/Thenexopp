@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { businessDb } from '../db/marketplaceDb';
+import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb } from '../db/marketplaceDb';
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -46,6 +46,13 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   subtitle,
   onBack,
 }) => {
+  const [, setForceUpdate] = useState(0);
+  useEffect(() => {
+    const handler = () => setForceUpdate((prev) => prev + 1);
+    window.addEventListener('nexopp_data_changed', handler);
+    return () => window.removeEventListener('nexopp_data_changed', handler);
+  }, []);
+
   // Top Search Card State
   const [activeTab, setActiveTab] = useState<'All' | 'Food' | 'Healthcare' | 'Retail' | 'Manufacturing'>('All');
   const [locationText, setLocationText] = useState('Hyderabad & Andhra Pradesh');
@@ -433,20 +440,13 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
 
               {indOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {[
-                    { label: 'Food & Dining', icon: FaUtensils },
-                    { label: 'Healthcare', icon: FaMedkit },
-                    { label: 'Retail & Stores', icon: FaShoppingBag },
-                    { label: 'Technology', icon: FaBriefcase },
-                    { label: 'Manufacturing & Industrial', icon: FaIndustry },
-                  ].map((indItem) => {
-                    const checked = selectedInds.includes(indItem.label);
-                    const Icon = indItem.icon;
+                  {masterCategoriesDb.filter(c => c.is_active !== false).map((catItem) => {
+                    const checked = selectedInds.includes(catItem.name);
                     return (
-                      <label key={indItem.label} onClick={() => toggleInd(indItem.label)} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? '#0F172A' : '#475569', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleInd(indItem.label)} style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }} />
-                        <Icon style={{ color: checked ? '#16A34A' : '#94A3B8', fontSize: '14px' }} />
-                        <span>{indItem.label}</span>
+                      <label key={catItem.id} onClick={() => toggleInd(catItem.name)} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? '#0F172A' : '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleInd(catItem.name)} style={{ accentColor: '#059669', width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <FaBriefcase style={{ color: checked ? '#059669' : '#94A3B8', fontSize: '14px' }} />
+                        <span>{catItem.name}</span>
                       </label>
                     );
                   })}
@@ -454,21 +454,21 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
               )}
             </div>
 
-            {/* Profitability Checkboxes */}
+            {/* Business Structure & Profitability Checkboxes */}
             <div style={{ marginBottom: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '20px' }}>
               <div onClick={() => setProfOpen(!profOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '14px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Profitability</span>
+                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Business Structure</span>
                 {profOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
               </div>
 
               {profOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['Profitable Now', 'High Growth', 'Asset-Light', 'Cashflow Positive'].map((pr) => {
-                    const checked = selectedProfs.includes(pr);
+                  {masterBusinessTypesDb.filter(bt => bt.is_active !== false).map((btItem) => {
+                    const checked = selectedProfs.includes(btItem.name);
                     return (
-                      <label key={pr} onClick={() => toggleProf(pr)} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? '#0F172A' : '#475569', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleProf(pr)} style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }} />
-                        <span>{pr}</span>
+                      <label key={btItem.id} onClick={() => toggleProf(btItem.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? '#0F172A' : '#475569', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={checked} onChange={() => toggleProf(btItem.name)} style={{ accentColor: '#059669', width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <span>{btItem.name}</span>
                       </label>
                     );
                   })}

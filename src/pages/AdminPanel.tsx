@@ -80,6 +80,13 @@ import {
   updateShowcaseVideo,
   deleteShowcaseVideo,
   updateShowcaseSettings,
+  masterCategoriesDb,
+  masterLocationsDb,
+  masterBusinessTypesDb,
+  addFilterMasterItem,
+  toggleFilterMasterItemActive,
+  deleteFilterMasterItem,
+  editFilterMasterItem,
   API_BASE_URL
 } from '../db/marketplaceDb';
 import { BrokerManagementSystem } from '../components/BrokerManagementSystem';
@@ -122,9 +129,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [error, setError] = useState<string | null>(null);
   const [newCityInput, setNewCityInput] = useState('');
   const [newTagInput, setNewTagInput] = useState('');
+  const [newCatInput, setNewCatInput] = useState('');
+  const [newLocInput, setNewLocInput] = useState('');
+  const [newBtInput, setNewBtInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -972,6 +982,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <FaMapMarkerAlt style={{ color: activeTab === 'demand_regions' ? '#059669' : '#64748B' }} /> Demand Regions
             </button>
           )}
+
+          <button
+            onClick={() => {
+              setActiveTab('master_filters');
+              setExpandedMenu(null);
+            }}
+            style={{
+              padding: '11px 16px', backgroundColor: activeTab === 'master_filters' ? '#ECFDF5' : 'transparent', color: activeTab === 'master_filters' ? '#059669' : '#475569', border: activeTab === 'master_filters' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'master_filters' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
+            }}
+          >
+            <FaFolder style={{ color: activeTab === 'master_filters' ? '#059669' : '#64748B' }} /> Filters & Categories Control
+          </button>
 
           {/* Section: USER MANAGEMENT */}
           {(hasPermission('brokers') || hasPermission('users')) && (
@@ -2926,6 +2948,355 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   ))}
                 </tbody>
               </table>
+            </div>
+
+          </div>
+        )}
+
+        {/* ================= CATEGORY 4.4: FILTERS & CATEGORIES MASTER CONTROL ================= */}
+        {activeTab === 'master_filters' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
+            
+            {/* Header Card */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)' }}>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <FaFolder style={{ color: '#059669' }} /> Dynamic Filters & Categories Control Panel
+              </h2>
+              <p style={{ fontSize: '13px', color: '#64748B', margin: '6px 0 0 0', fontWeight: 500 }}>
+                Manage live filter options across Business Categories, Locations, and Entity Types. Toggling <strong>Show/Hide (is_active)</strong> instantly updates or removes items from the live website without redeployment.
+              </p>
+            </div>
+
+            {/* 3-Column Manager Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px' }}>
+              
+              {/* CARD 1: Business Categories */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Business Categories</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterCategoriesDb.filter(c => c.is_active).length} Active / {masterCategoriesDb.length} Total
+                  </span>
+                </div>
+
+                {/* Add Category Form */}
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newCatInput.trim()) return;
+                    addFilterMasterItem('category', newCatInput.trim());
+                    setNewCatInput('');
+                    showNotification('Business category added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Add new category..."
+                    value={newCatInput}
+                    onChange={(e) => setNewCatInput(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                {/* Items List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterCategoriesDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                          {item.name}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* Toggle Switch */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleFilterMasterItemActive(item.id, 'category');
+                            showNotification(`Category "${item.name}" ${item.is_active ? 'hidden' : 'activated'}`, 'info');
+                          }}
+                          style={{
+                            backgroundColor: item.is_active ? '#10B981' : '#CBD5E1',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            padding: '5px 12px',
+                            borderRadius: '9999px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete category "${item.name}"?`)) {
+                              deleteFilterMasterItem(item.id, 'category');
+                              showNotification(`Category deleted`, 'warning');
+                            }
+                          }}
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: '#EF4444',
+                            border: 'none',
+                            padding: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                          }}
+                          title="Delete Category"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD 2: Locations */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Locations / Cities</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterLocationsDb.filter(l => l.is_active).length} Active / {masterLocationsDb.length} Total
+                  </span>
+                </div>
+
+                {/* Add Location Form */}
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newLocInput.trim()) return;
+                    addFilterMasterItem('location', newLocInput.trim());
+                    setNewLocInput('');
+                    showNotification('Location added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Add new location..."
+                    value={newLocInput}
+                    onChange={(e) => setNewLocInput(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                {/* Items List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterLocationsDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                          📍 {item.name}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* Toggle Switch */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleFilterMasterItemActive(item.id, 'location');
+                            showNotification(`Location "${item.name}" ${item.is_active ? 'hidden' : 'activated'}`, 'info');
+                          }}
+                          style={{
+                            backgroundColor: item.is_active ? '#10B981' : '#CBD5E1',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            padding: '5px 12px',
+                            borderRadius: '9999px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete location "${item.name}"?`)) {
+                              deleteFilterMasterItem(item.id, 'location');
+                              showNotification(`Location deleted`, 'warning');
+                            }
+                          }}
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: '#EF4444',
+                            border: 'none',
+                            padding: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                          }}
+                          title="Delete Location"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD 3: Business Types */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Business Types</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterBusinessTypesDb.filter(bt => bt.is_active).length} Active / {masterBusinessTypesDb.length} Total
+                  </span>
+                </div>
+
+                {/* Add Business Type Form */}
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newBtInput.trim()) return;
+                    addFilterMasterItem('business_type', newBtInput.trim());
+                    setNewBtInput('');
+                    showNotification('Business type added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Add entity structure..."
+                    value={newBtInput}
+                    onChange={(e) => setNewBtInput(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                {/* Items List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterBusinessTypesDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                          💼 {item.name}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {/* Toggle Switch */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleFilterMasterItemActive(item.id, 'business_type');
+                            showNotification(`Business type "${item.name}" ${item.is_active ? 'hidden' : 'activated'}`, 'info');
+                          }}
+                          style={{
+                            backgroundColor: item.is_active ? '#10B981' : '#CBD5E1',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            padding: '5px 12px',
+                            borderRadius: '9999px',
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete business type "${item.name}"?`)) {
+                              deleteFilterMasterItem(item.id, 'business_type');
+                              showNotification(`Business type deleted`, 'warning');
+                            }
+                          }}
+                          style={{
+                            backgroundColor: 'transparent',
+                            color: '#EF4444',
+                            border: 'none',
+                            padding: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                          }}
+                          title="Delete Business Type"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
 
           </div>
