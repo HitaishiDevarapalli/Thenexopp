@@ -4403,7 +4403,9 @@ p {
   background-color: var(--bg-main) !important;
   z-index: 1200;
   overflow-y: auto;
-  padding: 4rem 0;
+  padding-top: 120px !important;
+  padding-bottom: 4rem;
+  box-sizing: border-box;
   animation: fadeIn 0.4s ease-out forwards;
 }
 
@@ -4411,10 +4413,16 @@ p {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1.5rem;
+  position: relative;
 }
 
 .portfolio-back-btn {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 10;
 }
 
 .portfolio-header {
