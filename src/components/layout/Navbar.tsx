@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, FaChevronDown, FaMapMarkedAlt, FaStore, FaHandHoldingUsd, FaChartLine, FaShieldAlt, FaEnvelope, FaUtensils, FaMedkit, FaSearch, FaRegHeart, FaUser, FaBars } from 'react-icons/fa';
+import { FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, FaChevronDown, FaMapMarkedAlt, FaStore, FaHandHoldingUsd, FaChartLine, FaShieldAlt, FaEnvelope, FaUtensils, FaMedkit, FaSearch, FaRegHeart, FaUser, FaUserPlus, FaBars } from 'react-icons/fa';
 import { selectedCity, setSelectedCity, siteSettingsDb, isModuleActive } from '../../db/marketplaceDb';
 import { searchLivePlaces, geocodeLocationOnline } from '../../utils/locationIntelligence';
 import { Logo } from '../common/Logo';
@@ -473,9 +473,12 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               )}
             </div>
           ) : (
-            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '11px 22px', borderRadius: '22px', fontWeight: 800, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <FaUser style={{ fontSize: '13px', color: '#FDE68A' }} />
-              <span>Login / Register</span>
+            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '10px 20px', borderRadius: '22px', fontWeight: 800, fontSize: '13.5px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <FaUser style={{ fontSize: '13px', color: '#F59E0B' }} />
+              <span>Login</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)', margin: '0 1px' }}>/</span>
+              <FaUserPlus style={{ fontSize: '14px', color: '#10B981' }} />
+              <span>Register</span>
             </button>
           )}
         </div>
@@ -573,7 +576,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
                   gap: '8px'
                 }}
               >
-                <FaUser /> Login / Register
+                <FaUser style={{ color: '#FDE68A' }} /> Login / <FaUserPlus style={{ color: '#A7F3D0' }} /> Register
               </button>
             ) : (
               <button
