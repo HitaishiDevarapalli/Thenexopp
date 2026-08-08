@@ -89,6 +89,11 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
   };
 
   const handleOpenModal = (mode: 'contact' | 'book' = 'contact') => {
+    const lenis = (window as any).lenis;
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setModalMode(mode);
     setIsEnquiryModalOpen(true);
   };

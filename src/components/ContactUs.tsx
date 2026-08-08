@@ -4,6 +4,14 @@ import { useAuth } from '../context/AuthContext';
 
 export const ContactUs: React.FC = () => {
   const { user, openLoginModal } = useAuth();
+
+  React.useEffect(() => {
+    const lenis = (window as any).lenis;
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',

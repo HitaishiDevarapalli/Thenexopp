@@ -139,6 +139,11 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
   const handleOpenContactModal = (mode: 'contact' | 'book' = 'contact') => {
+    const lenis = (window as any).lenis;
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setModalMode(mode);
     setContactName('');
     setContactPhone('');
