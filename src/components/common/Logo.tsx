@@ -57,10 +57,7 @@ export const Logo: React.FC<LogoProps> = ({
         <rect x="207" y="78" width="10" height="10" fill="#002B66" />
 
         {/* Golden Yellow Secondary Buildings */}
-        <path
-          d="M 270 72 L 285 20 L 300 20 L 300 90 H 285 L 285 45 L 270 72 Z"
-          fill="#D97706"
-        />
+        <rect x="284" y="20" width="16" height="70" fill="#D97706" />
         <rect x="305" y="42" width="14" height="48" fill="#D97706" />
         <rect x="323" y="60" width="12" height="30" fill="#D97706" />
 
