@@ -10,24 +10,27 @@
 }
 
 :root {
-    /* Green Theme - matching reference design */
+    /* Brand Logo Tri-Color Theme: Golden Yellow (#D97706) + Deep Navy (#002B66) + Emerald Green (#059669) */
+    --brand-navy: #002B66;
+    --brand-gold: #D97706;
+    --brand-green: #059669;
     --bg-main: #FFFFFF;
-    --bg-alt: #F9FAFB;
+    --bg-alt: #F8FAFC;
     --card-bg: #FFFFFF;
-    --gold: #16A34A;
-    --gold-hover: #15803D;
-    --warm-sand: #DCFCE7;
-    --light-taupe: #86EFAC;
-    --text-primary: #1F2937;
-    --text-secondary: #6B7280;
-    --border-color: #E5E7EB;
-    --green-light: #F0FDF4;
+    --gold: #D97706;
+    --gold-hover: #B45309;
+    --warm-sand: #FEF3C7;
+    --light-taupe: #FDE68A;
+    --text-primary: #002B66;
+    --text-secondary: #475569;
+    --border-color: #E2E8F0;
+    --green-light: #ECFDF5;
 
     /* Fonts */
-    --font-serif: 'Roboto', 'Inter', system-ui, sans-serif;
-    --font-sans: 'Roboto', 'Inter', system-ui, sans-serif;
-    --font-heading: 'Roboto', 'Inter', system-ui, sans-serif;
-    --font-body: 'Roboto', 'Inter', system-ui, sans-serif;
+    --font-serif: 'Plus Jakarta Sans', 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-heading: 'Plus Jakarta Sans', 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
 
     /* Shadows */
     --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);

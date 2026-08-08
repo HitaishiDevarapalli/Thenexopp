@@ -204,27 +204,27 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   };
 
   const getNavTextColor = (itemId: string) => {
-    if (activeSection === itemId || hoveredItem === itemId) return '#16A34A';
-    return '#4B5563';
+    if (activeSection === itemId || hoveredItem === itemId) return '#059669';
+    return '#002B66';
   };
 
   return (
     <nav className="navbar" style={{
       backgroundColor: '#FFFFFF',
-      borderBottom: '1px solid #E5E7EB',
-      boxShadow: scrolled ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+      borderBottom: '1px solid #E2E8F0',
+      boxShadow: scrolled ? '0 4px 14px rgba(0,27,102,0.08)' : 'none',
       transition: 'box-shadow 0.3s ease',
     }}>
       <div className="navbar-container" style={{
         maxWidth: '1360px',
         margin: '0 auto',
-        padding: '12px 24px',
+        padding: '10px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         width: '100%',
         boxSizing: 'border-box',
-        height: '70px'
+        height: '78px'
       }}>
 
         {/* Left: Mobile Hamburger + Logo */}
