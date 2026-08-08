@@ -11,7 +11,7 @@ interface LogoProps {
 export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   dark = false,
-  showTagline = true,
+  showTagline = false,
   style,
   className = '',
 }) => {
@@ -116,21 +116,7 @@ export const Logo: React.FC<LogoProps> = ({
       </svg>
 
       {/* Optional Tagline */}
-      {showTagline && (
-        <span
-          style={{
-            fontSize: `${Math.max(9, Math.round(h * 0.18))}px`,
-            fontWeight: 700,
-            color: dark ? '#94A3B8' : '#475569',
-            letterSpacing: '0.04em',
-            marginTop: '-4px',
-            marginLeft: '12px',
-            fontFamily: "'Inter', -apple-system, sans-serif",
-          }}
-        >
-          — Find. Invest. Grow.
-        </span>
-      )}
+      {showTagline && null}
     </div>
   );
 };
