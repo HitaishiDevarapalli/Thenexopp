@@ -223,9 +223,9 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       transition: 'box-shadow 0.3s ease',
     }}>
       <div className="navbar-container" style={{
-        maxWidth: '100%',
+        maxWidth: '1440px',
         margin: '0 auto',
-        padding: '12px 24px',
+        padding: '0 28px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -234,171 +234,180 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
         height: '96px'
       }}>
 
-        {/* Left: Mobile Hamburger + Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '16px', flexShrink: 0 }}>
-          <button
-            className="mobile-only"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              color: '#1E293B',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <FaBars />
-          </button>
-
-          <a
-            href="#hero"
-            onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              if (onNavigateToPage) onNavigateToPage('adminPortal');
-              else window.location.href = '/secret-admin';
-            }}
-            title="Double-click for Admin Portal"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <Logo size="lg" />
-          </a>
-        </div>
-
-        {/* Center: Desktop Nav Items */}
-        <ul className="navbar-menu desktop-only" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          listStyle: 'none',
-          margin: 0,
-          padding: 0,
-        }}>
-          {menuItems.map((item) => (
-            <li
-              key={item.id}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '96px' }}
-              onMouseEnter={() => {
-                setHoveredItem(item.id);
-                if (item.dropdown) setOpenDropdown(item.id);
-              }}
-              onMouseLeave={() => {
-                setHoveredItem(null);
-                setOpenDropdown(null);
+        {/* Left Side Group: Logo + Menu Items grouped naturally */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flexGrow: 1 }}>
+          {/* Logo & Mobile Hamburger */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            <button
+              className="mobile-only"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                color: '#1E293B',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
-              <button
-                onClick={() => handleNavItemClick(item.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '6px 4px',
-                  fontSize: '14.5px',
-                  fontWeight: 700,
-                  color: getNavTextColor(item.id),
-                  transition: 'color 0.2s ease',
-                  whiteSpace: 'nowrap',
-                  position: 'relative'
+              <FaBars />
+            </button>
+
+            <a
+              href="#hero"
+              onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (onNavigateToPage) onNavigateToPage('adminPortal');
+                else window.location.href = '/secret-admin';
+              }}
+              title="Double-click for Admin Portal"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <Logo size="lg" />
+            </a>
+          </div>
+
+          {/* Desktop Nav Items (positioned next to logo) */}
+          <ul className="navbar-menu desktop-only" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px',
+            listStyle: 'none',
+            margin: 0,
+            padding: 0,
+          }}>
+            {menuItems.map((item) => (
+              <li
+                key={item.id}
+                style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '96px' }}
+                onMouseEnter={() => {
+                  setHoveredItem(item.id);
+                  if (item.dropdown) setOpenDropdown(item.id);
+                }}
+                onMouseLeave={() => {
+                  setHoveredItem(null);
+                  setOpenDropdown(null);
                 }}
               >
-                <span>{item.label}</span>
-                {activeSection === item.id && item.id !== 'hero' && (
-                  <div style={{
+                <button
+                  onClick={() => handleNavItemClick(item.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    color: getNavTextColor(item.id),
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeSection !== item.id) (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <span>{item.label}</span>
+                  {activeSection === item.id && item.id !== 'hero' && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '0px',
+                      left: '0',
+                      width: '100%',
+                      height: '2px',
+                      backgroundColor: '#16A34A',
+                      borderRadius: '2px'
+                    }} />
+                  )}
+                  {item.dropdown && (
+                    <FaChevronDown style={{
+                      fontSize: '11px',
+                      transition: 'transform 0.2s ease',
+                      transform: openDropdown === item.id ? 'rotate(180deg)' : 'rotate(0deg)',
+                      opacity: 0.7,
+                    }} />
+                  )}
+                </button>
+
+                {item.dropdown && openDropdown === item.id && (
+                  <ul style={{
                     position: 'absolute',
-                    bottom: '0px',
+                    top: '100%',
                     left: '0',
-                    width: '100%',
-                    height: '2px',
-                    backgroundColor: '#16A34A',
-                    borderRadius: '2px'
-                  }} />
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                    padding: '8px 0',
+                    minWidth: '200px',
+                    listStyle: 'none',
+                    margin: 0,
+                    zIndex: 1001,
+                    animation: 'fadeIn 0.15s ease',
+                  }}>
+                    {item.dropdown.map((sub, idx) => (
+                      <li key={idx}>
+                        <a
+                          href="#"
+                          onClick={(e) => handleDropdownClick(item.id, sub.name, sub.link, e)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '10px 18px',
+                            color: '#374151',
+                            textDecoration: 'none',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            transition: 'background-color 0.15s ease, color 0.15s ease',
+                            cursor: 'pointer',
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = '#F0FDF4';
+                            (e.currentTarget as HTMLElement).style.color = '#16A34A';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                            (e.currentTarget as HTMLElement).style.color = '#374151';
+                          }}
+                        >
+                          {sub.subIcon && <span style={{ fontSize: '15px', opacity: 0.75, display: 'flex', alignItems: 'center' }}>{sub.subIcon}</span>}
+                          <span>{sub.name}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-                {item.dropdown && (
-                  <FaChevronDown style={{
-                    fontSize: '10px',
-                    transition: 'transform 0.2s ease',
-                    transform: openDropdown === item.id ? 'rotate(180deg)' : 'rotate(0deg)',
-                    opacity: 0.6,
-                  }} />
-                )}
-              </button>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-              {item.dropdown && openDropdown === item.id && (
-                <ul style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: '0',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '10px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                  padding: '8px 0',
-                  minWidth: '200px',
-                  listStyle: 'none',
-                  margin: 0,
-                  zIndex: 1001,
-                  animation: 'fadeIn 0.15s ease',
-                }}>
-                  {item.dropdown.map((sub, idx) => (
-                    <li key={idx}>
-                      <a
-                        href="#"
-                        onClick={(e) => handleDropdownClick(item.id, sub.name, sub.link, e)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: '10px 18px',
-                          color: '#374151',
-                          textDecoration: 'none',
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          transition: 'background-color 0.15s ease, color 0.15s ease',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLElement).style.backgroundColor = '#F0FDF4';
-                          (e.currentTarget as HTMLElement).style.color = '#16A34A';
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                          (e.currentTarget as HTMLElement).style.color = '#374151';
-                        }}
-                      >
-                        {sub.subIcon && <span style={{ fontSize: '15px', opacity: 0.75, display: 'flex', alignItems: 'center' }}>{sub.subIcon}</span>}
-                        <span>{sub.name}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {/* Right: DESKTOP ONLY — full Location, Saved, Login */}
+        {/* Right Side Group: DESKTOP ONLY — Location, Saved, Login */}
         <div className="desktop-only" style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
+          gap: '10px',
           flexShrink: 0,
-          marginLeft: '4px',
         }}>
-          <div style={{ width: '1px', height: '24px', backgroundColor: '#E2E8F0', marginRight: '4px' }} />
+          <div style={{ width: '1px', height: '24px', backgroundColor: '#CBD5E1', marginRight: '6px' }} />
 
           {/* Location Button */}
           <div style={{ position: 'relative' }}>
@@ -407,31 +416,31 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '8px',
                 backgroundColor: isLocationPickerOpen ? '#F0FDF4' : '#FFFFFF',
                 border: '1px solid',
                 borderColor: isLocationPickerOpen ? '#16A34A' : '#E2E8F0',
-                height: '42px',
-                padding: '0 12px',
-                borderRadius: '21px',
+                height: '44px',
+                padding: '0 16px',
+                borderRadius: '22px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: isLocationPickerOpen ? '0 0 0 3px rgba(22,163,74,0.1)' : 'none',
               }}
             >
-              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '14px' }} />
-              <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13px', maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '15px' }} />
+              <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13.5px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 📍 {location?.area || location?.locality || location?.city || 'Select Location'}
               </span>
-              <FaChevronDown style={{ color: '#64748B', fontSize: '10px', marginLeft: '2px', transition: 'transform 0.2s', transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              <FaChevronDown style={{ color: '#64748B', fontSize: '11px', marginLeft: '2px', transition: 'transform 0.2s', transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
             </button>
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
 
           {/* Saved */}
-          <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '42px', padding: '0 12px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-            <FaRegHeart style={{ color: '#EF4444', fontSize: '14px' }} />
-            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13px' }}>Saved</span>
+          <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '44px', padding: '0 16px', borderRadius: '22px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
+            <FaRegHeart style={{ color: '#EF4444', fontSize: '15px' }} />
+            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13.5px' }}>Saved</span>
           </button>
 
           {/* Login / Profile */}
@@ -439,12 +448,12 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '42px', padding: '0 12px 0 6px', borderRadius: '21px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '44px', padding: '0 14px 0 8px', borderRadius: '22px', cursor: 'pointer', transition: 'all 0.2s ease' }}
               >
-                <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: '#10B981', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700 }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#10B981', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13.5px', fontWeight: 700 }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13px' }}>{user.name}</span>
+                <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '13.5px' }}>{user.name}</span>
                 <FaChevronDown style={{ fontSize: '11px', color: '#64748B', marginLeft: '2px' }} />
               </button>
               {openDropdown === 'user' && (
@@ -464,8 +473,8 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               )}
             </div>
           ) : (
-            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '10px 20px', borderRadius: '21px', fontWeight: 800, fontSize: '13.5px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <FaUser style={{ fontSize: '12px', color: '#FDE68A' }} />
+            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '11px 22px', borderRadius: '22px', fontWeight: 800, fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <FaUser style={{ fontSize: '13px', color: '#FDE68A' }} />
               <span>Login / Register</span>
             </button>
           )}
