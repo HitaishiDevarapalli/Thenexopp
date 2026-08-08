@@ -201,7 +201,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
     const lower = userQuery.toLowerCase();
     
     // Resolve entities with context memory preservation across turns
-    const targetCity = searchCity || (lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : (lower.includes('vijayawada') ? 'Vijayawada' : userMemory.city))));
+    const targetCity = searchCity || (lower.includes('vijayawada') ? 'Vijayawada' : (lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : userMemory.city)));
     const targetType = searchType || (lower.includes('villa') ? 'Villa' : (lower.includes('plot') || lower.includes('land') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : (lower.includes('house') ? 'House' : (lower.includes('commercial') ? 'Commercial' : userMemory.type)))));
     
     // Max Price extraction
@@ -612,7 +612,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           type: 'options',
           options: [
             { label: 'Guntur', value: 'Guntur' },
-            { label: 'Vizag (Visakhapatnam)', value: 'Vizag' },
+            { label: 'Vijayawada', value: 'Vijayawada' },
             { label: 'Hyderabad', value: 'Hyderabad' },
             { label: 'Others', value: 'Others' }
           ]
@@ -744,7 +744,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
     }
 
     // Parse City
-    let detectedCity = lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : (lower.includes('vizag') || lower.includes('visakhapatnam') ? 'Vizag' : (lower.includes('vijayawada') ? 'Vijayawada' : undefined)));
+    let detectedCity = lower.includes('vijayawada') ? 'Vijayawada' : (lower.includes('hyderabad') ? 'Hyderabad' : (lower.includes('guntur') ? 'Guntur' : undefined));
     
     // Parse Property Type
     let detectedType = lower.includes('villa') ? 'Villa' : (lower.includes('plot') || lower.includes('land') ? 'Plot' : (lower.includes('flat') || lower.includes('apartment') || lower.includes('bhk') ? 'Apartment' : (lower.includes('house') ? 'House' : (lower.includes('commercial') ? 'Commercial' : undefined))));
@@ -805,7 +805,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
             type: 'options',
             options: [
               { label: 'Guntur', value: 'Guntur' },
-              { label: 'Vizag', value: 'Vizag' },
+              { label: 'Vijayawada', value: 'Vijayawada' },
               { label: 'Hyderabad', value: 'Hyderabad' },
               { label: 'Others', value: 'Others' }
             ]

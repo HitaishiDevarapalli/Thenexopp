@@ -123,7 +123,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
     { id: 'doc-1', fileName: 'Hyderabad_RERA_Approved_Projects_2026.pdf', category: 'Legal & RERA', size: '2.4 MB', uploadedAt: '2026-07-20', status: 'Indexed' },
     { id: 'doc-2', fileName: 'Guntur_Amaravati_MasterPlan_Circular.pdf', category: 'Government Circular', size: '4.1 MB', uploadedAt: '2026-07-22', status: 'Indexed' },
     { id: 'doc-3', fileName: 'NexOpp_Franchise_Investment_FAQ.docx', category: 'FAQ Sheet', size: '850 KB', uploadedAt: '2026-07-25', status: 'Indexed' },
-    { id: 'doc-4', fileName: 'Vizag_BeachRoad_Villas_PriceList.csv', category: 'Price List', size: '320 KB', uploadedAt: '2026-07-27', status: 'Indexed' }
+    { id: 'doc-4', fileName: 'Vijayawada_BenzCircle_Villas_PriceList.csv', category: 'Price List', size: '320 KB', uploadedAt: '2026-07-27', status: 'Indexed' }
   ]);
 
   const [newDocName, setNewDocName] = useState('');
@@ -133,7 +133,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
   const [conversations, setConversations] = useState<ConversationRecord[]>([
     { id: 'conv-101', userId: 'USR-8821 (Hyderabad)', language: 'English', firstQuery: 'Looking for 3 BHK luxury apartment under 1 Cr in Gachibowli', messagesCount: 6, createdAt: '2026-07-28 12:40', starred: true, pinned: true, rating: 5 },
     { id: 'conv-102', userId: 'USR-8842 (Guntur)', language: 'Telugu', firstQuery: 'నాకు గుంటూరులో 50 లక్షల లోపు ప్లాట్స్ చూపించు', messagesCount: 8, createdAt: '2026-07-28 11:15', starred: false, pinned: false, rating: 5 },
-    { id: 'conv-103', userId: 'USR-8850 (Vizag)', language: 'Hindi', firstQuery: 'वाइजैग में बीच रोड विला की कीमत क्या है?', messagesCount: 4, createdAt: '2026-07-28 09:30', starred: true, pinned: false, rating: 4 },
+    { id: 'conv-103', userId: 'USR-8850 (Vijayawada)', language: 'Telugu', firstQuery: 'విజయవాడలో బెంచ్ సర్కిల్ ప్లాట్స్ ధరలు ఎంత?', messagesCount: 4, createdAt: '2026-07-28 09:30', starred: true, pinned: false, rating: 4 },
     { id: 'conv-104', userId: 'USR-8861 (Vijayawada)', language: 'English', firstQuery: 'Calculate home loan EMI for 60 Lakhs at 8.5% interest', messagesCount: 5, createdAt: '2026-07-27 18:20', starred: false, pinned: false, rating: 5 }
   ]);
 
