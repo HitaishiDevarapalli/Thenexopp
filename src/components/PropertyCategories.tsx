@@ -936,10 +936,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 }}
               >
                 <FaHome style={{ fontSize: '15px' }} />
-                <span>{activeTab === 'Rent' ? 'Rent Property' : 'Buy'}</span>
+                <span>{isRent ? 'Rent Property' : (_initialCategory === 'Sell' ? 'Sell Property' : 'Buy Property')}</span>
               </button>
 
-              {activeTab === 'Rent' && (
+              {isRent && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Categories:</span>
                   {[
@@ -974,7 +974,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             </div>
 
             {/* Official Rent Flow Banner */}
-            {activeTab === 'Rent' && (
+            {isRent && (
               <div
                 style={{
                   backgroundColor: '#EFF6FF',
