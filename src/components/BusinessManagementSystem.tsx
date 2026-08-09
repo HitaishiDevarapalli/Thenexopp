@@ -118,6 +118,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
           <button 
             onClick={() => onSubTabChange('addBusiness')}
             className="bg-[#1E40AF] hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
+            style={{ color: '#FFFFFF', backgroundColor: '#1E40AF' }}
           >
             <FaPlus className="mr-2" /> Add Business
           </button>
@@ -377,7 +378,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
             </div>
           </div>
           <div className="mt-8 flex justify-end">
-            <button type="submit" className="bg-[#1E40AF] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition-colors">Save Business</button>
+            <button type="submit" className="bg-[#1E40AF] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition-colors" style={{ color: '#FFFFFF', backgroundColor: '#1E40AF' }}>Save Business</button>
           </div>
         </form>
       </div>
