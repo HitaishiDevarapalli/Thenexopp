@@ -28,7 +28,7 @@ import { LoginModal } from './components/forms/LoginModal';
 import { SellBusinessPage } from './components/forms/SellBusinessPage';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 
-type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
+type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -48,6 +48,7 @@ const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?
 const routeMap: Record<string, PageType> = {
   '/': 'home',
   '/properties': 'propertiesPage',
+  '/properties/rent': 'rentPage',
   '/properties/flats': 'flatsPage',
   '/properties/villas': 'villasPage',
   '/properties/houses': 'housesPage',
@@ -386,20 +387,23 @@ export const App: React.FC = () => {
           }}
         />
 
-      ) : (currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
+      ) : (currentPage === 'rentPage' || currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
         <PropertyCategories 
           title={
+            currentPage === 'rentPage' ? 'Rental Properties Marketplace' :
             currentPage === 'flatsPage' ? 'Flats & Apartments' :
             currentPage === 'villasPage' ? 'Villas' :
             currentPage === 'housesPage' ? 'Individual Houses' : 'Lands & Plots'
           }
           subtitle={
+            currentPage === 'rentPage' ? 'Explore verified residential & commercial properties for rent' :
             currentPage === 'flatsPage' ? 'Explore 1, 2, 3 & 4+ BHK luxury apartments and gated societies' :
             currentPage === 'villasPage' ? 'Discover premium luxury villas and row houses' :
             currentPage === 'housesPage' ? 'Discover independent houses, villas and bungalows for sale & rent' : 'Verified residential plots, commercial lands and agricultural layouts'
           }
           onBack={navigateBack}
           initialCategory={
+            currentPage === 'rentPage' ? 'Rent' :
             currentPage === 'flatsPage' ? 'BuyApartment' :
             currentPage === 'villasPage' ? 'BuyVilla' :
             currentPage === 'housesPage' ? 'BuyHouse' : 'BuyLand'

@@ -113,6 +113,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         setSelectedTypes(['Farm Land']);
         setPropertyType('Farm Land');
         setActiveTab('Plots');
+      } else if (_initialCategory === 'Rent') {
+        setActiveTab('Rent');
       }
     }
 
@@ -145,7 +147,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [maxBudget, setMaxBudget] = useState(100);
   const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
-  const isRent = activeTab === 'Rent';
+  const isRent = activeTab === 'Rent' || _initialCategory === 'Rent';
   const sliderMin = 0.01;
   const sliderMax = isRent ? 10 : 100;
 
