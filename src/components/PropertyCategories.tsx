@@ -1294,51 +1294,55 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               </div>
             </div>
 
-            {/* 4. Property Status Filter Section */}
-            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                ■ Property Status
+            {/* 4. Property Status Filter Section (Hidden for Rental Property) */}
+            {!isRent && (
+              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                  ■ Property Status
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {masterPropertyStatusesDb.filter(ps => ps.is_active).map((ps) => {
+                    const isSelected = selectedPropertyStatusesFilter.includes(ps.name);
+                    return (
+                      <label key={ps.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => togglePropertyStatusFilter(ps.name)}
+                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>{ps.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {masterPropertyStatusesDb.filter(ps => ps.is_active).map((ps) => {
-                  const isSelected = selectedPropertyStatusesFilter.includes(ps.name);
-                  return (
-                    <label key={ps.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => togglePropertyStatusFilter(ps.name)}
-                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>{ps.name}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            )}
 
-            {/* 5. Property Ownership Filter Section */}
-            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                ■ Property Ownership
+            {/* 5. Property Ownership Filter Section (Hidden for Rental Property) */}
+            {!isRent && (
+              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                  ■ Property Ownership
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {masterPropertyOwnershipsDb.filter(po => po.is_active).map((po) => {
+                    const isSelected = selectedPropertyOwnershipsFilter.includes(po.name);
+                    return (
+                      <label key={po.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => togglePropertyOwnershipFilter(po.name)}
+                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>{po.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {masterPropertyOwnershipsDb.filter(po => po.is_active).map((po) => {
-                  const isSelected = selectedPropertyOwnershipsFilter.includes(po.name);
-                  return (
-                    <label key={po.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => togglePropertyOwnershipFilter(po.name)}
-                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>{po.name}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+            )}
           </div>
 
           {/* RIGHT RESULTS AREA */}

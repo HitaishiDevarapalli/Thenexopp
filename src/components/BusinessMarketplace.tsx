@@ -464,23 +464,24 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
               <button onClick={clearAllFilters} style={{ background: 'none', border: 'none', color: '#16A34A', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Clear All</button>
             </div>
 
-            {/* Valuation Budget Slider */}
+            {/* Area & Locality Filter */}
             <div style={{ marginBottom: '24px', borderBottom: '1px solid #F1F5F9', paddingBottom: '20px' }}>
-              <div onClick={() => setValOpen(!valOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '14px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Valuation Budget</span>
-                {valOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
+              <div onClick={() => setLocOpen(!locOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '14px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Area & Locality</span>
+                {locOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
               </div>
 
-              {valOpen && (
+              {locOpen && (
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '10px' }}>
-                    <span>₹ 10 Lac</span>
-                    <span>₹ 10 Cr+</span>
-                  </div>
-                  <div style={{ position: 'relative', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', margin: '14px 6px' }}>
-                    <div style={{ position: 'absolute', left: '10%', right: '15%', top: 0, bottom: 0, backgroundColor: '#16A34A', borderRadius: '3px' }} />
-                    <div style={{ position: 'absolute', left: '10%', top: '-6px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: '3px solid #16A34A', boxShadow: '0 2px 6px rgba(0,0,0,0.2)', cursor: 'pointer' }} />
-                    <div style={{ position: 'absolute', right: '15%', top: '-6px', width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: '3px solid #16A34A', boxShadow: '0 2px 6px rgba(0,0,0,0.2)', cursor: 'pointer' }} />
+                  <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaMapMarkerAlt style={{ color: '#16A34A', fontSize: '13px' }} />
+                    <input
+                      type="text"
+                      placeholder="Search Area or Locality..."
+                      value={locationText === 'All Cities' ? '' : locationText}
+                      onChange={(e) => setLocationText(e.target.value)}
+                      style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', width: '100%' }}
+                    />
                   </div>
                 </div>
               )}
