@@ -10,7 +10,7 @@ import {
 import { 
   FaStore, FaEye, FaEyeSlash, FaStar, FaEdit, FaTrash, FaPlus, 
   FaSearch, FaCheck, FaTimes, FaInbox, FaChartBar, FaTags, FaBriefcase,
-  FaFileAlt, FaMapMarkerAlt, FaRegStar, FaEllipsisV, FaMoneyBillWave
+  FaFileAlt, FaMapMarkerAlt, FaRegStar, FaEllipsisV, FaMoneyBillWave, FaCloudUploadAlt
 } from 'react-icons/fa';
 
 interface BusinessManagementSystemProps {
@@ -217,8 +217,40 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       reasonForSale: 'Business Expansion', featured: false, published: true, status: 'Available'
     });
 
+    const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleFileUpload = (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+      Array.from(files).forEach((file) => {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            const base64 = e.target.result as string;
+            setUploadedPhotos((prev) => {
+              const updated = [...prev, base64];
+              setFormData((f) => ({ ...f, imageUrl: updated[0], image: updated[0] }));
+              return updated;
+            });
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const removePhoto = (index: number) => {
+      setUploadedPhotos((prev) => {
+        const updated = prev.filter((_, i) => i !== index);
+        const nextPrimary = updated[0] || '';
+        setFormData((f) => ({ ...f, imageUrl: nextPrimary, image: nextPrimary }));
+        return updated;
+      });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+      const primaryImage = uploadedPhotos[0] || formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
       const payload: any = {
         ...formData,
         id: `biz-${Date.now()}`,
@@ -227,14 +259,15 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
         price: Number(formData.askingPrice) || 0,
         askingPrice: Number(formData.askingPrice) || 0,
         priceDisplay: formData.priceDisplay || `₹ ${formData.askingPrice || 50} Lakhs`,
-        image: formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
-        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+        image: primaryImage,
+        imageUrl: primaryImage,
+        images: uploadedPhotos.length > 0 ? uploadedPhotos : [primaryImage],
         published: true,
         status: formData.status || 'Available',
         createdAt: new Date().toISOString(),
       };
       addBusiness(payload as BusinessListing);
-      showNotification('Business added successfully & published', 'success');
+      showNotification('Business added successfully with photos & published', 'success');
       onSubTabChange('listings');
     };
 
@@ -243,13 +276,67 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
         <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaPlus className="mr-3 text-[#1E40AF]" /> Add New Business</h2>
         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 max-w-4xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Business Name</label>
               <input required type="text" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1E40AF] outline-none" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-              <input type="text" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1E40AF] outline-none" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} />
+
+            {/* Multi-Photo Drag & Drop Uploader */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                <span>📷 Upload Business Photos <span className="text-gray-400 font-normal">(Drag & Drop or Click to Select Multiple)</span></span>
+                {uploadedPhotos.length > 0 && (
+                  <span className="text-xs text-[#059669] font-bold">{uploadedPhotos.length} Photo(s) Added</span>
+                )}
+              </label>
+              
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  handleFileUpload(e.dataTransfer.files);
+                }}
+                onClick={() => document.getElementById('business-multi-photo-input')?.click()}
+                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+                  isDragging ? 'border-[#1E40AF] bg-blue-50' : 'border-gray-300 hover:border-[#1E40AF] bg-gray-50'
+                }`}
+              >
+                <input
+                  id="business-multi-photo-input"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
+                <FaCloudUploadAlt className="mx-auto text-4xl text-[#1E40AF] mb-2" />
+                <p className="text-sm font-bold text-gray-700">Drag & Drop Photos Here or Click to Upload</p>
+                <p className="text-xs text-gray-500 mt-1">Supports JPG, PNG, WEBP, GIF, SVG (Upload multiple photos at once)</p>
+              </div>
+
+              {/* Photos Preview Gallery */}
+              {uploadedPhotos.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {uploadedPhotos.map((photo, idx) => (
+                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 w-24 h-20 bg-gray-100 shadow-sm">
+                      <img src={photo} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 bg-[#1E40AF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">Cover</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removePhoto(idx); }}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-xs opacity-90 hover:opacity-100 transition-opacity"
+                        title="Remove photo"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
