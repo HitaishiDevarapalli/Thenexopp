@@ -43,6 +43,7 @@ export const NewFranchisePage: React.FC<NewFranchisePageProps> = ({ onBack, onPr
   }, [showSellerPortfolio, selectedDealer]);
 
   const filteredFranchises = franchiseDb.filter(franchise => {
+    if ((franchise.approvalStatus || 'Published') !== 'Published' || (franchise.status !== undefined && franchise.status !== 'Active')) return false;
     if (searchQuery && searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase().trim();
       const matchesBrand = franchise.brand.toLowerCase().includes(q);

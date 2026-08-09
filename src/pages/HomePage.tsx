@@ -169,8 +169,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#ECFDF5', color: '#059669', page: 'financePage' },
   ];
 
+  const activeProperties = React.useMemo(() => propertiesDb.filter(p => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'), [propertiesDb]);
+  const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb]);
+  const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false), [businessDb]);
+
   // Recently Sold properties (Latest 8 ordered by soldDate descending)
-  const recentlySoldListings = propertiesDb
+  const recentlySoldListings = activeProperties
     .filter((p) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold')
     .sort((a, b) => {
       const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
@@ -240,8 +244,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   };
 
   // Featured Listings from marketplaceDb (Ensure at least 4 items so grid is full)
-  const filteredProperties = filterAndSortByDistance(propertiesDb, true);
-  const rawListings = filteredProperties.length >= 2 ? filteredProperties : propertiesDb;
+  const filteredProperties = filterAndSortByDistance(activeProperties, true);
+  const rawListings = filteredProperties.length >= 2 ? filteredProperties : activeProperties;
   const featuredListings = rawListings.slice(0, 4).map((p) => {
     const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
     const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
@@ -265,13 +269,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     };
   });
 
-  const rawFranchises = filterAndSortByDistance(franchiseDb);
-  const featuredFranchises = (rawFranchises.length >= 2 ? rawFranchises : franchiseDb).slice(0, 4);
+  const rawFranchises = filterAndSortByDistance(activeFranchises);
+  const featuredFranchises = (rawFranchises.length >= 2 ? rawFranchises : activeFranchises).slice(0, 4);
 
-  const rawBusinesses = filterAndSortByDistance(businessDb);
+  const rawBusinesses = filterAndSortByDistance(activeBusinesses);
   // Combined Top Rated / Featured Listings (5-6 items)
   const combinedTopRated = React.useMemo(() => {
-    const props = propertiesDb
+    const props = activeProperties
       .filter(p => !p.sold && p.listingStatus !== 'Sold' && p.listingStatus !== 'Hidden' && p.listingStatus !== 'Draft')
       .map(p => ({
         id: p.id,
@@ -289,7 +293,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         badgeText: p.status === 'Rent' ? '#2563EB' : '#059669',
       }));
 
-    const bus = businessDb
+    const bus = activeBusinesses
       .filter(b => b.published !== false && b.status !== 'Sold' && b.status !== 'Unavailable')
       .map(b => ({
         id: b.id,
@@ -315,7 +319,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       });
 
     return merged.slice(0, 6);
-  }, [propertiesDb, businessDb]);
+  }, [activeProperties, activeBusinesses]);
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>

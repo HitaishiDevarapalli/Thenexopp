@@ -116,7 +116,9 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
   };
 
   const franchisesList = useMemo(() => {
-    const list = franchiseDb.map((f) => ({
+    const list = franchiseDb
+      .filter((f) => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active'))
+      .map((f) => ({
       id: f.id,
       brand: f.brand || 'Franchise Brand',
       category: f.category || f.type || 'Food & Beverage',

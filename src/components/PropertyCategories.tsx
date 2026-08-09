@@ -543,7 +543,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   // Rich screenshot-matching properties list
   const displayProperties = useMemo(() => {
-    const activeListings = propertiesDb;
+    const activeListings = propertiesDb.filter(
+      (p) => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'
+    );
     const baseList = activeListings.map((p) => {
       const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
       const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
