@@ -914,7 +914,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 }}
               >
                 {/* Image Section */}
-                <div style={{ position: 'relative', height: '200px', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
                   <img 
                     src={item.image} 
                     alt={item.title} 
