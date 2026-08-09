@@ -305,60 +305,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
             marginBottom: '32px',
           }}
         >
-          {/* Top Tabs */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              borderBottom: '1px solid #F1F5F9',
-              paddingBottom: '16px',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-            }}
-          >
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 18px',
-                    borderRadius: '9999px',
-                    border: 'none',
-                    backgroundColor: isActive ? '#DCFCE7' : 'transparent',
-                    color: isActive ? '#16A34A' : '#475569',
-                    fontWeight: 700,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    position: 'relative',
-                  }}
-                >
-                  <Icon style={{ fontSize: '15px' }} />
-                  <span>{tab.label}</span>
-                  {isActive && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        bottom: '-17px',
-                        left: '15%',
-                        right: '15%',
-                        height: '3px',
-                        backgroundColor: '#16A34A',
-                        borderRadius: '3px 3px 0 0',
-                      }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+
 
           {/* Row of Filter Inputs */}
           <div className="top-search-filter-bar-5">
