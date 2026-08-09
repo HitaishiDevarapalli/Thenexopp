@@ -564,16 +564,19 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
             </h2>
           </div>
 
-          {/* 3D Flowchart Grid with Connecting Arrows */}
+          {/* 3D Flowchart Container with horizontal scroll and no wrap */}
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
-              gap: '16px',
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'nowrap',
+              gap: '24px',
               position: 'relative',
               alignItems: 'stretch',
               overflowX: 'auto',
               paddingBottom: '16px',
+              width: '100%',
+              boxSizing: 'border-box',
             }}
           >
             {steps.map((step, idx) => (
@@ -584,6 +587,9 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
+                  flex: '1 1 0%',
+                  minWidth: '160px',
+                  maxWidth: '240px',
                 }}
               >
                 {/* 3D Modern Box */}
