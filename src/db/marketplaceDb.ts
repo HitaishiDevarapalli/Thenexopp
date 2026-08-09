@@ -1672,6 +1672,60 @@ export const deleteSellBusinessRequest = (id: string) => {
   }).catch(err => console.error('API Sync Error:', err));
 };
 
+// ── SELL PROPERTY REQUESTS ──────────────────────────────────────────────────
+export interface SellPropertyRequest {
+  id: string;
+  name: string;
+  mobile: string;
+  email?: string;
+  city: string;
+  propertyType: string;
+  preferredContactMethod: string;
+  status: string;
+  adminNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export let sellPropertyRequestsDb: SellPropertyRequest[] = [];
+
+export const addSellPropertyRequest = (item: SellPropertyRequest) => {
+  sellPropertyRequestsDb = [item, ...sellPropertyRequestsDb];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/sell-requests`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: item.id,
+      sellerName: item.name,
+      mobile: item.mobile,
+      email: item.email,
+      city: item.city,
+      propertyType: item.propertyType,
+      message: `Contact via ${item.preferredContactMethod}`,
+      status: item.status,
+    })
+  }).catch(err => console.error('API Sync Error:', err));
+};
+
+export const updateSellPropertyRequest = (id: string, updated: Partial<SellPropertyRequest>) => {
+  sellPropertyRequestsDb = sellPropertyRequestsDb.map(r => r.id === id ? { ...r, ...updated } : r);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/sell-requests/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(err => console.error('API Sync Error:', err));
+};
+
+export const deleteSellPropertyRequest = (id: string) => {
+  sellPropertyRequestsDb = sellPropertyRequestsDb.filter(r => r.id !== id);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/sell-requests/${id}`, {
+    method: 'DELETE'
+  }).catch(err => console.error('API Sync Error:', err));
+};
+
 // ── BUSINESS ENQUIRIES ─────────────────────────────────────────────────────
 export interface BusinessEnquiry {
   id: string;

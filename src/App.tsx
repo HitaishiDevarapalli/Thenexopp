@@ -26,9 +26,10 @@ import { siteSettingsDb, updateSiteSettings } from './db/marketplaceDb';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/forms/LoginModal';
 import { SellBusinessPage } from './components/forms/SellBusinessPage';
+import { SellPropertyPage } from './components/forms/SellPropertyPage';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 
-type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
+type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -49,6 +50,7 @@ const routeMap: Record<string, PageType> = {
   '/': 'home',
   '/properties': 'propertiesPage',
   '/properties/rent': 'rentPage',
+  '/properties/sell': 'sellPropertyPage',
   '/properties/flats': 'flatsPage',
   '/properties/villas': 'villasPage',
   '/properties/houses': 'housesPage',
@@ -425,6 +427,9 @@ export const App: React.FC = () => {
             else if (cat === 'BuyLand') navigateTo('landPage');
           }}
         />
+
+      ) : currentPage === 'sellPropertyPage' ? (
+        <SellPropertyPage onBack={navigateBack} />
 
       ) : currentPage === 'franchisePage' ? (
         siteSettingsDb.showFranchiseSection === false ? (

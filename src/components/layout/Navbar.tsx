@@ -190,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
     if (onNavigateToPage) {
       if (itemId === 'properties') {
         if (subName === 'Buy Property' || subLink === 'buyProperty') onNavigateToPage('propertiesPage');
-        else if (subName === 'Sell Property' || subLink === 'sellProperty') onNavigateToPage('contactUsPage');
+        else if (subName === 'Sell Property' || subLink === 'sellProperty') onNavigateToPage('sellPropertyPage');
         else if (subName === 'Rent Property' || subLink === 'rentProperty') onNavigateToPage('rentPage');
       } else if (itemId === 'franchise') {
         if (subName === 'New Franchise') onNavigateToPage('newFranchise');
