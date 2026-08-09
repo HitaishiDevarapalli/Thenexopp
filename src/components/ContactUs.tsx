@@ -203,8 +203,22 @@ export const ContactUs: React.FC = () => {
 
         </div>
 
+        <style>{`
+          .contact-two-col-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 36px;
+            align-items: start;
+          }
+          @media (max-width: 900px) {
+            .contact-two-col-grid {
+              grid-template-columns: 1fr;
+            }
+          }
+        `}</style>
+
         {/* 2-Column Main Section: Consultation Form + Map */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '36px', alignItems: 'start' }}>
+        <div className="contact-two-col-grid">
           
           {/* Consultation Form Card */}
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '40px 36px', border: '1px solid #E2E8F0', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.04)' }}>
