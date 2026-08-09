@@ -897,6 +897,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             border: '1px solid #E2E8F0',
             marginBottom: '32px',
           }}
+        >
           {/* Active Context Tab Badge - Only keeps active tab (Buy / Rent) */}
           <div
             style={{

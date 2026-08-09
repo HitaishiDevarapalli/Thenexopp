@@ -304,6 +304,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
             border: '1px solid #E2E8F0',
             marginBottom: '32px',
           }}
+        >
           {/* Active Context Tab Badge - Keeps only Buy Business */}
           <div
             style={{
