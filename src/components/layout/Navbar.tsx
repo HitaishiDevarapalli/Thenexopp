@@ -93,9 +93,8 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       { name: 'Existing Franchise', link: '#franchise', subIcon: <FaBriefcase /> },
     ]},
     { id: 'business', label: 'Business', icon: <FaBriefcase />, dropdown: [
-      { name: 'Food', link: 'Food', subIcon: <FaUtensils /> },
-      { name: 'Healthcare', link: 'Healthcare', subIcon: <FaMedkit /> },
-      { name: 'Retail & Stores', link: 'Retail & Stores', subIcon: <FaStore /> },
+      { name: 'Buy Business', link: 'buyBusiness', subIcon: <FaShoppingBag /> },
+      { name: 'Sell Business', link: 'sellBusiness', subIcon: <FaHandHoldingUsd /> },
     ]},
     { id: 'finance', label: 'Finance', icon: <FaCoins />, dropdown: [
       { name: 'Loans', link: '#finance', subIcon: <FaHandHoldingUsd /> },
@@ -178,7 +177,11 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
     e.preventDefault();
 
     if (itemId === 'business') {
-      if (onNavigateBusiness) {
+      if (subLink === 'buyBusiness') {
+        if (onNavigateToPage) onNavigateToPage('businessPage');
+      } else if (subLink === 'sellBusiness') {
+        if (onNavigateToPage) onNavigateToPage('sellBusinessPage');
+      } else if (onNavigateBusiness) {
         onNavigateBusiness(subLink as any);
       }
       return;

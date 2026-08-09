@@ -25,9 +25,10 @@ import { FaArrowLeft } from 'react-icons/fa';
 import { siteSettingsDb, updateSiteSettings } from './db/marketplaceDb';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/forms/LoginModal';
+import { SellBusinessPage } from './components/forms/SellBusinessPage';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 
-type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
+type PageType = 'home' | 'propertiesPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -55,6 +56,7 @@ const routeMap: Record<string, PageType> = {
   '/franchise/existing': 'franchiseResales',
   '/franchise/new': 'newFranchise',
   '/business': 'businessPage',
+  '/business/sell': 'sellBusinessPage',
   '/finance': 'financePage',
   '/finance/loans': 'loansPage',
   '/finance/advisory': 'financeServicePage',
@@ -459,6 +461,9 @@ export const App: React.FC = () => {
             navigateTo('propertyDetails', { propertyId: id });
           }}
         />
+
+      ) : currentPage === 'sellBusinessPage' ? (
+        <SellBusinessPage onBack={navigateBack} />
 
       ) : currentPage === 'aboutUsPage' ? (
         <>

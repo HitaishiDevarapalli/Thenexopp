@@ -55,11 +55,10 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   }, []);
 
   // Top Search Card State
-  const [activeTab, setActiveTab] = useState<'All' | 'Food' | 'Healthcare' | 'Retail' | 'Manufacturing'>('All');
-  const [locationText, setLocationText] = useState('Hyderabad & Andhra Pradesh');
-  const [industry, setIndustry] = useState('All Industries');
-  const [valuation, setValuation] = useState('₹ 20L - 10Cr+');
-  const [revenue, setRevenue] = useState('Any Revenue');
+  const [activeTab, setActiveTab] = useState<string>('All');
+  const [locationText, setLocationText] = useState('All Locations');
+  const [industry, setIndustry] = useState('All Categories');
+  const [valuation, setValuation] = useState('Any Price');
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -83,10 +82,14 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [valOpen, setValOpen] = useState(true);
   const [indOpen, setIndOpen] = useState(true);
   const [profOpen, setProfOpen] = useState(true);
-  const [ageOpen, setAgeOpen] = useState(false);
+  const [locOpen, setLocOpen] = useState(true);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const [selectedInds, setSelectedInds] = useState<string[]>([]);
   const [selectedProfs, setSelectedProfs] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
 
   // Right Results State
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
@@ -118,50 +121,88 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const clearAllFilters = () => {
     setSelectedInds([]);
     setSelectedProfs([]);
+    setSelectedLocations([]);
+    setMinPrice('');
+    setMaxPrice('');
     setActiveQuickFilter(null);
-    setIndustry('All Industries');
-    setValuation('₹ 20L - 10Cr+');
-    setRevenue('Any Revenue');
+    setIndustry('All Categories');
+    setValuation('Any Price');
+    setActiveTab('All');
+    setSortBy('Newest First');
   };
 
   const businessesList = useMemo(() => {
-    const list = businessDb.map((b) => ({
+    const list = businessDb
+      .filter((b: any) => b.published !== false)
+      .map((b) => ({
       id: b.id,
       title: b.name || 'Business For Sale',
-      industry: b.industry || 'Food & Dining',
+      industry: b.industry || b.category || 'Retail',
+      category: b.category || b.industry || 'Retail',
+      businessType: b.businessType || 'Private Limited',
       badge: b.verified ? 'Verified Seller' : (b.trending ? 'Profitable Now' : 'Great Deal'),
       badgeType: b.verified ? 'verified' : (b.trending ? 'profit' : 'deal'),
+      featured: (b as any).featured || false,
+      status: (b as any).status || 'Available',
       image: b.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
       valuation: b.priceDisplay || (`₹ ${b.price || 50} Lac`),
+      price: b.price || 0,
       revenue: b.revenueMonthly || b.revenue || '₹ 10 L / month',
       margin: b.profitMonthly || '20% Net Profit',
       employees: b.employeesCount ? `${b.employeesCount} Staff` : '10 Staff',
       location: `${b.city || ''}${b.state ? ', ' + b.state : ''}`,
-      brokerName: 'Karan Sharma',
+      brokerName: 'NexOpp Advisor',
       brokerRating: b.rating ? `${b.rating} (${b.reviewCount || 10})` : '4.9 (24)',
       brokerImg: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       latitude: b.latitude,
       longitude: b.longitude,
       city: b.city,
       locality: b.location,
+      createdAt: (b as any).createdAt || '',
     }));
 
-    return list.filter((item) => {
-      if (activeTab !== 'All') {
-        if (activeTab === 'Food' && item.industry !== 'Food & Dining') return false;
-        if (activeTab === 'Healthcare' && item.industry !== 'Healthcare') return false;
-        if (activeTab === 'Retail' && item.industry !== 'Retail & Stores') return false;
-        if (activeTab === 'Manufacturing' && item.industry !== 'Manufacturing & Industrial') return false;
+    let filtered = list.filter((item) => {
+      // Category filter
+      if (activeTab !== 'All' && item.category !== activeTab) return false;
+      if (selectedInds.length > 0 && !selectedInds.includes(item.category)) return false;
+      
+      // Location filter
+      if (selectedLocations.length > 0) {
+        const primaryCities = ['Guntur', 'Vijayawada', 'Hyderabad'];
+        const hasOther = selectedLocations.includes('Other Locations');
+        const matchesPrimary = selectedLocations.some(loc => loc !== 'Other Locations' && item.city?.toLowerCase().includes(loc.toLowerCase()));
+        const matchesOther = hasOther && !primaryCities.some(c => item.city?.toLowerCase().includes(c.toLowerCase()));
+        if (!matchesPrimary && !matchesOther) return false;
       }
-      if (selectedInds.length > 0 && !selectedInds.includes(item.industry)) return false;
+
+      // Business type filter
+      if (selectedProfs.length > 0 && !selectedProfs.includes(item.businessType)) return false;
+      
+      // Investment range filter
+      if (minPrice && item.price < parseFloat(minPrice)) return false;
+      if (maxPrice && item.price > parseFloat(maxPrice)) return false;
+
+      // Quick filters
       if (activeQuickFilter) {
         if (activeQuickFilter === 'Verified Sellers' && item.badgeType !== 'verified') return false;
         if (activeQuickFilter === 'Profitable Now' && item.badgeType !== 'profit') return false;
-        if (activeQuickFilter === 'Distress Sale / Great Deal' && item.badgeType !== 'deal') return false;
+        if (activeQuickFilter === 'Featured' && !item.featured) return false;
       }
       return true;
     });
-  }, [businessDb, activeTab, selectedInds, activeQuickFilter]);
+
+    // Sort
+    if (sortBy === 'Price: Low to High') {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'Price: High to Low') {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'Featured') {
+      filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+    }
+    // 'Newest First' is default order from API
+
+    return filtered;
+  }, [businessDb, activeTab, selectedInds, selectedLocations, selectedProfs, minPrice, maxPrice, activeQuickFilter, sortBy]);
 
   const totalPages = Math.ceil(businessesList.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -170,12 +211,18 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     return businessesList.slice(start, start + itemsPerPage);
   }, [businessesList, validPage, itemsPerPage]);
 
+  const activeCategories = masterCategoriesDb.filter(c => c.is_active !== false);
+  
   const tabs = [
-    { id: 'All' as const, label: 'All Businesses', icon: FaBriefcase },
-    { id: 'Food' as const, label: 'Food & Dining', icon: FaUtensils },
-    { id: 'Healthcare' as const, label: 'Healthcare & Clinics', icon: FaMedkit },
-    { id: 'Retail' as const, label: 'Retail & Stores', icon: FaShoppingBag },
-    { id: 'Manufacturing' as const, label: 'Manufacturing & Industrial', icon: FaIndustry },
+    { id: 'All', label: 'All Businesses', icon: FaBriefcase },
+    ...activeCategories.slice(0, 5).map(cat => ({
+      id: cat.name,
+      label: cat.name,
+      icon: cat.name.includes('Restaurant') ? FaUtensils :
+            cat.name.includes('Healthcare') ? FaMedkit :
+            cat.name.includes('Retail') ? FaShoppingBag :
+            cat.name.includes('Manufacturing') ? FaIndustry : FaBriefcase,
+    })),
   ];
 
   return (
@@ -304,23 +351,29 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
           <div className="top-search-filter-bar-5">
 
 
-            {/* Industry Dropdown */}
+            {/* Category Dropdown */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
-                Industry
+                Category
               </label>
               <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <select
                   value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setIndustry(val);
+                    if (val === 'All Categories') {
+                      setSelectedInds([]);
+                    } else {
+                      setSelectedInds([val]);
+                    }
+                  }}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', width: '100%' }}
                 >
-                  <option value="All Industries">All Industries</option>
-                  <option value="Food & Dining">Food & Dining</option>
-                  <option value="Healthcare">Healthcare</option>
-                  <option value="Retail & Stores">Retail & Stores</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Manufacturing & Industrial">Manufacturing & Industrial</option>
+                  <option value="All Categories">All Categories</option>
+                  {activeCategories.map((c) => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
                 </select>
               </div>
             </div>

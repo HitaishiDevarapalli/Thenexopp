@@ -101,6 +101,7 @@ import { BrokerManagementSystem } from '../components/BrokerManagementSystem';
 import { Logo } from '../components/common/Logo';
 import { PropertyManagementSystem } from '../components/PropertyManagementSystem';
 import { FranchiseManagementSystem } from '../components/FranchiseManagementSystem';
+import { BusinessManagementSystem } from '../components/BusinessManagementSystem';
 import { AiAssistantAdminPanel } from '../components/AiAssistantAdminPanel';
 import type {
   PropertyListing,
@@ -177,14 +178,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       { id: 'reports', label: 'Reports & Export', icon: <FaFileAlt /> },
     ],
     businesses: [
+      { id: 'dashboard', label: 'Dashboard', icon: <FaChartBar /> },
       { id: 'listings', label: 'All Businesses', icon: <FaListAlt /> },
-      { id: 'editProperty', label: 'Edit Business', icon: <FaEdit /> },
+      { id: 'addBusiness', label: 'Add Business', icon: <FaPlus /> },
+      { id: 'sellRequests', label: 'Sell Requests', icon: <FaFileAlt /> },
+      { id: 'buyEnquiries', label: 'Buy Enquiries', icon: <FaEnvelope /> },
+      { id: 'categories', label: 'Categories', icon: <FaFolder /> },
+      { id: 'businessTypes', label: 'Business Types', icon: <FaBriefcase /> },
       { id: 'featured', label: 'Featured & Premium', icon: <FaStar /> },
-      { id: 'analytics', label: 'Analytics & Stats', icon: <FaChartBar /> },
-      { id: 'categories', label: 'Categories & Industries', icon: <FaFolder /> },
-      { id: 'locations', label: 'Location Intelligence', icon: <FaMapMarkerAlt /> },
-      { id: 'soldOut', label: 'Sold Out Businesses', icon: <FaCheckCircle /> },
-      { id: 'reports', label: 'Reports & Export', icon: <FaFileAlt /> },
     ],
     brokers: [
       { id: 'directory', label: 'Broker Directory', icon: <FaListAlt /> },
@@ -2782,7 +2783,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
         {/* ================= CATEGORY 4.2: BUSINESS MANAGEMENT ================= */}
         {activeTab === 'businesses' && (
-          <FranchiseManagementSystem showNotification={showNotification} activeSubTab={businessSubTab} onSubTabChange={setBusinessSubTab} mode="business" />
+          <BusinessManagementSystem showNotification={showNotification} activeSubTab={businessSubTab} onSubTabChange={setBusinessSubTab} />
         )}
 
         {/* ================= CATEGORY 4.3: DEMAND REGIONS ================= */}

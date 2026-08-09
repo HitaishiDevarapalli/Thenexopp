@@ -129,6 +129,10 @@ model Property {
   category      String
   status        String         @default("Buy")
   listingStatus PropertyStatus @default(PUBLISHED)
+  published     Boolean        @default(true)
+  featured      Boolean        @default(false)
+  ownershipType String         @default("Individual")
+  propertyType  String         @default("Residential")
   areaSqFt      String
   bedrooms      Int            @default(0)
   bathrooms     Int            @default(0)
@@ -195,20 +199,50 @@ model Favorite {
 }
 
 model Enquiry {
-  id           String   @id @default(uuid())
-  customerName String
-  phone        String
-  email        String
-  listingTitle String
-  brokerName   String   @default("NEXOPP Advisor")
-  status       String   @default("New")
-  priority     String   @default("Medium")
-  source       String   @default("Direct Portal")
-  date         String?
-  createdAt    DateTime @default(now())
+  id                  String   @id @default(uuid())
+  customerName        String
+  phone               String
+  email               String
+  listingTitle        String
+  brokerName          String   @default("NEXOPP Advisor")
+  status              String   @default("New")
+  priority            String   @default("Medium")
+  source              String   @default("Direct Portal")
+  enquiryType         String   @default("BUY")
+  preferredMoveInDate String?
+  date                String?
+  createdAt           DateTime @default(now())
 
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id])
+  userId              String?
+  user                User?    @relation(fields: [userId], references: [id])
+}
+
+model SellRequest {
+  id           String   @id @default(uuid())
+  sellerName   String
+  mobile       String
+  email        String?
+  city         String
+  propertyType String
+  message      String?
+  status       String   @default("PENDING_REVIEW")
+  adminNotes   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SellBusinessRequest {
+  id                     String   @id @default(uuid())
+  name                   String
+  mobile                 String
+  email                  String?
+  city                   String
+  businessCategory       String
+  preferredContactMethod String   @default("Phone Call")
+  status                 String   @default("PENDING_REVIEW")
+  adminNotes             String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
 
 model AuthToken {
@@ -267,6 +301,8 @@ model Business {
   id              String   @id @default(uuid())
   name            String
   industry        String
+  category        String   @default("Retail")
+  businessType    String   @default("Private Limited")
   location        String
   state           String
   city            String
@@ -281,11 +317,15 @@ model Business {
   rating          Float    @default(4.7)
   reviewCount     Int      @default(0)
   verified        Boolean  @default(true)
+  published       Boolean  @default(true)
+  featured        Boolean  @default(false)
+  status          String   @default("Available")
   image           String
   description     String
   reasonForSale   String
   trustScore      Int      @default(95)
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt @default(now())
 }
 
 model ShowcaseVideo {

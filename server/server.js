@@ -761,7 +761,34 @@ app.delete('/api/franchises/:id', async (req, res, next) => {
 
 app.get('/api/businesses', async (req, res) => {
   try {
-    const businesses = await prisma.business.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    const { published, location, category, businessType, minPrice, maxPrice, sort, search, featured } = req.query;
+    
+    const where = {};
+    if (published === 'true') where.published = true;
+    if (location) where.location = { contains: String(location), mode: 'insensitive' };
+    if (category) where.category = String(category);
+    if (businessType) where.businessType = String(businessType);
+    if (featured === 'true') where.featured = true;
+    if (search) {
+      where.OR = [
+        { name: { contains: String(search), mode: 'insensitive' } },
+        { description: { contains: String(search), mode: 'insensitive' } },
+        { industry: { contains: String(search), mode: 'insensitive' } }
+      ];
+    }
+    
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = Number(minPrice);
+      if (maxPrice) where.price.lte = Number(maxPrice);
+    }
+
+    let orderBy = { createdAt: 'desc' };
+    if (sort === 'price_asc') orderBy = { price: 'asc' };
+    else if (sort === 'price_desc') orderBy = { price: 'desc' };
+    else if (sort === 'rating_desc') orderBy = { rating: 'desc' };
+
+    const businesses = await prisma.business.findMany({ where, orderBy }).catch(() => []);
     return res.json(businesses || []);
   } catch (err) {
     return res.json([]);
@@ -776,6 +803,8 @@ app.post('/api/businesses', async (req, res, next) => {
         id: b.id || `biz-pg-${Date.now()}`,
         name: b.name || 'Business Listing',
         industry: b.industry || 'General',
+        category: b.category || 'Other',
+        businessType: b.businessType || 'Retail',
         location: b.location || 'Guntur',
         state: b.state || 'Andhra Pradesh',
         city: b.city || 'Guntur',
@@ -794,6 +823,9 @@ app.post('/api/businesses', async (req, res, next) => {
         description: b.description || '',
         reasonForSale: b.reasonForSale || 'Retirement',
         trustScore: Number(b.trustScore) || 95,
+        published: b.published === true || b.published === 'true',
+        featured: b.featured === true || b.featured === 'true',
+        status: b.status || 'ACTIVE',
       },
     });
     return res.status(201).json(created);
@@ -809,13 +841,26 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     const updateData = {};
     if (b.name !== undefined) updateData.name = b.name;
     if (b.industry !== undefined) updateData.industry = b.industry;
+    if (b.category !== undefined) updateData.category = b.category;
+    if (b.businessType !== undefined) updateData.businessType = b.businessType;
     if (b.location !== undefined) updateData.location = b.location;
+    if (b.city !== undefined) updateData.city = b.city;
+    if (b.state !== undefined) updateData.state = b.state;
     if (b.price !== undefined) updateData.price = Number(b.price);
     if (b.priceDisplay !== undefined) updateData.priceDisplay = b.priceDisplay;
     if (b.revenueMonthly !== undefined) updateData.revenueMonthly = b.revenueMonthly;
     if (b.profitMonthly !== undefined) updateData.profitMonthly = b.profitMonthly;
+    if (b.establishedYear !== undefined) updateData.establishedYear = Number(b.establishedYear);
+    if (b.employeesCount !== undefined) updateData.employeesCount = Number(b.employeesCount);
     if (b.image !== undefined) updateData.image = b.image;
     if (b.description !== undefined) updateData.description = b.description;
+    if (b.reasonForSale !== undefined) updateData.reasonForSale = b.reasonForSale;
+    if (b.verified !== undefined) updateData.verified = b.verified === true || b.verified === 'true';
+    if (b.trustScore !== undefined) updateData.trustScore = Number(b.trustScore);
+    if (b.rating !== undefined) updateData.rating = Number(b.rating);
+    if (b.published !== undefined) updateData.published = b.published === true || b.published === 'true';
+    if (b.featured !== undefined) updateData.featured = b.featured === true || b.featured === 'true';
+    if (b.status !== undefined) updateData.status = b.status;
 
     const updated = await prisma.business.update({ where: { id }, data: updateData });
     return res.json(updated);
@@ -828,6 +873,136 @@ app.delete('/api/businesses/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     await prisma.business.deleteMany({ where: { id } });
+    return res.json({ success: true, id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── SELL BUSINESS REQUESTS ENDPOINTS ─────────────────────────────────────────
+app.get('/api/sell-business-requests', async (req, res) => {
+  try {
+    const requests = await prisma.sellBusinessRequest.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(requests || []);
+  } catch (err) {
+    return res.json([]);
+  }
+});
+
+app.post('/api/sell-business-requests', async (req, res, next) => {
+  try {
+    const r = req.body;
+    if (!r.name || !r.mobile) {
+      return res.status(400).json({ error: 'Name and mobile number are required' });
+    }
+    const created = await prisma.sellBusinessRequest.create({
+      data: {
+        id: r.id || `sbr-${Date.now()}`,
+        name: String(r.name),
+        mobile: String(r.mobile),
+        email: r.email || null,
+        city: String(r.city || ''),
+        businessCategory: String(r.businessCategory || 'Retail'),
+        preferredContactMethod: String(r.preferredContactMethod || 'Phone Call'),
+        status: 'PENDING_REVIEW',
+        adminNotes: null,
+      },
+    });
+    return res.status(201).json(created);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/sell-business-requests/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const r = req.body;
+    const updateData = {};
+    if (r.status !== undefined) updateData.status = String(r.status);
+    if (r.adminNotes !== undefined) updateData.adminNotes = String(r.adminNotes);
+    if (r.name !== undefined) updateData.name = String(r.name);
+    if (r.mobile !== undefined) updateData.mobile = String(r.mobile);
+    if (r.email !== undefined) updateData.email = r.email;
+    if (r.city !== undefined) updateData.city = String(r.city);
+    if (r.businessCategory !== undefined) updateData.businessCategory = String(r.businessCategory);
+    if (r.preferredContactMethod !== undefined) updateData.preferredContactMethod = String(r.preferredContactMethod);
+    const updated = await prisma.sellBusinessRequest.update({ where: { id }, data: updateData });
+    return res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/sell-business-requests/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.sellBusinessRequest.deleteMany({ where: { id } });
+    return res.json({ success: true, id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── SELL PROPERTY REQUESTS ENDPOINTS ─────────────────────────────────────────
+app.get('/api/sell-requests', async (req, res) => {
+  try {
+    const requests = await prisma.sellRequest.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    return res.json(requests || []);
+  } catch (err) {
+    return res.json([]);
+  }
+});
+
+app.post('/api/sell-requests', async (req, res, next) => {
+  try {
+    const r = req.body;
+    if (!r.sellerName || !r.mobile) {
+      return res.status(400).json({ error: 'Seller name and mobile number are required' });
+    }
+    const created = await prisma.sellRequest.create({
+      data: {
+        id: r.id || `sr-${Date.now()}`,
+        sellerName: String(r.sellerName),
+        mobile: String(r.mobile),
+        email: r.email || null,
+        city: String(r.city || ''),
+        propertyType: String(r.propertyType || 'Residential'),
+        message: r.message || null,
+        status: 'PENDING_REVIEW',
+        adminNotes: null,
+      },
+    });
+    return res.status(201).json(created);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/sell-requests/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const r = req.body;
+    const updateData = {};
+    if (r.status !== undefined) updateData.status = String(r.status);
+    if (r.adminNotes !== undefined) updateData.adminNotes = String(r.adminNotes);
+    if (r.sellerName !== undefined) updateData.sellerName = String(r.sellerName);
+    if (r.mobile !== undefined) updateData.mobile = String(r.mobile);
+    if (r.email !== undefined) updateData.email = r.email;
+    if (r.city !== undefined) updateData.city = String(r.city);
+    if (r.propertyType !== undefined) updateData.propertyType = String(r.propertyType);
+    if (r.message !== undefined) updateData.message = r.message;
+    const updated = await prisma.sellRequest.update({ where: { id }, data: updateData });
+    return res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/sell-requests/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.sellRequest.deleteMany({ where: { id } });
     return res.json({ success: true, id });
   } catch (err) {
     next(err);

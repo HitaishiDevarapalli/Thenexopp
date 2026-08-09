@@ -375,6 +375,12 @@ export interface BusinessListing {
   trustScore: number;
   revenue?: string;
   sellerProfile?: string;
+  category?: string;
+  businessType?: string;
+  published?: boolean;
+  featured?: boolean;
+  status?: string;  // 'Available' | 'Sold' | 'Unavailable' | 'Under_Review'
+  updatedAt?: string;
 }
 
 export interface InsuranceProvider {
@@ -692,7 +698,7 @@ export const persistAllToStorage = () => {
 };
 
 // PostgreSQL Data Sync Loader & LocalStorage Fallback Persistence
-const loadData = () => {
+const loadData = async () => {
   try {
     // 1. Restore from permanent local storage immediately on startup
     propertiesDb = loadFromStorage('nexopp_properties_db', []);
@@ -826,6 +832,15 @@ const loadData = () => {
         }
       })
       .catch(err => console.error('API Sync Error:', err));
+
+    // Fetch sell business requests
+    try {
+      const sbrRes = await fetch(`${API_BASE_URL}/api/sell-business-requests`);
+      if (sbrRes.ok) {
+        const sbrData = await sbrRes.json();
+        if (Array.isArray(sbrData)) sellBusinessRequestsDb = sbrData;
+      }
+    } catch (e) { console.warn('Could not fetch sell business requests'); }
 
   } catch (err) {
     console.error("Error initializing marketplace data:", err);
@@ -1450,16 +1465,16 @@ export interface FilterMasterItem {
 }
 
 const defaultMasterCategories: FilterMasterItem[] = [
-  { id: 'cat_1', name: 'Retail & Stores', is_active: true, type: 'category' },
-  { id: 'cat_2', name: 'Manufacturing & Industrial', is_active: true, type: 'category' },
+  { id: 'cat_1', name: 'Retail', is_active: true, type: 'category' },
+  { id: 'cat_2', name: 'Manufacturing', is_active: true, type: 'category' },
   { id: 'cat_3', name: 'Restaurants & Cafés', is_active: true, type: 'category' },
   { id: 'cat_4', name: 'Hotels & Resorts', is_active: true, type: 'category' },
-  { id: 'cat_5', name: 'Healthcare & Clinics', is_active: true, type: 'category' },
-  { id: 'cat_6', name: 'Education & Training', is_active: true, type: 'category' },
+  { id: 'cat_5', name: 'Healthcare', is_active: true, type: 'category' },
+  { id: 'cat_6', name: 'Education', is_active: true, type: 'category' },
   { id: 'cat_7', name: 'IT & Technology', is_active: true, type: 'category' },
-  { id: 'cat_8', name: 'Services & Consulting', is_active: true, type: 'category' },
+  { id: 'cat_8', name: 'Services', is_active: true, type: 'category' },
   { id: 'cat_9', name: 'Wholesale & Distribution', is_active: true, type: 'category' },
-  { id: 'cat_10', name: 'Agriculture & Organic', is_active: true, type: 'category' },
+  { id: 'cat_10', name: 'Agriculture', is_active: true, type: 'category' },
 ];
 
 const defaultMasterLocations: FilterMasterItem[] = [
@@ -1607,3 +1622,84 @@ export const editFilterMasterItem = (id: string, type: 'category' | 'location' |
   }
 };
 
+// ── SELL BUSINESS REQUESTS ─────────────────────────────────────────────────
+export interface SellBusinessRequest {
+  id: string;
+  name: string;
+  mobile: string;
+  email?: string;
+  city: string;
+  businessCategory: string;
+  preferredContactMethod: string;
+  status: string;
+  adminNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export let sellBusinessRequestsDb: SellBusinessRequest[] = [];
+
+export const addSellBusinessRequest = (item: SellBusinessRequest) => {
+  sellBusinessRequestsDb = [item, ...sellBusinessRequestsDb];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/sell-business-requests`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item)
+  }).catch(err => console.error('API Sync Error:', err));
+};
+
+export const updateSellBusinessRequest = (id: string, updated: Partial<SellBusinessRequest>) => {
+  sellBusinessRequestsDb = sellBusinessRequestsDb.map(r => r.id === id ? { ...r, ...updated } : r);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/sell-business-requests/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(err => console.error('API Sync Error:', err));
+};
+
+export const deleteSellBusinessRequest = (id: string) => {
+  sellBusinessRequestsDb = sellBusinessRequestsDb.filter(r => r.id !== id);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/sell-business-requests/${id}`, {
+    method: 'DELETE'
+  }).catch(err => console.error('API Sync Error:', err));
+};
+
+// ── BUSINESS ENQUIRIES ─────────────────────────────────────────────────────
+export interface BusinessEnquiry {
+  id: string;
+  businessId: string;
+  businessName: string;
+  name: string;
+  mobile: string;
+  email: string;
+  message: string;
+  status: string;
+  adminNotes?: string;
+  createdAt?: string;
+}
+
+export let businessEnquiriesDb: BusinessEnquiry[] = [];
+
+export const addBusinessEnquiry = (item: BusinessEnquiry) => {
+  businessEnquiriesDb = [item, ...businessEnquiriesDb];
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/enquiries`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: item.id,
+      customerName: item.name,
+      phone: item.mobile,
+      email: item.email,
+      listingTitle: item.businessName,
+      status: 'New',
+      priority: 'Medium',
+      source: 'Business Portal',
+      enquiryType: 'BUY_BUSINESS',
+      date: new Date().toLocaleDateString(),
+    })
+  }).catch(err => console.error('API Sync Error:', err));
+};
