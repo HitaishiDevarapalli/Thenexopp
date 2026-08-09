@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance } from '../db/marketplaceDb';
+import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -414,18 +414,48 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   // Right Results State
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
-  const [sortBy, setSortBy] = useState('Relevance');
+  const [sortBy, setSortBy] = useState('Newest First');
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const [wishlisted, setWishlisted] = useState<Record<string, boolean>>({});
   const [demandFilter, setDemandFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
+  // 6 Specified Property Filter States (Location, Property Type, Price, Status, Ownership, Sort By)
+  const [selectedLocationsFilter, setSelectedLocationsFilter] = useState<string[]>([]);
+  const [selectedPropertyTypesFilter, setSelectedPropertyTypesFilter] = useState<string[]>([]);
+  const [selectedPropertyStatusesFilter, setSelectedPropertyStatusesFilter] = useState<string[]>([]);
+  const [selectedPropertyOwnershipsFilter, setSelectedPropertyOwnershipsFilter] = useState<string[]>([]);
+
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     globalToggleWishlist(id);
+  };
+
+  const toggleLocationFilter = (val: string) => {
+    setSelectedLocationsFilter((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
+    );
+  };
+
+  const togglePropertyTypeFilter = (val: string) => {
+    setSelectedPropertyTypesFilter((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
+    );
+  };
+
+  const togglePropertyStatusFilter = (val: string) => {
+    setSelectedPropertyStatusesFilter((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
+    );
+  };
+
+  const togglePropertyOwnershipFilter = (val: string) => {
+    setSelectedPropertyOwnershipsFilter((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
+    );
   };
 
   const toggleBhk = (val: string) => {
@@ -437,7 +467,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const toggleType = (val: string) => {
     setSelectedTypes((prev) => {
       const next = prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val];
-      // Sync the top dropdown with sidebar checkboxes
       if (next.length === 1) {
         setPropertyType(next[0]);
       } else {
@@ -454,6 +483,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   };
 
   const clearAllFilters = () => {
+    setSelectedLocationsFilter([]);
+    setSelectedPropertyTypesFilter([]);
+    setSelectedPropertyStatusesFilter([]);
+    setSelectedPropertyOwnershipsFilter([]);
     setSelectedBhks([]);
     setSelectedTypes([]);
     setSelectedMoreFilters([]);
@@ -463,6 +496,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setPropertyType('All Types');
     setBudget(isRent ? '₹ 1K - 10L+' : '₹ 1K - 1Cr+');
     setBhkFilter('Any BHK');
+    setSortBy('Newest First');
     if (onClearSearch) onClearSearch();
   };
 
@@ -679,42 +713,108 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (activeQuickFilter === 'Top Brokers' && parseFloat(item.brokerRating) < 4.5) return false;
       }
 
+      // SPECIFIED FILTER 1: Location (Guntur, Vijayawada, Hyderabad, Other Locations)
+      if (selectedLocationsFilter.length > 0) {
+        const itemCity = (item.city || '').toLowerCase();
+        const itemLoc = (item.location || '').toLowerCase();
+        const matchLoc = selectedLocationsFilter.some((loc) => {
+          const normLoc = loc.toLowerCase();
+          if (normLoc === 'other locations') {
+            return !itemCity.includes('guntur') && !itemCity.includes('vijayawada') && !itemCity.includes('hyderabad');
+          }
+          return itemCity.includes(normLoc) || itemLoc.includes(normLoc);
+        });
+        if (!matchLoc) return false;
+      }
+
+      // SPECIFIED FILTER 2: Property Type (Residential, Commercial, Agricultural, Luxury Properties, New Projects)
+      if (selectedPropertyTypesFilter.length > 0) {
+        const itemType = (item.type || '').toLowerCase();
+        const itemTitle = (item.title || '').toLowerCase();
+        const matchPropType = selectedPropertyTypesFilter.some((pt) => {
+          const norm = pt.toLowerCase();
+          if (norm === 'residential') return itemType.includes('apartment') || itemType.includes('villa') || itemType.includes('house') || itemType.includes('flat') || itemTitle.includes('residential') || itemTitle.includes('apartment') || itemTitle.includes('villa');
+          if (norm === 'commercial') return itemType.includes('commercial') || itemType.includes('office') || itemType.includes('shop') || itemType.includes('showroom') || itemTitle.includes('commercial');
+          if (norm === 'agricultural') return itemType.includes('agricultural') || itemType.includes('land') || itemType.includes('farm') || itemType.includes('plot') || itemTitle.includes('farm') || itemTitle.includes('land');
+          if (norm === 'luxury properties') return itemType.includes('luxury') || itemType.includes('villa') || itemTitle.includes('luxury') || (item as any).badgeType === 'premium';
+          if (norm === 'new projects') return itemType.includes('project') || itemTitle.includes('project') || (item as any).badgeType === 'new' || (item as any).trending;
+          return itemType.includes(norm);
+        });
+        if (!matchPropType) return false;
+      }
+
+      // SPECIFIED FILTER 4: Property Status (Ready to Move, Under Construction, New Property, Resale Property)
+      if (selectedPropertyStatusesFilter.length > 0) {
+        const matchStatus = selectedPropertyStatusesFilter.some((ps) => {
+          const norm = ps.toLowerCase();
+          if (norm === 'ready to move') return (item as any).availabilityCount > 0 || (item as any).badgeType === 'verified';
+          if (norm === 'under construction') return (item as any).badgeType === 'new';
+          if (norm === 'new property') return (item as any).badgeType === 'new' || (item as any).trending;
+          if (norm === 'resale property') return !(item as any).trending;
+          return true;
+        });
+        if (!matchStatus) return false;
+      }
+
+      // SPECIFIED FILTER 5: Property Ownership (Individual, Company / Developer, Builder, Agent)
+      if (selectedPropertyOwnershipsFilter.length > 0) {
+        const matchOwner = selectedPropertyOwnershipsFilter.some((po) => {
+          const norm = po.toLowerCase();
+          const bName = (item.brokerName || '').toLowerCase();
+          if (norm === 'individual') return bName.includes('owner') || bName.includes('individual') || !bName;
+          if (norm === 'company / developer' || norm.includes('developer')) return bName.includes('developer') || bName.includes('realty') || bName.includes('pvts');
+          if (norm === 'builder') return bName.includes('builder') || bName.includes('constructions');
+          if (norm === 'agent') return bName.includes('advisors') || bName.includes('broker') || bName.includes('agent');
+          return true;
+        });
+        if (!matchOwner) return false;
+      }
+
+      // 6. Budget Slider Min / Max
+      if (item.rawPrice < minBudget || item.rawPrice > maxBudget) {
+        return false;
+      }
+
+      // 7. More Filters (AND logic)
+      if (selectedMoreFilters.length > 0) {
+        if (selectedMoreFilters.includes('Verified Only') && item.badgeType !== 'verified') return false;
+        if (selectedMoreFilters.includes('Ready to Move') && item.availabilityCount === 0) return false;
+        if (selectedMoreFilters.includes('Parking Available') && parseInt(item.parking) === 0) return false;
+      }
+
+      // 8. Quick Filters (AND logic)
+      if (activeQuickFilter) {
+        if (activeQuickFilter === 'Verified Properties' && item.badgeType !== 'verified') return false;
+        if (activeQuickFilter === 'Ready to Move' && item.availabilityCount === 0) return false;
+        if (activeQuickFilter === 'New Launch' && item.badgeType !== 'new') return false;
+        if (activeQuickFilter === 'Premium' && item.badgeType !== 'premium') return false;
+        if (activeQuickFilter === 'Top Brokers' && parseFloat(item.brokerRating) < 4.5) return false;
+      }
+
       return true;
     });
 
-    // Sorting (Default: Available properties listed first, followed by sold properties)
+    // SPECIFIED FILTER 6: Sorting (Newest First, Featured, Price: Low to High, Price: High to Low)
     filtered.sort((a, b) => {
       if ((a as any).exactLocationMatch && !(b as any).exactLocationMatch) return -1;
       if (!(a as any).exactLocationMatch && (b as any).exactLocationMatch) return 1;
 
-      if (sortBy === 'Relevance' || !sortBy) {
-        if (!a.sold && b.sold) return -1;
-        if (a.sold && !b.sold) return 1;
-        
-        if (!(a as any).exactLocationMatch && !(b as any).exactLocationMatch) {
-            return ((a as any).distanceKm || 0) - ((b as any).distanceKm || 0);
-        }
-        return 0;
-      } else if (sortBy === 'Price: Low to High') {
+      if (sortBy === 'Price: Low to High') {
         return a.rawPrice - b.rawPrice;
       } else if (sortBy === 'Price: High to Low') {
         return b.rawPrice - a.rawPrice;
-      } else if (sortBy === 'Newest First' || sortBy === 'Newest') {
+      } else if (sortBy === 'Featured') {
+        if (a.badgeType === 'premium' && b.badgeType !== 'premium') return -1;
+        if (a.badgeType !== 'premium' && b.badgeType === 'premium') return 1;
+        return b.viewsCount - a.viewsCount;
+      } else if (sortBy === 'Newest First' || sortBy === 'Newest' || !sortBy || sortBy === 'Relevance') {
         return b.id.localeCompare(a.id);
-      } else if (sortBy === 'Oldest') {
-        return a.id.localeCompare(b.id);
-      } else if (sortBy === 'Recently Sold') {
-        if (a.sold && !b.sold) return -1;
-        if (!a.sold && b.sold) return 1;
-        const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
-        const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
-        return dateB - dateA;
       }
       return 0;
     });
 
     return filtered;
-  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
+  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedLocationsFilter, selectedPropertyTypesFilter, selectedPropertyStatusesFilter, selectedPropertyOwnershipsFilter, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
 
   const totalPages = Math.ceil(displayProperties.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -1165,6 +1265,98 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* 1. Location Filter Section */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                ■ Location
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {masterLocationsDb.filter(l => l.is_active).map((loc) => {
+                  const isSelected = selectedLocationsFilter.includes(loc.name);
+                  return (
+                    <label key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleLocationFilter(loc.name)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{loc.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Property Type Filter Section */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                ■ Property Type
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {masterPropertyTypesDb.filter(pt => pt.is_active).map((pt) => {
+                  const isSelected = selectedPropertyTypesFilter.includes(pt.name);
+                  return (
+                    <label key={pt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => togglePropertyTypeFilter(pt.name)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{pt.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4. Property Status Filter Section */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                ■ Property Status
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {masterPropertyStatusesDb.filter(ps => ps.is_active).map((ps) => {
+                  const isSelected = selectedPropertyStatusesFilter.includes(ps.name);
+                  return (
+                    <label key={ps.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => togglePropertyStatusFilter(ps.name)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{ps.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 5. Property Ownership Filter Section */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                ■ Property Ownership
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {masterPropertyOwnershipsDb.filter(po => po.is_active).map((po) => {
+                  const isSelected = selectedPropertyOwnershipsFilter.includes(po.name);
+                  return (
+                    <label key={po.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => togglePropertyOwnershipFilter(po.name)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{po.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* RIGHT RESULTS AREA */}
@@ -1255,12 +1447,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     onChange={(e) => setSortBy(e.target.value)}
                     style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', fontWeight: 800, color: '#0F172A', cursor: 'pointer' }}
                   >
-                    <option value="Relevance">Relevance</option>
-                    <option value="Newest First">Newest</option>
-                    <option value="Oldest">Oldest</option>
-                    <option value="Price: Low to High">Price Low to High</option>
-                    <option value="Price: High to Low">Price High to Low</option>
-                    <option value="Recently Sold">Recently Sold</option>
+                    <option value="Newest First">Newest First</option>
+                    <option value="Featured">Featured</option>
+                    <option value="Price: Low to High">Price: Low to High</option>
+                    <option value="Price: High to Low">Price: High to Low</option>
                   </select>
                 </div>
               </div>

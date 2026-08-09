@@ -1466,11 +1466,29 @@ const defaultMasterLocations: FilterMasterItem[] = [
   { id: 'loc_1', name: 'Guntur', is_active: true, type: 'location' },
   { id: 'loc_2', name: 'Vijayawada', is_active: true, type: 'location' },
   { id: 'loc_3', name: 'Hyderabad', is_active: true, type: 'location' },
-  { id: 'loc_4', name: 'Visakhapatnam', is_active: true, type: 'location' },
-  { id: 'loc_5', name: 'Bengaluru', is_active: true, type: 'location' },
-  { id: 'loc_6', name: 'Chennai', is_active: true, type: 'location' },
-  { id: 'loc_7', name: 'Mumbai', is_active: true, type: 'location' },
-  { id: 'loc_8', name: 'Delhi NCR', is_active: true, type: 'location' },
+  { id: 'loc_4', name: 'Other Locations', is_active: true, type: 'location' },
+];
+
+const defaultMasterPropertyTypes: FilterMasterItem[] = [
+  { id: 'pt_1', name: 'Residential', is_active: true, type: 'category' },
+  { id: 'pt_2', name: 'Commercial', is_active: true, type: 'category' },
+  { id: 'pt_3', name: 'Agricultural', is_active: true, type: 'category' },
+  { id: 'pt_4', name: 'Luxury Properties', is_active: true, type: 'category' },
+  { id: 'pt_5', name: 'New Projects', is_active: true, type: 'category' },
+];
+
+const defaultMasterPropertyStatuses: FilterMasterItem[] = [
+  { id: 'ps_1', name: 'Ready to Move', is_active: true, type: 'category' },
+  { id: 'ps_2', name: 'Under Construction', is_active: true, type: 'category' },
+  { id: 'ps_3', name: 'New Property', is_active: true, type: 'category' },
+  { id: 'ps_4', name: 'Resale Property', is_active: true, type: 'category' },
+];
+
+const defaultMasterPropertyOwnerships: FilterMasterItem[] = [
+  { id: 'po_1', name: 'Individual', is_active: true, type: 'category' },
+  { id: 'po_2', name: 'Company / Developer', is_active: true, type: 'category' },
+  { id: 'po_3', name: 'Builder', is_active: true, type: 'category' },
+  { id: 'po_4', name: 'Agent', is_active: true, type: 'category' },
 ];
 
 const defaultMasterBusinessTypes: FilterMasterItem[] = [
@@ -1491,21 +1509,25 @@ const loadFilterMasterItems = (key: string, defaults: FilterMasterItem[]): Filte
 
 export let masterCategoriesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_categories', defaultMasterCategories);
 export let masterLocationsDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_locations', defaultMasterLocations);
+export let masterPropertyTypesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_property_types', defaultMasterPropertyTypes);
+export let masterPropertyStatusesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_property_statuses', defaultMasterPropertyStatuses);
+export let masterPropertyOwnershipsDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_property_ownerships', defaultMasterPropertyOwnerships);
 export let masterBusinessTypesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_business_types', defaultMasterBusinessTypes);
 
 const saveFilterMasterItems = (key: string, items: FilterMasterItem[]) => {
   try {
+    localStorage.getItem(key);
     localStorage.setItem(key, JSON.stringify(items));
   } catch (e) {}
   notifyDataChanged();
 };
 
-export const addFilterMasterItem = (type: 'category' | 'location' | 'business_type', name: string) => {
+export const addFilterMasterItem = (type: 'category' | 'location' | 'business_type' | 'property_type' | 'property_status' | 'property_ownership', name: string) => {
   const newItem: FilterMasterItem = {
     id: `${type}_${Date.now()}`,
     name,
     is_active: true,
-    type,
+    type: type as any,
   };
   if (type === 'category') {
     masterCategoriesDb = [...masterCategoriesDb, newItem];
@@ -1513,32 +1535,59 @@ export const addFilterMasterItem = (type: 'category' | 'location' | 'business_ty
   } else if (type === 'location') {
     masterLocationsDb = [...masterLocationsDb, newItem];
     saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'property_type') {
+    masterPropertyTypesDb = [...masterPropertyTypesDb, newItem];
+    saveFilterMasterItems('nexopp_master_property_types', masterPropertyTypesDb);
+  } else if (type === 'property_status') {
+    masterPropertyStatusesDb = [...masterPropertyStatusesDb, newItem];
+    saveFilterMasterItems('nexopp_master_property_statuses', masterPropertyStatusesDb);
+  } else if (type === 'property_ownership') {
+    masterPropertyOwnershipsDb = [...masterPropertyOwnershipsDb, newItem];
+    saveFilterMasterItems('nexopp_master_property_ownerships', masterPropertyOwnershipsDb);
   } else if (type === 'business_type') {
     masterBusinessTypesDb = [...masterBusinessTypesDb, newItem];
     saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
   }
 };
 
-export const toggleFilterMasterItemActive = (id: string, type: 'category' | 'location' | 'business_type') => {
+export const toggleFilterMasterItemActive = (id: string, type: 'category' | 'location' | 'business_type' | 'property_type' | 'property_status' | 'property_ownership') => {
   if (type === 'category') {
     masterCategoriesDb = masterCategoriesDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
     saveFilterMasterItems('nexopp_master_categories', masterCategoriesDb);
   } else if (type === 'location') {
     masterLocationsDb = masterLocationsDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
     saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'property_type') {
+    masterPropertyTypesDb = masterPropertyTypesDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
+    saveFilterMasterItems('nexopp_master_property_types', masterPropertyTypesDb);
+  } else if (type === 'property_status') {
+    masterPropertyStatusesDb = masterPropertyStatusesDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
+    saveFilterMasterItems('nexopp_master_property_statuses', masterPropertyStatusesDb);
+  } else if (type === 'property_ownership') {
+    masterPropertyOwnershipsDb = masterPropertyOwnershipsDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
+    saveFilterMasterItems('nexopp_master_property_ownerships', masterPropertyOwnershipsDb);
   } else if (type === 'business_type') {
     masterBusinessTypesDb = masterBusinessTypesDb.map(i => i.id === id ? { ...i, is_active: !i.is_active } : i);
     saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
   }
 };
 
-export const deleteFilterMasterItem = (id: string, type: 'category' | 'location' | 'business_type') => {
+export const deleteFilterMasterItem = (id: string, type: 'category' | 'location' | 'business_type' | 'property_type' | 'property_status' | 'property_ownership') => {
   if (type === 'category') {
     masterCategoriesDb = masterCategoriesDb.filter(i => i.id !== id);
     saveFilterMasterItems('nexopp_master_categories', masterCategoriesDb);
   } else if (type === 'location') {
     masterLocationsDb = masterLocationsDb.filter(i => i.id !== id);
     saveFilterMasterItems('nexopp_master_locations', masterLocationsDb);
+  } else if (type === 'property_type') {
+    masterPropertyTypesDb = masterPropertyTypesDb.filter(i => i.id !== id);
+    saveFilterMasterItems('nexopp_master_property_types', masterPropertyTypesDb);
+  } else if (type === 'property_status') {
+    masterPropertyStatusesDb = masterPropertyStatusesDb.filter(i => i.id !== id);
+    saveFilterMasterItems('nexopp_master_property_statuses', masterPropertyStatusesDb);
+  } else if (type === 'property_ownership') {
+    masterPropertyOwnershipsDb = masterPropertyOwnershipsDb.filter(i => i.id !== id);
+    saveFilterMasterItems('nexopp_master_property_ownerships', masterPropertyOwnershipsDb);
   } else if (type === 'business_type') {
     masterBusinessTypesDb = masterBusinessTypesDb.filter(i => i.id !== id);
     saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);

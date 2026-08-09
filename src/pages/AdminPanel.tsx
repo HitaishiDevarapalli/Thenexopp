@@ -82,6 +82,9 @@ import {
   updateShowcaseSettings,
   masterCategoriesDb,
   masterLocationsDb,
+  masterPropertyTypesDb,
+  masterPropertyStatusesDb,
+  masterPropertyOwnershipsDb,
   masterBusinessTypesDb,
   addFilterMasterItem,
   toggleFilterMasterItemActive,
@@ -137,6 +140,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newCatInput, setNewCatInput] = useState('');
   const [newLocInput, setNewLocInput] = useState('');
   const [newBtInput, setNewBtInput] = useState('');
+  const [newPropTypeInput, setNewPropTypeInput] = useState('');
+  const [newPropStatusInput, setNewPropStatusInput] = useState('');
+  const [newPropOwnershipInput, setNewPropOwnershipInput] = useState('');
 
   // Main Category Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
@@ -3293,6 +3299,246 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             fontSize: '13px',
                           }}
                           title="Delete Business Type"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD 4: Property Types */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Property Types</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterPropertyTypesDb.filter(c => c.is_active).length} Active / {masterPropertyTypesDb.length} Total
+                  </span>
+                </div>
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newPropTypeInput.trim()) return;
+                    addFilterMasterItem('property_type', newPropTypeInput.trim());
+                    setNewPropTypeInput('');
+                    showNotification('Property type added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Add property type (e.g. Residential)..."
+                    value={newPropTypeInput}
+                    onChange={(e) => setNewPropTypeInput(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterPropertyTypesDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                      }}
+                    >
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                        🏢 {item.name}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleFilterMasterItemActive(item.id, 'property_type');
+                            showNotification(`Property type "${item.name}" updated`, 'info');
+                          }}
+                          style={{ backgroundColor: item.is_active ? '#10B981' : '#CBD5E1', color: '#FFFFFF', border: 'none', padding: '5px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete property type "${item.name}"?`)) {
+                              deleteFilterMasterItem(item.id, 'property_type');
+                              showNotification(`Property type deleted`, 'warning');
+                            }
+                          }}
+                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', padding: '6px', cursor: 'pointer', fontSize: '13px' }}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD 5: Property Statuses */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Property Statuses</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterPropertyStatusesDb.filter(c => c.is_active).length} Active / {masterPropertyStatusesDb.length} Total
+                  </span>
+                </div>
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newPropStatusInput.trim()) return;
+                    addFilterMasterItem('property_status', newPropStatusInput.trim());
+                    setNewPropStatusInput('');
+                    showNotification('Property status added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Add status (e.g. Ready to Move)..."
+                    value={newPropStatusInput}
+                    onChange={(e) => setNewPropStatusInput(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterPropertyStatusesDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                      }}
+                    >
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                        🔑 {item.name}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleFilterMasterItemActive(item.id, 'property_status');
+                            showNotification(`Property status "${item.name}" updated`, 'info');
+                          }}
+                          style={{ backgroundColor: item.is_active ? '#10B981' : '#CBD5E1', color: '#FFFFFF', border: 'none', padding: '5px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete property status "${item.name}"?`)) {
+                              deleteFilterMasterItem(item.id, 'property_status');
+                              showNotification(`Property status deleted`, 'warning');
+                            }
+                          }}
+                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', padding: '6px', cursor: 'pointer', fontSize: '13px' }}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD 6: Property Ownerships */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Property Ownership</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterPropertyOwnershipsDb.filter(c => c.is_active).length} Active / {masterPropertyOwnershipsDb.length} Total
+                  </span>
+                </div>
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newPropOwnershipInput.trim()) return;
+                    addFilterMasterItem('property_ownership', newPropOwnershipInput.trim());
+                    setNewPropOwnershipInput('');
+                    showNotification('Property ownership added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Add ownership (e.g. Individual)..."
+                    value={newPropOwnershipInput}
+                    onChange={(e) => setNewPropOwnershipInput(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterPropertyOwnershipsDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                      }}
+                    >
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                        👤 {item.name}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleFilterMasterItemActive(item.id, 'property_ownership');
+                            showNotification(`Property ownership "${item.name}" updated`, 'info');
+                          }}
+                          style={{ backgroundColor: item.is_active ? '#10B981' : '#CBD5E1', color: '#FFFFFF', border: 'none', padding: '5px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete property ownership "${item.name}"?`)) {
+                              deleteFilterMasterItem(item.id, 'property_ownership');
+                              showNotification(`Property ownership deleted`, 'warning');
+                            }
+                          }}
+                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', padding: '6px', cursor: 'pointer', fontSize: '13px' }}
                         >
                           <FaTrash />
                         </button>
