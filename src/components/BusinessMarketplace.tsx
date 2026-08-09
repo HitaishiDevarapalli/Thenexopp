@@ -59,6 +59,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [locationText, setLocationText] = useState('All Locations');
   const [industry, setIndustry] = useState('All Categories');
   const [valuation, setValuation] = useState('Any Price');
+  const [revenue, setRevenue] = useState('Any Revenue');
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
@@ -83,6 +84,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [indOpen, setIndOpen] = useState(true);
   const [profOpen, setProfOpen] = useState(true);
   const [locOpen, setLocOpen] = useState(true);
+  const [ageOpen, setAgeOpen] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const [selectedInds, setSelectedInds] = useState<string[]>([]);

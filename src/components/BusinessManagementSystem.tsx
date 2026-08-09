@@ -155,7 +155,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
               {filteredBusinesses.map(b => (
                 <tr key={b.id} className="border-b hover:bg-gray-50 transition-colors">
                   <td className="p-4">
-                    <img src={b.imageUrl || 'https://via.placeholder.com/50'} alt={b.title} className="w-12 h-12 rounded object-cover" />
+                    <img src={b.imageUrl || b.image || 'https://via.placeholder.com/50'} alt={b.title} className="w-12 h-12 rounded object-cover" />
                   </td>
                   <td className="p-4">
                     <p className="font-semibold text-gray-800">{b.title}</p>
@@ -166,7 +166,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                     <p className="text-xs text-gray-500">{b.businessType}</p>
                   </td>
                   <td className="p-4 text-gray-600">{b.city}</td>
-                  <td className="p-4 font-medium text-gray-800">{b.priceDisplay || `₹${b.askingPrice}`}</td>
+                  <td className="p-4 font-medium text-gray-800">{b.priceDisplay || (b.askingPrice !== undefined ? `₹${b.askingPrice}` : `₹${b.price}`)}</td>
                   <td className="p-4 text-center">
                     <select 
                       className="border rounded px-2 py-1 text-sm outline-none"
@@ -362,8 +362,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
         {categories.map(c => (
           <div key={c.id} className="flex justify-between items-center border-b p-3">
             <span className="font-medium">{c.name}</span>
-            <span className={`px-2 py-1 rounded text-xs ${c.active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {c.active !== false ? 'Active' : 'Inactive'}
+            <span className={`px-2 py-1 rounded text-xs ${(c.is_active ?? c.active) !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {(c.is_active ?? c.active) !== false ? 'Active' : 'Inactive'}
             </span>
           </div>
         ))}
@@ -378,8 +378,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
         {businessTypes.map(t => (
           <div key={t.id} className="flex justify-between items-center border-b p-3">
             <span className="font-medium">{t.name}</span>
-            <span className={`px-2 py-1 rounded text-xs ${t.active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {t.active !== false ? 'Active' : 'Inactive'}
+            <span className={`px-2 py-1 rounded text-xs ${(t.is_active ?? t.active) !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {(t.is_active ?? t.active) !== false ? 'Active' : 'Inactive'}
             </span>
           </div>
         ))}
@@ -393,7 +393,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {businesses.filter(b => b.featured).map(b => (
           <div key={b.id} className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <img src={b.imageUrl || 'https://via.placeholder.com/300x200'} alt={b.title} className="w-full h-40 object-cover" />
+            <img src={b.imageUrl || b.image || 'https://via.placeholder.com/300x200'} alt={b.title} className="w-full h-40 object-cover" />
             <div className="p-4">
               <h3 className="font-bold text-lg">{b.title}</h3>
               <p className="text-gray-500 text-sm mb-2">{b.category}</p>

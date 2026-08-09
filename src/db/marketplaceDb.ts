@@ -360,16 +360,18 @@ export interface BusinessListing {
   latitude: number;
   longitude: number;
   price: number;
+  askingPrice?: number;
   priceDisplay: string;
   revenueMonthly: string;
   profitMonthly: string;
   establishedYear: number;
-  employeesCount: number;
+  employeesCount: number | string;
   rating: number;
   reviewCount: number;
   verified: boolean;
   trending: boolean;
   image: string;
+  imageUrl?: string;
   description: string;
   reasonForSale: string;
   trustScore: number;
@@ -1460,6 +1462,7 @@ export interface FilterMasterItem {
   id: string;
   name: string;
   is_active: boolean;
+  active?: boolean;
   type: 'category' | 'location' | 'business_type';
   displayOrder?: number;
 }
@@ -1621,6 +1624,8 @@ export const editFilterMasterItem = (id: string, type: 'category' | 'location' |
     saveFilterMasterItems('nexopp_master_business_types', masterBusinessTypesDb);
   }
 };
+
+export const updateFilterMasterItem = editFilterMasterItem;
 
 // ── SELL BUSINESS REQUESTS ─────────────────────────────────────────────────
 export interface SellBusinessRequest {
