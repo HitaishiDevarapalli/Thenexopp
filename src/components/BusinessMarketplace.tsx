@@ -86,6 +86,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [locOpen, setLocOpen] = useState(true);
   const [ageOpen, setAgeOpen] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [showSidebarFilters, setShowSidebarFilters] = useState(false);
 
   const [selectedInds, setSelectedInds] = useState<string[]>([]);
   const [selectedProfs, setSelectedProfs] = useState<string[]>([]);
@@ -434,7 +435,9 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
             {/* Search Button */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '22px' }}>
               <button
-                onClick={() => alert('Searching Businesses...')}
+                onClick={() => {
+                  setShowSidebarFilters(true);
+                }}
                 style={{
                   backgroundColor: '#16A34A',
                   color: '#FFFFFF',
@@ -462,10 +465,11 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
           </div>
         </div>
 
-        {/* MAIN 2-COLUMN GRID AREA */}
-        <div className="layout-sidebar-main">
+        {/* MAIN GRID AREA */}
+        <div className="layout-sidebar-main" style={{ gridTemplateColumns: showSidebarFilters ? undefined : '1fr' }}>
           
-          {/* LEFT SIDEBAR: "Filter By" Card */}
+          {/* LEFT SIDEBAR: "Filter By" Card (Only appears when user clicks Search) */}
+          {showSidebarFilters && (
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '22px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '14px' }}>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Filter By</h3>
@@ -556,9 +560,9 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                     </label>
                   ))}
                 </div>
-              )}
             </div>
           </div>
+          )}
 
           {/* RIGHT RESULTS AREA */}
           <div>
