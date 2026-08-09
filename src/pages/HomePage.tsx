@@ -878,11 +878,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             </button>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-          }}>
+          <div className="responsive-property-grid" style={{ gap: '24px' }}>
             {combinedTopRated.map((item) => (
               <div
                 key={item.id}
