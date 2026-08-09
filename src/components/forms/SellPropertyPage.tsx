@@ -11,6 +11,7 @@ import {
   FaShieldAlt,
   FaHandshake,
   FaFileAlt,
+  FaBuilding,
 } from 'react-icons/fa';
 
 interface SellPropertyPageProps {
@@ -19,7 +20,7 @@ interface SellPropertyPageProps {
 
 export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    sellerName: '',
     mobile: '',
     email: '',
     city: '',
@@ -32,7 +33,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.sellerName.trim()) newErrors.sellerName = 'Name is required';
     if (!formData.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required';
     } else if (!/^[6-9]\d{9}$/.test(formData.mobile.trim())) {
@@ -53,6 +54,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
     setIsSubmitting(true);
     const request = {
       id: `spr-${Date.now()}`,
+      name: formData.sellerName,
       ...formData,
       status: 'PENDING_REVIEW',
       createdAt: new Date().toISOString(),
@@ -80,6 +82,12 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
   };
 
   const activePropertyTypes = masterPropertyTypesDb.filter((pt) => pt.is_active !== false);
+  const activeCities = [
+    { id: 'c1', name: 'Hyderabad' },
+    { id: 'c2', name: 'Vijayawada' },
+    { id: 'c3', name: 'Guntur' },
+    { id: 'c4', name: 'Visakhapatnam' },
+  ];
 
   const contactMethods = ['Phone Call', 'WhatsApp', 'Email'];
 
@@ -90,70 +98,6 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
     { icon: <FaShieldAlt />, title: 'Document Verification & Approval', desc: 'Rigorous document verification and listing preparation' },
     { icon: <FaHandshake />, title: 'Publish Listing', desc: 'Your property goes live on NexOpp marketplace' },
   ];
-
-  if (submitted) {
-    return (
-      <section
-        style={{
-          backgroundColor: '#F8FAFC',
-          paddingTop: '120px',
-          paddingBottom: '80px',
-          minHeight: '100vh',
-          fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif",
-        }}
-      >
-        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '24px',
-              padding: '60px 40px',
-              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.06)',
-              border: '1px solid #E2E8F0',
-            }}
-          >
-            <div
-              style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #DCFCE7, #BBF7D0)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 24px auto',
-              }}
-            >
-              <FaCheckCircle style={{ fontSize: '36px', color: '#16A34A' }} />
-            </div>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
-              Thank You!
-            </h2>
-            <p style={{ fontSize: '1.05rem', color: '#64748B', lineHeight: 1.7, maxWidth: '420px', margin: '0 auto 32px auto' }}>
-              The NexOpp property team will contact you shortly to collect property details, verify documents, and prepare your listing.
-            </p>
-            <button
-              onClick={onBack}
-              style={{
-                backgroundColor: '#1E40AF',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '14px 32px',
-                fontSize: '15px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(30, 64, 175, 0.3)',
-                transition: 'all 0.2s',
-              }}
-            >
-              Back to Marketplace
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section
@@ -168,7 +112,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px' }}>
         
         {/* Header Section */}
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div
             style={{
               display: 'inline-flex',
@@ -210,402 +154,555 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
           </p>
         </div>
 
-        {/* How It Works Card */}
+        {/* Contact Information Form Card (POSITIONED AT TOP) */}
         <div
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '24px',
-            padding: '36px 40px',
-            marginBottom: '40px',
+            padding: '40px',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.05)',
             border: '1px solid #E2E8F0',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
           }}
         >
-          <h2
+          {submitted ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div
+                style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  backgroundColor: '#D1FAE5',
+                  color: '#059669',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '28px',
+                  margin: '0 auto 20px auto',
+                }}
+              >
+                <FaCheckCircle />
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                Sell Request Submitted!
+              </h3>
+              <p style={{ fontSize: '1rem', color: '#475569', maxWidth: '500px', margin: '0 auto 24px auto' }}>
+                Thank you <strong>{formData.sellerName}</strong>. TheNexOpp Team will call you back within 24 hours to collect property details, verify documents, and publish your listing!
+              </p>
+              <button
+                onClick={() => setSubmitted(false)}
+                style={{
+                  backgroundColor: '#1E40AF',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '12px 28px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Submit Another Request
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '28px', borderBottom: '1px solid #F1F5F9', paddingBottom: '16px' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  Property Sell Contact Information
+                </h3>
+                <p style={{ fontSize: '0.88rem', color: '#64748B', marginTop: '4px' }}>
+                  Fill in your details below. TheNexOpp team will contact you to collect property specs & document verification.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '24px',
+                  marginBottom: '28px',
+                }}
+              >
+                {/* Full Name */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <FaUser style={{ color: '#1E40AF' }} /> Seller Name <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={formData.sellerName}
+                    onChange={(e) => handleChange('sellerName', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: errors.sellerName ? '2px solid #EF4444' : '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      transition: 'border 0.2s',
+                    }}
+                  />
+                  {errors.sellerName && (
+                    <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {errors.sellerName}
+                    </span>
+                  )}
+                </div>
+
+                {/* Mobile */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <FaPhone style={{ color: '#1E40AF' }} /> Mobile Number <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="Enter 10-digit mobile number"
+                    value={formData.mobile}
+                    onChange={(e) => handleChange('mobile', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: errors.mobile ? '2px solid #EF4444' : '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      transition: 'border 0.2s',
+                    }}
+                  />
+                  {errors.mobile && (
+                    <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {errors.mobile}
+                    </span>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <FaEnvelope style={{ color: '#1E40AF' }} /> Email Address <span style={{ color: '#94A3B8', fontWeight: 400 }}>(Optional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    value={formData.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      transition: 'border 0.2s',
+                    }}
+                  />
+                </div>
+
+                {/* City */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <FaMapMarkerAlt style={{ color: '#1E40AF' }} /> City / Location <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <select
+                    value={formData.city}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: errors.city ? '2px solid #EF4444' : '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      cursor: 'pointer',
+                      backgroundColor: '#FFFFFF',
+                      transition: 'border 0.2s',
+                    }}
+                  >
+                    <option value="">Select City</option>
+                    {activeCities.map((city) => (
+                      <option key={city.id} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.city && (
+                    <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {errors.city}
+                    </span>
+                  )}
+                </div>
+
+                {/* Property Type */}
+                <div>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <FaBuilding style={{ color: '#1E40AF' }} /> Property Type <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <select
+                    value={formData.propertyType}
+                    onChange={(e) => handleChange('propertyType', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: errors.propertyType ? '2px solid #EF4444' : '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      cursor: 'pointer',
+                      backgroundColor: '#FFFFFF',
+                      transition: 'border 0.2s',
+                    }}
+                  >
+                    <option value="">Select Property Type</option>
+                    {activePropertyTypes.map((type) => (
+                      <option key={type.id} value={type.name}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.propertyType && (
+                    <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                      {errors.propertyType}
+                    </span>
+                  )}
+                </div>
+
+                {/* Preferred Contact Method */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Preferred Contact Method
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    {contactMethods.map((method) => {
+                      const isSelected = formData.preferredContactMethod === method;
+                      return (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => {
+                            handleChange('preferredContactMethod', method);
+                            if (method === 'WhatsApp') {
+                              const msg = encodeURIComponent(`Hello TheNexOpp Team, I am interested in listing/selling my property.`);
+                              window.open(`https://wa.me/919989087654?text=${msg}`, '_blank');
+                            } else if (method === 'Email') {
+                              window.location.href = `mailto:contact@thenexopp.com?subject=${encodeURIComponent('Sell Property Enquiry - TheNexOpp')}`;
+                            } else if (method === 'Phone Call') {
+                              window.location.href = `tel:+919989087654`;
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '12px 8px',
+                            borderRadius: '12px',
+                            border: isSelected ? '2px solid #1E40AF' : '1px solid #CBD5E1',
+                            backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+                            color: isSelected ? '#1E40AF' : '#475569',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          {method}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    backgroundColor: '#1E40AF',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '14px',
+                    padding: '16px 48px',
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 16px rgba(30, 64, 175, 0.3)',
+                    transition: 'all 0.2s',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}
+                >
+                  <FaPaperPlane />
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit / Contact TheNexOpp'}</span>
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* 3D Modern Flowchart — How It Works (POSITIONED BELOW CONTACT INFORMATION) */}
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '28px',
+            padding: '44px 40px',
+            marginTop: '48px',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px rgba(0,0,0,0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Ambient Glow */}
+          <div
             style={{
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              color: '#0F172A',
-              marginBottom: '28px',
-              textAlign: 'left',
+              position: 'absolute',
+              top: '-40px',
+              right: '-40px',
+              width: '240px',
+              height: '240px',
+              background: 'radial-gradient(circle, rgba(30, 64, 175, 0.08) 0%, rgba(255,255,255,0) 70%)',
+              pointerEvents: 'none',
             }}
-          >
-            How It Works
-          </h2>
+          />
+
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                color: '#1E40AF',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                backgroundColor: '#EFF6FF',
+                padding: '6px 16px',
+                borderRadius: '999px',
+                display: 'inline-block',
+                marginBottom: '10px',
+              }}
+            >
+              Step-By-Step Flowchart
+            </span>
+            <h2
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                letterSpacing: '-0.02em',
+                margin: 0,
+              }}
+            >
+              How Listing Your Property Works
+            </h2>
+          </div>
+
+          {/* 3D Flowchart Grid with Connecting Arrows */}
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '20px',
               position: 'relative',
+              alignItems: 'stretch',
             }}
           >
             {steps.map((step, idx) => (
               <div
                 key={idx}
                 style={{
-                  textAlign: 'center',
-                  padding: '16px 12px',
                   position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                 }}
               >
+                {/* 3D Modern Box */}
                 <div
                   style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '16px',
-                    backgroundColor: idx === 0 ? '#1E40AF' : '#2563EB',
-                    color: '#FFFFFF',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '20px',
+                    padding: '24px 16px',
+                    width: '100%',
+                    textAlign: 'center',
+                    border: '1px solid #E2E8F0',
+                    boxShadow: '0 12px 24px -6px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px auto',
-                    fontSize: '22px',
-                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-                  }}
-                >
-                  {step.icon}
-                </div>
-                <h4
-                  style={{
-                    fontSize: '0.92rem',
-                    fontWeight: 800,
-                    color: '#0F172A',
-                    marginBottom: '6px',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {step.title}
-                </h4>
-                <p
-                  style={{
-                    fontSize: '0.8rem',
-                    color: '#64748B',
-                    lineHeight: 1.4,
-                    margin: 0,
-                  }}
-                >
-                  {step.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Contact Information Form */}
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '24px',
-            padding: '40px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
-          }}
-        >
-          <div style={{ marginBottom: '28px' }}>
-            <h2
-              style={{
-                fontSize: '1.4rem',
-                fontWeight: 800,
-                color: '#0F172A',
-                marginBottom: '6px',
-              }}
-            >
-              Contact Information
-            </h2>
-            <p style={{ fontSize: '0.95rem', color: '#64748B', margin: 0 }}>
-              Share your details below and our property team will reach out to guide you through the selling process.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '24px',
-                marginBottom: '32px',
-              }}
-            >
-              {/* Name */}
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <FaUser style={{ color: '#1E40AF', marginRight: '6px' }} />
-                  Name <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: errors.name ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    backgroundColor: '#FFFFFF',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {errors.name && (
-                  <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {errors.name}
-                  </span>
-                )}
-              </div>
-
-              {/* Mobile Number */}
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <FaPhone style={{ color: '#1E40AF', marginRight: '6px' }} />
-                  Mobile Number <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="Enter 10-digit mobile number"
-                  value={formData.mobile}
-                  onChange={(e) => handleChange('mobile', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: errors.mobile ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    backgroundColor: '#FFFFFF',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {errors.mobile && (
-                  <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {errors.mobile}
-                  </span>
-                )}
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <FaEnvelope style={{ color: '#1E40AF', marginRight: '6px' }} />
-                  Email Address <span style={{ color: '#94A3B8', fontWeight: 500 }}>(Optional)</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: errors.email ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    backgroundColor: '#FFFFFF',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {errors.email && (
-                  <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {errors.email}
-                  </span>
-                )}
-              </div>
-
-              {/* City / Location */}
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <FaMapMarkerAlt style={{ color: '#1E40AF', marginRight: '6px' }} />
-                  City / Location <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Hyderabad, Guntur, Vijayawada"
-                  value={formData.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: errors.city ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    backgroundColor: '#FFFFFF',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {errors.city && (
-                  <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {errors.city}
-                  </span>
-                )}
-              </div>
-
-              {/* Property Type Dropdown */}
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '8px',
-                  }}
-                >
-                  <FaHome style={{ color: '#1E40AF', marginRight: '6px' }} />
-                  Property Type <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <select
-                  value={formData.propertyType}
-                  onChange={(e) => handleChange('propertyType', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '12px',
-                    border: errors.propertyType ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
-                    fontSize: '14px',
-                    outline: 'none',
-                    backgroundColor: '#FFFFFF',
+                    justifyContent: 'space-between',
+                    minHeight: '230px',
                     boxSizing: 'border-box',
                     cursor: 'pointer',
                   }}
-                >
-                  <option value="">Select Property Type</option>
-                  {activePropertyTypes.length > 0 ? (
-                    activePropertyTypes.map((pt) => (
-                      <option key={pt.id} value={pt.name}>
-                        {pt.name}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="Residential Apartment">Residential Apartment</option>
-                      <option value="Luxury Villa">Luxury Villa</option>
-                      <option value="Independent House">Independent House</option>
-                      <option value="Residential Land / Plot">Residential Land / Plot</option>
-                      <option value="Commercial Property">Commercial Property</option>
-                    </>
-                  )}
-                </select>
-                {errors.propertyType && (
-                  <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                    {errors.propertyType}
-                  </span>
-                )}
-              </div>
-
-              {/* Preferred Contact Method */}
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#0F172A',
-                    marginBottom: '8px',
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 20px 30px -10px rgba(30, 64, 175, 0.18), 0 0 0 2px #1E40AF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = '0 12px 24px -6px rgba(15, 23, 42, 0.06)';
                   }}
                 >
-                  Preferred Contact Method
-                </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  {contactMethods.map((method) => {
-                    const isSelected = formData.preferredContactMethod === method;
-                    return (
-                      <button
-                        key={method}
-                        type="button"
-                        onClick={() => {
-                          handleChange('preferredContactMethod', method);
-                          if (method === 'WhatsApp') {
-                            const msg = encodeURIComponent(`Hello TheNexOpp Team, I am interested in listing/selling my property.`);
-                            window.open(`https://wa.me/919989087654?text=${msg}`, '_blank');
-                          } else if (method === 'Email') {
-                            window.location.href = `mailto:contact@thenexopp.com?subject=${encodeURIComponent('Sell Property Enquiry - TheNexOpp')}`;
-                          } else if (method === 'Phone Call') {
-                            window.location.href = `tel:+919989087654`;
-                          }
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '12px 8px',
-                          borderRadius: '12px',
-                          border: isSelected ? '2px solid #1E40AF' : '1px solid #CBD5E1',
-                          backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
-                          color: isSelected ? '#1E40AF' : '#475569',
-                          fontWeight: isSelected ? 700 : 500,
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                      >
-                        {method}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+                  {/* Step Badge */}
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: '#1E40AF',
+                      backgroundColor: '#EFF6FF',
+                      padding: '3px 10px',
+                      borderRadius: '999px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    STEP 0{idx + 1}
+                  </div>
 
-            {/* Submit Button */}
-            <div style={{ textAlign: 'center' }}>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  backgroundColor: '#1E40AF',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '14px',
-                  padding: '16px 48px',
-                  fontSize: '16px',
-                  fontWeight: 800,
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 16px rgba(30, 64, 175, 0.3)',
-                  transition: 'all 0.2s',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <FaPaperPlane />
-                <span>{isSubmitting ? 'Submitting...' : 'Submit / Contact TheNexOpp'}</span>
-              </button>
-            </div>
-          </form>
+                  {/* 3D Floating Icon */}
+                  <div
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '18px',
+                      background: idx === 0 
+                        ? 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)' 
+                        : 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      marginBottom: '16px',
+                      boxShadow: '0 10px 20px -5px rgba(30, 64, 175, 0.4)',
+                    }}
+                  >
+                    {step.icon}
+                  </div>
+
+                  {/* Title & Desc */}
+                  <div>
+                    <h4
+                      style={{
+                        fontSize: '0.95rem',
+                        fontWeight: 800,
+                        color: '#0F172A',
+                        marginBottom: '8px',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {step.title}
+                    </h4>
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#64748B',
+                        lineHeight: 1.5,
+                        margin: 0,
+                      }}
+                    >
+                      {step.desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3D Flowchart Connecting Arrow */}
+                {idx < steps.length - 1 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      right: '-14px',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      border: '2px solid #3B82F6',
+                      boxShadow: '0 4px 10px rgba(37, 99, 235, 0.25)',
+                      color: '#1E40AF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 900,
+                    }}
+                  >
+                    ➔
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

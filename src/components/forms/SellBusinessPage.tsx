@@ -213,73 +213,6 @@ export const SellBusinessPage: React.FC<SellBusinessPageProps> = ({ onBack }) =>
           </div>
         </div>
 
-        {/* How It Works Steps */}
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '20px',
-            padding: '28px',
-            boxShadow: '0 6px 24px rgba(0,0,0,0.04)',
-            border: '1px solid #E2E8F0',
-            marginBottom: '32px',
-          }}
-        >
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginBottom: '20px' }}>
-            How It Works
-          </h3>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-            {steps.map((step, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: '1 1 160px',
-                  minWidth: '140px',
-                  textAlign: 'center',
-                  padding: '16px 12px',
-                  position: 'relative',
-                }}
-              >
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '14px',
-                    background: 'linear-gradient(135deg, #1E40AF, #3B82F6)',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    margin: '0 auto 12px auto',
-                    boxShadow: '0 4px 14px rgba(30, 64, 175, 0.25)',
-                  }}
-                >
-                  {step.icon}
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>
-                  {step.title}
-                </div>
-                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 500, lineHeight: 1.4 }}>
-                  {step.desc}
-                </div>
-                {i < steps.length - 1 && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '36px',
-                      right: '-10px',
-                      fontSize: '16px',
-                      color: '#CBD5E1',
-                      fontWeight: 800,
-                    }}
-                  >
-                    →
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Contact Form */}
         <div
@@ -585,6 +518,190 @@ export const SellBusinessPage: React.FC<SellBusinessPageProps> = ({ onBack }) =>
               </button>
             </div>
           </form>
+        </div>
+
+        {/* 3D Modern Flowchart — How It Works (Positioned BELOW Contact Information) */}
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '28px',
+            padding: '44px 40px',
+            marginTop: '48px',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px rgba(0,0,0,0.1)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 800,
+                color: '#1E40AF',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                backgroundColor: '#EFF6FF',
+                padding: '6px 16px',
+                borderRadius: '999px',
+                display: 'inline-block',
+                marginBottom: '10px',
+              }}
+            >
+              Step-By-Step Flowchart
+            </span>
+            <h2
+              style={{
+                fontSize: '1.75rem',
+                fontWeight: 800,
+                color: '#0F172A',
+                letterSpacing: '-0.02em',
+                margin: 0,
+              }}
+            >
+              How Listing Your Business Works
+            </h2>
+          </div>
+
+          {/* 3D Flowchart Grid with Connecting Arrows */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '20px',
+              position: 'relative',
+              alignItems: 'stretch',
+            }}
+          >
+            {steps.map((step, idx) => (
+              <div
+                key={idx}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}
+              >
+                {/* 3D Modern Box */}
+                <div
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '20px',
+                    padding: '24px 16px',
+                    width: '100%',
+                    textAlign: 'center',
+                    border: '1px solid #E2E8F0',
+                    boxShadow: '0 12px 24px -6px rgba(15, 23, 42, 0.06), 0 4px 6px -2px rgba(15, 23, 42, 0.03)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    minHeight: '230px',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 20px 30px -10px rgba(30, 64, 175, 0.18), 0 0 0 2px #1E40AF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = '0 12px 24px -6px rgba(15, 23, 42, 0.06)';
+                  }}
+                >
+                  {/* Step Badge */}
+                  <div
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: '#1E40AF',
+                      backgroundColor: '#EFF6FF',
+                      padding: '3px 10px',
+                      borderRadius: '999px',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    STEP 0{idx + 1}
+                  </div>
+
+                  {/* 3D Floating Icon */}
+                  <div
+                    style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '18px',
+                      background: idx === 0 
+                        ? 'linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)' 
+                        : 'linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      marginBottom: '16px',
+                      boxShadow: '0 10px 20px -5px rgba(30, 64, 175, 0.4)',
+                    }}
+                  >
+                    {step.icon}
+                  </div>
+
+                  {/* Title & Desc */}
+                  <div>
+                    <h4
+                      style={{
+                        fontSize: '0.95rem',
+                        fontWeight: 800,
+                        color: '#0F172A',
+                        marginBottom: '8px',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {step.title}
+                    </h4>
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#64748B',
+                        lineHeight: 1.5,
+                        margin: 0,
+                      }}
+                    >
+                      {step.desc}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3D Flowchart Connecting Arrow */}
+                {idx < steps.length - 1 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      right: '-14px',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      border: '2px solid #3B82F6',
+                      boxShadow: '0 4px 10px rgba(37, 99, 235, 0.25)',
+                      color: '#1E40AF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 900,
+                    }}
+                  >
+                    ➔
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
