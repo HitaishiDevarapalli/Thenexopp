@@ -897,10 +897,36 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             border: '1px solid #E2E8F0',
             marginBottom: '32px',
           }}
-        >
-
-
-          {/* Row of Filter Inputs */}
+          {/* Active Context Tab Badge - Only keeps active tab (Buy / Rent) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              borderBottom: '1px solid #F1F5F9',
+              paddingBottom: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            <button
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 22px',
+                borderRadius: '9999px',
+                border: 'none',
+                backgroundColor: '#DCFCE7',
+                color: '#16A34A',
+                fontWeight: 800,
+                fontSize: '14px',
+                cursor: 'default',
+              }}
+            >
+              <FaHome style={{ fontSize: '15px' }} />
+              <span>{activeTab === 'Rent' ? 'Rent' : 'Buy'}</span>
+            </button>
+          </div>
           <div className="top-search-filter-bar">
 
 

@@ -304,10 +304,36 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
             border: '1px solid #E2E8F0',
             marginBottom: '32px',
           }}
-        >
-
-
-          {/* Row of Filter Inputs */}
+          {/* Active Context Tab Badge - Keeps only Buy Business */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              borderBottom: '1px solid #F1F5F9',
+              paddingBottom: '16px',
+              marginBottom: '20px',
+            }}
+          >
+            <button
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 22px',
+                borderRadius: '9999px',
+                border: 'none',
+                backgroundColor: '#DCFCE7',
+                color: '#16A34A',
+                fontWeight: 800,
+                fontSize: '14px',
+                cursor: 'default',
+              }}
+            >
+              <FaBriefcase style={{ fontSize: '15px' }} />
+              <span>Buy Business</span>
+            </button>
+          </div>
           <div className="top-search-filter-bar-5">
 
 
