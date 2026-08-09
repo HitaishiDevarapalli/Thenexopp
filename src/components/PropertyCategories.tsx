@@ -66,6 +66,18 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
     if (currentGlobalCity) {
       setLocationText(currentGlobalCity);
+      const allLocs = [
+        'Kukatpally', 'Madhapur', 'Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Secunderabad',
+        'Benz Circle', 'Patamata', 'Labbipet', 'Governorpet', 'Kanuru',
+        'Brodipet', 'Arundelpet', 'Lakshmipuram', 'Koretipadu', 'Nagarampalem',
+        'Gajuwaka', 'MVP Colony', 'Madhurawada', 'Dwaraka Nagar', 'Seethammadhara'
+      ];
+      const matchingLoc = allLocs.find(l => currentGlobalCity.toLowerCase().includes(l.toLowerCase()));
+      if (matchingLoc) {
+        setSelectedLocality(matchingLoc);
+      } else {
+        setSelectedLocality('');
+      }
     }
   }, [location?.city, location?.displayName, selectedCity]);
 
@@ -1309,29 +1321,52 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             </div>
 
             {/* Area & Locality Section */}
-            {['Hyderabad', 'Vijayawada', 'Guntur', 'Visakhapatnam'].includes(selectedLocationsFilter[0] || locationText) && (
-              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                  ■ Area & Locality
+            {(() => {
+              const getParentCity = (loc: string) => {
+                const l = (loc || '').toLowerCase().trim();
+                if (!l) return '';
+                if (l.includes('hyderabad') || l.includes('kukatpally') || l.includes('madhapur') || l.includes('gachibowli') || l.includes('banjara') || l.includes('jubilee') || l.includes('secunderabad')) {
+                  return 'Hyderabad';
+                }
+                if (l.includes('vijayawada') || l.includes('benz circle') || l.includes('patamata') || l.includes('labbipet') || l.includes('governorpet') || l.includes('kanuru')) {
+                  return 'Vijayawada';
+                }
+                if (l.includes('guntur') || l.includes('brodipet') || l.includes('arundel') || l.includes('lakshmipuram') || l.includes('koretipadu') || l.includes('nagarampalem')) {
+                  return 'Guntur';
+                }
+                if (l.includes('visakhapatnam') || l.includes('vizag') || l.includes('gajuwaka') || l.includes('mvp') || l.includes('madhurawada') || l.includes('dwaraka') || l.includes('seethammadhara')) {
+                  return 'Visakhapatnam';
+                }
+                return '';
+              };
+
+              const activeCity = getParentCity(selectedLocationsFilter[0] || locationText || '');
+              if (!activeCity) return null;
+
+              return (
+                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                    ■ Area & Locality
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {cityLocalities[activeCity]?.map((loc) => {
+                      const isSelected = selectedLocality === loc;
+                      return (
+                        <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => setSelectedLocality(isSelected ? '' : loc)}
+                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                          />
+                          <span>{loc}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {cityLocalities[selectedLocationsFilter[0] || locationText]?.map((loc) => {
-                    const isSelected = selectedLocality === loc;
-                    return (
-                      <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => setSelectedLocality(isSelected ? '' : loc)}
-                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                        <span>{loc}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* 2. Property Type Filter Section */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
