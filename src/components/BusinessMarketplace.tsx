@@ -58,7 +58,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [activeTab, setActiveTab] = useState<string>('All');
   const [locationText, setLocationText] = useState('All Locations');
   const [industry, setIndustry] = useState('All Categories');
-  const [valuation, setValuation] = useState('Any Price');
+  const [valuation, setValuation] = useState('Any Budget');
   const [revenue, setRevenue] = useState('Any Revenue');
 
   useEffect(() => {
@@ -184,6 +184,13 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       if (selectedProfs.length > 0 && !selectedProfs.includes(item.businessType)) return false;
       
       // Investment range filter
+      if (valuation && valuation !== 'Any Budget' && valuation !== 'Any Price') {
+        if (valuation === 'Under ₹ 20 Lac' && item.price >= 20) return false;
+        if (valuation === '₹ 20 Lac - ₹ 50 Lac' && (item.price < 20 || item.price > 50)) return false;
+        if (valuation === '₹ 50 Lac - ₹ 2 Cr' && (item.price < 50 || item.price > 200)) return false;
+        if (valuation === '₹ 2 Cr - ₹ 5 Cr' && (item.price < 200 || item.price > 500)) return false;
+        if (valuation === '₹ 5 Cr+' && item.price < 500) return false;
+      }
       if (minPrice && item.price < parseFloat(minPrice)) return false;
       if (maxPrice && item.price > parseFloat(maxPrice)) return false;
 
@@ -394,11 +401,12 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                   onChange={(e) => setValuation(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', width: '100%' }}
                 >
-                  <option value="₹ 20L - 10Cr+">₹ 20L - 10Cr+</option>
-                  <option value="Under ₹ 50L">Under ₹ 50L</option>
-                  <option value="₹ 50L - ₹ 2Cr">₹ 50L - ₹ 2Cr</option>
-                  <option value="₹ 2Cr - ₹ 5Cr">₹ 2Cr - ₹ 5Cr</option>
-                  <option value="₹ 5Cr+">₹ 5Cr+</option>
+                  <option value="Any Budget">Any Budget</option>
+                  <option value="Under ₹ 20 Lac">Under ₹ 20 Lac</option>
+                  <option value="₹ 20 Lac - ₹ 50 Lac">₹ 20 Lac - ₹ 50 Lac</option>
+                  <option value="₹ 50 Lac - ₹ 2 Cr">₹ 50 Lac - ₹ 2 Cr</option>
+                  <option value="₹ 2 Cr - ₹ 5 Cr">₹ 2 Cr - ₹ 5 Cr</option>
+                  <option value="₹ 5 Cr+">₹ 5 Cr+</option>
                 </select>
               </div>
             </div>
