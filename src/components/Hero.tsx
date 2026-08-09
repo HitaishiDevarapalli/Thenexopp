@@ -521,25 +521,6 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                     );
                   })}
                 </div>
-
-                <a
-                  href="#advanced"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Opening Advanced Search...');
-                  }}
-                  style={{
-                    color: '#0284C7',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <span>Advanced Search</span>
-                </a>
               </div>
             </div>
           </div>

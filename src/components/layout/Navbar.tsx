@@ -84,9 +84,9 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const rawMenuItems = [
     { id: 'hero', label: 'Home', icon: <FaHome /> },
     { id: 'properties', label: 'Property', icon: <FaHome />, dropdown: [
-      { name: 'Flats', link: '#properties', subIcon: <FaBuilding /> },
-      { name: 'Individual Houses', link: '#properties', subIcon: <FaHome /> },
-      { name: 'Land', link: '#properties', subIcon: <FaMapMarkedAlt /> },
+      { name: 'Buy Property', link: 'buyProperty', subIcon: <FaBuilding /> },
+      { name: 'Sell Property', link: 'sellProperty', subIcon: <FaHandHoldingUsd /> },
+      { name: 'Rent Property', link: 'rentProperty', subIcon: <FaStore /> },
     ]},
     { id: 'franchise', label: 'Franchise', icon: <FaBuilding />, dropdown: [
       { name: 'New Franchise', link: '#franchise', subIcon: <FaStore /> },
@@ -189,9 +189,9 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
 
     if (onNavigateToPage) {
       if (itemId === 'properties') {
-        if (subName === 'Flats') onNavigateToPage('flatsPage');
-        else if (subName === 'Individual Houses') onNavigateToPage('housesPage');
-        else if (subName === 'Land') onNavigateToPage('landPage');
+        if (subName === 'Buy Property' || subLink === 'buyProperty') onNavigateToPage('propertiesPage');
+        else if (subName === 'Sell Property' || subLink === 'sellProperty') onNavigateToPage('contactUsPage');
+        else if (subName === 'Rent Property' || subLink === 'rentProperty') onNavigateToPage('propertiesPage');
       } else if (itemId === 'franchise') {
         if (subName === 'New Franchise') onNavigateToPage('newFranchise');
         else if (subName === 'Existing Franchise') onNavigateToPage('franchiseResales');

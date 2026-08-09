@@ -382,13 +382,6 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
                 <FaSearch />
                 <span>Search Franchises</span>
               </button>
-              <button
-                onClick={() => alert('Opening Advanced Search Options...')}
-                style={{ background: 'none', border: 'none', color: '#64748B', fontWeight: 600, fontSize: '12px', cursor: 'pointer', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <span>Advanced Search</span>
-                <FaChevronDown style={{ fontSize: '10px' }} />
-              </button>
             </div>
           </div>
         </div>

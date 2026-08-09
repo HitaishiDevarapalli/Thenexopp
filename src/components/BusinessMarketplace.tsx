@@ -169,8 +169,11 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       if (selectedInds.length > 0 && !selectedInds.includes(item.category)) return false;
       
       // Location filter
+      if (locationText && locationText !== 'All Cities') {
+        if (!item.city?.toLowerCase().includes(locationText.toLowerCase()) && !item.location?.toLowerCase().includes(locationText.toLowerCase())) return false;
+      }
       if (selectedLocations.length > 0) {
-        const primaryCities = ['Guntur', 'Vijayawada', 'Hyderabad'];
+        const primaryCities = ['Guntur', 'Vijayawada', 'Hyderabad', 'Visakhapatnam'];
         const hasOther = selectedLocations.includes('Other Locations');
         const matchesPrimary = selectedLocations.some(loc => loc !== 'Other Locations' && item.city?.toLowerCase().includes(loc.toLowerCase()));
         const matchesOther = hasOther && !primaryCities.some(c => item.city?.toLowerCase().includes(c.toLowerCase()));
@@ -400,26 +403,27 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
               </div>
             </div>
 
-            {/* Annual Revenue Dropdown */}
+            {/* City Dropdown */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
-                Annual Revenue
+                City
               </label>
               <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '12px', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <select
-                  value={revenue}
-                  onChange={(e) => setRevenue(e.target.value)}
+                  value={locationText}
+                  onChange={(e) => setLocationText(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', width: '100%' }}
                 >
-                  <option value="Any Revenue">Any Revenue</option>
-                  <option value="₹ 50L - ₹ 1Cr">₹ 50L - ₹ 1Cr</option>
-                  <option value="₹ 1Cr - ₹ 5Cr">₹ 1Cr - ₹ 5Cr</option>
-                  <option value="₹ 5Cr+">₹ 5Cr+</option>
+                  <option value="All Cities">All Cities</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Vijayawada">Vijayawada</option>
+                  <option value="Guntur">Guntur</option>
+                  <option value="Visakhapatnam">Visakhapatnam</option>
                 </select>
               </div>
             </div>
 
-            {/* Search Button & Advanced Search */}
+            {/* Search Button */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '22px' }}>
               <button
                 onClick={() => alert('Searching Businesses...')}
@@ -445,13 +449,6 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
               >
                 <FaSearch />
                 <span>Search Businesses</span>
-              </button>
-              <button
-                onClick={() => alert('Opening Advanced Search Options...')}
-                style={{ background: 'none', border: 'none', color: '#64748B', fontWeight: 600, fontSize: '12px', cursor: 'pointer', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <span>Advanced Search</span>
-                <FaChevronDown style={{ fontSize: '10px' }} />
               </button>
             </div>
           </div>

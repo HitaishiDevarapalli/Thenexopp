@@ -783,27 +783,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               ))}
             </div>
 
-            {/* Bottom: Advanced Search Link directly below */}
-            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '4px' }}>
-              <button
-                onClick={() => onNavigate('propertiesPage')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#00A86B',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: 0
-                }}
-              >
-                <span>Advanced Search</span>
-                <FaArrowRight style={{ fontSize: '12px' }} />
-              </button>
-            </div>
           </div>
 
         </div>
