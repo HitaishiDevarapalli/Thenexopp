@@ -837,7 +837,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       {/* Featured & Top Rated Listings Showcase */}
       {combinedTopRated.length > 0 && (
         <div style={{ maxWidth: '1360px', margin: '40px auto 48px auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#1E40AF', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
                 Exclusive Picks
@@ -876,7 +876,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '24px',
           }}>
             {combinedTopRated.map((item) => (
