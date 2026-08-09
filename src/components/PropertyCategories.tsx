@@ -428,7 +428,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [selectedLocationsFilter, setSelectedLocationsFilter] = useState<string[]>([]);
   const [selectedPropertyTypesFilter, setSelectedPropertyTypesFilter] = useState<string[]>([]);
   const [selectedPropertyStatusesFilter, setSelectedPropertyStatusesFilter] = useState<string[]>([]);
+  const [selectedLocality, setSelectedLocality] = useState<string>('');
   const [selectedPropertyOwnershipsFilter, setSelectedPropertyOwnershipsFilter] = useState<string[]>([]);
+
+  const cityLocalities: Record<string, string[]> = {
+    Hyderabad: ['Kukatpally', 'Madhapur', 'Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Secunderabad'],
+    Vijayawada: ['Benz Circle', 'Patamata', 'Labbipet', 'Governorpet', 'Kanuru'],
+    Guntur: ['Brodipet', 'Arundelpet', 'Lakshmipuram', 'Koretipadu', 'Nagarampalem'],
+    Visakhapatnam: ['Gajuwaka', 'MVP Colony', 'Madhurawada', 'Dwaraka Nagar', 'Seethammadhara'],
+  };
 
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
@@ -562,6 +570,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     }
 
     let filtered = baseList.filter((item) => {
+      // Locality Filter
+      if (selectedLocality) {
+        const locLow = selectedLocality.toLowerCase().trim();
+        const matchesLoc = 
+          (item.location && item.location.toLowerCase().includes(locLow)) ||
+          (item.city && item.city.toLowerCase().includes(locLow)) ||
+          (item.title && item.title.toLowerCase().includes(locLow));
+        if (!matchesLoc) return false;
+      }
+
       // Availability Filter
       if (availabilityFilter === 'Available' && item.sold) return false;
       if (availabilityFilter === 'Sold' && !item.sold) return false;
@@ -824,7 +842,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     });
 
     return filtered;
-  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedLocationsFilter, selectedPropertyTypesFilter, selectedPropertyStatusesFilter, selectedPropertyOwnershipsFilter, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
+  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedLocationsFilter, selectedLocality, selectedPropertyTypesFilter, selectedPropertyStatusesFilter, selectedPropertyOwnershipsFilter, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
 
   const totalPages = Math.ceil(displayProperties.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -972,30 +990,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 </div>
               )}
             </div>
-
-            {/* Official Rent Flow Banner */}
-            {isRent && (
-              <div
-                style={{
-                  backgroundColor: '#EFF6FF',
-                  border: '1px solid #BFDBFE',
-                  borderRadius: '12px',
-                  padding: '12px 18px',
-                  fontSize: '12.5px',
-                  fontWeight: 600,
-                  color: '#1E40AF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  lineHeight: 1.5,
-                }}
-              >
-                <span style={{ fontSize: '16px' }}>🔑</span>
-                <span>
-                  <strong>Rent Flow:</strong> Property → Rent → Select Category ({rentCategoryFilter === 'All' ? 'Residential / Commercial' : rentCategoryFilter}) → Apply Filters → View Rental Listings → Property Details → Enquire → <strong style={{ color: '#16A34A' }}>TheNexOpp Team Coordinates Tenant & Owner</strong>
-                </span>
-              </div>
-            )}
           </div>
           <div className="top-search-filter-bar">
 
@@ -1314,6 +1308,31 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               </div>
             </div>
 
+            {/* Area & Locality Section */}
+            {['Hyderabad', 'Vijayawada', 'Guntur', 'Visakhapatnam'].includes(selectedLocationsFilter[0] || locationText) && (
+              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+                  ■ Area & Locality
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {cityLocalities[selectedLocationsFilter[0] || locationText]?.map((loc) => {
+                    const isSelected = selectedLocality === loc;
+                    return (
+                      <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => setSelectedLocality(isSelected ? '' : loc)}
+                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>{loc}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* 2. Property Type Filter Section */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
               <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
@@ -1498,7 +1517,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     else if (onBuyProperty) onBuyProperty(id);
                   }}
                   height={viewMode === 'map' ? '550px' : '360px'}
-                  localSearchLocation={locationText}
+                  localSearchLocation={selectedLocality ? `${selectedLocality}, ${locationText}` : locationText}
                 />
               </div>
             )}

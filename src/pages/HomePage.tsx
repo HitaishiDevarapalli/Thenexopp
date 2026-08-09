@@ -269,7 +269,53 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const featuredFranchises = (rawFranchises.length >= 2 ? rawFranchises : franchiseDb).slice(0, 4);
 
   const rawBusinesses = filterAndSortByDistance(businessDb);
-  const featuredBusinesses = (rawBusinesses.length >= 2 ? rawBusinesses : businessDb).slice(0, 4);
+  // Combined Top Rated / Featured Listings (5-6 items)
+  const combinedTopRated = React.useMemo(() => {
+    const props = propertiesDb
+      .filter(p => !p.sold && p.listingStatus !== 'Sold' && p.listingStatus !== 'Hidden' && p.listingStatus !== 'Draft')
+      .map(p => ({
+        id: p.id,
+        type: 'property',
+        title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
+        price: p.priceDisplay || `₹${p.price || 75} Lakh`,
+        image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
+        location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
+        rating: p.rating || 4.8,
+        reviewCount: p.reviewCount || 12,
+        verified: p.verified || false,
+        premium: p.premium || false,
+        badge: p.status || 'Buy',
+        badgeColor: p.status === 'Rent' ? '#EFF6FF' : '#ECFDF5',
+        badgeText: p.status === 'Rent' ? '#2563EB' : '#059669',
+      }));
+
+    const bus = businessDb
+      .filter(b => b.published !== false && b.status !== 'Sold' && b.status !== 'Unavailable')
+      .map(b => ({
+        id: b.id,
+        type: 'business',
+        title: b.name || b.title || 'Business For Sale',
+        price: b.priceDisplay || `₹${b.price || b.askingPrice || 50} Lac`,
+        image: b.image || b.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+        location: `${b.location ? b.location + ', ' : ''}${b.city || 'Hyderabad'}`,
+        rating: b.rating || 4.7,
+        reviewCount: b.reviewCount || 8,
+        verified: b.verified || false,
+        premium: b.featured || false,
+        badge: b.category || b.industry || 'Business',
+        badgeColor: '#FFFBEB',
+        badgeText: '#D97706',
+      }));
+
+    const merged = [...props, ...bus]
+      .sort((a, b) => {
+        const scoreA = (a.premium ? 2 : 0) + (a.verified ? 1 : 0) + (a.rating / 5);
+        const scoreB = (b.premium ? 2 : 0) + (b.verified ? 1 : 0) + (b.rating / 5);
+        return scoreB - scoreA;
+      });
+
+    return merged.slice(0, 6);
+  }, [propertiesDb, businessDb]);
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
@@ -788,6 +834,205 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         </div>
       </div>
 
+      {/* Featured & Top Rated Listings Showcase */}
+      {combinedTopRated.length > 0 && (
+        <div style={{ maxWidth: '1360px', margin: '40px auto 48px auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#1E40AF', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                Exclusive Picks
+              </span>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+                Featured & Top Rated Listings
+              </h2>
+            </div>
+            <button 
+              onClick={() => onNavigate('propertiesPage')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: '#EFF6FF',
+                color: '#1E40AF',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#DBEAFE';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#EFF6FF';
+              }}
+            >
+              <span>Explore All</span>
+              <FaArrowRight style={{ fontSize: '12px' }} />
+            </button>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '24px',
+          }}>
+            {combinedTopRated.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  if (item.type === 'property') {
+                    if (onPropertyClick) onPropertyClick(item.id);
+                    else onNavigate('propertyDetails', `?propertyId=${item.id}`);
+                  } else {
+                    onNavigate('businessPage');
+                  }
+                }}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '20px',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 30px -10px rgba(15, 23, 42, 0.12)';
+                  e.currentTarget.style.borderColor = '#1E40AF';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.03)';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                }}
+              >
+                {/* Image Section */}
+                <div style={{ position: 'relative', height: '200px', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                  <img 
+                    src={item.image} 
+                    alt={item.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  />
+                  
+                  {/* Rating Tag */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                    backdropFilter: 'blur(4px)',
+                    color: '#FFFFFF',
+                    padding: '6px 12px',
+                    borderRadius: '30px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    zIndex: 2,
+                  }}>
+                    <FaStar style={{ color: '#F59E0B' }} />
+                    <span>{item.rating.toFixed(1)}</span>
+                    <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>
+                  </div>
+
+                  {/* Category / Type Tag */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '12px',
+                    left: '12px',
+                    backgroundColor: item.badgeColor,
+                    color: item.badgeText,
+                    padding: '6px 14px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
+                    zIndex: 2,
+                  }}>
+                    {item.type === 'business' ? `Business • ${item.badge}` : `Property • ${item.badge}`}
+                  </div>
+                  
+                  {/* Verified Badge */}
+                  {item.verified && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      backgroundColor: '#DCFCE7',
+                      color: '#16A34A',
+                      padding: '6px 10px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      boxShadow: '0 4px 10px rgba(22, 163, 74, 0.2)',
+                      zIndex: 2,
+                    }}>
+                      <FaCheckCircle />
+                    </div>
+                  )}
+                </div>
+
+                {/* Content Section */}
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', lineBreak: 'anywhere', lineHeight: 1.4 }}>
+                      {item.title}
+                    </h3>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '13px', marginBottom: '16px' }}>
+                      <FaMapMarkerAlt style={{ color: '#EF4444', flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.location}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>
+                        Asking Price
+                      </span>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669' }}>
+                        {item.price}
+                      </span>
+                    </div>
+                    
+                    <button style={{
+                      backgroundColor: '#1E40AF',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}>
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Stats Row (6 Cards in a spacious 3x2 Grid) */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 44px 24px' }}>
         <div className="responsive-stats-grid">
@@ -933,180 +1178,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
         <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
       </div>
-
-      
-      {/* FEATURED PROPERTIES GRID */}
-      {featuredListings.length > 0 && (
-        <div style={{ maxWidth: '1360px', margin: '40px auto 20px auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Properties in {currentGlobalCity}</h2>
-            <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>Top recommended residential and commercial properties.</p>
-          </div>
-          <div className="responsive-property-grid">
-            {featuredListings.map((prop, idx) => (
-              <div
-                key={idx}
-                onClick={() => onPropertyClick ? onPropertyClick(prop.id) : onNavigate('propertyDetails', `?propertyId=${prop.id}`)}
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '8px',
-                  border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                  transition: 'transform 0.2s, box-shadow 0.2s'
-                }}
-              >
-                {/* Image Container with Heart & Yellow Featured Tag */}
-                <div style={{ position: 'relative', height: '145px', width: '100%', overflow: 'hidden' }}>
-                  <img src={prop.image} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleWishlist(prop.id, e); }}
-                    style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      width: '30px',
-                      height: '30px',
-                      borderRadius: '50%',
-                      backgroundColor: '#FFFFFF',
-                      border: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                      cursor: 'pointer',
-                      zIndex: 5
-                    }}
-                  >
-                    {isWishlisted(prop.id) ? (
-                      <FaHeart style={{ color: '#EF4444', fontSize: '14px' }} />
-                    ) : (
-                      <FaRegHeart style={{ color: '#0F172A', fontSize: '14px' }} />
-                    )}
-                  </button>
-
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    left: '8px',
-                    backgroundColor: '#FACC15',
-                    color: '#0F172A',
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    letterSpacing: '0.05em',
-                    textTransform: 'uppercase',
-                    zIndex: 5
-                  }}>
-                    FEATURED
-                  </div>
-                </div>
-
-                {/* Details Container with Yellow Left Border Line (Picture 2 OLX Accent) */}
-                <div style={{
-                  padding: '10px 12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  flex: 1,
-                  justifyContent: 'space-between',
-                  borderLeft: '4px solid #FACC15',
-                  backgroundColor: '#FFFFFF'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0F172A', marginBottom: '2px', lineHeight: 1.2 }}>
-                      {prop.price}
-                    </div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {prop.title}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {prop.location}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
-            <button onClick={() => onNavigate('propertiesPage')} style={{ padding: '12px 28px', backgroundColor: '#0F172A', color: '#FFF', borderRadius: '30px', fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>View More Properties</button>
-          </div>
-        </div>
-      )}
-
-      {/* FEATURED FRANCHISES GRID */}
-      {featuredFranchises.length > 0 && (
-        <div style={{ maxWidth: '1360px', margin: '40px auto 20px auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Franchises in {currentGlobalCity}</h2>
-            <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>Top brand opportunities available for setup.</p>
-          </div>
-          <div className="responsive-property-grid">
-            {featuredFranchises.map((f, idx) => (
-              <div
-                key={idx}
-                onClick={() => onNavigate('franchiseDetails', `?franchiseId=${f.id}`)}
-                style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', position: 'relative' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.08)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)'; }}
-              >
-                <div style={{ position: 'relative', height: '200px' }}>
-                  <img src={f.logo || f.image || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=500&q=80'} alt={f.brand} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ padding: '16px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>{f.investmentDisplay}</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.brand}</div>
-                  <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
-                    <FaMapMarkerAlt /> {f.city || currentGlobalCity}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
-            <button onClick={() => onNavigate('franchisePage')} style={{ padding: '12px 28px', backgroundColor: '#0F172A', color: '#FFF', borderRadius: '30px', fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>View More Franchises</button>
-          </div>
-        </div>
-      )}
-
-      {/* FEATURED BUSINESSES GRID */}
-      {featuredBusinesses.length > 0 && (
-        <div style={{ maxWidth: '1360px', margin: '40px auto 40px auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Businesses in {currentGlobalCity}</h2>
-            <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>Turnkey operations and commercial businesses for sale.</p>
-          </div>
-          <div className="responsive-property-grid">
-            {featuredBusinesses.map((b, idx) => (
-              <div
-                key={idx}
-                onClick={() => onNavigate('businessPage')}
-                style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', position: 'relative' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.08)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)'; }}
-              >
-                <div style={{ position: 'relative', height: '200px' }}>
-                  <img src={b.image || 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=500&q=80'} alt={b.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ padding: '16px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>{b.priceDisplay}</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</div>
-                  <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
-                    <FaMapMarkerAlt /> {b.city || currentGlobalCity}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
-            <button onClick={() => onNavigate('businessPage')} style={{ padding: '12px 28px', backgroundColor: '#0F172A', color: '#FFF', borderRadius: '30px', fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}>View More Businesses</button>
-          </div>
-        </div>
-      )}
 
       {/* 5. RECENTLY SOLD PROPERTIES SECTION */}
       {recentlySoldListings.length > 0 && (

@@ -568,10 +568,12 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '20px',
+              gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
+              gap: '16px',
               position: 'relative',
               alignItems: 'stretch',
+              overflowX: 'auto',
+              paddingBottom: '16px',
             }}
           >
             {steps.map((step, idx) => (

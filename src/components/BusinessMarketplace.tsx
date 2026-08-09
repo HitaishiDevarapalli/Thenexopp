@@ -92,7 +92,15 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [selectedProfs, setSelectedProfs] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>('');
+  const [selectedLocality, setSelectedLocality] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
+
+  const cityLocalities: Record<string, string[]> = {
+    Hyderabad: ['Kukatpally', 'Madhapur', 'Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Secunderabad'],
+    Vijayawada: ['Benz Circle', 'Patamata', 'Labbipet', 'Governorpet', 'Kanuru'],
+    Guntur: ['Brodipet', 'Arundelpet', 'Lakshmipuram', 'Koretipadu', 'Nagarampalem'],
+    Visakhapatnam: ['Gajuwaka', 'MVP Colony', 'Madhurawada', 'Dwaraka Nagar', 'Seethammadhara'],
+  };
 
   // Right Results State
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');
@@ -127,6 +135,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     setSelectedLocations([]);
     setMinPrice('');
     setMaxPrice('');
+    setSelectedLocality('');
     setActiveQuickFilter(null);
     setIndustry('All Categories');
     setValuation('Any Price');
@@ -173,6 +182,14 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       if (locationText && locationText !== 'All Cities') {
         if (!item.city?.toLowerCase().includes(locationText.toLowerCase()) && !item.location?.toLowerCase().includes(locationText.toLowerCase())) return false;
       }
+      if (selectedLocality) {
+        const locLow = selectedLocality.toLowerCase().trim();
+        const matchesLoc = 
+          (item.locality && item.locality.toLowerCase().includes(locLow)) ||
+          (item.city && item.city.toLowerCase().includes(locLow)) ||
+          (item.title && item.title.toLowerCase().includes(locLow));
+        if (!matchesLoc) return false;
+      }
       if (selectedLocations.length > 0) {
         const primaryCities = ['Guntur', 'Vijayawada', 'Hyderabad', 'Visakhapatnam'];
         const hasOther = selectedLocations.includes('Other Locations');
@@ -215,7 +232,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     // 'Newest First' is default order from API
 
     return filtered;
-  }, [businessDb, activeTab, selectedInds, selectedLocations, selectedProfs, minPrice, maxPrice, activeQuickFilter, sortBy]);
+  }, [businessDb, activeTab, selectedInds, selectedLocations, selectedLocality, locationText, selectedProfs, minPrice, maxPrice, activeQuickFilter, sortBy]);
 
   const totalPages = Math.ceil(businessesList.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -459,16 +476,35 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
 
               {locOpen && (
                 <div>
-                  <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                     <FaMapMarkerAlt style={{ color: '#16A34A', fontSize: '13px' }} />
                     <input
                       type="text"
                       placeholder="Search Area or Locality..."
-                      value={locationText === 'All Cities' ? '' : locationText}
-                      onChange={(e) => setLocationText(e.target.value)}
+                      value={selectedLocality}
+                      onChange={(e) => setSelectedLocality(e.target.value)}
                       style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', width: '100%' }}
                     />
                   </div>
+
+                  {cityLocalities[locationText] && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingLeft: '4px' }}>
+                      {cityLocalities[locationText].map((loc) => {
+                        const isSelected = selectedLocality === loc;
+                        return (
+                          <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: isSelected ? '#16A34A' : '#475569', fontWeight: isSelected ? 700 : 500 }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => setSelectedLocality(isSelected ? '' : loc)}
+                              style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                            />
+                            <span>{loc}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -592,6 +628,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                     else if (onBuyProperty) onBuyProperty(id);
                   }}
                   height={viewMode === 'map' ? '550px' : '360px'}
+                  localSearchLocation={selectedLocality ? `${selectedLocality}, ${locationText}` : locationText}
                 />
               </div>
             )}
