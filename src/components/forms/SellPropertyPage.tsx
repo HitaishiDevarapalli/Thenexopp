@@ -548,7 +548,17 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                       <button
                         key={method}
                         type="button"
-                        onClick={() => handleChange('preferredContactMethod', method)}
+                        onClick={() => {
+                          handleChange('preferredContactMethod', method);
+                          if (method === 'WhatsApp') {
+                            const msg = encodeURIComponent(`Hello TheNexOpp Team, I am interested in listing/selling my property.`);
+                            window.open(`https://wa.me/919989087654?text=${msg}`, '_blank');
+                          } else if (method === 'Email') {
+                            window.location.href = `mailto:contact@thenexopp.com?subject=${encodeURIComponent('Sell Property Enquiry - TheNexOpp')}`;
+                          } else if (method === 'Phone Call') {
+                            window.location.href = `tel:+919989087654`;
+                          }
+                        }}
                         style={{
                           flex: 1,
                           padding: '12px 8px',

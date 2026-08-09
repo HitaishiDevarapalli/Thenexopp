@@ -527,7 +527,17 @@ export const SellBusinessPage: React.FC<SellBusinessPageProps> = ({ onBack }) =>
                       <button
                         key={method}
                         type="button"
-                        onClick={() => handleChange('preferredContactMethod', method)}
+                        onClick={() => {
+                          handleChange('preferredContactMethod', method);
+                          if (method === 'WhatsApp') {
+                            const msg = encodeURIComponent(`Hello TheNexOpp Team, I am interested in listing/selling my business.`);
+                            window.open(`https://wa.me/919989087654?text=${msg}`, '_blank');
+                          } else if (method === 'Email') {
+                            window.location.href = `mailto:contact@thenexopp.com?subject=${encodeURIComponent('Sell Business Enquiry - TheNexOpp')}`;
+                          } else if (method === 'Phone Call') {
+                            window.location.href = `tel:+919989087654`;
+                          }
+                        }}
                         style={{
                           padding: '10px 20px',
                           borderRadius: '10px',
