@@ -995,12 +995,22 @@ export const deleteDealer = (id: string) => {
 };
 
 export const addBusiness = (item: BusinessListing) => {
-  businessDb = [item, ...businessDb];
+  const norm: BusinessListing = {
+    ...item,
+    id: item.id || `biz-${Date.now()}`,
+    name: item.name || (item as any).title || 'Business Listing',
+    price: item.price !== undefined ? item.price : ((item as any).askingPrice || 50),
+    priceDisplay: item.priceDisplay || `₹ ${item.price || (item as any).askingPrice || 50} Lakhs`,
+    published: item.published !== false,
+    status: item.status || 'Available',
+  };
+  businessDb = [norm, ...businessDb];
+  saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item)
+    body: JSON.stringify(norm)
   }).catch(err => console.error('API Sync Error:', err));
 };
 

@@ -219,8 +219,22 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      addBusiness(formData as BusinessListing);
-      showNotification('Business added successfully', 'success');
+      const payload: any = {
+        ...formData,
+        id: `biz-${Date.now()}`,
+        name: formData.title || 'Business Listing',
+        title: formData.title || 'Business Listing',
+        price: Number(formData.askingPrice) || 0,
+        askingPrice: Number(formData.askingPrice) || 0,
+        priceDisplay: formData.priceDisplay || `₹ ${formData.askingPrice || 50} Lakhs`,
+        image: formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+        published: true,
+        status: formData.status || 'Available',
+        createdAt: new Date().toISOString(),
+      };
+      addBusiness(payload as BusinessListing);
+      showNotification('Business added successfully & published', 'success');
       onSubTabChange('listings');
     };
 

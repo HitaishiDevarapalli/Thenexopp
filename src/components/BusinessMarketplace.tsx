@@ -137,19 +137,19 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const businessesList = useMemo(() => {
     const list = businessDb
       .filter((b: any) => b.published !== false)
-      .map((b) => ({
+      .map((b: any) => ({
       id: b.id,
-      title: b.name || 'Business For Sale',
-      industry: b.industry || b.category || 'Retail',
+      title: b.name || b.title || 'Business For Sale',
+      industry: b.category || b.industry || 'Retail',
       category: b.category || b.industry || 'Retail',
       businessType: b.businessType || 'Private Limited',
       badge: b.verified ? 'Verified Seller' : (b.trending ? 'Profitable Now' : 'Great Deal'),
       badgeType: b.verified ? 'verified' : (b.trending ? 'profit' : 'deal'),
-      featured: (b as any).featured || false,
-      status: (b as any).status || 'Available',
-      image: b.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
-      valuation: b.priceDisplay || (`₹ ${b.price || 50} Lac`),
-      price: b.price || 0,
+      featured: b.featured || false,
+      status: b.status || 'Available',
+      image: b.image || b.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
+      valuation: b.priceDisplay || (`₹ ${b.price || b.askingPrice || 50} Lac`),
+      price: Number(b.price) || Number(b.askingPrice) || 0,
       revenue: b.revenueMonthly || b.revenue || '₹ 10 L / month',
       margin: b.profitMonthly || '20% Net Profit',
       employees: b.employeesCount ? `${b.employeesCount} Staff` : '10 Staff',
