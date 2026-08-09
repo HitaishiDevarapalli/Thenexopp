@@ -129,8 +129,14 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
               {/* Property Summary Card */}
               <div className="checkout-summary-card premium-card" style={{ padding: '1.5rem', marginBottom: '2rem', borderRadius: '12px' }}>
                 <h3 className="column-title" style={{ fontSize: '1.25rem', marginBottom: '1rem', borderBottom: 'none', padding: '0' }}>
-                  Property Selected for Purchase
+                  {property?.status?.toLowerCase() === 'rent' ? 'Rental Property Selected for Enquiry' : 'Property Selected for Purchase'}
                 </h3>
+                {property?.status?.toLowerCase() === 'rent' && (
+                  <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '10px', padding: '10px 14px', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: 700, color: '#1E40AF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🤝</span>
+                    <span>TheNexOpp Team Coordinates Tenant & Owner throughout the rental agreement process</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
                   <img 
                     src={property.image} 

@@ -60,6 +60,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [propertyType, setPropertyType] = useState('All Types');
   const [budget, setBudget] = useState('₹ 1K - 1Cr+');
   const [bhkFilter, setBhkFilter] = useState('Any BHK');
+  const [rentCategoryFilter, setRentCategoryFilter] = useState<'All' | 'Residential' | 'Commercial'>('All');
 
   useEffect(() => {
     const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
@@ -644,6 +645,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (item.status.toLowerCase() !== 'buy' && item.status.toLowerCase() !== 'sell') return false;
       } else if (activeTab === 'Rent') {
         if (item.status.toLowerCase() !== 'rent') return false;
+        if (rentCategoryFilter !== 'All') {
+          const itemType = (item.type || '').toLowerCase();
+          const itemTitle = (item.title || '').toLowerCase();
+          const isComm = itemType.includes('commercial') || itemType.includes('office') || itemType.includes('shop') || itemType.includes('showroom') || itemType.includes('warehouse') || itemType.includes('industrial') || itemTitle.includes('commercial') || itemTitle.includes('office') || itemTitle.includes('shop');
+          if (rentCategoryFilter === 'Commercial' && !isComm) return false;
+          if (rentCategoryFilter === 'Residential' && isComm) return false;
+        }
       } else if (activeTab === 'Commercial') {
         const itemType = (item.type || '').toLowerCase();
         const itemTitle = (item.title || '').toLowerCase();
@@ -904,31 +912,90 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
+              flexDirection: 'column',
+              gap: '14px',
               borderBottom: '1px solid #F1F5F9',
               paddingBottom: '16px',
               marginBottom: '20px',
             }}
           >
-            <button
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 22px',
-                borderRadius: '9999px',
-                border: 'none',
-                backgroundColor: '#DCFCE7',
-                color: '#16A34A',
-                fontWeight: 800,
-                fontSize: '14px',
-                cursor: 'default',
-              }}
-            >
-              <FaHome style={{ fontSize: '15px' }} />
-              <span>{activeTab === 'Rent' ? 'Rent' : 'Buy'}</span>
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <button
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 22px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  backgroundColor: '#DCFCE7',
+                  color: '#16A34A',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  cursor: 'default',
+                }}
+              >
+                <FaHome style={{ fontSize: '15px' }} />
+                <span>{activeTab === 'Rent' ? 'Rent Property' : 'Buy'}</span>
+              </button>
+
+              {activeTab === 'Rent' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Categories:</span>
+                  {[
+                    { id: 'All', label: 'All Categories' },
+                    { id: 'Residential', label: '1. Residential' },
+                    { id: 'Commercial', label: '2. Commercial' },
+                  ].map((cat) => {
+                    const isSelected = rentCategoryFilter === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setRentCategoryFilter(cat.id as any)}
+                        style={{
+                          padding: '6px 16px',
+                          borderRadius: '9999px',
+                          border: isSelected ? '2px solid #16A34A' : '1px solid #CBD5E1',
+                          backgroundColor: isSelected ? '#16A34A' : '#FFFFFF',
+                          color: isSelected ? '#FFFFFF' : '#475569',
+                          fontWeight: isSelected ? 800 : 600,
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          boxShadow: isSelected ? '0 2px 8px rgba(22, 163, 74, 0.2)' : 'none',
+                        }}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Official Rent Flow Banner */}
+            {activeTab === 'Rent' && (
+              <div
+                style={{
+                  backgroundColor: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  borderRadius: '12px',
+                  padding: '12px 18px',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                  color: '#1E40AF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  lineHeight: 1.5,
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🔑</span>
+                <span>
+                  <strong>Rent Flow:</strong> Property → Rent → Select Category ({rentCategoryFilter === 'All' ? 'Residential / Commercial' : rentCategoryFilter}) → Apply Filters → View Rental Listings → Property Details → Enquire → <strong style={{ color: '#16A34A' }}>TheNexOpp Team Coordinates Tenant & Owner</strong>
+                </span>
+              </div>
+            )}
           </div>
           <div className="top-search-filter-bar">
 
