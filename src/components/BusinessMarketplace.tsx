@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb } from '../db/marketplaceDb';
+import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -95,12 +95,23 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const [selectedLocality, setSelectedLocality] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
 
-  const cityLocalities: Record<string, string[]> = {
-    Hyderabad: ['Kukatpally', 'Madhapur', 'Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Secunderabad'],
-    Vijayawada: ['Benz Circle', 'Patamata', 'Labbipet', 'Governorpet', 'Kanuru'],
-    Guntur: ['Brodipet', 'Arundelpet', 'Lakshmipuram', 'Koretipadu', 'Nagarampalem'],
-    Visakhapatnam: ['Gajuwaka', 'MVP Colony', 'Madhurawada', 'Dwaraka Nagar', 'Seethammadhara'],
-  };
+  const cityLocalities = useMemo(() => {
+    const map: Record<string, string[]> = {
+      Hyderabad: [],
+      Vijayawada: [],
+      Guntur: [],
+      Visakhapatnam: []
+    };
+    masterLocalitiesDb.forEach(item => {
+      if (item.is_active) {
+        if (!map[item.parentCity]) {
+          map[item.parentCity] = [];
+        }
+        map[item.parentCity].push(item.name);
+      }
+    });
+    return map;
+  }, [masterLocalitiesDb]);
 
   // Right Results State
   const [viewMode, setViewMode] = useState<'list' | 'map' | 'split'>('list');

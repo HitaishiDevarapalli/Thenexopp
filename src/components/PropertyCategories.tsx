@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb } from '../db/marketplaceDb';
+import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -80,6 +80,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
     }
   }, [location?.city, location?.displayName, selectedCity]);
+
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setTick(t => t + 1);
+    window.addEventListener('nexopp_data_changed', handler);
+    return () => window.removeEventListener('nexopp_data_changed', handler);
+  }, []);
 
   // Left Sidebar Filters State
   const [budgetOpen, setBudgetOpen] = useState(true);
@@ -443,12 +450,23 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [selectedLocality, setSelectedLocality] = useState<string>('');
   const [selectedPropertyOwnershipsFilter, setSelectedPropertyOwnershipsFilter] = useState<string[]>([]);
 
-  const cityLocalities: Record<string, string[]> = {
-    Hyderabad: ['Kukatpally', 'Madhapur', 'Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Secunderabad'],
-    Vijayawada: ['Benz Circle', 'Patamata', 'Labbipet', 'Governorpet', 'Kanuru'],
-    Guntur: ['Brodipet', 'Arundelpet', 'Lakshmipuram', 'Koretipadu', 'Nagarampalem'],
-    Visakhapatnam: ['Gajuwaka', 'MVP Colony', 'Madhurawada', 'Dwaraka Nagar', 'Seethammadhara'],
-  };
+  const cityLocalities = useMemo(() => {
+    const map: Record<string, string[]> = {
+      Hyderabad: [],
+      Vijayawada: [],
+      Guntur: [],
+      Visakhapatnam: []
+    };
+    masterLocalitiesDb.forEach(item => {
+      if (item.is_active) {
+        if (!map[item.parentCity]) {
+          map[item.parentCity] = [];
+        }
+        map[item.parentCity].push(item.name);
+      }
+    });
+    return map;
+  }, [masterLocalitiesDb]);
 
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 

@@ -1637,6 +1637,75 @@ export const editFilterMasterItem = (id: string, type: 'category' | 'location' |
 
 export const updateFilterMasterItem = editFilterMasterItem;
 
+// ── MASTER LOCALITIES DATA ─────────────────────────────────────────────────
+export interface LocalityMasterItem {
+  id: string;
+  name: string;
+  parentCity: string;
+  is_active: boolean;
+}
+
+const defaultMasterLocalities: LocalityMasterItem[] = [
+  // Hyderabad
+  { id: 'loc_lh1', name: 'Kukatpally', parentCity: 'Hyderabad', is_active: true },
+  { id: 'loc_lh2', name: 'Madhapur', parentCity: 'Hyderabad', is_active: true },
+  { id: 'loc_lh3', name: 'Gachibowli', parentCity: 'Hyderabad', is_active: true },
+  { id: 'loc_lh4', name: 'Banjara Hills', parentCity: 'Hyderabad', is_active: true },
+  { id: 'loc_lh5', name: 'Jubilee Hills', parentCity: 'Hyderabad', is_active: true },
+  { id: 'loc_lh6', name: 'Secunderabad', parentCity: 'Hyderabad', is_active: true },
+  // Vijayawada
+  { id: 'loc_lv1', name: 'Benz Circle', parentCity: 'Vijayawada', is_active: true },
+  { id: 'loc_lv2', name: 'Patamata', parentCity: 'Vijayawada', is_active: true },
+  { id: 'loc_lv3', name: 'Labbipet', parentCity: 'Vijayawada', is_active: true },
+  { id: 'loc_lv4', name: 'Governorpet', parentCity: 'Vijayawada', is_active: true },
+  { id: 'loc_lv5', name: 'Kanuru', parentCity: 'Vijayawada', is_active: true },
+  // Guntur
+  { id: 'loc_lg1', name: 'Brodipet', parentCity: 'Guntur', is_active: true },
+  { id: 'loc_lg2', name: 'Arundelpet', parentCity: 'Guntur', is_active: true },
+  { id: 'loc_lg3', name: 'Lakshmipuram', parentCity: 'Guntur', is_active: true },
+  { id: 'loc_lg4', name: 'Koretipadu', parentCity: 'Guntur', is_active: true },
+  { id: 'loc_lg5', name: 'Nagarampalem', parentCity: 'Guntur', is_active: true },
+  // Visakhapatnam
+  { id: 'loc_ls1', name: 'Gajuwaka', parentCity: 'Visakhapatnam', is_active: true },
+  { id: 'loc_ls2', name: 'MVP Colony', parentCity: 'Visakhapatnam', is_active: true },
+  { id: 'loc_ls3', name: 'Madhurawada', parentCity: 'Visakhapatnam', is_active: true },
+  { id: 'loc_ls4', name: 'Dwaraka Nagar', parentCity: 'Visakhapatnam', is_active: true },
+  { id: 'loc_ls5', name: 'Seethammadhara', parentCity: 'Visakhapatnam', is_active: true },
+];
+
+const loadLocalities = (): LocalityMasterItem[] => {
+  try {
+    const stored = localStorage.getItem('nexopp_master_localities');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return defaultMasterLocalities;
+};
+
+export let masterLocalitiesDb: LocalityMasterItem[] = loadLocalities();
+
+const saveLocalities = () => {
+  try {
+    localStorage.setItem('nexopp_master_localities', JSON.stringify(masterLocalitiesDb));
+  } catch (e) {}
+  notifyDataChanged();
+};
+
+export const addLocality = (name: string, parentCity: string) => {
+  const newItem: LocalityMasterItem = {
+    id: `loc_l_${Date.now()}`,
+    name,
+    parentCity,
+    is_active: true
+  };
+  masterLocalitiesDb = [...masterLocalitiesDb, newItem];
+  saveLocalities();
+};
+
+export const toggleLocalityActive = (id: string) => {
+  masterLocalitiesDb = masterLocalitiesDb.map(l => l.id === id ? { ...l, is_active: !l.is_active } : l);
+  saveLocalities();
+};
+
 // ── SELL BUSINESS REQUESTS ─────────────────────────────────────────────────
 export interface SellBusinessRequest {
   id: string;

@@ -90,6 +90,9 @@ import {
   toggleFilterMasterItemActive,
   deleteFilterMasterItem,
   editFilterMasterItem,
+  masterLocalitiesDb,
+  addLocality,
+  toggleLocalityActive,
   adminModulesDb,
   toggleAdminModuleActive,
   deleteAdminModule,
@@ -570,6 +573,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [editingProperty, setEditingProperty] = useState<PropertyListing | null>(null);
   const [editingFranchise, setEditingFranchise] = useState<FranchiseListing | null>(null);
   const [editingBroker, setEditingBroker] = useState<Dealer | null>(null);
+
+  // Localities Management State
+  const [newLocalityName, setNewLocalityName] = useState('');
+  const [selectedParentCity, setSelectedParentCity] = useState('Hyderabad');
 
 
   // ================= PASSWORD AUTH LOGIN SCREEN (WHITE & GREEN PROFESSIONAL) =================
@@ -3064,27 +3071,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
                         </button>
 
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Delete category "${item.name}"?`)) {
-                              deleteFilterMasterItem(item.id, 'category');
-                              showNotification(`Category deleted`, 'warning');
-                            }
-                          }}
-                          style={{
-                            backgroundColor: 'transparent',
-                            color: '#EF4444',
-                            border: 'none',
-                            padding: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                          }}
-                          title="Delete Category"
-                        >
-                          <FaTrash />
-                        </button>
                       </div>
                     </div>
                   ))}
@@ -3173,27 +3159,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
                         </button>
 
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Delete location "${item.name}"?`)) {
-                              deleteFilterMasterItem(item.id, 'location');
-                              showNotification(`Location deleted`, 'warning');
-                            }
-                          }}
-                          style={{
-                            backgroundColor: 'transparent',
-                            color: '#EF4444',
-                            border: 'none',
-                            padding: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                          }}
-                          title="Delete Location"
-                        >
-                          <FaTrash />
-                        </button>
                       </div>
                     </div>
                   ))}
@@ -3282,27 +3247,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
                         </button>
 
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Delete business type "${item.name}"?`)) {
-                              deleteFilterMasterItem(item.id, 'business_type');
-                              showNotification(`Business type deleted`, 'warning');
-                            }
-                          }}
-                          style={{
-                            backgroundColor: 'transparent',
-                            color: '#EF4444',
-                            border: 'none',
-                            padding: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                          }}
-                          title="Delete Business Type"
-                        >
-                          <FaTrash />
-                        </button>
                       </div>
                     </div>
                   ))}
@@ -3370,18 +3314,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           style={{ backgroundColor: item.is_active ? '#10B981' : '#CBD5E1', color: '#FFFFFF', border: 'none', padding: '5px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
                         >
                           {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Delete property type "${item.name}"?`)) {
-                              deleteFilterMasterItem(item.id, 'property_type');
-                              showNotification(`Property type deleted`, 'warning');
-                            }
-                          }}
-                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', padding: '6px', cursor: 'pointer', fontSize: '13px' }}
-                        >
-                          <FaTrash />
                         </button>
                       </div>
                     </div>
@@ -3451,18 +3383,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         >
                           {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Delete property status "${item.name}"?`)) {
-                              deleteFilterMasterItem(item.id, 'property_status');
-                              showNotification(`Property status deleted`, 'warning');
-                            }
-                          }}
-                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', padding: '6px', cursor: 'pointer', fontSize: '13px' }}
-                        >
-                          <FaTrash />
-                        </button>
                       </div>
                     </div>
                   ))}
@@ -3531,17 +3451,89 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         >
                           {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
                         </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD 7: Localities & Areas Management */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Localities & Areas</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterLocalitiesDb.filter(c => c.is_active).length} Active / {masterLocalitiesDb.length} Total
+                  </span>
+                </div>
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newLocalityName.trim()) return;
+                    addLocality(newLocalityName.trim(), selectedParentCity);
+                    setNewLocalityName('');
+                    showNotification('Locality added successfully!', 'success');
+                  }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select 
+                      value={selectedParentCity} 
+                      onChange={(e) => setSelectedParentCity(e.target.value)}
+                      style={{ width: '40%', padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
+                    >
+                      {masterLocationsDb.filter(l => l.is_active).map(loc => (
+                        <option key={loc.id} value={loc.name}>{loc.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Add locality (e.g. Kukatpally)..."
+                      value={newLocalityName}
+                      onChange={(e) => setNewLocalityName(e.target.value)}
+                      style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                    />
+                    <button
+                      type="submit"
+                      style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <FaPlus /> Add
+                    </button>
+                  </div>
+                </form>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterLocalitiesDb.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                          📍 {item.name}
+                        </span>
+                        <span style={{ fontSize: '10.5px', color: '#64748B', marginTop: '2px', fontWeight: 600 }}>
+                          City: {item.parentCity}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(`Delete property ownership "${item.name}"?`)) {
-                              deleteFilterMasterItem(item.id, 'property_ownership');
-                              showNotification(`Property ownership deleted`, 'warning');
-                            }
+                            toggleLocalityActive(item.id);
+                            showNotification(`Locality "${item.name}" updated`, 'info');
                           }}
-                          style={{ backgroundColor: 'transparent', color: '#EF4444', border: 'none', padding: '6px', cursor: 'pointer', fontSize: '13px' }}
+                          style={{ backgroundColor: item.is_active ? '#10B981' : '#CBD5E1', color: '#FFFFFF', border: 'none', padding: '5px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
                         >
-                          <FaTrash />
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
                         </button>
                       </div>
                     </div>
