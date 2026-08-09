@@ -534,6 +534,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                     </label>
                   ))}
                 </div>
+              )}
             </div>
           </div>
           )}
