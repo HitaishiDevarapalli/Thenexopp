@@ -211,10 +211,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
 
   const AddBusinessForm = () => {
     const [formData, setFormData] = useState<Partial<BusinessListing>>({
-      title: '', description: '', category: categories[0]?.name || '', businessType: businessTypes[0]?.name || '',
-      city: '', state: 'Andhra Pradesh', askingPrice: 0, priceDisplay: '', imageUrl: '', 
-      establishedYear: new Date().getFullYear(), employeesCount: '1-10', revenueMonthly: '', profitMonthly: '',
-      reasonForSale: '', featured: false, published: true, status: 'Available'
+      title: '', description: '', category: categories[0]?.name || 'Retail', businessType: businessTypes[0]?.name || 'Private Limited',
+      city: 'Hyderabad', state: 'Andhra Pradesh', askingPrice: 50, priceDisplay: '', imageUrl: '', 
+      establishedYear: new Date().getFullYear(), employeesCount: '1-10', revenueMonthly: '₹ 2 L / month', profitMonthly: '25% Net Profit',
+      reasonForSale: 'Business Expansion', featured: false, published: true, status: 'Available'
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -265,7 +265,12 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input required type="text" className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+              <select required className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.city || 'Hyderabad'} onChange={e => setFormData({...formData, city: e.target.value})}>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Vijayawada">Vijayawada</option>
+                <option value="Guntur">Guntur</option>
+                <option value="Visakhapatnam">Visakhapatnam</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">State</label>

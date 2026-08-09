@@ -1491,10 +1491,10 @@ const defaultMasterCategories: FilterMasterItem[] = [
 ];
 
 const defaultMasterLocations: FilterMasterItem[] = [
-  { id: 'loc_1', name: 'Guntur', is_active: true, type: 'location' },
+  { id: 'loc_1', name: 'Hyderabad', is_active: true, type: 'location' },
   { id: 'loc_2', name: 'Vijayawada', is_active: true, type: 'location' },
-  { id: 'loc_3', name: 'Hyderabad', is_active: true, type: 'location' },
-  { id: 'loc_4', name: 'Other Locations', is_active: true, type: 'location' },
+  { id: 'loc_3', name: 'Guntur', is_active: true, type: 'location' },
+  { id: 'loc_4', name: 'Visakhapatnam', is_active: true, type: 'location' },
 ];
 
 const defaultMasterPropertyTypes: FilterMasterItem[] = [
