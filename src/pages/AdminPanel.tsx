@@ -1243,11 +1243,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <input
                 type="text"
                 placeholder="Search anything..."
-                style={{ width: '100%', padding: '9px 40px 9px 38px', border: '1px solid #E2E8F0', borderRadius: '8px', backgroundColor: '#F8FAFC', fontSize: '0.85rem', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '9px 14px 9px 38px', border: '1px solid #E2E8F0', borderRadius: '8px', backgroundColor: '#F8FAFC', fontSize: '0.85rem', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
               />
-              <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', backgroundColor: '#E2E8F0', color: '#64748B', fontSize: '0.7rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px' }}>
-                ⌘K
-              </span>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid #E2E8F0' }}>
