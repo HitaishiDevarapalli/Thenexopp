@@ -607,7 +607,8 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    minHeight: '230px',
+                    minHeight: '260px',
+                    height: '100%',
                     boxSizing: 'border-box',
                     cursor: 'pointer',
                   }}
