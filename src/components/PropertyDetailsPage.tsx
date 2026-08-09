@@ -54,7 +54,7 @@ const PropertyLocationMap: React.FC<{ latitude: number; longitude: number; title
     };
   }, [latitude, longitude, title, area, price]);
   
-  return <div ref={mapContainerRef} style={{ width: '100%', height: '100%', borderRadius: '16px', zIndex: 1 }} />;
+  return <div ref={mapContainerRef} data-lenis-prevent="true" style={{ width: '100%', height: '100%', borderRadius: '16px', zIndex: 1 }} />;
 };
 
 const getNearbyAmenities = (category: string, area: string, city: string) => {

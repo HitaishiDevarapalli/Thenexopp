@@ -117,6 +117,7 @@ export const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
   return (
     <div 
       ref={mapContainerRef} 
+      data-lenis-prevent="true"
       style={{ 
         width: '100%', 
         height: height, 

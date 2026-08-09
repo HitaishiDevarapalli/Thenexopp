@@ -264,7 +264,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       `}</style>
 
       {/* Map Container */}
-      <div ref={mapContainerRef} style={{ width: '100%', height: '100%', backgroundColor: '#E2E8F0' }} />
+      <div ref={mapContainerRef} data-lenis-prevent="true" style={{ width: '100%', height: '100%', backgroundColor: '#E2E8F0' }} />
 
       {/* Top Floating Bar: Location Indicator & Live GPS Button */}
       <div style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', maxWidth: 'calc(100% - 32px)', zIndex: 500, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>

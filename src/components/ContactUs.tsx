@@ -350,8 +350,9 @@ export const ContactUs: React.FC = () => {
                 Located in the heart of Gachibowli Financial District, accessible via Outer Ring Road.
               </p>
               
-              <div style={{ borderRadius: '18px', overflow: 'hidden', height: '280px', border: '1px solid #CBD5E1', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+              <div data-lenis-prevent="true" style={{ borderRadius: '18px', overflow: 'hidden', height: '280px', border: '1px solid #CBD5E1', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
                 <iframe 
+                  data-lenis-prevent="true"
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
                   width="100%" 
                   height="100%" 
