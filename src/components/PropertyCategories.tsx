@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb } from '../db/marketplaceDb';
+import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -66,17 +66,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
     if (currentGlobalCity) {
       setLocationText(currentGlobalCity);
-      const allLocs = [
-        'Kukatpally', 'Madhapur', 'Gachibowli', 'Banjara Hills', 'Jubilee Hills', 'Secunderabad',
-        'Benz Circle', 'Patamata', 'Labbipet', 'Governorpet', 'Kanuru',
-        'Brodipet', 'Arundelpet', 'Lakshmipuram', 'Koretipadu', 'Nagarampalem',
-        'Gajuwaka', 'MVP Colony', 'Madhurawada', 'Dwaraka Nagar', 'Seethammadhara'
-      ];
-      const matchingLoc = allLocs.find(l => currentGlobalCity.toLowerCase().includes(l.toLowerCase()));
-      if (matchingLoc) {
-        setSelectedLocality(matchingLoc);
-      } else {
-        setSelectedLocality('');
+      // Auto-select city if it matches a master location
+      const matchedCity = masterLocationsDb.find(c => c.is_active && currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()));
+      if (matchedCity) {
+        setSelectedCityId(matchedCity.id);
+        // Check if the search text matches an area within that city
+        const matchedArea = masterAreasDb.find(a => a.cityId === matchedCity.id && a.is_active && currentGlobalCity.toLowerCase().includes(a.name.toLowerCase()));
+        if (matchedArea) {
+          setSelectedAreaId(matchedArea.id);
+          setAreaSearchText(matchedArea.name);
+        }
       }
     }
   }, [location?.city, location?.displayName, selectedCity]);
@@ -444,29 +443,35 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
   // 6 Specified Property Filter States (Location, Property Type, Price, Status, Ownership, Sort By)
-  const [selectedLocationsFilter, setSelectedLocationsFilter] = useState<string[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<string>('');
+  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
+  const [selectedLocalityId, setSelectedLocalityId] = useState<string>('');
+  const [areaSearchText, setAreaSearchText] = useState<string>('');
+  const [localitySearchText, setLocalitySearchText] = useState<string>('');
+  const [areaDropdownOpen, setAreaDropdownOpen] = useState<boolean>(false);
+  const [localityDropdownOpen, setLocalityDropdownOpen] = useState<boolean>(false);
+
+
+
   const [selectedPropertyTypesFilter, setSelectedPropertyTypesFilter] = useState<string[]>([]);
   const [selectedPropertyStatusesFilter, setSelectedPropertyStatusesFilter] = useState<string[]>([]);
-  const [selectedLocality, setSelectedLocality] = useState<string>('');
   const [selectedPropertyOwnershipsFilter, setSelectedPropertyOwnershipsFilter] = useState<string[]>([]);
 
-  const cityLocalities = useMemo(() => {
-    const map: Record<string, string[]> = {
-      Hyderabad: [],
-      Vijayawada: [],
-      Guntur: [],
-      Visakhapatnam: []
-    };
-    masterLocalitiesDb.forEach(item => {
-      if (item.is_active) {
-        if (!map[item.parentCity]) {
-          map[item.parentCity] = [];
-        }
-        map[item.parentCity].push(item.name);
-      }
-    });
-    return map;
-  }, [masterLocalitiesDb]);
+  const handleCityChange = (cityId: string) => {
+    setSelectedCityId(cityId);
+    setSelectedAreaId('');
+    setSelectedLocalityId('');
+    setAreaSearchText('');
+    setLocalitySearchText('');
+  };
+
+  const handleAreaChange = (areaId: string) => {
+    setSelectedAreaId(areaId);
+    setSelectedLocalityId('');
+    setLocalitySearchText('');
+  };
+
+  // cityLocalities is no longer needed — replaced by hierarchical City→Area→Locality system
 
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
@@ -475,11 +480,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     globalToggleWishlist(id);
   };
 
-  const toggleLocationFilter = (val: string) => {
-    setSelectedLocationsFilter((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
-  };
+
 
   const togglePropertyTypeFilter = (val: string) => {
     setSelectedPropertyTypesFilter((prev) =>
@@ -524,7 +525,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   };
 
   const clearAllFilters = () => {
-    setSelectedLocationsFilter([]);
     setSelectedPropertyTypesFilter([]);
     setSelectedPropertyStatusesFilter([]);
     setSelectedPropertyOwnershipsFilter([]);
@@ -538,6 +538,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setBudget(isRent ? '₹ 1K - 10L+' : '₹ 1K - 1Cr+');
     setBhkFilter('Any BHK');
     setSortBy('Newest First');
+    setSelectedCityId('');
+    setSelectedAreaId('');
+    setSelectedLocalityId('');
+    setAreaSearchText('');
+    setLocalitySearchText('');
     if (onClearSearch) onClearSearch();
   };
 
@@ -551,6 +556,24 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
       const brokerRating = assignedBroker?.rating ? `${assignedBroker.rating} (${assignedBroker.reviewCount || 10})` : (p.agentRating ? `${p.agentRating} (${p.reviewCount || 10})` : '4.8 (24)');
       const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80';
+
+      // Resolve location IDs from text names if not already set
+      let resolvedCityId = p.cityId || '';
+      let resolvedAreaId = p.areaId || '';
+      let resolvedLocalityId = p.localityId || '';
+      if (!resolvedCityId && p.city) {
+        const matchedCity = masterLocationsDb.find(c => c.name.toLowerCase() === p.city.toLowerCase());
+        if (matchedCity) resolvedCityId = matchedCity.id;
+      }
+      if (!resolvedAreaId && p.area && resolvedCityId) {
+        const matchedArea = masterAreasDb.find(a => a.name.toLowerCase() === p.area.toLowerCase() && a.cityId === resolvedCityId);
+        if (matchedArea) resolvedAreaId = matchedArea.id;
+      }
+      if (!resolvedLocalityId && p.locality && resolvedAreaId) {
+        const matchedLoc = masterLocalitiesDb.find(l => l.name.toLowerCase() === p.locality!.toLowerCase() && l.areaId === resolvedAreaId);
+        if (matchedLoc) resolvedLocalityId = matchedLoc.id;
+      }
+
       return {
         id: p.id,
         title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
@@ -581,6 +604,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         sold: p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || false,
         soldDate: p.soldDate,
         viewsCount: p.viewsCount || 0,
+        cityId: resolvedCityId,
+        areaId: resolvedAreaId,
+        localityId: resolvedLocalityId,
       };
     });
 
@@ -602,14 +628,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     }
 
     let filtered = baseList.filter((item) => {
-      // Locality Filter
-      if (selectedLocality) {
-        const locLow = selectedLocality.toLowerCase().trim();
-        const matchesLoc = 
-          (item.location && item.location.toLowerCase().includes(locLow)) ||
-          (item.city && item.city.toLowerCase().includes(locLow)) ||
-          (item.title && item.title.toLowerCase().includes(locLow));
-        if (!matchesLoc) return false;
+      // Hierarchical Location Filter (City → Area → Locality)
+      if (selectedCityId) {
+        if (item.cityId !== selectedCityId) return false;
+      }
+      if (selectedAreaId) {
+        if (item.areaId !== selectedAreaId) return false;
+      }
+      if (selectedLocalityId) {
+        if (item.localityId !== selectedLocalityId) return false;
       }
 
       // Availability Filter
@@ -773,19 +800,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (activeQuickFilter === 'Top Brokers' && parseFloat(item.brokerRating) < 4.5) return false;
       }
 
-      // SPECIFIED FILTER 1: Location (Guntur, Vijayawada, Hyderabad, Other Locations)
-      if (selectedLocationsFilter.length > 0) {
-        const itemCity = (item.city || '').toLowerCase();
-        const itemLoc = (item.location || '').toLowerCase();
-        const matchLoc = selectedLocationsFilter.some((loc) => {
-          const normLoc = loc.toLowerCase();
-          if (normLoc === 'other locations') {
-            return !itemCity.includes('guntur') && !itemCity.includes('vijayawada') && !itemCity.includes('hyderabad');
-          }
-          return itemCity.includes(normLoc) || itemLoc.includes(normLoc);
-        });
-        if (!matchLoc) return false;
-      }
+      // SPECIFIED FILTER 1: Location — now handled by hierarchical City→Area→Locality filter above
 
       // SPECIFIED FILTER 2: Property Type (Residential, Commercial, Agricultural, Luxury Properties, New Projects)
       if (selectedPropertyTypesFilter.length > 0) {
@@ -874,7 +889,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     });
 
     return filtered;
-  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedLocationsFilter, selectedLocality, selectedPropertyTypesFilter, selectedPropertyStatusesFilter, selectedPropertyOwnershipsFilter, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
+  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedCityId, selectedAreaId, selectedLocalityId, selectedPropertyTypesFilter, selectedPropertyStatusesFilter, selectedPropertyOwnershipsFilter, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
 
   const totalPages = Math.ceil(displayProperties.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -1317,76 +1332,95 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               </div>
             </div>
 
-            {/* 1. Location Filter Section */}
+            {/* 1. Hierarchical Location Filter: City → Area → Locality */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
                 ■ Location
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {masterLocationsDb.filter(l => l.is_active).map((loc) => {
-                  const isSelected = selectedLocationsFilter.includes(loc.name);
+
+              {/* City Select */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>City</label>
+                <select
+                  value={selectedCityId}
+                  onChange={(e) => handleCityChange(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: selectedCityId ? '#0F172A' : '#94A3B8', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s' }}
+                >
+                  <option value="">All Cities</option>
+                  {masterLocationsDb.filter(c => c.is_active).map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Area Search/Select */}
+              <div style={{ marginBottom: '12px', position: 'relative' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Area</label>
+                <input
+                  type="text"
+                  placeholder={selectedCityId ? 'Search area...' : 'Select city first'}
+                  disabled={!selectedCityId}
+                  value={selectedAreaId ? (masterAreasDb.find(a => a.id === selectedAreaId)?.name || areaSearchText) : areaSearchText}
+                  onChange={(e) => { setAreaSearchText(e.target.value); setSelectedAreaId(''); setSelectedLocalityId(''); setLocalitySearchText(''); setAreaDropdownOpen(true); }}
+                  onFocus={() => { if (selectedCityId) setAreaDropdownOpen(true); if (selectedAreaId) { setAreaSearchText(''); setSelectedAreaId(''); setSelectedLocalityId(''); setLocalitySearchText(''); } }}
+                  onBlur={() => setTimeout(() => setAreaDropdownOpen(false), 200)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: '#0F172A', backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC', cursor: selectedCityId ? 'text' : 'not-allowed', outline: 'none', opacity: selectedCityId ? 1 : 0.6, boxSizing: 'border-box' }}
+                />
+                {areaDropdownOpen && selectedCityId && (() => {
+                  const areas = masterAreasDb.filter(a => a.cityId === selectedCityId && a.is_active && (!areaSearchText || a.name.toLowerCase().includes(areaSearchText.toLowerCase())));
+                  if (areas.length === 0) return <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px', fontSize: '13px', color: '#94A3B8', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>No areas found</div>;
                   return (
-                    <label key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleLocationFilter(loc.name)}
-                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>{loc.name}</span>
-                    </label>
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>
+                      {areas.map(a => (
+                        <div
+                          key={a.id}
+                          onMouseDown={(e) => { e.preventDefault(); handleAreaChange(a.id); setAreaSearchText(a.name); setAreaDropdownOpen(false); }}
+                          style={{ padding: '10px 14px', fontSize: '13.5px', fontWeight: 600, color: '#334155', cursor: 'pointer', borderBottom: '1px solid #F8FAFC', transition: 'background-color 0.15s' }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          {a.name}
+                        </div>
+                      ))}
+                    </div>
                   );
-                })}
+                })()}
+              </div>
+
+              {/* Locality Search/Select */}
+              <div style={{ position: 'relative' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locality</label>
+                <input
+                  type="text"
+                  placeholder={selectedAreaId ? 'Search locality...' : 'Select area first'}
+                  disabled={!selectedAreaId}
+                  value={selectedLocalityId ? (masterLocalitiesDb.find(l => l.id === selectedLocalityId)?.name || localitySearchText) : localitySearchText}
+                  onChange={(e) => { setLocalitySearchText(e.target.value); setSelectedLocalityId(''); setLocalityDropdownOpen(true); }}
+                  onFocus={() => { if (selectedAreaId) setLocalityDropdownOpen(true); if (selectedLocalityId) { setLocalitySearchText(''); setSelectedLocalityId(''); } }}
+                  onBlur={() => setTimeout(() => setLocalityDropdownOpen(false), 200)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: '#0F172A', backgroundColor: selectedAreaId ? '#FFFFFF' : '#F8FAFC', cursor: selectedAreaId ? 'text' : 'not-allowed', outline: 'none', opacity: selectedAreaId ? 1 : 0.6, boxSizing: 'border-box' }}
+                />
+                {localityDropdownOpen && selectedAreaId && (() => {
+                  const localities = masterLocalitiesDb.filter(l => l.areaId === selectedAreaId && l.is_active && (!localitySearchText || l.name.toLowerCase().includes(localitySearchText.toLowerCase())));
+                  if (localities.length === 0) return <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px', fontSize: '13px', color: '#94A3B8', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>No localities found</div>;
+                  return (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>
+                      {localities.map(l => (
+                        <div
+                          key={l.id}
+                          onMouseDown={(e) => { e.preventDefault(); setSelectedLocalityId(l.id); setLocalitySearchText(l.name); setLocalityDropdownOpen(false); }}
+                          style={{ padding: '10px 14px', fontSize: '13.5px', fontWeight: 600, color: '#334155', cursor: 'pointer', borderBottom: '1px solid #F8FAFC', transition: 'background-color 0.15s' }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          {l.name}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
-
-            {/* Area & Locality Section */}
-            {(() => {
-              const getParentCity = (loc: string) => {
-                const l = (loc || '').toLowerCase().trim();
-                if (!l) return '';
-                if (l.includes('hyderabad') || l.includes('kukatpally') || l.includes('madhapur') || l.includes('gachibowli') || l.includes('banjara') || l.includes('jubilee') || l.includes('secunderabad')) {
-                  return 'Hyderabad';
-                }
-                if (l.includes('vijayawada') || l.includes('benz circle') || l.includes('patamata') || l.includes('labbipet') || l.includes('governorpet') || l.includes('kanuru')) {
-                  return 'Vijayawada';
-                }
-                if (l.includes('guntur') || l.includes('brodipet') || l.includes('arundel') || l.includes('lakshmipuram') || l.includes('koretipadu') || l.includes('nagarampalem')) {
-                  return 'Guntur';
-                }
-                if (l.includes('visakhapatnam') || l.includes('vizag') || l.includes('gajuwaka') || l.includes('mvp') || l.includes('madhurawada') || l.includes('dwaraka') || l.includes('seethammadhara')) {
-                  return 'Visakhapatnam';
-                }
-                return '';
-              };
-
-              const activeCity = getParentCity(selectedLocationsFilter[0] || locationText || '');
-              if (!activeCity) return null;
-
-              return (
-                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                    ■ Area & Locality
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {cityLocalities[activeCity]?.map((loc) => {
-                      const isSelected = selectedLocality === loc;
-                      return (
-                        <label key={loc} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => setSelectedLocality(isSelected ? '' : loc)}
-                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                          />
-                          <span>{loc}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* 2. Property Type Filter Section */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
@@ -1572,7 +1606,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     else if (onBuyProperty) onBuyProperty(id);
                   }}
                   height={viewMode === 'map' ? '550px' : '360px'}
-                  localSearchLocation={selectedLocality ? `${selectedLocality}, ${locationText}` : locationText}
+                  localSearchLocation={(() => {
+                    const parts: string[] = [];
+                    if (selectedLocalityId) { const loc = masterLocalitiesDb.find(l => l.id === selectedLocalityId); if (loc) parts.push(loc.name); }
+                    if (selectedAreaId) { const area = masterAreasDb.find(a => a.id === selectedAreaId); if (area) parts.push(area.name); }
+                    if (selectedCityId) { const city = masterLocationsDb.find(c => c.id === selectedCityId); if (city) parts.push(city.name); }
+                    return parts.length > 0 ? parts.join(', ') : locationText;
+                  })()}
                 />
               </div>
             )}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb } from '../db/marketplaceDb';
+import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -102,12 +102,11 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       Guntur: [],
       Visakhapatnam: []
     };
-    masterLocalitiesDb.forEach(item => {
-      if (item.is_active) {
-        if (!map[item.parentCity]) {
-          map[item.parentCity] = [];
-        }
-        map[item.parentCity].push(item.name);
+    // Build city→area names map from the hierarchical structure
+    masterAreasDb.filter(a => a.is_active).forEach(area => {
+      const city = masterLocationsDb.find(c => c.id === area.cityId);
+      if (city && map[city.name] !== undefined) {
+        map[city.name].push(area.name);
       }
     });
     return map;

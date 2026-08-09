@@ -94,6 +94,9 @@ export interface Dealer {
 export interface PropertyListing {
   id: string;
   dealerId: string;
+  cityId?: string;
+  areaId?: string;
+  localityId?: string;
   featured?: boolean;
   title: string;
   description: string;
@@ -1637,41 +1640,98 @@ export const editFilterMasterItem = (id: string, type: 'category' | 'location' |
 
 export const updateFilterMasterItem = editFilterMasterItem;
 
-// ── MASTER LOCALITIES DATA ─────────────────────────────────────────────────
-export interface LocalityMasterItem {
+// ── MASTER AREAS & LOCALITIES DATA ─────────────────────────────────────────
+export interface AreaMasterItem {
   id: string;
+  cityId: string;
   name: string;
-  parentCity: string;
   is_active: boolean;
 }
 
-const defaultMasterLocalities: LocalityMasterItem[] = [
-  // Hyderabad
-  { id: 'loc_lh1', name: 'Kukatpally', parentCity: 'Hyderabad', is_active: true },
-  { id: 'loc_lh2', name: 'Madhapur', parentCity: 'Hyderabad', is_active: true },
-  { id: 'loc_lh3', name: 'Gachibowli', parentCity: 'Hyderabad', is_active: true },
-  { id: 'loc_lh4', name: 'Banjara Hills', parentCity: 'Hyderabad', is_active: true },
-  { id: 'loc_lh5', name: 'Jubilee Hills', parentCity: 'Hyderabad', is_active: true },
-  { id: 'loc_lh6', name: 'Secunderabad', parentCity: 'Hyderabad', is_active: true },
-  // Vijayawada
-  { id: 'loc_lv1', name: 'Benz Circle', parentCity: 'Vijayawada', is_active: true },
-  { id: 'loc_lv2', name: 'Patamata', parentCity: 'Vijayawada', is_active: true },
-  { id: 'loc_lv3', name: 'Labbipet', parentCity: 'Vijayawada', is_active: true },
-  { id: 'loc_lv4', name: 'Governorpet', parentCity: 'Vijayawada', is_active: true },
-  { id: 'loc_lv5', name: 'Kanuru', parentCity: 'Vijayawada', is_active: true },
-  // Guntur
-  { id: 'loc_lg1', name: 'Brodipet', parentCity: 'Guntur', is_active: true },
-  { id: 'loc_lg2', name: 'Arundelpet', parentCity: 'Guntur', is_active: true },
-  { id: 'loc_lg3', name: 'Lakshmipuram', parentCity: 'Guntur', is_active: true },
-  { id: 'loc_lg4', name: 'Koretipadu', parentCity: 'Guntur', is_active: true },
-  { id: 'loc_lg5', name: 'Nagarampalem', parentCity: 'Guntur', is_active: true },
-  // Visakhapatnam
-  { id: 'loc_ls1', name: 'Gajuwaka', parentCity: 'Visakhapatnam', is_active: true },
-  { id: 'loc_ls2', name: 'MVP Colony', parentCity: 'Visakhapatnam', is_active: true },
-  { id: 'loc_ls3', name: 'Madhurawada', parentCity: 'Visakhapatnam', is_active: true },
-  { id: 'loc_ls4', name: 'Dwaraka Nagar', parentCity: 'Visakhapatnam', is_active: true },
-  { id: 'loc_ls5', name: 'Seethammadhara', parentCity: 'Visakhapatnam', is_active: true },
+export interface LocalityMasterItem {
+  id: string;
+  areaId: string;
+  name: string;
+  is_active: boolean;
+}
+
+const defaultMasterAreas: AreaMasterItem[] = [
+  // Hyderabad (loc_1)
+  { id: 'area_hyd_1', cityId: 'loc_1', name: 'Kukatpally', is_active: true },
+  { id: 'area_hyd_2', cityId: 'loc_1', name: 'Madhapur', is_active: true },
+  { id: 'area_hyd_3', cityId: 'loc_1', name: 'Gachibowli', is_active: true },
+  { id: 'area_hyd_4', cityId: 'loc_1', name: 'Banjara Hills', is_active: true },
+  { id: 'area_hyd_5', cityId: 'loc_1', name: 'Jubilee Hills', is_active: true },
+  { id: 'area_hyd_6', cityId: 'loc_1', name: 'Secunderabad', is_active: true },
+  // Vijayawada (loc_2)
+  { id: 'area_vij_1', cityId: 'loc_2', name: 'Benz Circle', is_active: true },
+  { id: 'area_vij_2', cityId: 'loc_2', name: 'Patamata', is_active: true },
+  { id: 'area_vij_3', cityId: 'loc_2', name: 'Labbipet', is_active: true },
+  { id: 'area_vij_4', cityId: 'loc_2', name: 'Governorpet', is_active: true },
+  { id: 'area_vij_5', cityId: 'loc_2', name: 'Kanuru', is_active: true },
+  // Guntur (loc_3)
+  { id: 'area_gun_1', cityId: 'loc_3', name: 'Brodipet', is_active: true },
+  { id: 'area_gun_2', cityId: 'loc_3', name: 'Arundelpet', is_active: true },
+  { id: 'area_gun_3', cityId: 'loc_3', name: 'Lakshmipuram', is_active: true },
+  { id: 'area_gun_4', cityId: 'loc_3', name: 'Koretipadu', is_active: true },
+  { id: 'area_gun_5', cityId: 'loc_3', name: 'Nagarampalem', is_active: true }
 ];
+
+const defaultMasterLocalities: LocalityMasterItem[] = [
+  // Hyderabad -> Kukatpally (area_hyd_1)
+  { id: 'loc_lh1', areaId: 'area_hyd_1', name: 'JNTU Road', is_active: true },
+  { id: 'loc_lh2', areaId: 'area_hyd_1', name: 'KPHB Colony', is_active: true },
+  { id: 'loc_lh3', areaId: 'area_hyd_1', name: 'Pragathi Nagar', is_active: true },
+  { id: 'loc_lh4', areaId: 'area_hyd_1', name: 'Nizampet Road', is_active: true },
+  // Hyderabad -> Madhapur (area_hyd_2)
+  { id: 'loc_lh5', areaId: 'area_hyd_2', name: 'Hitech City', is_active: true },
+  { id: 'loc_lh6', areaId: 'area_hyd_2', name: 'Kavuri Hills', is_active: true },
+  { id: 'loc_lh7', areaId: 'area_hyd_2', name: 'Ayyappa Society', is_active: true },
+  // Hyderabad -> Gachibowli (area_hyd_3)
+  { id: 'loc_lh8', areaId: 'area_hyd_3', name: 'Financial District', is_active: true },
+  { id: 'loc_lh9', areaId: 'area_hyd_3', name: 'Nanakramguda', is_active: true },
+  { id: 'loc_lh10', areaId: 'area_hyd_3', name: 'Telecom Nagar', is_active: true },
+  { id: 'loc_lh11', areaId: 'area_hyd_3', name: 'DLF Road', is_active: true },
+  // Hyderabad -> Banjara Hills (area_hyd_4)
+  { id: 'loc_lh12', areaId: 'area_hyd_4', name: 'Road No 1', is_active: true },
+  { id: 'loc_lh13', areaId: 'area_hyd_4', name: 'Road No 12', is_active: true },
+  { id: 'loc_lh14', areaId: 'area_hyd_4', name: 'MLA Colony', is_active: true },
+  // Hyderabad -> Jubilee Hills (area_hyd_5)
+  { id: 'loc_lh15', areaId: 'area_hyd_5', name: 'Road No 36', is_active: true },
+  { id: 'loc_lh16', areaId: 'area_hyd_5', name: 'Road No 45', is_active: true },
+  // Secunderabad (area_hyd_6)
+  { id: 'loc_lh17', areaId: 'area_hyd_6', name: 'Sindhi Colony', is_active: true },
+  { id: 'loc_lh18', areaId: 'area_hyd_6', name: 'Sainikpuri', is_active: true },
+
+  // Vijayawada -> Benz Circle (area_vij_1)
+  { id: 'loc_lv1', areaId: 'area_vij_1', name: 'Ring Road', is_active: true },
+  { id: 'loc_lv2', areaId: 'area_vij_1', name: 'Mahanadu Road', is_active: true },
+  // Vijayawada -> Patamata (area_vij_2)
+  { id: 'loc_lv3', areaId: 'area_vij_2', name: 'Patamata Lanka', is_active: true },
+  { id: 'loc_lv4', areaId: 'area_vij_2', name: 'Pantakaluva Road', is_active: true },
+  // Vijayawada -> Labbipet (area_vij_3)
+  { id: 'loc_lv5', areaId: 'area_vij_3', name: 'MG Road', is_active: true },
+  { id: 'loc_lv6', areaId: 'area_vij_3', name: 'Siddhartha Nagar', is_active: true },
+
+  // Guntur -> Brodipet (area_gun_1)
+  { id: 'loc_lg1', areaId: 'area_gun_1', name: '1st Lane', is_active: true },
+  { id: 'loc_lg2', areaId: 'area_gun_1', name: '3rd Lane', is_active: true },
+  { id: 'loc_lg3', areaId: 'area_gun_1', name: '5th Lane', is_active: true },
+  // Guntur -> Arundelpet (area_gun_2)
+  { id: 'loc_lg4', areaId: 'area_gun_2', name: '10th Line', is_active: true },
+  { id: 'loc_lg5', areaId: 'area_gun_2', name: '12th Line', is_active: true },
+  // Guntur -> Lakshmipuram (area_gun_3)
+  { id: 'loc_lg6', areaId: 'area_gun_3', name: 'Vidya Nagar', is_active: true },
+  { id: 'loc_lg7', areaId: 'area_gun_3', name: 'NGO Colony', is_active: true },
+];
+
+const loadAreas = (): AreaMasterItem[] => {
+  try {
+    const stored = localStorage.getItem('nexopp_master_areas');
+    if (stored) return JSON.parse(stored);
+  } catch (e) {}
+  return defaultMasterAreas;
+};
 
 const loadLocalities = (): LocalityMasterItem[] => {
   try {
@@ -1681,7 +1741,15 @@ const loadLocalities = (): LocalityMasterItem[] => {
   return defaultMasterLocalities;
 };
 
+export let masterAreasDb: AreaMasterItem[] = loadAreas();
 export let masterLocalitiesDb: LocalityMasterItem[] = loadLocalities();
+
+const saveAreas = () => {
+  try {
+    localStorage.setItem('nexopp_master_areas', JSON.stringify(masterAreasDb));
+  } catch (e) {}
+  notifyDataChanged();
+};
 
 const saveLocalities = () => {
   try {
@@ -1690,19 +1758,57 @@ const saveLocalities = () => {
   notifyDataChanged();
 };
 
-export const addLocality = (name: string, parentCity: string) => {
+export const addArea = (name: string, cityId: string) => {
+  const newItem: AreaMasterItem = {
+    id: `area_${Date.now()}`,
+    cityId,
+    name,
+    is_active: true
+  };
+  masterAreasDb = [...masterAreasDb, newItem];
+  saveAreas();
+};
+
+export const editArea = (id: string, newName: string) => {
+  masterAreasDb = masterAreasDb.map(a => a.id === id ? { ...a, name: newName } : a);
+  saveAreas();
+};
+
+export const toggleAreaActive = (id: string) => {
+  masterAreasDb = masterAreasDb.map(a => a.id === id ? { ...a, is_active: !a.is_active } : a);
+  saveAreas();
+};
+
+export const deleteArea = (id: string) => {
+  masterAreasDb = masterAreasDb.filter(a => a.id !== id);
+  masterLocalitiesDb = masterLocalitiesDb.filter(l => l.areaId !== id);
+  saveAreas();
+  saveLocalities();
+};
+
+export const addLocality = (name: string, areaId: string) => {
   const newItem: LocalityMasterItem = {
     id: `loc_l_${Date.now()}`,
+    areaId,
     name,
-    parentCity,
     is_active: true
   };
   masterLocalitiesDb = [...masterLocalitiesDb, newItem];
   saveLocalities();
 };
 
+export const editLocality = (id: string, newName: string) => {
+  masterLocalitiesDb = masterLocalitiesDb.map(l => l.id === id ? { ...l, name: newName } : l);
+  saveLocalities();
+};
+
 export const toggleLocalityActive = (id: string) => {
   masterLocalitiesDb = masterLocalitiesDb.map(l => l.id === id ? { ...l, is_active: !l.is_active } : l);
+  saveLocalities();
+};
+
+export const deleteLocality = (id: string) => {
+  masterLocalitiesDb = masterLocalitiesDb.filter(l => l.id !== id);
   saveLocalities();
 };
 

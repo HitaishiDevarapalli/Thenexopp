@@ -91,6 +91,7 @@ import {
   deleteFilterMasterItem,
   editFilterMasterItem,
   masterLocalitiesDb,
+  masterAreasDb,
   addLocality,
   toggleLocalityActive,
   adminModulesDb,
@@ -576,7 +577,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   // Localities Management State
   const [newLocalityName, setNewLocalityName] = useState('');
-  const [selectedParentCity, setSelectedParentCity] = useState('Hyderabad');
+  const [selectedLocalityCityId, setSelectedLocalityCityId] = useState(masterLocationsDb[0]?.id || '');
+  const [selectedLocalityAreaId, setSelectedLocalityAreaId] = useState('');
 
 
   // ================= PASSWORD AUTH LOGIN SCREEN (WHITE & GREEN PROFESSIONAL) =================
@@ -3466,8 +3468,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <form 
                   onSubmit={(e) => {
                     e.preventDefault();
-                    if (!newLocalityName.trim()) return;
-                    addLocality(newLocalityName.trim(), selectedParentCity);
+                    if (!newLocalityName.trim() || !selectedLocalityAreaId) return;
+                    addLocality(newLocalityName.trim(), selectedLocalityAreaId);
                     setNewLocalityName('');
                     showNotification('Locality added successfully!', 'success');
                   }}
@@ -3475,24 +3477,35 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 >
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <select 
-                      value={selectedParentCity} 
-                      onChange={(e) => setSelectedParentCity(e.target.value)}
-                      style={{ width: '40%', padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
+                      value={selectedLocalityCityId} 
+                      onChange={(e) => { setSelectedLocalityCityId(e.target.value); setSelectedLocalityAreaId(''); }}
+                      style={{ width: '30%', padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
                     >
                       {masterLocationsDb.filter(l => l.is_active).map(loc => (
-                        <option key={loc.id} value={loc.name}>{loc.name}</option>
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
+                    <select 
+                      value={selectedLocalityAreaId} 
+                      onChange={(e) => setSelectedLocalityAreaId(e.target.value)}
+                      style={{ width: '30%', padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
+                    >
+                      <option value="">Select Area</option>
+                      {masterAreasDb.filter(a => a.cityId === selectedLocalityCityId && a.is_active).map(area => (
+                        <option key={area.id} value={area.id}>{area.name}</option>
                       ))}
                     </select>
                     <input
                       type="text"
-                      placeholder="Add locality (e.g. Kukatpally)..."
+                      placeholder="Add locality..."
                       value={newLocalityName}
                       onChange={(e) => setNewLocalityName(e.target.value)}
                       style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
                     />
                     <button
                       type="submit"
-                      style={{ backgroundColor: '#059669', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                      disabled={!selectedLocalityAreaId}
+                      style={{ backgroundColor: selectedLocalityAreaId ? '#059669' : '#94A3B8', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: selectedLocalityAreaId ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
                       <FaPlus /> Add
                     </button>
@@ -3518,7 +3531,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           📍 {item.name}
                         </span>
                         <span style={{ fontSize: '10.5px', color: '#64748B', marginTop: '2px', fontWeight: 600 }}>
-                          City: {item.parentCity}
+                          Area: {(() => { const area = masterAreasDb.find(a => a.id === item.areaId); return area ? `${area.name} (${masterLocationsDb.find(c => c.id === area.cityId)?.name || ''})` : item.areaId; })()}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
