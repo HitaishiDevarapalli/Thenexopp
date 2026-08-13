@@ -707,13 +707,15 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
           }
         });
 
-        await prisma.userActivity.create({
-          data: {
-            customerId: customer.id,
-            activityType: 'LOGIN',
-            description: isNewCustomer ? 'New customer registered and logged in using OTP' : 'Customer logged in using OTP'
-          }
-        });
+        if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+          await prisma.userActivity.create({
+            data: {
+              customerId: customer.id,
+              activityType: 'LOGIN',
+              description: isNewCustomer ? 'New customer registered and logged in using OTP' : 'Customer logged in using OTP'
+            }
+          }).catch(() => {});
+        }
       } catch (logErr) {
         console.error('Failed to log login history/activity:', logErr);
       }
@@ -937,14 +939,18 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
       });
     }
 
-    // Record Activity
-    await prisma.userActivity.create({
-      data: {
-        customerId: customer.id,
-        activityType: 'PROFILE_COMPLETED',
-        description: 'Completed mandatory customer profile details'
-      }
-    });
+    // Record Activity safely
+    if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+      try {
+        await prisma.userActivity.create({
+          data: {
+            customerId: customer.id,
+            activityType: 'PROFILE_COMPLETED',
+            description: 'Completed mandatory customer profile details'
+          }
+        });
+      } catch (_) {}
+    }
 
     // Generate fresh tokens with updated profileCompleted state
     const userPayload = {
@@ -1036,16 +1042,20 @@ app.post('/api/favorites', authMiddleware, async (req, res, next) => {
       });
     }
 
-    // Log Activity
-    await prisma.userActivity.create({
-      data: {
-        customerId: req.user.id,
-        activityType: 'FAVORITE_ADD',
-        listingType,
-        listingId,
-        description: `Added "${listingTitle}" to favorites`
-      }
-    });
+    // Log Activity safely
+    if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+      try {
+        await prisma.userActivity.create({
+          data: {
+            customerId: req.user.id,
+            activityType: 'FAVORITE_ADD',
+            listingType,
+            listingId,
+            description: `Added "${listingTitle}" to favorites`
+          }
+        });
+      } catch (_) {}
+    }
 
     return res.json({ success: true, message: 'Added to favorites successfully.' });
   } catch (err) {
