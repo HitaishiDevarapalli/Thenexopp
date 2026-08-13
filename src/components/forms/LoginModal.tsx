@@ -16,25 +16,21 @@ export const LoginModal: React.FC = () => {
         right: 0,
         bottom: 0,
         zIndex: 9999999,
-        backgroundColor: 'rgba(15, 23, 42, 0.85)',
-        backdropFilter: 'blur(12px)',
+        backgroundColor: 'rgba(2, 20, 14, 0.75)',
+        backdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '20px',
         overflowY: 'auto',
-        maxHeight: '100vh'
       }}
       onClick={closeLoginModal}
     >
-      <div 
-        onClick={(e) => e.stopPropagation()} 
-        style={{ 
-          width: '100%', 
-          maxWidth: '1040px',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          borderRadius: '24px'
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: '480px',
         }}
       >
         <LoginPage onClose={closeLoginModal} isModal={true} />
