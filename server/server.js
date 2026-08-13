@@ -638,14 +638,13 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     let isNewCustomer = false;
     try {
       const existing = await prisma.customer.findFirst({
-        where: { OR: [{ mobile: verifiedMobile }, { phone: verifiedMobile }, { email: mockEmail }] },
+        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
       });
 
       if (existing) {
         customer = await prisma.customer.update({
           where: { id: existing.id },
           data: {
-            mobile: existing.mobile || verifiedMobile,
             phone: existing.phone || verifiedMobile,
             name: existing.name || targetName,
             gender: existing.gender || gender,
@@ -660,7 +659,6 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
           data: {
             name: targetName,
             email: mockEmail,
-            mobile: verifiedMobile,
             phone: verifiedMobile,
             gender: gender || 'Male',
             district: district || 'Hyderabad',
@@ -907,7 +905,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
 
     if (!customer && userMobile) {
       customer = await prisma.customer.findFirst({
-        where: { OR: [{ mobile: userMobile }, { phone: userMobile }] }
+        where: { OR: [{ phone: userMobile }, { email: `${userMobile}@nexopp.in` }] }
       }).catch(() => null);
     }
 
@@ -926,7 +924,6 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
         data: {
           name: name.trim(),
           email: `${userMobile || 'user'}@nexopp.in`,
-          mobile: userMobile,
           phone: userMobile,
           gender: gender || 'Male',
           district: area || 'Hyderabad',
@@ -1412,16 +1409,13 @@ app.get('/api/admin/customers', authMiddleware, requireRole(['SUPER_ADMIN', 'ADM
     if (search) {
       where.OR = [
         { name: { contains: String(search), mode: 'insensitive' } },
-        { mobile: { contains: String(search), mode: 'insensitive' } },
-        { phone: { contains: String(search), mode: 'insensitive' } }
+        { phone: { contains: String(search), mode: 'insensitive' } },
+        { email: { contains: String(search), mode: 'insensitive' } }
       ];
     }
 
     if (area) {
-      where.OR = [
-        { area: { contains: String(area), mode: 'insensitive' } },
-        { district: { contains: String(area), mode: 'insensitive' } }
-      ];
+      where.district = { contains: String(area), mode: 'insensitive' };
     }
 
     if (interest) {
