@@ -454,7 +454,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     setError('');
     setSuccess('');
 
-    const clean = mobile.replace(/\D/g);
+    const clean = mobile.replace(/\D/g, '');
     if (clean.length !== 10) {
       setError('Please enter a valid 10-digit mobile number.');
       return;
@@ -495,7 +495,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
     setLoading(true);
     try {
-      const clean = mobile.replace(/\D/g);
+      const clean = mobile.replace(/\D/g, '');
       const res = await fetch(`${apiBase()}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -572,7 +572,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
       setStep('success');
       setTimeout(() => {
-        const clean = mobile.replace(/\D/g);
+        const clean = mobile.replace(/\D/g, '');
         const email = `${clean}@nexopp.in`;
         loginWithGmail(
           email,
@@ -596,7 +596,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     setOtp(Array(6).fill(''));
     setLoading(true);
     try {
-      const clean = mobile.replace(/\D/g);
+      const clean = mobile.replace(/\D/g, '');
       const res = await fetch(`${apiBase()}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -616,7 +616,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
   /* OTP digit handlers */
   const onDigitChange = (val: string, idx: number) => {
-    const clean = val.replace(/\D/g).slice(-1);
+    const clean = val.replace(/\D/g, '').slice(-1);
     const next = [...otp];
     next[idx] = clean;
     setOtp(next);
@@ -645,7 +645,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
   const onDigitPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const paste = e.clipboardData.getData('text').replace(/\D/g).slice(0, 6);
+    const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     if (!paste) return;
     const next = Array(6).fill('').map((_, i) => paste[i] || '');
     setOtp(next);
@@ -656,7 +656,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   };
 
   const handleMobileInput = (val: string) => {
-    const clean = val.replace(/\D/g).slice(0, 10);
+    const clean = val.replace(/\D/g, '').slice(0, 10);
     setMobile(clean);
     setError('');
   };
