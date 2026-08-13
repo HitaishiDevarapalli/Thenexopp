@@ -411,7 +411,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
     }
 
     const formattedMobile = `91${cleaned}`;
-    const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}`;
+    const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}&otp_length=6`;
 
     const response = await fetch(url, {
       method: 'POST',
