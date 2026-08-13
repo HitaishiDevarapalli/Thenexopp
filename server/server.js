@@ -407,9 +407,9 @@ app.post('/api/auth/send-otp', async (req, res) => {
         return res.status(429).json({ error: `Too many attempts or requests. Please try again after ${minutesLeft} minutes.` });
       }
 
-      // Check 30 seconds limit between requests
-      if (now - session.lastOtpRequestAt < 30000) {
-        const secondsLeft = Math.ceil((30000 - (now - session.lastOtpRequestAt)) / 1000);
+      // Check 5 seconds limit between requests
+      if (now - session.lastOtpRequestAt < 5000) {
+        const secondsLeft = Math.ceil((5000 - (now - session.lastOtpRequestAt)) / 1000);
         return res.status(429).json({ error: `Please wait ${secondsLeft} seconds before requesting another OTP.` });
       }
 
@@ -418,10 +418,10 @@ app.post('/api/auth/send-otp', async (req, res) => {
         session.firstRequestInWindowAt = now;
         session.requestCount = 1;
       } else {
-        if (session.requestCount >= 3) {
-          session.blockedUntil = now + 15 * 60 * 1000;
+        if (session.requestCount >= 10) {
+          session.blockedUntil = now + 5 * 60 * 1000;
           otpSessionsMap.set(cleaned, session);
-          return res.status(429).json({ error: 'Maximum 3 OTP requests allowed within 15 minutes. Temporarily blocked.' });
+          return res.status(429).json({ error: 'Maximum OTP requests reached. Please wait a few minutes.' });
         }
         session.requestCount++;
       }
