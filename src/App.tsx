@@ -107,6 +107,14 @@ export const App: React.FC = () => {
   
   const [currentPath, setCurrentPath] = useState(window.location.pathname + window.location.search);
 
+  // Force update when global data/modules change
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    const handler = () => forceUpdate({});
+    window.addEventListener('nexopp_data_changed', handler);
+    return () => window.removeEventListener('nexopp_data_changed', handler);
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsInitialLoading(false);

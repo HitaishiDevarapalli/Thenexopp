@@ -522,3 +522,11 @@ model ShowcaseSettings {
   defaultPlaybackDurationSec Int      @default(10)
   updatedAt                  DateTime @updatedAt
 }
+
+model AdminModule {
+  id       String  @id
+  label    String
+  category String
+  isActive Boolean @default(true)
+  custom   Boolean @default(false)
+}

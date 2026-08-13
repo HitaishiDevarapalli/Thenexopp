@@ -188,6 +188,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     properties: [
       { id: 'listings', label: 'All Properties', icon: <FaListAlt /> },
       { id: 'editProperty', label: 'Edit Property', icon: <FaEdit /> },
+      { id: 'sellRequests', label: 'Sell Requests', icon: <FaFileAlt /> },
       { id: 'featured', label: 'Featured & Premium', icon: <FaStar /> },
       { id: 'analytics', label: 'Analytics & Stats', icon: <FaChartBar /> },
       { id: 'categories', label: 'Categories & Subtypes', icon: <FaFolder /> },
@@ -263,6 +264,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [registeredCustomers, setRegisteredCustomers] = useState<any[]>([]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [customerDistrictFilter, setCustomerDistrictFilter] = useState('All');
+  const [customerLoginHistory, setCustomerLoginHistory] = useState<any[]>([]);
+
+  const fetchCustomerLoginHistory = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/customers-login-history`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomerLoginHistory(data || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch login history:', e);
+    }
+  };
 
   const fetchCustomerDetails = async (id: string) => {
     try {
@@ -334,6 +348,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchRegisteredCustomers = () => {
     fetchCustomersList();
+    fetchCustomerLoginHistory();
   };
 
   const handleUpdateEnquiryStatus = async (id: string, newStatus: string) => {
@@ -387,6 +402,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   useEffect(() => {
     if (activeTab === 'overview') {
       fetchAdminDashboardStats();
+    }
+    if ((activeTab as string) === 'users_data') {
+      fetchRegisteredCustomers();
     }
   }, [activeTab]);
 
@@ -453,7 +471,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     }
 
     // Check Employee Users DB
-    const employee = employeeUsersDb.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+    const employee = employeeUsersDb.find(u => (u.email || '').toLowerCase() === email.toLowerCase() && u.password === password);
     if (employee) {
       if (employee.status !== 'Active') {
         setError('Your account is currently suspended. Please contact the administrator.');
@@ -826,7 +844,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   // Granular Permission Checking Logic
   const loggedInEmail = sessionStorage.getItem('nexopp_admin_user_email') || '';
-  const currentEmpUser = employeeUsersDb.find(u => u.email.toLowerCase() === loggedInEmail.toLowerCase());
+  const currentEmpUser = employeeUsersDb.find(u => (u.email || '').toLowerCase() === loggedInEmail.toLowerCase());
   const userRoleData = rolesDb.find(r => r.name === currentUserRole);
 
   // If user has customPermissions explicitly defined (even if empty or custom), use it! Otherwise fallback to role permissions
@@ -1834,10 +1852,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
                   {activeAnalyticsSlide === 'franchise' && (() => {
                     const data = [
-                      { label: 'Food/Dining', val: franchiseDb.filter(f => f.type.toLowerCase().includes('food') || f.type.toLowerCase().includes('restaurant')).length },
-                      { label: 'Retail/Stores', val: franchiseDb.filter(f => f.type.toLowerCase().includes('retail') || f.type.toLowerCase().includes('store')).length },
-                      { label: 'Services', val: franchiseDb.filter(f => f.type.toLowerCase().includes('service')).length },
-                      { label: 'Education', val: franchiseDb.filter(f => f.type.toLowerCase().includes('education')).length }
+                      { label: 'Food/Dining', val: franchiseDb.filter(f => (f.type || '').toLowerCase().includes('food') || (f.type || '').toLowerCase().includes('restaurant')).length },
+                      { label: 'Retail/Stores', val: franchiseDb.filter(f => (f.type || '').toLowerCase().includes('retail') || (f.type || '').toLowerCase().includes('store')).length },
+                      { label: 'Services', val: franchiseDb.filter(f => (f.type || '').toLowerCase().includes('service')).length },
+                      { label: 'Education', val: franchiseDb.filter(f => (f.type || '').toLowerCase().includes('education')).length }
                     ];
                     const maxVal = Math.max(...data.map(d => d.val), 1);
                     return (
@@ -1871,10 +1889,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
                   {activeAnalyticsSlide === 'business' && (() => {
                     const data = [
-                      { label: 'Food/Dining', val: businessDb.filter(b => b.industry.toLowerCase().includes('food')).length },
-                      { label: 'Healthcare', val: businessDb.filter(b => b.industry.toLowerCase().includes('health')).length },
-                      { label: 'Retail Stores', val: businessDb.filter(b => b.industry.toLowerCase().includes('retail') || b.industry.toLowerCase().includes('store')).length },
-                      { label: 'Services', val: businessDb.filter(b => b.industry.toLowerCase().includes('service')).length },
+                      { label: 'Food/Dining', val: businessDb.filter(b => (b.industry || '').toLowerCase().includes('food')).length },
+                      { label: 'Healthcare', val: businessDb.filter(b => (b.industry || '').toLowerCase().includes('health')).length },
+                      { label: 'Retail Stores', val: businessDb.filter(b => (b.industry || '').toLowerCase().includes('retail') || (b.industry || '').toLowerCase().includes('store')).length },
+                      { label: 'Services', val: businessDb.filter(b => (b.industry || '').toLowerCase().includes('service')).length },
                     ];
                     const maxVal = Math.max(...data.map(d => d.val), 1);
                     return (
@@ -6005,11 +6023,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>GUNTUR & AP USERS</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>TOTAL OTP LOGINS</div>
                 <div style={{ fontSize: '2rem', fontWeight: 800, color: '#8B5CF6', marginTop: '6px' }}>
-                  {registeredCustomers.filter(c => (c.district || '').toLowerCase().includes('guntur') || (c.district || '').toLowerCase().includes('vijayawada')).length}
+                  {customerLoginHistory.length}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Regional Footprint</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Real Login Sessions</div>
               </div>
             </div>
 
@@ -6118,6 +6136,64 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Real-Time OTP Login Activity Logs */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginTop: '24px' }}>
+              <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>OTP Login Activity Logs</h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '4px 0 0 0' }}>Real-time audit log of all successful mobile OTP logins generated directly from the database.</p>
+              </div>
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', fontWeight: 700 }}>
+                      <th style={{ padding: '16px 24px' }}>Customer Profile</th>
+                      <th style={{ padding: '16px 20px' }}>Contact Phone</th>
+                      <th style={{ padding: '16px 20px' }}>Location</th>
+                      <th style={{ padding: '16px 20px' }}>Device & OS</th>
+                      <th style={{ padding: '16px 20px' }}>Browser</th>
+                      <th style={{ padding: '16px 20px' }}>IP Address</th>
+                      <th style={{ padding: '16px 24px' }}>Login Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerLoginHistory.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ padding: '36px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>No OTP login history found.</td>
+                      </tr>
+                    ) : (
+                      customerLoginHistory.map((log: any) => (
+                        <tr key={log.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                          <td style={{ padding: '16px 24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <img
+                                src={log.customer?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(log.customer?.name || 'User')}&background=007A55&color=fff`}
+                                alt={log.customer?.name}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                              />
+                              <div>
+                                <div style={{ fontWeight: 800, color: '#0F172A' }}>{log.customer?.name || 'Verified Investor'}</div>
+                                <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{log.customer?.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '16px 20px', fontWeight: 700, color: '#0F172A' }}>{log.customer?.phone || 'N/A'}</td>
+                          <td style={{ padding: '16px 20px', color: '#047857', fontWeight: 700 }}>{log.customer?.district || log.customer?.area || 'Hyderabad'}</td>
+                          <td style={{ padding: '16px 20px', color: '#475569' }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>{log.device || 'Mobile'}</span>
+                            <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block' }}>{log.os || 'Android'}</span>
+                          </td>
+                          <td style={{ padding: '16px 20px', color: '#475569', fontSize: '0.82rem' }}>{log.browser || 'Chrome'}</td>
+                          <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: '#64748B', fontSize: '0.8rem' }}>{log.ipAddress || '127.0.0.1'}</td>
+                          <td style={{ padding: '16px 24px', fontSize: '0.82rem', color: '#0F172A', fontWeight: 600 }}>{log.loginAt ? new Date(log.loginAt).toLocaleString() : 'Just now'}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

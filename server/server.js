@@ -1448,6 +1448,30 @@ app.get('/api/admin/customers', authMiddleware, requireRole(['SUPER_ADMIN', 'ADM
   }
 });
 
+// 7.2. Admin CRM Customers Login History Logs
+app.get('/api/admin/customers-login-history', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const history = await prisma.customerLoginHistory.findMany({
+      include: {
+        customer: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            avatar: true,
+            district: true
+          }
+        }
+      },
+      orderBy: { loginAt: 'desc' },
+      take: 150
+    });
+    return res.json(history || []);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // 8. Admin CRM Customer Detailed Profile Fetch
 app.get('/api/admin/customers/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
   try {
@@ -2270,6 +2294,85 @@ app.put('/api/settings', async (req, res, next) => {
       create: { id: 'default', ...req.body },
     });
     return res.json(settings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── ADMIN MODULES ENDPOINTS ──────────────────────────────────────────────────
+app.get('/api/admin-modules', async (req, res) => {
+  try {
+    let modules = await prisma.adminModule.findMany({ orderBy: { id: 'asc' } }).catch(() => []);
+    if (modules.length === 0) {
+      const defaultModules = [
+        { id: 'properties', label: 'Property Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+        { id: 'franchises', label: 'Franchise Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+        { id: 'business', label: 'Business Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+        { id: 'demand_regions', label: 'Demand Regions', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+        { id: 'master_filters', label: 'Filters & Categories Control', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+        { id: 'brokers', label: 'Broker Management', category: 'USER MANAGEMENT', isActive: true, custom: false },
+        { id: 'users_data', label: 'User Management', category: 'USER MANAGEMENT', isActive: true, custom: false },
+        { id: 'team_members', label: 'Team Members', category: 'USER MANAGEMENT', isActive: true, custom: false },
+        { id: 'roles_permissions', label: 'Roles & Permissions', category: 'USER MANAGEMENT', isActive: true, custom: false },
+        { id: 'ai_assistant', label: 'AI Assistant', category: 'SITE MANAGEMENT', isActive: true, custom: false },
+        { id: 'main_page_settings', label: 'Main Page Settings', category: 'SITE MANAGEMENT', isActive: true, custom: false },
+      ];
+      await prisma.adminModule.createMany({
+        data: defaultModules,
+        skipDuplicates: true
+      }).catch(() => {});
+      modules = defaultModules;
+    }
+    return res.json(modules);
+  } catch (err) {
+    logger.error({ error: err.message }, 'Failed to fetch admin modules');
+    return res.json([]);
+  }
+});
+
+app.put('/api/admin-modules/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { isActive, label, category } = req.body;
+    const updated = await prisma.adminModule.update({
+      where: { id },
+      data: {
+        ...(isActive !== undefined && { isActive }),
+        ...(label !== undefined && { label }),
+        ...(category !== undefined && { category }),
+      }
+    });
+    return res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/admin-modules', async (req, res, next) => {
+  try {
+    const { id, label, category, isActive, custom } = req.body;
+    const created = await prisma.adminModule.create({
+      data: {
+        id,
+        label,
+        category,
+        isActive: isActive !== undefined ? isActive : true,
+        custom: custom !== undefined ? custom : true,
+      }
+    });
+    return res.json(created);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/admin-modules/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.adminModule.delete({
+      where: { id }
+    });
+    return res.json({ success: true });
   } catch (err) {
     next(err);
   }

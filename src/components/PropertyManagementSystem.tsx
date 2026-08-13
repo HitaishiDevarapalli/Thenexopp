@@ -5,13 +5,16 @@ import {
   updateProperty, 
   deleteProperty, 
   dealersDb,
-  notifyDataChanged
+  notifyDataChanged,
+  sellPropertyRequestsDb,
+  updateSellPropertyRequest,
+  deleteSellPropertyRequest
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
 import { 
-  FaBuilding, FaSearch, FaPlus, FaEdit, FaTrash, 
+  FaBuilding, FaSearch, FaPlus, FaEdit, FaTrash, FaFileAlt,
   FaCrown, FaMapMarkerAlt, FaFileExport, FaCopy, 
   FaCheck, FaChartBar, FaGlobe, FaMap, FaCity, FaCompass, 
   FaEnvelope, FaCrosshairs, FaExternalLinkAlt, FaTimes, 
@@ -41,7 +44,7 @@ const GOOGLE_PLACES_SUGGESTIONS = COMPREHENSIVE_INDIA_PLACES_DB;
 
 export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange }) => {
   // Main Navigation Tabs
-  const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports'>('listings');
+  const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'sellRequests'>('listings');
 
   React.useEffect(() => {
     if (activeSubTab) {
@@ -1327,6 +1330,113 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             <button onClick={exportToCSV} style={{ padding: '14px 32px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
               DOWNLOAD MASTER EXCEL / CSV
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODULE 7: SELL PROPERTY REQUESTS ================= */}
+      {activeModuleTab === 'sellRequests' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+                <FaFileAlt style={{ color: '#059669' }} /> Property Sell Requests
+              </h2>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, padding: '4px 10px', borderRadius: '20px', backgroundColor: '#ECFDF5', color: '#059669' }}>
+                {sellPropertyRequestsDb.length} Requests Total
+              </span>
+            </div>
+            
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #F1F5F9', color: '#475569', fontSize: '0.82rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <th style={{ padding: '12px 16px' }}>ID</th>
+                    <th style={{ padding: '12px 16px' }}>Seller Details</th>
+                    <th style={{ padding: '12px 16px' }}>Property Specifications</th>
+                    <th style={{ padding: '12px 16px' }}>Status</th>
+                    <th style={{ padding: '12px 16px' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sellPropertyRequestsDb.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding: '48px 16px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>
+                        No property sell requests found.
+                      </td>
+                    </tr>
+                  ) : (
+                    sellPropertyRequestsDb.map(r => (
+                      <tr key={r.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <td style={{ padding: '16px', fontSize: '0.82rem', fontFamily: 'monospace', color: '#64748B', fontWeight: 600 }}>{r.id.substring(0, 8)}</td>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>{r.name}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '2px', fontWeight: 600 }}>{r.mobile}</div>
+                          {r.email && <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '1px' }}>{r.email}</div>}
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>{r.propertyType}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '2px', fontWeight: 600 }}>{r.city}</div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '2px', fontStyle: 'italic' }}>
+                            Preferred Contact: {r.preferredContactMethod}
+                          </div>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <select 
+                            style={{ 
+                              padding: '6px 12px', 
+                              borderRadius: '20px', 
+                              border: 'none', 
+                              fontSize: '0.78rem', 
+                              fontWeight: 700, 
+                              outline: 'none', 
+                              cursor: 'pointer',
+                              backgroundColor: r.status === 'PENDING_REVIEW' ? '#FFEDD5' : r.status === 'APPROVED' ? '#DCFCE7' : r.status === 'REJECTED' ? '#FEE2E2' : '#DBEAFE',
+                              color: r.status === 'PENDING_REVIEW' ? '#C2410C' : r.status === 'APPROVED' ? '#15803D' : r.status === 'REJECTED' ? '#B91C1C' : '#1E40AF'
+                            }}
+                            value={r.status}
+                            onChange={(e) => {
+                              updateSellPropertyRequest(r.id, { status: e.target.value as any });
+                              if (showNotification) showNotification(`Updated status of "${r.name}'s" request to ${e.target.value}`, 'success');
+                            }}
+                          >
+                            <option value="PENDING_REVIEW">Pending</option>
+                            <option value="CONTACTED">Contacted</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                          </select>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <button 
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this sell request?')) {
+                                deleteSellPropertyRequest(r.id);
+                                if (showNotification) showNotification('Sell request deleted successfully', 'success');
+                              }
+                            }}
+                            style={{ 
+                              border: 'none', 
+                              backgroundColor: 'transparent', 
+                              color: '#EF4444', 
+                              cursor: 'pointer', 
+                              fontSize: '1rem', 
+                              padding: '6px',
+                              borderRadius: '6px',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FEE2E2'}
+                            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="Delete Request"
+                          >
+                            <FaTrash />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

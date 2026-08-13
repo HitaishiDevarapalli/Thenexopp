@@ -670,28 +670,43 @@ export const isModuleActive = (moduleId: string): boolean => {
 
 export const saveAdminModules = (modules: AdminModuleItem[]) => {
   adminModulesDb = modules;
-  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
   notifyDataChanged();
 };
 
 export const toggleAdminModuleActive = (id: string) => {
   adminModulesDb = adminModulesDb.map(m => m.id === id ? { ...m, isActive: !m.isActive } : m);
-  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
   notifyDataChanged();
+  
+  const updated = adminModulesDb.find(m => m.id === id);
+  if (updated) {
+    fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive: updated.isActive })
+    }).catch(err => console.error('API Sync Error:', err));
+  }
 };
 
 export const deleteAdminModule = (id: string) => {
   adminModulesDb = adminModulesDb.filter(m => m.id !== id);
-  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
   notifyDataChanged();
+
+  fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
+    method: 'DELETE'
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const addAdminModule = (label: string, category: AdminModuleItem['category']) => {
   const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
   const newItem: AdminModuleItem = { id, label, category, isActive: true, custom: true };
   adminModulesDb = [...adminModulesDb, newItem];
-  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
   notifyDataChanged();
+
+  fetch(`${API_BASE_URL}/api/admin-modules`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newItem)
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const persistAllToStorage = () => {
@@ -707,7 +722,6 @@ export const persistAllToStorage = () => {
   saveToStorage('nexopp_roles_db', rolesDb);
   saveToStorage('nexopp_demand_regions_db', demandRegionsDb);
   saveToStorage('nexopp_showcase_videos_db', showcaseVideosDb);
-  saveToStorage('nexopp_admin_modules_db', adminModulesDb);
 };
 
 // PostgreSQL Data Sync Loader & LocalStorage Fallback Persistence
@@ -726,11 +740,10 @@ const loadData = async () => {
     rolesDb = loadFromStorage('nexopp_roles_db', []);
     demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);
     showcaseVideosDb = loadFromStorage('nexopp_showcase_videos_db', []);
-    adminModulesDb = loadFromStorage('nexopp_admin_modules_db', defaultAdminModules);
-    employeeUsersDb = loadFromStorage('nexopp_employee_users_db', []);
-    rolesDb = loadFromStorage('nexopp_roles_db', []);
-    demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);
-    showcaseVideosDb = loadFromStorage('nexopp_showcase_videos_db', []);
+    
+    adminModulesDb = [...defaultAdminModules];
+    sellPropertyRequestsDb = [];
+    sellBusinessRequestsDb = [];
 
     // 2. Fetch from backend server API if available, replacing with server state as source of truth
     fetch(`${API_BASE_URL}/api/properties`)
@@ -846,14 +859,54 @@ const loadData = async () => {
       })
       .catch(err => console.error('API Sync Error:', err));
 
+    fetch(`${API_BASE_URL}/api/admin-modules`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          adminModulesDb = data;
+          notifyDataChanged();
+        }
+      })
+      .catch(err => console.error('API Sync Error for admin modules:', err));
+
     // Fetch sell business requests
     try {
       const sbrRes = await fetch(`${API_BASE_URL}/api/sell-business-requests`);
       if (sbrRes.ok) {
         const sbrData = await sbrRes.json();
-        if (Array.isArray(sbrData)) sellBusinessRequestsDb = sbrData;
+        if (Array.isArray(sbrData) && sbrData.length > 0) {
+          sellBusinessRequestsDb = sbrData;
+          notifyDataChanged();
+        }
       }
     } catch (e) { console.warn('Could not fetch sell business requests'); }
+
+    // Fetch sell property requests
+    try {
+      const sprRes = await fetch(`${API_BASE_URL}/api/sell-requests`);
+      if (sprRes.ok) {
+        const sprData = await sprRes.json();
+        if (Array.isArray(sprData) && sprData.length > 0) {
+          sellPropertyRequestsDb = sprData.map((d: any) => ({
+            id: d.id,
+            name: d.sellerName,
+            mobile: d.mobile,
+            email: d.email || '',
+            city: d.city,
+            propertyType: d.propertyType,
+            preferredContactMethod: d.message ? d.message.replace('Contact via ', '') : 'Phone Call',
+            status: d.status,
+            adminNotes: d.adminNotes || '',
+            createdAt: d.createdAt,
+            updatedAt: d.updatedAt,
+          }));
+          notifyDataChanged();
+        }
+      }
+    } catch (e) { console.warn('Could not fetch sell property requests'); }
 
   } catch (err) {
     console.error("Error initializing marketplace data:", err);
@@ -1904,10 +1957,21 @@ export const addSellPropertyRequest = (item: SellPropertyRequest) => {
 export const updateSellPropertyRequest = (id: string, updated: Partial<SellPropertyRequest>) => {
   sellPropertyRequestsDb = sellPropertyRequestsDb.map(r => r.id === id ? { ...r, ...updated } : r);
   notifyDataChanged();
+
+  const backendUpdate: any = { ...updated };
+  if (updated.name !== undefined) {
+    backendUpdate.sellerName = updated.name;
+    delete backendUpdate.name;
+  }
+  if (updated.preferredContactMethod !== undefined) {
+    backendUpdate.message = `Contact via ${updated.preferredContactMethod}`;
+    delete backendUpdate.preferredContactMethod;
+  }
+
   fetch(`${API_BASE_URL}/api/sell-requests/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updated)
+    body: JSON.stringify(backendUpdate)
   }).catch(err => console.error('API Sync Error:', err));
 };
 

@@ -74,31 +74,142 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     const statCards = [
       { title: 'Total Businesses', value: totalBusinesses, icon: <FaStore />, color: '#1E40AF', borderColor: '#1E40AF' },
       { title: 'Published', value: publishedBusinesses, icon: <FaEye />, color: '#059669', borderColor: '#059669' },
-      { title: 'Unpublished', value: unpublishedBusinesses, icon: <FaEyeSlash />, color: '#9CA3AF', borderColor: '#9CA3AF' },
-      { title: 'Featured', value: featuredBusinesses, icon: <FaStar />, color: '#D4A10F', borderColor: '#D4A10F' },
+      { title: 'Unpublished', value: unpublishedBusinesses, icon: <FaEyeSlash />, color: '#64748B', borderColor: '#64748B' },
+      { title: 'Featured', value: featuredBusinesses, icon: <FaStar />, color: '#D97706', borderColor: '#D97706' },
       { title: 'Pending Sell Requests', value: pendingSellRequests, icon: <FaFileAlt />, color: '#EA580C', borderColor: '#EA580C' },
       { title: 'Buy Enquiries', value: totalBuyEnquiries, icon: <FaInbox />, color: '#4F46E5', borderColor: '#4F46E5' },
       { title: 'Available', value: availableBusinesses, icon: <FaCheck />, color: '#10B981', borderColor: '#10B981' },
       { title: 'Sold/Unavailable', value: soldBusinesses, icon: <FaTimes />, color: '#EF4444', borderColor: '#EF4444' },
     ];
 
+    // Distributions
+    const categoryCounts = businesses.reduce((acc, b) => {
+      const cat = b.category || 'Retail';
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const typeCounts = businesses.reduce((acc, b) => {
+      const type = b.businessType || 'Private Limited';
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const cityCounts = businesses.reduce((acc, b) => {
+      const city = b.city || 'Hyderabad';
+      acc[city] = (acc[city] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const statusCounts = businesses.reduce((acc, b) => {
+      const status = b.status || 'Available';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
     return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaChartBar className="mr-3 text-[#1E40AF]" /> Business Dashboard</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', margin: '0 0 24px 0' }}>
+          <FaChartBar style={{ color: '#1E40AF' }} /> Business Dashboard & Analytics
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
           {statCards.map((stat, idx) => (
-            <div key={idx} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-6 border-l-4" style={{ borderColor: stat.borderColor }}>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-500 font-medium mb-1">{stat.title}</p>
-                  <p className="text-3xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                </div>
-                <div className="text-4xl opacity-20" style={{ color: stat.color }}>
-                  {stat.icon}
-                </div>
+            <div key={idx} style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', borderLeft: `4px solid ${stat.borderColor}`, boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{stat.title}</span>
+                <strong style={{ fontSize: '1.8rem', fontWeight: 800, color: stat.color, display: 'block', marginTop: '6px' }}>{stat.value}</strong>
+              </div>
+              <div style={{ fontSize: '1.8rem', color: stat.color, opacity: 0.25 }}>
+                {stat.icon}
               </div>
             </div>
           ))}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '24px' }}>
+          {/* Card 1: Category Distribution */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '0.85rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category Distribution</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {Object.entries(categoryCounts).map(([cat, count]) => {
+                const pct = totalBusinesses > 0 ? Math.round((count / totalBusinesses) * 100) : 0;
+                return (
+                  <div key={cat}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#1E293B' }}>
+                      <span>{cat}</span>
+                      <span>{count} ({pct}%)</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#1E40AF', borderRadius: '4px' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 2: Business Type Distribution */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '0.85rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Business Type Distribution</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {Object.entries(typeCounts).map(([type, count]) => {
+                const pct = totalBusinesses > 0 ? Math.round((count / totalBusinesses) * 100) : 0;
+                return (
+                  <div key={type}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#1E293B' }}>
+                      <span>{type}</span>
+                      <span>{count} ({pct}%)</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#4F46E5', borderRadius: '4px' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 3: Location Distribution */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '0.85rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>City Distribution</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {Object.entries(cityCounts).map(([city, count]) => {
+                const pct = totalBusinesses > 0 ? Math.round((count / totalBusinesses) * 100) : 0;
+                return (
+                  <div key={city}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#1E293B' }}>
+                      <span>{city}</span>
+                      <span>{count} ({pct}%)</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#059669', borderRadius: '4px' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 4: Status Distribution */}
+          <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '0.85rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Listing Status</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {Object.entries(statusCounts).map(([status, count]) => {
+                const pct = totalBusinesses > 0 ? Math.round((count / totalBusinesses) * 100) : 0;
+                return (
+                  <div key={status}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px', color: '#1E293B' }}>
+                      <span>{status}</span>
+                      <span>{count} ({pct}%)</span>
+                    </div>
+                    <div style={{ width: '100%', height: '8px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', backgroundColor: '#10B981', borderRadius: '4px' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -106,105 +217,114 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
 
   const renderListings = () => {
     const filteredBusinesses = businesses.filter(b => 
-      b.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.category?.toLowerCase().includes(searchTerm.toLowerCase())
+      (b.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (b.category || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center"><FaStore className="mr-3 text-[#1E40AF]" /> All Businesses</h2>
+      <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', margin: 0 }}>
+            <FaStore style={{ color: '#1E40AF' }} /> All Businesses
+          </h2>
           <button 
             onClick={() => onSubTabChange('addBusiness')}
-            className="bg-[#1E40AF] hover:bg-blue-800 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
-            style={{ color: '#FFFFFF', backgroundColor: '#1E40AF' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', transition: 'background-color 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1D4ED8'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#1E40AF'}
           >
-            <FaPlus className="mr-2" /> Add Business
+            <FaPlus /> Add Business
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search by name, city, or category..." 
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E40AF]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-          </div>
+        <div style={{ backgroundColor: '#FFFFFF', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '20px', display: 'flex', alignItems: 'center', position: 'relative' }}>
+          <FaSearch style={{ position: 'absolute', left: '28px', color: '#94A3B8' }} />
+          <input 
+            type="text" 
+            placeholder="Search by name, city, or category..." 
+            style={{ width: '100%', padding: '12px 16px 12px 40px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', fontWeight: 500, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-600 border-b">
-                <th className="p-4 font-semibold">Image</th>
-                <th className="p-4 font-semibold">Name & ID</th>
-                <th className="p-4 font-semibold">Category & Type</th>
-                <th className="p-4 font-semibold">Location</th>
-                <th className="p-4 font-semibold">Price</th>
-                <th className="p-4 font-semibold text-center">Status</th>
-                <th className="p-4 font-semibold text-center">Published</th>
-                <th className="p-4 font-semibold text-center">Featured</th>
-                <th className="p-4 font-semibold text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBusinesses.map(b => (
-                <tr key={b.id} className="border-b hover:bg-gray-50 transition-colors">
-                  <td className="p-4">
-                    <img src={b.imageUrl || b.image || 'https://via.placeholder.com/50'} alt={b.title} className="w-12 h-12 rounded object-cover" />
-                  </td>
-                  <td className="p-4">
-                    <p className="font-semibold text-gray-800">{b.title}</p>
-                    <p className="text-xs text-gray-500">{b.id}</p>
-                  </td>
-                  <td className="p-4">
-                    <p className="text-gray-800">{b.category}</p>
-                    <p className="text-xs text-gray-500">{b.businessType}</p>
-                  </td>
-                  <td className="p-4 text-gray-600">{b.city}</td>
-                  <td className="p-4 font-medium text-gray-800">{b.priceDisplay || (b.askingPrice !== undefined ? `₹${b.askingPrice}` : `₹${b.price}`)}</td>
-                  <td className="p-4 text-center">
-                    <select 
-                      className="border rounded px-2 py-1 text-sm outline-none"
-                      value={b.status || 'Available'}
-                      onChange={(e) => updateBusiness(b.id, { status: e.target.value as any })}
-                    >
-                      <option value="Available">Available</option>
-                      <option value="Sold">Sold</option>
-                      <option value="Unavailable">Unavailable</option>
-                      <option value="Under_Review">Under Review</option>
-                    </select>
-                  </td>
-                  <td className="p-4 text-center">
-                    <button onClick={() => handleTogglePublish(b.id, b.published !== false)}>
-                      {b.published !== false ? <FaEye className="text-green-500 text-xl mx-auto" /> : <FaEyeSlash className="text-red-500 text-xl mx-auto" />}
-                    </button>
-                  </td>
-                  <td className="p-4 text-center">
-                    <button onClick={() => handleToggleFeatured(b.id, !!b.featured)}>
-                      {b.featured ? <FaStar className="text-yellow-500 text-xl mx-auto" /> : <FaRegStar className="text-gray-400 text-xl mx-auto" />}
-                    </button>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex justify-center space-x-3">
-                      <button className="text-blue-600 hover:text-blue-800"><FaEdit /></button>
-                      <button onClick={() => handleDeleteBusiness(b.id)} className="text-red-600 hover:text-red-800"><FaTrash /></button>
-                    </div>
-                  </td>
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Business Details</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category & Type</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Price</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'center' }}>Status</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'center' }}>Published</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'center' }}>Featured</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'center' }}>Actions</th>
                 </tr>
-              ))}
-              {filteredBusinesses.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-500">No businesses found matching your search.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredBusinesses.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>No businesses found matching your search.</td>
+                  </tr>
+                ) : (
+                  filteredBusinesses.map(b => (
+                    <tr key={b.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                      <td style={{ padding: '16px' }}>
+                        <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                          <img src={b.imageUrl || b.image || 'https://via.placeholder.com/50'} alt={b.title} style={{ width: '64px', height: '52px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0' }} />
+                          <div>
+                            <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px' }}>{b.title}</div>
+                            <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{b.id}</div>
+                            <span style={{ padding: '2px 6px', backgroundColor: '#EFF6FF', color: '#1E40AF', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
+                              {b.category}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <p style={{ color: '#0F172A', margin: 0, fontWeight: 600, fontSize: '0.88rem' }}>{b.category}</p>
+                        <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '2px 0 0 0' }}>{b.businessType}</p>
+                      </td>
+                      <td style={{ padding: '16px', color: '#475569', fontWeight: 600, fontSize: '0.88rem' }}>{b.city}</td>
+                      <td style={{ padding: '16px', fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>{b.priceDisplay || (b.askingPrice !== undefined ? `₹${b.askingPrice} L` : `₹${b.price} L`)}</td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <select 
+                          style={{ padding: '6px 12px', borderRadius: '20px', border: '1px solid #CBD5E1', fontSize: '0.78rem', fontWeight: 700, outline: 'none', cursor: 'pointer', backgroundColor: '#FFF', color: '#334155' }}
+                          value={b.status || 'Available'}
+                          onChange={(e) => updateBusiness(b.id, { status: e.target.value as any })}
+                        >
+                          <option value="Available">Available</option>
+                          <option value="Sold">Sold</option>
+                          <option value="Unavailable">Unavailable</option>
+                          <option value="Under_Review">Under Review</option>
+                        </select>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <button onClick={() => handleTogglePublish(b.id, b.published !== false)} style={{ border: 'none', backgroundColor: 'transparent', cursor: 'pointer', padding: '6px', borderRadius: '50%' }}>
+                          {b.published !== false ? <FaEye style={{ color: '#059669', fontSize: '1.2rem' }} /> : <FaEyeSlash style={{ color: '#EF4444', fontSize: '1.2rem' }} />}
+                        </button>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <button onClick={() => handleToggleFeatured(b.id, !!b.featured)} style={{ border: 'none', backgroundColor: 'transparent', cursor: 'pointer', padding: '6px', borderRadius: '50%' }}>
+                          {b.featured ? <FaStar style={{ color: '#D97706', fontSize: '1.2rem' }} /> : <FaRegStar style={{ color: '#94A3B8', fontSize: '1.2rem' }} />}
+                        </button>
+                      </td>
+                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button onClick={() => handleDeleteBusiness(b.id)} style={{ border: 'none', backgroundColor: 'transparent', color: '#EF4444', cursor: 'pointer', fontSize: '0.95rem', padding: '6px', borderRadius: '6px', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FEE2E2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -273,22 +393,23 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     };
 
     return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaPlus className="mr-3 text-[#1E40AF]" /> Add New Business</h2>
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 max-w-4xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Business Name</label>
-              <input required type="text" className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1E40AF] outline-none" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+      <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <FaPlus style={{ color: '#1E40AF' }} /> Add New Business
+        </h2>
+        
+        <form onSubmit={handleSubmit} style={{ backgroundColor: '#FFFFFF', padding: '28px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', maxWidth: '840px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Business Name</label>
+              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
             </div>
 
-            {/* Multi-Photo Drag & Drop Uploader */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
-                <span>📷 Upload Business Photos <span className="text-gray-400 font-normal">(Drag & Drop or Click to Select Multiple)</span></span>
-                {uploadedPhotos.length > 0 && (
-                  <span className="text-xs text-[#059669] font-bold">{uploadedPhotos.length} Photo(s) Added</span>
-                )}
+            {/* Drag & Drop Photo Uploader */}
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <span>📷 Upload Business Photos</span>
+                {uploadedPhotos.length > 0 && <span style={{ color: '#059669' }}>{uploadedPhotos.length} Photo(s) Added</span>}
               </label>
               
               <div
@@ -300,37 +421,41 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   handleFileUpload(e.dataTransfer.files);
                 }}
                 onClick={() => document.getElementById('business-multi-photo-input')?.click()}
-                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                  isDragging ? 'border-[#1E40AF] bg-blue-50' : 'border-gray-300 hover:border-[#1E40AF] bg-gray-50'
-                }`}
+                style={{
+                  border: '2px dashed #CBD5E1',
+                  borderRadius: '12px',
+                  padding: '28px 16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  backgroundColor: isDragging ? '#EFF6FF' : '#F8FAFC',
+                  borderColor: isDragging ? '#1E40AF' : '#CBD5E1',
+                  transition: 'all 0.2s'
+                }}
               >
                 <input
                   id="business-multi-photo-input"
                   type="file"
                   multiple
                   accept="image/*"
-                  className="hidden"
+                  style={{ display: 'none' }}
                   onChange={(e) => handleFileUpload(e.target.files)}
                 />
-                <FaCloudUploadAlt className="mx-auto text-4xl text-[#1E40AF] mb-2" />
-                <p className="text-sm font-bold text-gray-700">Drag & Drop Photos Here or Click to Upload</p>
-                <p className="text-xs text-gray-500 mt-1">Supports JPG, PNG, WEBP, GIF, SVG (Upload multiple photos at once)</p>
+                <FaCloudUploadAlt style={{ fontSize: '2.5rem', color: '#1E40AF', marginBottom: '8px' }} />
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.88rem', fontWeight: 700, color: '#334155' }}>Drag & Drop Photos Here or Click to Upload</p>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B' }}>Supports JPG, PNG, WEBP, GIF, SVG (Upload multiple photos at once)</p>
               </div>
 
-              {/* Photos Preview Gallery */}
+              {/* Photos Gallery Preview */}
               {uploadedPhotos.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-4">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '16px' }}>
                   {uploadedPhotos.map((photo, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 w-24 h-20 bg-gray-100 shadow-sm">
-                      <img src={photo} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
-                      {idx === 0 && (
-                        <span className="absolute top-1 left-1 bg-[#1E40AF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">Cover</span>
-                      )}
+                    <div key={idx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0', width: '96px', height: '80px', backgroundColor: '#F1F5F9', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                      <img src={photo} alt={`Upload ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {idx === 0 && <span style={{ position: 'absolute', top: '4px', left: '4px', backgroundColor: '#1E40AF', color: '#FFF', fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>Cover</span>}
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removePhoto(idx); }}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-xs opacity-90 hover:opacity-100 transition-opacity"
-                        title="Remove photo"
+                        style={{ position: 'absolute', top: '4px', right: '4px', backgroundColor: '#EF4444', color: '#FFF', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '9px' }}
                       >
                         <FaTrash />
                       </button>
@@ -339,21 +464,22 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                 </div>
               )}
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Category</label>
+              <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', backgroundColor: '#FFF', boxSizing: 'border-box' }} value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                 {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Business Type</label>
-              <select className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.businessType} onChange={e => setFormData({...formData, businessType: e.target.value})}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Business Type</label>
+              <select style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', backgroundColor: '#FFF', boxSizing: 'border-box' }} value={formData.businessType} onChange={e => setFormData({...formData, businessType: e.target.value})}>
                 {businessTypes.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <select required className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.city || 'Hyderabad'} onChange={e => setFormData({...formData, city: e.target.value})}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>City</label>
+              <select required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', backgroundColor: '#FFF', boxSizing: 'border-box' }} value={formData.city || 'Hyderabad'} onChange={e => setFormData({...formData, city: e.target.value})}>
                 <option value="Hyderabad">Hyderabad</option>
                 <option value="Vijayawada">Vijayawada</option>
                 <option value="Guntur">Guntur</option>
@@ -361,24 +487,25 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-              <input required type="text" className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} />
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>State</label>
+              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Asking Price (Numeric)</label>
-              <input required type="number" className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.askingPrice} onChange={e => setFormData({...formData, askingPrice: Number(e.target.value)})} />
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Asking Price (Lakhs)</label>
+              <input required type="number" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.askingPrice} onChange={e => setFormData({...formData, askingPrice: Number(e.target.value)})} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price Display (e.g. ₹50 Lakhs)</label>
-              <input type="text" className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.priceDisplay} onChange={e => setFormData({...formData, priceDisplay: e.target.value})} />
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Price Display (e.g. ₹50 Lakhs)</label>
+              <input type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.priceDisplay} onChange={e => setFormData({...formData, priceDisplay: e.target.value})} />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea rows={4} className="w-full border rounded-lg px-4 py-2 outline-none" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Description</label>
+              <textarea rows={4} style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box', fontFamily: 'inherit' }} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
             </div>
           </div>
-          <div className="mt-8 flex justify-end">
-            <button type="submit" className="bg-[#1E40AF] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition-colors" style={{ color: '#FFFFFF', backgroundColor: '#1E40AF' }}>Save Business</button>
+          
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
+            <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1D4ED8'} onMouseLeave={e => e.currentTarget.style.backgroundColor = '#1E40AF'}>Save Business</button>
           </div>
         </form>
       </div>
@@ -386,66 +513,80 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   };
 
   const renderSellRequests = () => {
-    const getStatusColor = (status: string) => {
-      switch(status) {
-        case 'PENDING_REVIEW': return 'bg-orange-100 text-orange-800';
-        case 'APPROVED': return 'bg-green-100 text-green-800';
-        case 'REJECTED': return 'bg-red-100 text-red-800';
-        default: return 'bg-blue-100 text-blue-800';
-      }
-    };
-
     return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaFileAlt className="mr-3 text-[#1E40AF]" /> Sell Business Requests</h2>
-        <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-600 border-b">
-                <th className="p-4 font-semibold">ID</th>
-                <th className="p-4 font-semibold">Contact Info</th>
-                <th className="p-4 font-semibold">Business Details</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sellRequests.map(r => (
-                <tr key={r.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 text-sm font-mono text-gray-500">{r.id.substring(0,8)}</td>
-                  <td className="p-4">
-                    <p className="font-semibold text-gray-800">{r.name}</p>
-                    <p className="text-sm text-gray-600">{r.mobile}</p>
-                    <p className="text-sm text-gray-600">{r.email}</p>
-                  </td>
-                  <td className="p-4">
-                    <p className="text-gray-800">{r.businessCategory}</p>
-                    <p className="text-sm text-gray-600">{r.city}</p>
-                  </td>
-                  <td className="p-4">
-                    <select 
-                      className={`text-xs font-semibold px-2 py-1 rounded-full outline-none ${getStatusColor(r.status)}`}
-                      value={r.status}
-                      onChange={(e) => updateSellBusinessRequest(r.id, { status: e.target.value as any })}
-                    >
-                      <option value="PENDING_REVIEW">Pending</option>
-                      <option value="CONTACTED">Contacted</option>
-                      <option value="APPROVED">Approved</option>
-                      <option value="REJECTED">Rejected</option>
-                    </select>
-                  </td>
-                  <td className="p-4">
-                    <button className="text-red-500 hover:text-red-700" onClick={() => {
-                      if(window.confirm('Delete request?')) {
-                        deleteSellBusinessRequest(r.id);
-                        showNotification('Request deleted', 'success');
-                      }
-                    }}><FaTrash /></button>
-                  </td>
+      <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <FaFileAlt style={{ color: '#1E40AF' }} /> Sell Business Requests
+        </h2>
+        
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '2px solid #E2E8F0', color: '#475569', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <th style={{ padding: '16px' }}>ID</th>
+                  <th style={{ padding: '16px' }}>Contact Info</th>
+                  <th style={{ padding: '16px' }}>Business Details</th>
+                  <th style={{ padding: '16px' }}>Status</th>
+                  <th style={{ padding: '16px' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sellRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '48px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>No sell business requests found.</td>
+                  </tr>
+                ) : (
+                  sellRequests.map(r => (
+                    <tr key={r.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                      <td style={{ padding: '16px', fontSize: '0.82rem', fontFamily: 'monospace', color: '#64748B', fontWeight: 600 }}>{r.id.substring(0,8)}</td>
+                      <td style={{ padding: '16px' }}>
+                        <p style={{ fontWeight: 700, color: '#0F172A', margin: 0, fontSize: '0.92rem' }}>{r.name}</p>
+                        <p style={{ fontSize: '0.78rem', color: '#475569', margin: '2px 0 0 0', fontWeight: 600 }}>{r.mobile}</p>
+                        <p style={{ fontSize: '0.78rem', color: '#64748B', margin: '1px 0 0 0' }}>{r.email}</p>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <p style={{ color: '#0F172A', margin: 0, fontWeight: 700, fontSize: '0.92rem' }}>{r.businessCategory}</p>
+                        <p style={{ fontSize: '0.78rem', color: '#475569', margin: '2px 0 0 0', fontWeight: 600 }}>{r.city}</p>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <select 
+                          style={{ 
+                            padding: '6px 12px', 
+                            borderRadius: '20px', 
+                            border: 'none', 
+                            fontSize: '0.78rem', 
+                            fontWeight: 700, 
+                            outline: 'none', 
+                            cursor: 'pointer',
+                            backgroundColor: r.status === 'PENDING_REVIEW' ? '#FFEDD5' : r.status === 'APPROVED' ? '#DCFCE7' : r.status === 'REJECTED' ? '#FEE2E2' : '#DBEAFE',
+                            color: r.status === 'PENDING_REVIEW' ? '#C2410C' : r.status === 'APPROVED' ? '#15803D' : r.status === 'REJECTED' ? '#B91C1C' : '#1E40AF'
+                          }}
+                          value={r.status}
+                          onChange={(e) => updateSellBusinessRequest(r.id, { status: e.target.value as any })}
+                        >
+                          <option value="PENDING_REVIEW">Pending</option>
+                          <option value="CONTACTED">Contacted</option>
+                          <option value="APPROVED">Approved</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+                      </td>
+                      <td style={{ padding: '16px' }}>
+                        <button onClick={() => {
+                          if(window.confirm('Delete request?')) {
+                            deleteSellBusinessRequest(r.id);
+                            showNotification('Request deleted', 'success');
+                          }
+                        }} style={{ border: 'none', backgroundColor: 'transparent', color: '#EF4444', cursor: 'pointer', fontSize: '1rem', padding: '6px', borderRadius: '6px', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#FEE2E2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                          <FaTrash />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -453,23 +594,28 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
 
   const renderBuyEnquiries = () => {
     return (
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaInbox className="mr-3 text-[#1E40AF]" /> Buy Enquiries</h2>
-        <div className="bg-white rounded-xl shadow-sm overflow-x-auto p-4">
-          <p className="text-gray-500">Buy enquiries will be displayed here.</p>
+      <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+          <FaInbox style={{ color: '#1E40AF' }} /> Buy Enquiries
+        </h2>
+        <div style={{ backgroundColor: '#FFFFFF', padding: '36px', borderRadius: '16px', border: '1px solid #E2E8F0', textAlign: 'center', color: '#64748B' }}>
+          <FaInbox style={{ fontSize: '2.5rem', color: '#CBD5E1', marginBottom: '12px' }} />
+          <p style={{ margin: 0, fontWeight: 600 }}>Buy enquiries will be displayed here.</p>
         </div>
       </div>
     );
   };
 
   const renderCategories = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaTags className="mr-3 text-[#1E40AF]" /> Categories</h2>
-      <div className="bg-white rounded-xl shadow-sm p-4">
+    <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <FaTags style={{ color: '#1E40AF' }} /> Categories
+      </h2>
+      <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
         {categories.map(c => (
-          <div key={c.id} className="flex justify-between items-center border-b p-3">
-            <span className="font-medium">{c.name}</span>
-            <span className={`px-2 py-1 rounded text-xs ${(c.is_active ?? c.active) !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #F1F5F9' }}>
+            <span style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.92rem' }}>{c.name}</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '12px', backgroundColor: (c.is_active ?? c.active) !== false ? '#DCFCE7' : '#FEE2E2', color: (c.is_active ?? c.active) !== false ? '#15803D' : '#B91C1C' }}>
               {(c.is_active ?? c.active) !== false ? 'Active' : 'Inactive'}
             </span>
           </div>
@@ -479,13 +625,15 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   );
 
   const renderBusinessTypes = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaBriefcase className="mr-3 text-[#1E40AF]" /> Business Types</h2>
-      <div className="bg-white rounded-xl shadow-sm p-4">
+    <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <FaBriefcase style={{ color: '#1E40AF' }} /> Business Types
+      </h2>
+      <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
         {businessTypes.map(t => (
-          <div key={t.id} className="flex justify-between items-center border-b p-3">
-            <span className="font-medium">{t.name}</span>
-            <span className={`px-2 py-1 rounded text-xs ${(t.is_active ?? t.active) !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #F1F5F9' }}>
+            <span style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.92rem' }}>{t.name}</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '12px', backgroundColor: (t.is_active ?? t.active) !== false ? '#DCFCE7' : '#FEE2E2', color: (t.is_active ?? t.active) !== false ? '#15803D' : '#B91C1C' }}>
               {(t.is_active ?? t.active) !== false ? 'Active' : 'Inactive'}
             </span>
           </div>
@@ -495,16 +643,18 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   );
 
   const renderFeatured = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center"><FaStar className="mr-3 text-[#D4A10F]" /> Featured Businesses</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
+      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+        <FaStar style={{ color: '#D97706' }} /> Featured Businesses
+      </h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
         {businesses.filter(b => b.featured).map(b => (
-          <div key={b.id} className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <img src={b.imageUrl || b.image || 'https://via.placeholder.com/300x200'} alt={b.title} className="w-full h-40 object-cover" />
-            <div className="p-4">
-              <h3 className="font-bold text-lg">{b.title}</h3>
-              <p className="text-gray-500 text-sm mb-2">{b.category}</p>
-              <button onClick={() => handleToggleFeatured(b.id, true)} className="text-red-500 text-sm hover:underline">Remove from Featured</button>
+          <div key={b.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+            <img src={b.imageUrl || b.image || 'https://via.placeholder.com/300x200'} alt={b.title} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+            <div style={{ padding: '16px' }}>
+              <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{b.title}</h3>
+              <p style={{ margin: '0 0 16px 0', color: '#64748B', fontSize: '0.85rem', fontWeight: 550 }}>{b.category}</p>
+              <button onClick={() => handleToggleFeatured(b.id, true)} style={{ border: 'none', backgroundColor: 'transparent', color: '#EF4444', fontSize: '0.82rem', fontWeight: 700, padding: 0, cursor: 'pointer', textDecoration: 'underline' }}>Remove from Featured</button>
             </div>
           </div>
         ))}
@@ -513,7 +663,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   );
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', width: '100%', boxSizing: 'border-box' }}>
       {activeSubTab === 'dashboard' && renderDashboard()}
       {activeSubTab === 'listings' && renderListings()}
       {activeSubTab === 'addBusiness' && <AddBusinessForm />}
