@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Logo } from '../components/common/Logo';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -46,6 +46,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Custom Mobile OTP States
+  const [mobileOtpStep, setMobileOtpStep] = useState<'input' | 'verify'>('input');
+  const [mobileOtpDigits, setMobileOtpDigits] = useState<string[]>(Array(6).fill(''));
+  const [resendCountdown, setResendCountdown] = useState<number>(0);
+  const otpInputsRef = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Mobile OTP resend countdown timer
+  useEffect(() => {
+    let timer: any;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [resendCountdown]);
 
   // Load remembered credentials
   useEffect(() => {
@@ -249,8 +268,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     onClose?.();
   };
 
-  // 4. MSG91 MOBILE OTP WIDGET LOGIN FLOW
-  const handleWidgetLogin = async (e: React.FormEvent) => {
+  // 4. CUSTOM DIRECT MSG91 MOBILE OTP FLOW
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -259,82 +278,165 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       setError('Please enter your full name');
       return;
     }
-    if (!mobile || mobile.length !== 10) {
+    if (!mobile || mobile.length !== 10 || !/^\d+$/.test(mobile)) {
       setError('Please enter a valid 10-digit mobile number');
       return;
     }
 
-    const widgetId = import.meta.env.VITE_MSG91_WIDGET_ID || '3668635565333331313137';
-    const tokenAuth = import.meta.env.VITE_MSG91_TOKEN_AUTH || '557093TbSwW47iNa86a715c45P1';
-    const formattedMobile = mobile.startsWith('91') ? mobile : `91${mobile}`;
+    setLoading(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+      const res = await fetch(`${apiBase}/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: mobile.trim() }),
+      });
 
-    const sendTokenToBackend = async (token: string) => {
-      setLoading(true);
-      try {
-        const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
-        const res = await fetch(`${apiBase}/auth/widget-login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            verificationToken: token,
-            fullName: fullName.trim(),
-          }),
-        });
+      const data = await res.json();
+      setLoading(false);
 
-        const data = await res.json();
-        setLoading(false);
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send verification code. Please try again.');
+      }
 
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || data.message || 'Verification token validation failed');
-        }
+      setSuccess('Verification code sent successfully!');
+      setMobileOtpStep('verify');
+      setMobileOtpDigits(Array(6).fill(''));
+      setResendCountdown(30);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Could not send OTP. Please try again.');
+    }
+  };
 
-        saveRegisteredUser({
-          fullName: fullName.trim(),
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    const otpCode = mobileOtpDigits.join('');
+    if (otpCode.length !== 6 || !/^\d+$/.test(otpCode)) {
+      setError('Please enter a valid 6-digit OTP');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+      const res = await fetch(`${apiBase}/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           mobile: mobile.trim(),
-        });
+          otp: otpCode,
+          fullName: fullName.trim()
+        }),
+      });
 
-        const userEmail = email.trim() || `${mobile}@nexopp.in`;
-        loginWithGmail(userEmail, 'Verified Investor', fullName.trim(), mobile.trim());
-        onClose?.();
-      } catch (err: any) {
-        setLoading(false);
-        setError(err.message || 'Failed to authenticate verified mobile number');
+      const data = await res.json();
+      setLoading(false);
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Verification failed. Please check the code and try again.');
       }
-    };
 
-    if (typeof (window as any).initSendOTP === 'function') {
-      try {
-        const configuration = {
-          widgetId: widgetId,
-          tokenAuth: tokenAuth,
-          identifier: formattedMobile,
-          success: (data: any) => {
-            console.log('MSG91 Widget success:', data);
-            const token = typeof data === 'string' ? data : (data.message || data.verificationToken || data['access-token'] || data.token);
-            sendTokenToBackend(token);
-          },
-          failure: (error: any) => {
-            console.error('MSG91 Widget Error:', error);
-            setError(typeof error === 'string' ? error : (error.message || 'OTP verification failed via MSG91 Widget.'));
-          },
-        };
-
-        (window as any).initSendOTP(configuration);
-
-        if (typeof (window as any).sendOTP === 'function') {
-          (window as any).sendOTP(formattedMobile);
-        } else if (typeof (window as any).openOtpWidget === 'function') {
-          (window as any).openOtpWidget();
-        }
-
-        setSuccess(`MSG91 Mobile OTP Widget triggered for +${formattedMobile}. Complete verification in the popup.`);
-      } catch (err) {
-        console.error('Widget initialization error:', err);
-        setError('Failed to open MSG91 OTP Widget. Please try again.');
+      // Save to localStorage if rememberMe is enabled
+      if (rememberMe) {
+        localStorage.setItem('nexopp_remembered_mobile', mobile.trim());
+        localStorage.setItem('nexopp_remembered_name', fullName.trim());
+      } else {
+        localStorage.removeItem('nexopp_remembered_mobile');
       }
-    } else {
-      setError('MSG91 Widget script is loading or blocked by browser extensions. Please refresh page.');
+
+      saveRegisteredUser({
+        fullName: fullName.trim(),
+        mobile: mobile.trim(),
+      });
+
+      const userEmail = `${mobile.trim()}@nexopp.in`;
+      loginWithGmail(userEmail, 'Verified Investor', fullName.trim(), mobile.trim());
+      onClose?.();
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'OTP verification failed. Please try again.');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0) return;
+    setError('');
+    setSuccess('');
+
+    setLoading(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+      const res = await fetch(`${apiBase}/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobile: mobile.trim() }),
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to resend verification code.');
+      }
+
+      setSuccess('OTP code resent successfully!');
+      setMobileOtpDigits(Array(6).fill(''));
+      setResendCountdown(30);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Could not resend OTP. Please try again.');
+    }
+  };
+
+  const handleOtpDigitChange = (value: string, index: number) => {
+    // Only allow digits
+    const cleanedVal = value.replace(/\D/g, '').slice(-1);
+    const newDigits = [...mobileOtpDigits];
+    newDigits[index] = cleanedVal;
+    setMobileOtpDigits(newDigits);
+    setError('');
+
+    // Auto-focus next input
+    if (cleanedVal !== '' && index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace') {
+      if (mobileOtpDigits[index] === '' && index > 0) {
+        // Focus previous input and clear it
+        const newDigits = [...mobileOtpDigits];
+        newDigits[index - 1] = '';
+        setMobileOtpDigits(newDigits);
+        otpInputsRef.current[index - 1]?.focus();
+        e.preventDefault();
+      } else {
+        const newDigits = [...mobileOtpDigits];
+        newDigits[index] = '';
+        setMobileOtpDigits(newDigits);
+      }
+      setError('');
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData.length > 0) {
+      const newDigits = [...mobileOtpDigits];
+      for (let i = 0; i < 6; i++) {
+        newDigits[i] = pastedData[i] || '';
+      }
+      setMobileOtpDigits(newDigits);
+      setError('');
+      // Focus the last filled input
+      const focusIndex = Math.min(pastedData.length - 1, 5);
+      otpInputsRef.current[focusIndex]?.focus();
     }
   };
 
@@ -1052,128 +1154,265 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           )}
 
           {/* ── MOBILE OTP (MSG91) AUTHENTICATION FORM ── */}
+          {/* ── MOBILE OTP (MSG91) AUTHENTICATION FORM ── */}
           {authMethod === 'mobile' && (
-            <form onSubmit={handleWidgetLogin} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              {/* 1. Full Name */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  Full Name <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <FaUser style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#007A55',
-                    fontSize: '15px'
-                  }} />
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => {
-                      setFullName(e.target.value);
-                      setError('');
-                    }}
-                    placeholder="e.g. Rahul Sharma"
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px 14px 44px',
-                      borderRadius: '12px',
-                      border: '1.5px solid #E2E8F0',
-                      fontSize: '0.95rem',
-                      color: '#0F172A',
-                      backgroundColor: '#F8FAFC',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    required
-                  />
+            mobileOtpStep === 'input' ? (
+              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {/* 1. Full Name */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Full Name <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <FaUser style={{
+                      position: 'absolute',
+                      left: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#007A55',
+                      fontSize: '15px'
+                    }} />
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="e.g. Rahul Sharma"
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px 14px 44px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #E2E8F0',
+                        fontSize: '0.95rem',
+                        color: '#0F172A',
+                        backgroundColor: '#F8FAFC',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* 2. Mobile Number */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                  Mobile Number <span style={{ color: '#DC2626' }}>*</span>
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: '14px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
+                {/* 2. Mobile Number */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Mobile Number <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: '#007A55',
+                      fontWeight: 700,
+                      fontSize: '0.9rem'
+                    }}>
+                      <FaPhoneAlt style={{ fontSize: '13px' }} />
+                      <span>+91</span>
+                    </div>
+                    <input
+                      type="tel"
+                      value={mobile}
+                      onChange={(e) => handleMobileChange(e.target.value)}
+                      placeholder="9876543210"
+                      maxLength={10}
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px 14px 75px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #E2E8F0',
+                        fontSize: '0.95rem',
+                        color: '#0F172A',
+                        backgroundColor: '#F8FAFC',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Checkbox Options */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{ width: '17px', height: '17px', accentColor: '#007A55', cursor: 'pointer' }}
+                    />
+                    Remember me
+                  </label>
+                </div>
+
+                {/* Send OTP Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    backgroundColor: '#007A55',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: loading ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    color: '#007A55',
-                    fontWeight: 700,
-                    fontSize: '0.9rem'
-                  }}>
-                    <FaPhoneAlt style={{ fontSize: '13px' }} />
-                    <span>+91</span>
-                  </div>
-                  <input
-                    type="tel"
-                    value={mobile}
-                    onChange={(e) => handleMobileChange(e.target.value)}
-                    placeholder="9876543210"
-                    maxLength={10}
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px 14px 75px',
-                      borderRadius: '12px',
-                      border: '1.5px solid #E2E8F0',
-                      fontSize: '0.95rem',
-                      color: '#0F172A',
-                      backgroundColor: '#F8FAFC',
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Checkbox Options */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.88rem', color: '#475569', fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{ width: '17px', height: '17px', accentColor: '#007A55', cursor: 'pointer' }}
-                  />
-                  Remember me
-                </label>
-              </div>
-
-              {/* MSG91 Widget Action Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  backgroundColor: '#007A55',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
+                    transition: 'all 0.2s ease',
+                    marginTop: '4px'
+                  }}
+                >
+                  {loading ? 'Sending OTP Code...' : 'Send OTP'} <FaArrowRight style={{ fontSize: '14px' }} />
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                {/* Header Information */}
+                <div style={{
                   display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
-                  transition: 'all 0.2s ease',
-                  marginTop: '4px'
-                }}
-              >
-                {loading ? 'Verifying Token...' : 'Continue with Mobile (MSG91 Widget)'} <FaArrowRight style={{ fontSize: '14px' }} />
-              </button>
-            </form>
+                  backgroundColor: '#E6F4EA',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid #A3D9C9'
+                }}>
+                  <div style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, textTransform: 'uppercase' }}>Verify your mobile number</div>
+                  <div style={{ fontSize: '0.9rem', color: '#047857', fontWeight: 600, textAlign: 'center' }}>
+                    We sent a verification code to<br />
+                    <span style={{ fontWeight: 800 }}>+91 {mobile.slice(0, 5)} {mobile.slice(5)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOtpStep('input');
+                      setError('');
+                      setSuccess('');
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#007A55',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      marginTop: '4px',
+                      backgroundColor: 'rgba(0,122,85,0.08)'
+                    }}
+                  >
+                    <FaEdit /> Edit Number
+                  </button>
+                </div>
+
+                {/* 6-Digit Code Box Section */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px', textAlign: 'center' }}>
+                    Enter 6-Digit OTP Code <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', margin: '8px 0' }}>
+                    {mobileOtpDigits.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={(el) => { otpInputsRef.current[idx] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpDigitChange(e.target.value, idx)}
+                        onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                        onPaste={idx === 0 ? handleOtpPaste : undefined}
+                        style={{
+                          width: '45px',
+                          height: '50px',
+                          borderRadius: '8px',
+                          border: '1.5px solid #E2E8F0',
+                          textAlign: 'center',
+                          fontSize: '1.25rem',
+                          fontWeight: 800,
+                          color: '#0F172A',
+                          backgroundColor: '#F8FAFC',
+                          outline: 'none',
+                          boxSizing: 'border-box'
+                        }}
+                        autoFocus={idx === 0}
+                        required
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resend Cooldown Countdown */}
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.85rem' }}>
+                  {resendCountdown > 0 ? (
+                    <span style={{ color: '#64748B', fontWeight: 500 }}>
+                      Resend OTP in <span style={{ color: '#007A55', fontWeight: 700 }}>{resendCountdown}s</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={loading}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#007A55',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+
+                {/* Verify OTP Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    backgroundColor: '#007A55',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
+                    transition: 'all 0.2s ease',
+                    marginTop: '4px'
+                  }}
+                >
+                  {loading ? 'Verifying OTP Code...' : 'Verify OTP'} <FaArrowRight style={{ fontSize: '14px' }} />
+                </button>
+              </form>
+            )
           )}
         </div>
       </div>

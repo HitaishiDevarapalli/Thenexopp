@@ -333,6 +333,347 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
   }
 });
 
+// ── CUSTOM MSG91 OTP AUTHENTICATION ENDPOINTS & RATE LIMITING ────────────────
+const otpSessionsMap = new Map();
+
+// Helper to validate and clean Indian mobile number (10 digits)
+function cleanIndianMobile(mobile) {
+  if (!mobile) return null;
+  const cleaned = mobile.toString().replace(/\D/g, '');
+  if (cleaned.length === 10) {
+    return cleaned;
+  }
+  // If user sent with 91 prefix, handle it
+  if (cleaned.length === 12 && cleaned.startsWith('91')) {
+    return cleaned.slice(2);
+  }
+  return null;
+}
+
+app.post('/api/auth/send-otp', async (req, res) => {
+  try {
+    const { mobile } = req.body;
+    const cleaned = cleanIndianMobile(mobile);
+    if (!cleaned) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+    }
+
+    const now = Date.now();
+    let session = otpSessionsMap.get(cleaned);
+
+    if (session) {
+      // Check block state
+      if (session.blockedUntil && now < session.blockedUntil) {
+        const minutesLeft = Math.ceil((session.blockedUntil - now) / (60 * 1000));
+        return res.status(429).json({ error: `Too many attempts or requests. Please try again after ${minutesLeft} minutes.` });
+      }
+
+      // Check 30 seconds limit between requests
+      if (now - session.lastOtpRequestAt < 30000) {
+        const secondsLeft = Math.ceil((30000 - (now - session.lastOtpRequestAt)) / 1000);
+        return res.status(429).json({ error: `Please wait ${secondsLeft} seconds before requesting another OTP.` });
+      }
+
+      // Check 15-minute rate limit window
+      if (now - session.firstRequestInWindowAt > 15 * 60 * 1000) {
+        session.firstRequestInWindowAt = now;
+        session.requestCount = 1;
+      } else {
+        if (session.requestCount >= 3) {
+          session.blockedUntil = now + 15 * 60 * 1000;
+          otpSessionsMap.set(cleaned, session);
+          return res.status(429).json({ error: 'Maximum 3 OTP requests allowed within 15 minutes. Temporarily blocked.' });
+        }
+        session.requestCount++;
+      }
+
+      session.lastOtpRequestAt = now;
+      session.otpAttemptCount = 0; // reset attempts for the new OTP
+    } else {
+      session = {
+        mobile: cleaned,
+        firstRequestInWindowAt: now,
+        requestCount: 1,
+        lastOtpRequestAt: now,
+        otpAttemptCount: 0,
+        blockedUntil: null
+      };
+    }
+
+    otpSessionsMap.set(cleaned, session);
+
+    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH;
+    const templateId = process.env.MSG91_TEMPLATE_ID || '6a7d73335c4fafe2050bbfb4';
+
+    if (!authKey) {
+      console.error('MSG91 auth key is missing in environment variables.');
+      return res.status(500).json({ error: 'SMS service configuration is missing. Please contact support.' });
+    }
+
+    const formattedMobile = `91${cleaned}`;
+    const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'authkey': authKey
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok && (data.type === 'success' || data.status === 'success')) {
+      return res.json({
+        success: true,
+        message: 'OTP sent successfully.'
+      });
+    } else {
+      console.error('MSG91 Send OTP failure response:', data);
+      return res.status(502).json({ error: 'We couldn\'t send the OTP right now. Please try again.' });
+    }
+  } catch (err) {
+    console.error('Error in send-otp route:', err);
+    return res.status(500).json({ error: 'An internal server error occurred while sending OTP.' });
+  }
+});
+
+app.post('/api/auth/resend-otp', async (req, res) => {
+  try {
+    const { mobile } = req.body;
+    const cleaned = cleanIndianMobile(mobile);
+    if (!cleaned) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+    }
+
+    const now = Date.now();
+    const session = otpSessionsMap.get(cleaned);
+
+    if (!session) {
+      return res.status(400).json({ error: 'No active OTP session found. Please request a new OTP first.' });
+    }
+
+    // Check block state
+    if (session.blockedUntil && now < session.blockedUntil) {
+      const minutesLeft = Math.ceil((session.blockedUntil - now) / (60 * 1000));
+      return res.status(429).json({ error: `Too many attempts or requests. Please try again after ${minutesLeft} minutes.` });
+    }
+
+    // Check 30 seconds limit between requests
+    if (now - session.lastOtpRequestAt < 30000) {
+      const secondsLeft = Math.ceil((30000 - (now - session.lastOtpRequestAt)) / 1000);
+      return res.status(429).json({ error: `Please wait ${secondsLeft} seconds before resending OTP.` });
+    }
+
+    // Check 15-minute rate limit window
+    if (now - session.firstRequestInWindowAt > 15 * 60 * 1000) {
+      session.firstRequestInWindowAt = now;
+      session.requestCount = 1;
+    } else {
+      if (session.requestCount >= 3) {
+        session.blockedUntil = now + 15 * 60 * 1000;
+        otpSessionsMap.set(cleaned, session);
+        return res.status(429).json({ error: 'Maximum 3 OTP requests allowed within 15 minutes. Temporarily blocked.' });
+      }
+      session.requestCount++;
+    }
+
+    session.lastOtpRequestAt = now;
+    session.otpAttemptCount = 0; // reset attempts for retry/new OTP
+    otpSessionsMap.set(cleaned, session);
+
+    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH;
+
+    if (!authKey) {
+      console.error('MSG91 auth key is missing in environment variables.');
+      return res.status(500).json({ error: 'SMS service configuration is missing. Please contact support.' });
+    }
+
+    const formattedMobile = `91${cleaned}`;
+    const url = `https://control.msg91.com/api/v5/otp/retry?mobile=${formattedMobile}&retrytype=text`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'authkey': authKey,
+        'accept': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok && (data.type === 'success' || data.status === 'success')) {
+      return res.json({
+        success: true,
+        message: 'OTP resent successfully.'
+      });
+    } else {
+      console.error('MSG91 Resend OTP failure response:', data);
+      return res.status(502).json({ error: data.message || 'Failed to resend OTP. Please request a new one.' });
+    }
+  } catch (err) {
+    console.error('Error in resend-otp route:', err);
+    return res.status(500).json({ error: 'An internal server error occurred while resending OTP.' });
+  }
+});
+
+app.post('/api/auth/verify-otp', async (req, res, next) => {
+  try {
+    const { mobile, otp, fullName, gender, district } = req.body;
+    const cleaned = cleanIndianMobile(mobile);
+    if (!cleaned) {
+      return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+    }
+
+    if (!otp || otp.trim().length !== 6) {
+      return res.status(400).json({ error: 'Please enter a valid 6-digit verification code.' });
+    }
+
+    const now = Date.now();
+    const session = otpSessionsMap.get(cleaned);
+
+    if (!session) {
+      return res.status(400).json({ error: 'No active OTP session found. Please request a new OTP.' });
+    }
+
+    // Check block state
+    if (session.blockedUntil && now < session.blockedUntil) {
+      const minutesLeft = Math.ceil((session.blockedUntil - now) / (60 * 1000));
+      return res.status(429).json({ error: `Too many attempts or requests. Please try again after ${minutesLeft} minutes.` });
+    }
+
+    // Check verification attempt count
+    if (session.otpAttemptCount >= 5) {
+      session.blockedUntil = now + 15 * 60 * 1000;
+      otpSessionsMap.set(cleaned, session);
+      return res.status(429).json({ error: 'Too many incorrect attempts. Please try again after 15 minutes.' });
+    }
+
+    session.otpAttemptCount++;
+    otpSessionsMap.set(cleaned, session);
+
+    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH;
+    if (!authKey) {
+      console.error('MSG91 auth key is missing in environment variables.');
+      return res.status(500).json({ error: 'SMS service configuration is missing. Please contact support.' });
+    }
+
+    let isVerified = false;
+    const formattedMobile = `91${cleaned}`;
+    const url = `https://control.msg91.com/api/v5/otp/verify?mobile=${formattedMobile}&otp=${otp.trim()}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'authkey': authKey,
+        'accept': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+
+    if (response.ok && (data.type === 'success' || data.status === 'success' || data.message === 'number_verified_successfully')) {
+      isVerified = true;
+    } else {
+      console.error('MSG91 Verify OTP failure response:', data);
+    }
+
+    if (!isVerified) {
+      if (session.otpAttemptCount >= 5) {
+        session.blockedUntil = now + 15 * 60 * 1000;
+        otpSessionsMap.set(cleaned, session);
+        return res.status(429).json({ error: 'Too many incorrect attempts. Please try again after 15 minutes.' });
+      }
+      return res.status(400).json({ error: 'Invalid OTP. Please check the code and try again.' });
+    }
+
+    // Verification successful - clear session
+    otpSessionsMap.delete(cleaned);
+
+    const verifiedMobile = cleaned;
+    const timestamp = new Date().toLocaleString();
+    const mockEmail = `${verifiedMobile}@nexopp.in`;
+    const targetName = fullName || 'Verified Investor';
+
+    let customer = null;
+    try {
+      const existing = await prisma.customer.findFirst({
+        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
+      });
+
+      if (existing) {
+        customer = await prisma.customer.update({
+          where: { id: existing.id },
+          data: {
+            name: existing.name || targetName,
+            gender: existing.gender || gender,
+            district: existing.district || district,
+            lastLoginAt: timestamp,
+            loginCount: existing.loginCount + 1,
+          },
+        });
+      } else {
+        customer = await prisma.customer.create({
+          data: {
+            name: targetName,
+            email: mockEmail,
+            phone: verifiedMobile,
+            gender: gender || 'Male',
+            district: district || 'Hyderabad',
+            role: 'Verified Investor',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
+            lastLoginAt: timestamp,
+            loginCount: 1,
+            status: 'Active',
+            registeredDate: new Date().toLocaleDateString(),
+          },
+        });
+      }
+    } catch (dbErr) {
+      logger.warn({ dbErr }, 'Database offline or query error during OTP verification, falling back to session payload');
+      customer = {
+        id: `cust-${verifiedMobile}`,
+        name: targetName,
+        email: mockEmail,
+        phone: verifiedMobile,
+        gender: gender || 'Male',
+        district: district || 'Hyderabad',
+        role: 'Verified Investor',
+      };
+    }
+
+    // Generate JWT Token
+    const userPayload = {
+      id: customer.id,
+      email: customer.email,
+      fullName: customer.name,
+      mobile: customer.phone,
+      role: customer.role || 'Verified Investor',
+      gender: customer.gender,
+      district: customer.district,
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    // Set HTTP-Only Cookie
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.json({
+      success: true,
+      message: 'OTP verified successfully.',
+      user: userPayload,
+      tokens,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── MSG91 WIDGET OTP AUTHENTICATION ENDPOINT ─────────────────────────────────
 app.post('/api/auth/widget-login', async (req, res, next) => {
   try {
