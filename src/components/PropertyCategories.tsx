@@ -554,7 +554,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const baseList = activeListings.map((p) => {
       const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
       const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
-      const brokerRating = assignedBroker?.rating ? `${assignedBroker.rating} (${assignedBroker.reviewCount || 10})` : (p.agentRating ? `${p.agentRating} (${p.reviewCount || 10})` : '4.8 (24)');
+      const brokerRating = assignedBroker?.rating ? `${assignedBroker.rating}${assignedBroker.reviewCount ? ` (${assignedBroker.reviewCount})` : ''}` : (p.agentRating ? `${p.agentRating}${p.reviewCount ? ` (${p.reviewCount})` : ''}` : '');
       const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80';
 
       // Resolve location IDs from text names if not already set

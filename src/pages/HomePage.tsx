@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { useWishlist } from '../context/WishlistContext';
 import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
@@ -273,53 +273,47 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const featuredFranchises = (rawFranchises.length >= 2 ? rawFranchises : activeFranchises).slice(0, 4);
 
   const rawBusinesses = filterAndSortByDistance(activeBusinesses);
-  // Combined Top Rated / Featured Listings (5-6 items)
-  const combinedTopRated = React.useMemo(() => {
-    const props = activeProperties
+  // Separate Property Showcase Listings (4-5 items)
+  const propertyListingsShowcase = React.useMemo(() => {
+    return activeProperties
       .filter(p => !p.sold && p.listingStatus !== 'Sold' && p.listingStatus !== 'Hidden' && p.listingStatus !== 'Draft')
+      .slice(0, 4)
       .map(p => ({
         id: p.id,
-        type: 'property',
-        title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
+        title: p.title || `${p.bedrooms || 3} BHK ${p.category || 'Property'}`,
         price: p.priceDisplay || `₹${p.price || 75} Lakh`,
         image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
         location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
-        rating: p.rating || 4.8,
-        reviewCount: p.reviewCount || 12,
+        rating: p.rating || 0,
+        reviewCount: p.reviewCount || 0,
         verified: p.verified || false,
         premium: p.premium || false,
         badge: p.status || 'Buy',
         badgeColor: p.status === 'Rent' ? '#EFF6FF' : '#ECFDF5',
         badgeText: p.status === 'Rent' ? '#2563EB' : '#059669',
       }));
+  }, [activeProperties]);
 
-    const bus = activeBusinesses
+  // Separate Business Showcase Listings (4-5 items)
+  const businessListingsShowcase = React.useMemo(() => {
+    return activeBusinesses
       .filter(b => b.published !== false && b.status !== 'Sold' && b.status !== 'Unavailable')
+      .slice(0, 4)
       .map(b => ({
         id: b.id,
-        type: 'business',
         title: b.name || b.title || 'Business For Sale',
-        price: b.priceDisplay || `₹${b.price || b.askingPrice || 50} Lac`,
+        price: b.priceDisplay || (typeof b.price === 'number' ? `₹${b.price} Lac` : `${b.price || b.askingPrice || '50'} Lac`),
         image: b.image || b.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
         location: `${b.location ? b.location + ', ' : ''}${b.city || 'Hyderabad'}`,
-        rating: b.rating || 4.7,
-        reviewCount: b.reviewCount || 8,
+        rating: b.rating || 0,
+        reviewCount: b.reviewCount || 0,
         verified: b.verified || false,
         premium: b.featured || false,
         badge: b.category || b.industry || 'Business',
         badgeColor: '#FFFBEB',
         badgeText: '#D97706',
       }));
-
-    const merged = [...props, ...bus]
-      .sort((a, b) => {
-        const scoreA = (a.premium ? 2 : 0) + (a.verified ? 1 : 0) + (a.rating / 5);
-        const scoreB = (b.premium ? 2 : 0) + (b.verified ? 1 : 0) + (b.rating / 5);
-        return scoreB - scoreA;
-      });
-
-    return merged.slice(0, 6);
-  }, [activeProperties, activeBusinesses]);
+  }, [activeBusinesses]);
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', paddingBottom: '60px', paddingTop: '105px', fontFamily: "'Outfit', 'Inter', sans-serif" }}>
@@ -559,12 +553,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             paddingBottom: '16px'
           }}>
             {[
-              { id: 'Property', label: 'Property', icon: FaHome, color: '#002B66', bg: '#EFF6FF' },
-              { id: 'Franchise', label: 'Franchise', icon: FaStore, color: '#D97706', bg: '#FEF3C7' },
-              { id: 'Business', label: 'Business', icon: FaBriefcase, color: '#002B66', bg: '#EFF6FF' },
-              { id: 'Plots/Land', label: 'Plots/Land', icon: FaMapMarkerAlt, color: '#059669', bg: '#ECFDF5' },
-              { id: 'Commercial', label: 'Commercial', icon: FaBuilding, color: '#D97706', bg: '#FEF3C7' },
-            ].map((tab) => {
+              { id: 'Property', label: 'Property', icon: FaHome, color: '#002B66', bg: '#EFF6FF', mod: 'properties' },
+              { id: 'Franchise', label: 'Franchise', icon: FaStore, color: '#D97706', bg: '#FEF3C7', mod: 'franchises' },
+              { id: 'Business', label: 'Business', icon: FaBriefcase, color: '#002B66', bg: '#EFF6FF', mod: 'business' },
+              { id: 'Plots/Land', label: 'Plots/Land', icon: FaMapMarkerAlt, color: '#059669', bg: '#ECFDF5', mod: 'properties' },
+              { id: 'Commercial', label: 'Commercial', icon: FaBuilding, color: '#D97706', bg: '#FEF3C7', mod: 'properties' },
+            ].filter(tab => isModuleActive(tab.mod)).map((tab) => {
               const TabIcon = tab.icon;
               const isActive = activeSearchTab === tab.id;
               return (
@@ -838,16 +832,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         </div>
       </div>
 
-      {/* Featured & Top Rated Listings Showcase */}
-      {combinedTopRated.length > 0 && (
+      {/* 1. SEPARATE PROPERTY LISTINGS SECTION */}
+      {isModuleActive('properties') && propertyListingsShowcase.length > 0 && (
         <div style={{ maxWidth: '1360px', margin: '40px auto 48px auto', padding: '0 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#1E40AF', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                Exclusive Picks
+                Exclusive Real Estate
               </span>
               <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
-                Featured & Top Rated Listings
+                Property Listings
               </h2>
             </div>
             <button 
@@ -866,29 +860,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#DBEAFE';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#EFF6FF';
-              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DBEAFE'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; }}
             >
-              <span>Explore All</span>
+              <span>Explore All Properties</span>
               <FaArrowRight style={{ fontSize: '12px' }} />
             </button>
           </div>
 
           <div className="responsive-property-grid" style={{ gap: '24px' }}>
-            {combinedTopRated.map((item) => (
+            {propertyListingsShowcase.map((item) => (
               <div
                 key={item.id}
                 onClick={() => {
-                  if (item.type === 'property') {
-                    if (onPropertyClick) onPropertyClick(item.id);
-                    else onNavigate('propertyDetails', `?propertyId=${item.id}`);
-                  } else {
-                    onNavigate('businessPage');
-                  }
+                  if (onPropertyClick) onPropertyClick(item.id);
+                  else onNavigate('propertyDetails', `?propertyId=${item.id}`);
                 }}
                 style={{
                   backgroundColor: '#FFFFFF',
@@ -919,37 +905,33 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     src={item.image} 
                     alt={item.title} 
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                   />
                   
-                  {/* Rating Tag */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '12px',
-                    left: '12px',
-                    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                    backdropFilter: 'blur(4px)',
-                    color: '#FFFFFF',
-                    padding: '6px 12px',
-                    borderRadius: '30px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    zIndex: 2,
-                  }}>
-                    <FaStar style={{ color: '#F59E0B' }} />
-                    <span>{item.rating.toFixed(1)}</span>
-                    <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>
-                  </div>
+                  {item.rating > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                      backdropFilter: 'blur(4px)',
+                      color: '#FFFFFF',
+                      padding: '6px 12px',
+                      borderRadius: '30px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      zIndex: 2,
+                    }}>
+                      <FaStar style={{ color: '#F59E0B' }} />
+                      <span>{item.rating.toFixed(1)}</span>
+                      {item.reviewCount > 0 && <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>}
+                    </div>
+                  )}
 
-                  {/* Category / Type Tag */}
                   <div style={{
                     position: 'absolute',
                     bottom: '12px',
@@ -964,10 +946,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
                     zIndex: 2,
                   }}>
-                    {item.type === 'business' ? `Business • ${item.badge}` : `Property • ${item.badge}`}
+                    Property • {item.badge}
                   </div>
                   
-                  {/* Verified Badge */}
                   {item.verified && (
                     <div style={{
                       position: 'absolute',
@@ -1030,6 +1011,225 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               </div>
             ))}
           </div>
+
+          <div style={{ textAlign: 'center', marginTop: '28px' }}>
+            <button
+              onClick={() => onNavigate('propertiesPage')}
+              style={{
+                backgroundColor: '#FFFFFF',
+                color: '#1E40AF',
+                border: '1.5px solid #1E40AF',
+                padding: '12px 32px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 14px rgba(30, 64, 175, 0.08)'
+              }}
+            >
+              View More Property Listings →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 2. SEPARATE BUSINESS LISTINGS SECTION */}
+      {isModuleActive('business') && businessListingsShowcase.length > 0 && (
+        <div style={{ maxWidth: '1360px', margin: '0 auto 48px auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                Verified Commercial Deals
+              </span>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+                Business Listings
+              </h2>
+            </div>
+            <button 
+              onClick={() => onNavigate('businessPage')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: '#FEF3C7',
+                color: '#D97706',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FDE68A'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FEF3C7'; }}
+            >
+              <span>Explore All Businesses</span>
+              <FaArrowRight style={{ fontSize: '12px' }} />
+            </button>
+          </div>
+
+          <div className="responsive-property-grid" style={{ gap: '24px' }}>
+            {businessListingsShowcase.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => onNavigate('businessPage')}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '20px',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 30px -10px rgba(15, 23, 42, 0.12)';
+                  e.currentTarget.style.borderColor = '#D97706';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.03)';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                }}
+              >
+                {/* Image Section */}
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                  <img 
+                    src={item.image} 
+                    alt={item.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  />
+                  
+                  {item.rating > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                      backdropFilter: 'blur(4px)',
+                      color: '#FFFFFF',
+                      padding: '6px 12px',
+                      borderRadius: '30px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      zIndex: 2,
+                    }}>
+                      <FaStar style={{ color: '#F59E0B' }} />
+                      <span>{item.rating.toFixed(1)}</span>
+                      {item.reviewCount > 0 && <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>}
+                    </div>
+                  )}
+
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '12px',
+                    left: '12px',
+                    backgroundColor: item.badgeColor,
+                    color: item.badgeText,
+                    padding: '6px 14px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
+                    zIndex: 2,
+                  }}>
+                    Business • {item.badge}
+                  </div>
+                  
+                  {item.verified && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      backgroundColor: '#DCFCE7',
+                      color: '#16A34A',
+                      padding: '6px 10px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      boxShadow: '0 4px 10px rgba(22, 163, 74, 0.2)',
+                      zIndex: 2,
+                    }}>
+                      <FaCheckCircle />
+                    </div>
+                  )}
+                </div>
+
+                {/* Content Section */}
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', lineBreak: 'anywhere', lineHeight: 1.4 }}>
+                      {item.title}
+                    </h3>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '13px', marginBottom: '16px' }}>
+                      <FaMapMarkerAlt style={{ color: '#EF4444', flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.location}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>
+                        Valuation / Price
+                      </span>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#D97706' }}>
+                        {item.price}
+                      </span>
+                    </div>
+                    
+                    <button style={{
+                      backgroundColor: '#D97706',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}>
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: '28px' }}>
+            <button
+              onClick={() => onNavigate('businessPage')}
+              style={{
+                backgroundColor: '#FFFFFF',
+                color: '#D97706',
+                border: '1.5px solid #D97706',
+                padding: '12px 32px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: '0 4px 14px rgba(217, 119, 6, 0.08)'
+              }}
+            >
+              View More Business Listings →
+            </button>
+          </div>
         </div>
       )}
 
@@ -1090,6 +1290,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       </div>
 
       {/* 3. POPULAR CATEGORIES SECTION */}
+      {isModuleActive('properties') && (
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 40px 24px' }}>
         
         {/* Section Header */}
@@ -1173,6 +1374,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         </div>
 
       </div>
+      )}
 
       {/* 4. SHOWCASE & FEATURED PROPERTIES */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
@@ -1180,7 +1382,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       </div>
 
       {/* 5. RECENTLY SOLD PROPERTIES SECTION */}
-      {recentlySoldListings.length > 0 && (
+      {isModuleActive('properties') && recentlySoldListings.length > 0 && (
         <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '40px 24px 60px 24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>

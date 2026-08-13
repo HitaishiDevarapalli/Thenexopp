@@ -107,8 +107,11 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     const layer = markersLayerRef.current;
     if (!map || !layer) return;
 
-    // Smoothly fly to selected Navbar location coordinates
-    map.flyTo([mapCenter.lat, mapCenter.lng], 14, { duration: 1.2 });
+    // Smoothly fly to selected Navbar location coordinates only when coordinates actually change
+    const currentCenter = map.getCenter();
+    if (Math.abs(currentCenter.lat - mapCenter.lat) > 0.0001 || Math.abs(currentCenter.lng - mapCenter.lng) > 0.0001) {
+      map.flyTo([mapCenter.lat, mapCenter.lng], 14, { duration: 1.2 });
+    }
 
     // Clear old markers
     layer.clearLayers();

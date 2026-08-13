@@ -42,10 +42,102 @@
   --transition-fast: all 0.2s ease;
 }
 
+/* Logo Transparency Pulsing Loading Animation (100% -> 50% -> 100%) */
+@keyframes logoPulseTransparency {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes dotFlashing {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.nexopp-loading-screen {
+  position: fixed;
+  inset: 0;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  font-family: 'Plus Jakarta Sans', 'Outfit', 'Inter', sans-serif;
+}
+
+.nexopp-loading-logo {
+  animation: logoPulseTransparency 1.4s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.nexopp-loading-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nexopp-loading-dot {
+  animation: dotFlashing 1.2s infinite ease-in-out;
+}
+.nexopp-loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.nexopp-loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
 html {
   scroll-behavior: initial; /* Lenis handles smooth scrolling */
   overflow-x: hidden;
   font-size: 16px;
+}
+
+/* Lenis Smooth Scroll Mandatory CSS Fixes to prevent full-screen shaking & jitter */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe,
+.lenis.lenis-scrolling [data-lenis-prevent],
+.lenis.lenis-scrolling .leaflet-container {
+  pointer-events: none !important;
 }
 
 body {

@@ -86,7 +86,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Pre-React Initial Page Loading Screen matching clinformatiq style -->
+      <div style="position: fixed; inset: 0; background-color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;">
+        <div style="animation: logoPulseTransparency 1.4s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px;">
+          <svg viewBox="0 0 480 230" fill="none" xmlns="http://www.w3.org/2000/svg" style="height: 75px; width: auto; display: block;">
+            <path d="M 135 90 L 205 28 L 275 90 H 260 L 205 42 L 150 90 Z" fill="#002B66" />
+            <rect x="194" y="65" width="10" height="10" fill="#002B66" />
+            <rect x="207" y="65" width="10" height="10" fill="#002B66" />
+            <rect x="194" y="78" width="10" height="10" fill="#002B66" />
+            <rect x="207" y="78" width="10" height="10" fill="#002B66" />
+            <rect x="284" y="20" width="16" height="70" fill="#D97706" />
+            <rect x="305" y="42" width="14" height="48" fill="#D97706" />
+            <rect x="323" y="60" width="12" height="30" fill="#D97706" />
+            <text x="30" y="155" fill="#D97706" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-weight="900" font-size="68" letter-spacing="-1px">The</text>
+            <text x="156" y="155" fill="#002B66" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-weight="900" font-size="68" letter-spacing="-1px">Nex</text>
+            <circle cx="320" cy="132" r="22" stroke="#059669" stroke-width="10" fill="none" />
+            <line x1="334" y1="147" x2="350" y2="168" stroke="#059669" stroke-width="10" stroke-linecap="round" />
+            <text x="356" y="155" fill="#059669" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-weight="800" font-size="68" letter-spacing="-1px">pp</text>
+            <path d="M 38 188 Q 240 162 432 188 Q 240 174 38 188 Z" fill="#059669" />
+          </svg>
+        </div>
+        <div style="font-size: 1.05rem; font-weight: 700; color: #475569; letter-spacing: 0.02em; display: flex; align-items: center; gap: 4px;">
+          <span>Loading...</span>
+        </div>
+        <style>
+          @keyframes logoPulseTransparency {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.97); }
+            100% { opacity: 1; transform: scale(1); }
+          }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

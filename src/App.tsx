@@ -22,12 +22,13 @@ import PropertyDetailsPage from './components/PropertyDetailsPage';
 import CloseDealPage from './components/CloseDealPage';
 import AdminPanel from './pages/AdminPanel';
 import { FaArrowLeft } from 'react-icons/fa';
-import { siteSettingsDb, updateSiteSettings } from './db/marketplaceDb';
+import { siteSettingsDb, updateSiteSettings, isModuleActive } from './db/marketplaceDb';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/forms/LoginModal';
 import { SellBusinessPage } from './components/forms/SellBusinessPage';
 import { SellPropertyPage } from './components/forms/SellPropertyPage';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
+import LoadingScreen from './components/common/LoadingScreen';
 
 type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
 
@@ -101,8 +102,16 @@ const parseUrl = (path: string) => {
 export const App: React.FC = () => {
   const { user } = useAuth();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   
   const [currentPath, setCurrentPath] = useState(window.location.pathname + window.location.search);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 450);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Dynamic SEO Document Title update
   useEffect(() => {
@@ -227,19 +236,24 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (currentPage === 'adminPortal') {
-      // Do not run Lenis smooth scroll on the admin page to allow native layout scrolling
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       return;
     }
 
+    document.documentElement.classList.add('lenis', 'lenis-smooth');
+
     // Initialize Lenis Smooth Scroll
     const lenis = new Lenis({
-      duration: 1.2,
+      duration: 0.9,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1,
-      touchMultiplier: 2,
+      touchMultiplier: 1,
+      syncTouch: false,
     });
     
     (window as any).lenis = lenis;
@@ -255,8 +269,13 @@ export const App: React.FC = () => {
       cancelAnimationFrame(rafId);
       lenis.destroy();
       (window as any).lenis = null;
+      document.documentElement.classList.remove('lenis', 'lenis-smooth');
     };
   }, [currentPage]);
+
+  if (isInitialLoading) {
+    return <LoadingScreen message="Loading..." />;
+  }
 
   return (
     <div className="app-container">
@@ -367,9 +386,16 @@ export const App: React.FC = () => {
         />
 
       ) : currentPage === 'propertiesPage' ? (
-        <PropertyCategories 
-          title="Properties Marketplace"
-          subtitle="Explore verified residential, commercial, plots and new projects across India"
+        !isModuleActive('properties') ? (
+          <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Property Section Temporarily Offline</h2>
+            <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently disabled by the site administrator. Please explore our active franchise and business listings.</p>
+            <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
+          </div>
+        ) : (
+          <PropertyCategories 
+            title="Properties Marketplace"
+            subtitle="Explore verified residential, commercial, plots and new projects across India"
           onBack={navigateBack}
           searchQuery={globalSearchQuery}
           onClearSearch={() => setGlobalSearchQuery('')}
@@ -388,6 +414,7 @@ export const App: React.FC = () => {
             else if (cat === 'BuyLand') navigateTo('landPage');
           }}
         />
+        )
 
       ) : (currentPage === 'rentPage' || currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
         <PropertyCategories 
@@ -432,7 +459,7 @@ export const App: React.FC = () => {
         <SellPropertyPage onBack={navigateBack} />
 
       ) : currentPage === 'franchisePage' ? (
-        siteSettingsDb.showFranchiseSection === false ? (
+        !isModuleActive('franchises') || siteSettingsDb.showFranchiseSection === false ? (
           <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Franchise Section Temporarily Offline</h2>
             <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently undergoing maintenance. Please explore our verified properties and business listings.</p>
@@ -457,19 +484,27 @@ export const App: React.FC = () => {
         )
 
       ) : currentPage === 'businessPage' ? (
-        <BusinessMarketplace 
-          title="Business Marketplace"
-          subtitle="Discover verified businesses for sale, investment, and strategic acquisitions"
-          onBack={navigateBack}
-          onExploreCategory={(industry) => {
-            setSelectedBusinessIndustry(industry);
-            navigateTo('businessListings');
-          }}
-          onPropertyClick={(id) => {
-            setSelectedPropertyId(id);
-            navigateTo('propertyDetails', { propertyId: id });
-          }}
-        />
+        !isModuleActive('business') ? (
+          <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Business Section Temporarily Offline</h2>
+            <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This page is currently disabled by the site administrator. Please explore our active property and franchise listings.</p>
+            <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
+          </div>
+        ) : (
+          <BusinessMarketplace 
+            title="Business Marketplace"
+            subtitle="Discover verified businesses for sale, investment, and strategic acquisitions"
+            onBack={navigateBack}
+            onExploreCategory={(industry) => {
+              setSelectedBusinessIndustry(industry);
+              navigateTo('businessListings');
+            }}
+            onPropertyClick={(id) => {
+              setSelectedPropertyId(id);
+              navigateTo('propertyDetails', { propertyId: id });
+            }}
+          />
+        )
 
       ) : currentPage === 'sellBusinessPage' ? (
         <SellBusinessPage onBack={navigateBack} />

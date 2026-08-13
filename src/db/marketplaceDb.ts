@@ -656,7 +656,15 @@ const loadFromStorage = <T>(key: string, fallback: T): T => {
 };
 
 export const isModuleActive = (moduleId: string): boolean => {
-  const item = adminModulesDb.find(m => m.id === moduleId || (moduleId === 'franchise' && m.id === 'franchises') || (moduleId === 'property' && m.id === 'properties'));
+  const item = adminModulesDb.find(m => 
+    m.id === moduleId || 
+    (moduleId === 'franchise' && m.id === 'franchises') || 
+    (moduleId === 'franchises' && m.id === 'franchises') ||
+    (moduleId === 'property' && m.id === 'properties') ||
+    (moduleId === 'properties' && m.id === 'properties') ||
+    (moduleId === 'business' && m.id === 'business') ||
+    (moduleId === 'businesses' && m.id === 'business')
+  );
   return item ? item.isActive !== false : true;
 };
 

@@ -35,8 +35,13 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
 
 
 
+  const [, setModuleRefresh] = useState(0);
+
   useEffect(() => {
-    const handler = () => setCurrentCityState(selectedCity);
+    const handler = () => {
+      setCurrentCityState(selectedCity);
+      setModuleRefresh((prev) => prev + 1);
+    };
     window.addEventListener('nexopp_data_changed', handler);
     return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);

@@ -174,7 +174,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       employees: b.employeesCount ? `${b.employeesCount} Staff` : '10 Staff',
       location: `${b.city || ''}${b.state ? ', ' + b.state : ''}`,
       brokerName: 'NexOpp Advisor',
-      brokerRating: b.rating ? `${b.rating} (${b.reviewCount || 10})` : '4.9 (24)',
+      brokerRating: b.rating ? `${b.rating}${b.reviewCount ? ` (${b.reviewCount})` : ''}` : '',
       brokerImg: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       latitude: b.latitude,
       longitude: b.longitude,

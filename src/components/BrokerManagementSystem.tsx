@@ -596,7 +596,26 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                       </td>
                       <td style={{ padding: '16px 20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <img src={broker.photo || broker.logo} alt={broker.companyName} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #1E40AF' }} />
+                          {broker.photo || broker.logo ? (
+                            <img 
+                              src={broker.photo || broker.logo} 
+                              alt={broker.companyName} 
+                              style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid #1E40AF', flexShrink: 0 }} 
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                                if (e.currentTarget.parentElement) {
+                                  const fallback = document.createElement('div');
+                                  fallback.style.cssText = 'width:44px;height:44px;border-radius:50%;background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem;border:1.5px solid #1E40AF;flex-shrink:0;';
+                                  fallback.innerText = (broker.fullName || broker.companyName || 'B').substring(0, 2).toUpperCase();
+                                  e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9rem', border: '1.5px solid #1E40AF', flexShrink: 0 }}>
+                              {(broker.fullName || broker.companyName || 'B').substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.95rem' }}>{broker.companyName}</div>
                             <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{broker.fullName || 'Partner'}</div>
@@ -657,8 +676,25 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                 {dealersDb.map(broker => (
                   <div key={broker.id} style={{ padding: '18px', border: broker.premiumPartner ? '2px solid #F59E0B' : '1px solid #E2E8F0', borderRadius: '10px', backgroundColor: broker.premiumPartner ? '#FFFBEB' : '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      {(broker.photo || broker.logo) && (
-                        <img src={broker.photo || broker.logo} alt="" style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover' }} />
+                      {broker.photo || broker.logo ? (
+                        <img 
+                          src={broker.photo || broker.logo} 
+                          alt="" 
+                          style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                            if (e.currentTarget.parentElement) {
+                              const fallback = document.createElement('div');
+                              fallback.style.cssText = 'width:56px;height:56px;border-radius:50%;background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;flex-shrink:0;';
+                              fallback.innerText = (broker.companyName || 'B').substring(0, 2).toUpperCase();
+                              e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', flexShrink: 0 }}>
+                          {(broker.companyName || 'B').substring(0, 2).toUpperCase()}
+                        </div>
                       )}
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -762,8 +798,25 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: idx === 0 ? '#F59E0B' : '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1rem' }}>
                       #{idx + 1}
                     </div>
-                    {(broker.photo || broker.logo) && (
-                      <img src={broker.photo || broker.logo} alt="" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+                    {broker.photo || broker.logo ? (
+                      <img 
+                        src={broker.photo || broker.logo} 
+                        alt="" 
+                        style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
+                        onError={(e) => {
+                          (e.currentTarget as HTMLElement).style.display = 'none';
+                          if (e.currentTarget.parentElement) {
+                            const fallback = document.createElement('div');
+                            fallback.style.cssText = 'width:60px;height:60px;border-radius:50%;background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;flex-shrink:0;';
+                            fallback.innerText = (broker.companyName || 'B').substring(0, 2).toUpperCase();
+                            e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem', flexShrink: 0 }}>
+                        {(broker.companyName || 'B').substring(0, 2).toUpperCase()}
+                      </div>
                     )}
                     <div>
                       <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>{broker.companyName}</h4>
@@ -841,8 +894,25 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               return (
                 <div key={broker.id} style={{ backgroundColor: '#FFFFFF', padding: '24px', borderTop: `6px solid ${borderColor}`, border: '1px solid #E2E8F0', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <div style={{ fontWeight: 800, fontSize: '0.95rem', color: borderColor, marginBottom: '14px' }}>{medal}</div>
-                  {(broker.photo || broker.logo) && (
-                    <img src={broker.photo || broker.logo} alt="" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${borderColor}`, marginBottom: '12px' }} />
+                  {broker.photo || broker.logo ? (
+                    <img 
+                      src={broker.photo || broker.logo} 
+                      alt="" 
+                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: `3px solid ${borderColor}`, marginBottom: '12px', flexShrink: 0 }} 
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                        if (e.currentTarget.parentElement) {
+                          const fallback = document.createElement('div');
+                          fallback.style.cssText = `width:80px;height:80px;border-radius:50%;background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.5rem;border:3px solid ${borderColor};margin-bottom:12px;flex-shrink:0;`;
+                          fallback.innerText = (broker.companyName || 'B').substring(0, 2).toUpperCase();
+                          e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.5rem', border: `3px solid ${borderColor}`, marginBottom: '12px', flexShrink: 0 }}>
+                      {(broker.companyName || 'B').substring(0, 2).toUpperCase()}
+                    </div>
                   )}
                   <h4 style={{ margin: '0 0 4px 0', fontSize: '1.15rem', fontWeight: 700 }}>{broker.companyName}</h4>
                   <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 12px 0' }}>{broker.serviceAreas?.[0]?.city || (broker as any).city || 'N/A'}</p>

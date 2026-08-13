@@ -265,14 +265,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     const lenis = (window as any).lenis;
     if (lenis) {
       lenis.stop();
+      lenis.scrollTo(0, { immediate: true });
     }
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+
     return () => {
       const lenis = (window as any).lenis;
       if (lenis) {
         lenis.start();
       }
     };
-  }, []);
+  }, [isAuthenticated]);
 
 
   const [notification, setNotification] = useState<{ message: string; type: string } | null>(null);
@@ -298,6 +303,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       setCurrentUserRole('Super Admin');
       setCurrentUserName('Super Admin');
       setError(null);
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
       return;
     }
 
@@ -316,6 +324,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       setCurrentUserRole(employee.role);
       setCurrentUserName(employee.fullName);
       setError(null);
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
 
       // Evaluate permissions to set active tab
       const empPerms = employee.customPermissions !== undefined
@@ -869,21 +880,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               CONTENT MANAGEMENT
             </div>
           )}
-
           {hasPermission('properties') && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button
-                onClick={() => {
-                  setActiveTab('properties');
-                  setExpandedMenu(expandedMenu === 'properties' ? null : 'properties');
-                }}
-                style={{
-                  padding: '11px 16px', backgroundColor: activeTab === 'properties' ? '#ECFDF5' : 'transparent', color: activeTab === 'properties' ? '#059669' : '#475569', border: activeTab === 'properties' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBuilding style={{ color: activeTab === 'properties' ? '#059669' : '#64748B' }} /> Property Management</div>
-                <FaChevronDown style={{ transform: expandedMenu === 'properties' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={() => {
+                    setActiveTab('properties');
+                    setExpandedMenu(expandedMenu === 'properties' ? null : 'properties');
+                  }}
+                  style={{
+                    flexGrow: 1, padding: '11px 12px', backgroundColor: activeTab === 'properties' ? '#ECFDF5' : 'transparent', color: activeTab === 'properties' ? '#059669' : '#475569', border: activeTab === 'properties' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FaBuilding style={{ color: activeTab === 'properties' ? '#059669' : '#64748B' }} /> Property Management</div>
+                  <FaChevronDown style={{ transform: expandedMenu === 'properties' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAdminModuleActive('properties');
+                    showNotification(`Property Management is now ${isModuleActive('properties') ? 'Disabled' : 'Enabled'} on website`);
+                    triggerRefresh();
+                  }}
+                  title={isModuleActive('properties') ? 'Click to Disable Property page on Website' : 'Click to Enable Property page on Website'}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    backgroundColor: isModuleActive('properties') ? '#DCFCE7' : '#FEE2E2',
+                    color: isModuleActive('properties') ? '#15803D' : '#DC2626',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {isModuleActive('properties') ? 'ON' : 'OFF'}
+                </button>
+              </div>
               
               {expandedMenu === 'properties' && (
                 <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
@@ -912,18 +947,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             
           {hasPermission('franchises') && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button
-                onClick={() => {
-                  setActiveTab('franchises');
-                  setExpandedMenu(expandedMenu === 'franchises' ? null : 'franchises');
-                }}
-                style={{
-                  padding: '11px 16px', backgroundColor: activeTab === 'franchises' ? '#ECFDF5' : 'transparent', color: activeTab === 'franchises' ? '#059669' : '#475569', border: activeTab === 'franchises' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaStore style={{ color: activeTab === 'franchises' ? '#059669' : '#64748B' }} /> Franchise Management</div>
-                <FaChevronDown style={{ transform: expandedMenu === 'franchises' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={() => {
+                    setActiveTab('franchises');
+                    setExpandedMenu(expandedMenu === 'franchises' ? null : 'franchises');
+                  }}
+                  style={{
+                    flexGrow: 1, padding: '11px 12px', backgroundColor: activeTab === 'franchises' ? '#ECFDF5' : 'transparent', color: activeTab === 'franchises' ? '#059669' : '#475569', border: activeTab === 'franchises' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FaStore style={{ color: activeTab === 'franchises' ? '#059669' : '#64748B' }} /> Franchise Management</div>
+                  <FaChevronDown style={{ transform: expandedMenu === 'franchises' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAdminModuleActive('franchises');
+                    showNotification(`Franchise Management is now ${isModuleActive('franchises') ? 'Disabled' : 'Enabled'} on website`);
+                    triggerRefresh();
+                  }}
+                  title={isModuleActive('franchises') ? 'Click to Disable Franchise page on Website' : 'Click to Enable Franchise page on Website'}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    backgroundColor: isModuleActive('franchises') ? '#DCFCE7' : '#FEE2E2',
+                    color: isModuleActive('franchises') ? '#15803D' : '#DC2626',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {isModuleActive('franchises') ? 'ON' : 'OFF'}
+                </button>
+              </div>
 
               {expandedMenu === 'franchises' && (
                 <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
@@ -952,18 +1012,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
           {hasPermission('businesses') && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button
-                onClick={() => {
-                  setActiveTab('businesses');
-                  setExpandedMenu(expandedMenu === 'businesses' ? null : 'businesses');
-                }}
-                style={{
-                  padding: '11px 16px', backgroundColor: activeTab === 'businesses' ? '#ECFDF5' : 'transparent', color: activeTab === 'businesses' ? '#059669' : '#475569', border: activeTab === 'businesses' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaBriefcase style={{ color: activeTab === 'businesses' ? '#059669' : '#64748B' }} /> Business Management</div>
-                <FaChevronDown style={{ transform: expandedMenu === 'businesses' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  onClick={() => {
+                    setActiveTab('businesses');
+                    setExpandedMenu(expandedMenu === 'businesses' ? null : 'businesses');
+                  }}
+                  style={{
+                    flexGrow: 1, padding: '11px 12px', backgroundColor: activeTab === 'businesses' ? '#ECFDF5' : 'transparent', color: activeTab === 'businesses' ? '#059669' : '#475569', border: activeTab === 'businesses' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FaBriefcase style={{ color: activeTab === 'businesses' ? '#059669' : '#64748B' }} /> Business Management</div>
+                  <FaChevronDown style={{ transform: expandedMenu === 'businesses' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAdminModuleActive('business');
+                    showNotification(`Business Management is now ${isModuleActive('business') ? 'Disabled' : 'Enabled'} on website`);
+                    triggerRefresh();
+                  }}
+                  title={isModuleActive('business') ? 'Click to Disable Business page on Website' : 'Click to Enable Business page on Website'}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    backgroundColor: isModuleActive('business') ? '#DCFCE7' : '#FEE2E2',
+                    color: isModuleActive('business') ? '#15803D' : '#DC2626',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {isModuleActive('business') ? 'ON' : 'OFF'}
+                </button>
+              </div>
 
               {expandedMenu === 'businesses' && (
                 <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>

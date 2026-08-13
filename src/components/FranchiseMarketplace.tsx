@@ -131,7 +131,7 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
       breakeven: f.paybackPeriod || '18 - 24 months',
       location: `${f.city || ''}${f.state ? ', ' + f.state : ''}`,
       brokerName: f.dealerId ? 'Authorized Dealer' : 'Karan Sharma',
-      brokerRating: f.rating ? `${f.rating} (${f.reviewCount || 10})` : '4.9 (24)',
+      brokerRating: f.rating ? `${f.rating}${f.reviewCount ? ` (${f.reviewCount})` : ''}` : '',
       brokerImg: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       latitude: f.latitude,
       longitude: f.longitude,

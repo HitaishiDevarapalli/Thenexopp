@@ -124,6 +124,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [showPhone, setShowPhone] = useState(false);
   const [message, setMessage] = useState('');
   const [showSellerPortfolio, setShowSellerPortfolio] = useState(false);
+  const [portfolioTab, setPortfolioTab] = useState<'active' | 'sold'>('active');
   const [nearbyRadiusFilter, setNearbyRadiusFilter] = useState<number>(5); // Default 5 km
   const [activeAmenityTab, setActiveAmenityTab] = useState<string>('schools');
   const [amenityCache, setAmenityCache] = useState<Record<string, any[]>>({});
@@ -439,6 +440,35 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     }
     return found || null;
   }, [property]);
+
+  // Broker active and sold listings
+  const brokerListings = useMemo(() => {
+    if (!dealer) return { active: [], sold: [] };
+    const bId = dealer.id;
+    
+    // Properties
+    const allProps = propertiesDb.filter(p => p.dealerId === bId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(bId)));
+    
+    // Businesses
+    const allBiz = businessDb ? businessDb.filter((b: any) => b.dealerId === bId || (b as any).assignedBrokerIds?.includes(bId)) : [];
+    
+    // Franchises
+    const allFran = franchiseDb ? franchiseDb.filter((f: any) => f.dealerId === bId || (f as any).assignedBrokerIds?.includes(bId)) : [];
+
+    const activeProps = allProps.filter(p => !p.sold && p.listingStatus !== 'Sold' && p.status !== 'Sold' && p.approvalStatus !== 'Sold').map(p => ({ ...p, itemType: 'Property', isSold: false }));
+    const soldProps = allProps.filter(p => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold' || p.approvalStatus === 'Sold').map(p => ({ ...p, itemType: 'Property', isSold: true }));
+
+    const activeBiz = allBiz.filter((b: any) => !(b as any).sold && b.status !== 'Sold' && (b as any).listingStatus !== 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: false }));
+    const soldBiz = allBiz.filter((b: any) => (b as any).sold || b.status === 'Sold' || (b as any).listingStatus === 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: true }));
+
+    const activeFran = allFran.filter((f: any) => !(f as any).sold && f.status !== 'Sold' && (f as any).listingStatus !== 'Sold' && (f as any).approvalStatus !== 'Closed').map((f: any) => ({ ...f, itemType: 'Franchise', title: f.brand, priceDisplay: f.investmentDisplay || `₹${f.investment || 25} Lac`, isSold: false }));
+    const soldFran = allFran.filter((f: any) => (f as any).sold || f.status === 'Sold' || (f as any).listingStatus === 'Sold' || (f as any).approvalStatus === 'Closed').map((f: any) => ({ ...f, itemType: 'Franchise', title: f.brand, priceDisplay: f.investmentDisplay || `₹${f.investment || 25} Lac`, isSold: true }));
+
+    return {
+      active: [...activeProps, ...activeBiz, ...activeFran],
+      sold: [...soldProps, ...soldBiz, ...soldFran]
+    };
+  }, [dealer]);
 
   // Generate dynamic gallery images based on category
   const galleryImages = useMemo(() => {
@@ -947,7 +977,26 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 onClick={() => setShowSellerPortfolio(true)}
                 title="View Broker Profile"
               >
-                <img src={dealer.photo || dealer.logo} alt={dealer.fullName || dealer.companyName} style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '2px solid #E2E8F0', backgroundColor: '#EFF6FF' }} />
+                {dealer.photo || dealer.logo ? (
+                  <img 
+                    src={dealer.photo || dealer.logo} 
+                    alt={dealer.fullName || dealer.companyName} 
+                    style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E2E8F0', backgroundColor: '#EFF6FF', flexShrink: 0 }} 
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                      if (e.currentTarget.parentElement) {
+                        const fallback = document.createElement('div');
+                        fallback.style.cssText = 'width:45px;height:45px;border-radius:50%;background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.95rem;border:2px solid #E2E8F0;flex-shrink:0;';
+                        fallback.innerText = (dealer.fullName || dealer.companyName || 'B').substring(0, 2).toUpperCase();
+                        e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div style={{ width: '45px', height: '45px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.95rem', border: '2px solid #E2E8F0', flexShrink: 0 }}>
+                    {(dealer.fullName || dealer.companyName || 'B').substring(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block', fontWeight: 600 }}>Assigned Broker</span>
                   <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>{dealer.fullName || dealer.companyName}</h4>
@@ -1100,43 +1149,76 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             </button>
 
             <div className="portfolio-header">
-              <img 
-                src={dealer.photo || dealer.logo} 
-                alt={dealer.companyName} 
-                className="portfolio-seller-img" 
-                style={{ objectFit: 'contain', backgroundColor: '#EFF6FF' }}
-              />
+              {dealer.photo || dealer.logo ? (
+                <img 
+                  src={dealer.photo || dealer.logo} 
+                  alt={dealer.companyName} 
+                  className="portfolio-seller-img" 
+                  style={{ objectFit: 'cover', backgroundColor: '#EFF6FF' }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                    if (e.currentTarget.parentElement) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'portfolio-seller-img';
+                      fallback.style.cssText = 'background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:2rem;border-radius:50%;';
+                      fallback.innerText = (dealer.companyName || 'B').substring(0, 2).toUpperCase();
+                      e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                    }
+                  }}
+                />
+              ) : (
+                <div className="portfolio-seller-img" style={{ backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '2rem', borderRadius: '50%' }}>
+                  {(dealer.companyName || 'B').substring(0, 2).toUpperCase()}
+                </div>
+              )}
               <div className="portfolio-header-text">
                 <span className="section-tag">Exclusive Portfolio</span>
                 <h1 className="portfolio-title">{dealer.companyName}</h1>
                 <div className="portfolio-meta">
-                  <span className="meta-item">⭐ {dealer.rating} ({dealer.reviewCount} Reviews)</span>
-                  <span className="meta-item">💼 {dealer.yearsExperience} Years Exp</span>
-                  <span className="meta-item">🏢 {dealer.inventoryCount} Active Properties</span>
+                  {dealer.rating > 0 && <span className="meta-item">⭐ {dealer.rating} {dealer.reviewCount ? `(${dealer.reviewCount} Reviews)` : ''}</span>}
+                  {dealer.yearsExperience != null && <span className="meta-item">💼 {dealer.yearsExperience} Years Exp</span>}
+                  <span className="meta-item">🏢 {brokerListings.active.length} Active Listings</span>
+                  <span className="meta-item">🤝 {brokerListings.sold.length} Sold Properties</span>
                 </div>
               </div>
             </div>
 
             {/* Seller Profile & Contact Section */}
-            <div className="portfolio-seller-details-card premium-card" style={{ marginBottom: '3rem', padding: '2.5rem' }}>
+            <div className="portfolio-seller-details-card premium-card" style={{ marginBottom: '2rem', padding: '2.5rem' }}>
               <div className="seller-details-grid">
                 <div className="seller-profile-column">
-                  {(dealer.photo || dealer.logo) && (
+                  {dealer.photo || dealer.logo ? (
                     <img 
                       src={dealer.photo || dealer.logo} 
                       alt={dealer.companyName} 
                       className="seller-details-avatar" 
-                      style={{ objectFit: 'contain', backgroundColor: '#EFF6FF' }}
+                      style={{ objectFit: 'cover', backgroundColor: '#EFF6FF' }}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                        if (e.currentTarget.parentElement) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'seller-details-avatar';
+                          fallback.style.cssText = 'background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:2rem;border-radius:50%;';
+                          fallback.innerText = (dealer.companyName || 'B').substring(0, 2).toUpperCase();
+                          e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                        }
+                      }}
                     />
+                  ) : (
+                    <div className="seller-details-avatar" style={{ backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '2rem', borderRadius: '50%' }}>
+                      {(dealer.companyName || 'B').substring(0, 2).toUpperCase()}
+                    </div>
                   )}
                   <h3 className="seller-details-name">{dealer.companyName}</h3>
                   <div className="seller-details-badges" style={{ marginTop: '0.5rem' }}>
                     {dealer.verified && <span className="badge-verified" style={{ marginRight: '8px' }}>✔ Verified Dealer</span>}
                     {dealer.premiumPartner && <span className="badge-premium">💎 Premium Partner</span>}
                   </div>
-                  <div className="seller-details-rating" style={{ marginTop: '1rem', fontSize: '1.1rem' }}>
-                    ⭐ <strong>{dealer.rating}</strong> ({dealer.reviewCount} user reviews)
-                  </div>
+                  {dealer.rating > 0 && (
+                    <div className="seller-details-rating" style={{ marginTop: '1rem', fontSize: '1.1rem' }}>
+                      ⭐ <strong>{dealer.rating}</strong> {dealer.reviewCount ? `(${dealer.reviewCount} user reviews)` : ''}
+                    </div>
+                  )}
                 </div>
 
                 <div className="seller-info-column">
@@ -1146,18 +1228,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       <div className="info-item">
                         <span className="info-label">👤 Authorized Name</span>
                         <span className="info-value">{dealer.fullName}</span>
-                      </div>
-                    )}
-                    {(dealer.phone || dealer.mobileNumber) && (
-                      <div className="info-item">
-                        <span className="info-label">📞 Mobile Number</span>
-                        <span className="info-value" style={{ color: 'var(--gold)', fontWeight: 'bold' }}>{dealer.phone || dealer.mobileNumber}</span>
-                      </div>
-                    )}
-                    {dealer.email && (
-                      <div className="info-item">
-                        <span className="info-label">✉ Email Address</span>
-                        <span className="info-value">{dealer.email}</span>
                       </div>
                     )}
                     {(dealer.city || dealer.state || dealer.district) && (
@@ -1199,66 +1269,144 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               </div>
             </div>
 
-            {/* Properties Grid */}
-            <div className="portfolio-grid">
-              {propertiesDb.filter(p => p.dealerId === dealer.id).map(prop => (
-                <div 
-                  key={prop.id} 
-                  className="feed-card premium-card landscape-card portfolio-card-item" 
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => {
-                    setShowSellerPortfolio(false);
-                    onPropertyClick(prop.id);
-                    setActiveImageIndex(0);
-                    setShowPhone(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+            {/* Tabs Header */}
+            <div style={{ marginBottom: '1.5rem', borderBottom: '2px solid #E2E8F0', paddingBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  Broker Listings & Portfolio
+                </h3>
+                <p style={{ margin: '4px 0 0 0', color: '#64748B', fontSize: '0.88rem' }}>
+                  Explore active offerings and previous transactions by {dealer.companyName}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', backgroundColor: '#F1F5F9', padding: '4px', borderRadius: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPortfolioTab('active')}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    backgroundColor: portfolioTab === 'active' ? '#FFFFFF' : 'transparent',
+                    color: portfolioTab === 'active' ? '#1E40AF' : '#64748B',
+                    boxShadow: portfolioTab === 'active' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none'
                   }}
                 >
-                  <div className="feed-card-image-wrap">
-                    <img 
-                      src={prop.image} 
-                      alt={prop.title} 
-                      className="feed-card-img" 
-                    />
-                    <button 
-                      className={`wishlist-btn ${isWishlisted(prop.id) ? 'active' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleWishlist(prop.id);
-                      }}
-                    >
-                      {isWishlisted(prop.id) ? <FaHeart className="heart-icon filled" /> : <FaRegHeart className="heart-icon outline" />}
-                    </button>
-                    <button 
-                      className="buy-now-badge"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowSellerPortfolio(false);
-                        onBuyProperty?.(prop.id);
-                      }}
-                    >
-                      <FaShoppingCart /> Buy
-                    </button>
-                    <div className="feed-card-badges">
-                      {prop.premium && <span className="badge-premium">💎 Premium</span>}
-                      {prop.verified && <span className="badge-verified">✔ Verified</span>}
-                    </div>
-                  </div>
+                  Active Listings ({brokerListings.active.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPortfolioTab('sold')}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    backgroundColor: portfolioTab === 'sold' ? '#FFFFFF' : 'transparent',
+                    color: portfolioTab === 'sold' ? '#DC2626' : '#64748B',
+                    boxShadow: portfolioTab === 'sold' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none'
+                  }}
+                >
+                  Previously Sold ({brokerListings.sold.length})
+                </button>
+              </div>
+            </div>
 
-                  <div className="feed-card-body">
-                    <div className="feed-card-price-title">
-                      <h3 className="feed-prop-price">₹ {prop.priceDisplay}</h3>
-                      <h4 className="feed-prop-title">{prop.title}</h4>
+            {/* Properties Grid */}
+            <div className="portfolio-grid">
+              {(portfolioTab === 'active' ? brokerListings.active : brokerListings.sold).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', gridColumn: '1 / -1', backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+                  <p style={{ fontSize: '1rem', color: '#64748B', fontWeight: 600 }}>
+                    {portfolioTab === 'active' 
+                      ? `No active listings currently available for ${dealer.companyName}.`
+                      : `No previously sold properties recorded yet for ${dealer.companyName}.`}
+                  </p>
+                </div>
+              ) : (
+                (portfolioTab === 'active' ? brokerListings.active : brokerListings.sold).map((item: any) => (
+                  <div 
+                    key={item.id} 
+                    className="feed-card premium-card landscape-card portfolio-card-item" 
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      if (item.itemType === 'Property') {
+                        setShowSellerPortfolio(false);
+                        onPropertyClick(item.id);
+                        setActiveImageIndex(0);
+                        setShowPhone(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <div className="feed-card-image-wrap" style={{ position: 'relative' }}>
+                      <img 
+                        src={item.image || item.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80'} 
+                        alt={item.title || item.name} 
+                        className="feed-card-img" 
+                      />
+                      {item.isSold ? (
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          backgroundColor: '#DC2626',
+                          color: '#FFFFFF',
+                          padding: '5px 12px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          boxShadow: '0 4px 10px rgba(220, 38, 38, 0.3)',
+                          zIndex: 3
+                        }}>
+                          SOLD / CLOSED DEAL
+                        </div>
+                      ) : (
+                        <button 
+                          className="buy-now-badge"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowSellerPortfolio(false);
+                            onBuyProperty?.(item.id);
+                          }}
+                        >
+                          <FaShoppingCart /> Buy
+                        </button>
+                      )}
+                      <div className="feed-card-badges">
+                        {item.itemType && <span style={{ backgroundColor: '#EFF6FF', color: '#1E40AF', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: 800 }}>{item.itemType}</span>}
+                        {item.premium && <span className="badge-premium">💎 Premium</span>}
+                        {item.verified && <span className="badge-verified">✔ Verified</span>}
+                      </div>
                     </div>
-                    <div className="feed-card-specs">
-                      <span>📐 {prop.areaSqFt}</span>
-                    </div>
-                    <div className="feed-card-footer">
-                      <span className="feed-prop-location"><FaMapMarkerAlt /> {prop.area}, {prop.city}</span>
+
+                    <div className="feed-card-body">
+                      <div className="feed-card-price-title">
+                        <h3 className="feed-prop-price" style={{ color: item.isSold ? '#DC2626' : undefined }}>
+                          ₹ {item.priceDisplay || item.price}
+                        </h3>
+                        <h4 className="feed-prop-title">{item.title || item.name}</h4>
+                      </div>
+                      <div className="feed-card-specs">
+                        {item.areaSqFt && <span>📐 {item.areaSqFt}</span>}
+                        {item.isSold && <span style={{ color: '#DC2626', fontWeight: 700 }}>✓ Transaction Completed</span>}
+                      </div>
+                      <div className="feed-card-footer">
+                        <span className="feed-prop-location"><FaMapMarkerAlt /> {item.area || item.location || ''}{item.city ? `, ${item.city}` : ''}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
