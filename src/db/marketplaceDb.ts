@@ -674,17 +674,21 @@ export const saveAdminModules = (modules: AdminModuleItem[]) => {
 };
 
 export const toggleAdminModuleActive = (id: string) => {
-  adminModulesDb = adminModulesDb.map(m => m.id === id ? { ...m, isActive: !m.isActive } : m);
+  const current = adminModulesDb.find(m => m.id === id);
+  const newActive = current ? !current.isActive : false;
+
+  if (current) {
+    adminModulesDb = adminModulesDb.map(m => m.id === id ? { ...m, isActive: newActive } : m);
+  } else {
+    adminModulesDb = [...adminModulesDb, { id, label: id, category: 'CONTENT MANAGEMENT', isActive: newActive, custom: false }];
+  }
   notifyDataChanged();
   
-  const updated = adminModulesDb.find(m => m.id === id);
-  if (updated) {
-    fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: updated.isActive })
-    }).catch(err => console.error('API Sync Error:', err));
-  }
+  fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isActive: newActive, id })
+  }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteAdminModule = (id: string) => {

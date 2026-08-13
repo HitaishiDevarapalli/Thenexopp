@@ -2374,16 +2374,24 @@ app.put('/api/admin-modules/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const { isActive, label, category } = req.body;
-    const updated = await prisma.adminModule.update({
+    const updated = await prisma.adminModule.upsert({
       where: { id },
-      data: {
-        ...(isActive !== undefined && { isActive }),
+      update: {
+        ...(isActive !== undefined && { isActive: Boolean(isActive) }),
         ...(label !== undefined && { label }),
         ...(category !== undefined && { category }),
+      },
+      create: {
+        id,
+        label: label || id,
+        category: category || 'CONTENT MANAGEMENT',
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
+        custom: false,
       }
     });
     return res.json(updated);
   } catch (err) {
+    logger.error({ err }, `Failed to update admin module ${req.params.id}`);
     next(err);
   }
 });
