@@ -2284,15 +2284,7 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
   }
 });
 
-// ── ENQUIRIES ENDPOINTS ───────────────────────────────────────────────────────
-app.get('/api/enquiries', async (req, res) => {
-  try {
-    const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
-    return res.json(enquiries || []);
-  } catch (err) {
-    return res.json([]);
-  }
-});
+// ── ENQUIRIES ENDPOINTS (Admin/Public Mutators) ───────────────────────────────────
 
 app.post('/api/enquiries', async (req, res, next) => {
   try {

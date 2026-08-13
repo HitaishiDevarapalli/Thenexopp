@@ -1,23 +1,88 @@
-import React, { createContext, useContext, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useWishlistStore } from '../store/useWishlistStore';
+import { useAuth } from './AuthContext';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 interface WishlistContextType {
   wishlistItems: string[];
-  toggleWishlist: (propertyId: string) => void;
-  isWishlisted: (propertyId: string) => boolean;
+  toggleWishlist: (listingId: string, listingType?: 'PROPERTY' | 'BUSINESS') => Promise<void>;
+  isWishlisted: (listingId: string) => boolean;
+  refreshWishlist: () => Promise<void>;
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const store = useWishlistStore();
+  const { user, openLoginModal } = useAuth();
+
+  const fetchUserFavorites = async () => {
+    if (!user || user.profileCompleted !== true) {
+      store.clearWishlist();
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/favorites`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const ids = data.map((item: any) => item.listingId || item.propertyId || item.businessId || item.id);
+          store.setWishlistIds(ids);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch user favorites:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserFavorites();
+  }, [user]);
+
+  const toggleWishlist = async (listingId: string, listingType: 'PROPERTY' | 'BUSINESS' = 'PROPERTY') => {
+    if (!user || user.profileCompleted !== true) {
+      openLoginModal();
+      return;
+    }
+
+    const isCurrentlyWishlisted = store.isWishlisted(listingId);
+    // Optimistic in-memory update for instant UI feedback
+    store.toggleWishlist(listingId);
+
+    try {
+      if (isCurrentlyWishlisted) {
+        const favRes = await fetch(`${API_BASE_URL}/api/favorites`, { credentials: 'include' });
+        if (favRes.ok) {
+          const favs = await favRes.json();
+          const target = favs.find((f: any) => f.listingId === listingId || f.id === listingId);
+          if (target) {
+            await fetch(`${API_BASE_URL}/api/favorites/${target.id}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            });
+          }
+        }
+      } else {
+        await fetch(`${API_BASE_URL}/api/favorites`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ listingType, listingId })
+        });
+      }
+    } catch (e) {
+      console.error('Failed to sync favorite with server:', e);
+    }
+  };
 
   return (
     <WishlistContext.Provider
       value={{
         wishlistItems: store.wishlistIds,
-        toggleWishlist: store.toggleWishlist,
+        toggleWishlist,
         isWishlisted: store.isWishlisted,
+        refreshWishlist: fetchUserFavorites
       }}
     >
       {children}
@@ -31,8 +96,9 @@ export const useWishlist = () => {
     const store = useWishlistStore();
     return {
       wishlistItems: store.wishlistIds,
-      toggleWishlist: store.toggleWishlist,
+      toggleWishlist: async (id: string) => store.toggleWishlist(id),
       isWishlisted: store.isWishlisted,
+      refreshWishlist: async () => {},
     };
   }
   return context;

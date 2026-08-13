@@ -86,15 +86,8 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     return null;
   }).filter(Boolean) as any[];
 
-  // Decoupled favourites source
-  const favoritesToShow = isUsingDb ? dbFavorites : resolvedLocalFavorites.map(fav => ({
-    id: fav.id,
-    listingType: fav.listingType,
-    listingId: fav.id,
-    property: fav.property,
-    business: fav.business,
-    createdAt: new Date().toISOString()
-  }));
+  // Decoupled favourites source - strictly dbFavorites for authenticated user
+  const favoritesToShow = user ? dbFavorites : [];
 
   const removeFavorite = async (favIdOrListingId: string, listingType?: string, listingId?: string) => {
     if (isUsingDb) {
