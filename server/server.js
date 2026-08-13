@@ -668,9 +668,8 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
             lastLoginAt: timestamp,
             loginCount: 1,
-            status: 'Active',
-            registeredDate: new Date().toLocaleDateString(),
-            profileCompleted: false
+            status: 'Pending',
+            registeredDate: new Date().toLocaleDateString()
           },
         });
       }
@@ -685,7 +684,7 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
         gender: gender || 'Male',
         district: district || 'Hyderabad',
         role: 'Verified Investor',
-        profileCompleted: false
+        status: 'Pending'
       };
     }
 
@@ -731,9 +730,8 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
       phone: customer.mobile || customer.phone || '',
       role: customer.role || 'Verified Investor',
       gender: customer.gender,
-      district: customer.district || customer.area || '',
-      area: customer.area || customer.district || '',
-      profileCompleted: customer.profileCompleted || false,
+      district: customer.district || '',
+      profileCompleted: customer.status === 'Active',
     };
 
     const tokens = generateTokens(userPayload);
@@ -871,11 +869,8 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
             phone: customer.mobile || customer.phone || '',
             role: customer.role || 'Verified Investor',
             gender: customer.gender,
-            district: customer.district || customer.area || '',
-            area: customer.area || customer.district || '',
-            profileCompleted: customer.profileCompleted,
-            propertyInterest: customer.propertyInterest,
-            businessInterest: customer.businessInterest,
+            district: customer.district || '',
+            profileCompleted: customer.status === 'Active',
             status: customer.status,
             avatar: customer.avatar
           }
@@ -909,9 +904,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
         name: name.trim(),
         gender: gender || 'Male',
         district: area || '',
-        propertyInterest: Boolean(propertyInterest),
-        businessInterest: Boolean(businessInterest),
-        profileCompleted: true
+        status: 'Active'
       }
     });
 
@@ -933,9 +926,8 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
       phone: customer.mobile || customer.phone || '',
       role: customer.role || 'Verified Investor',
       gender: customer.gender,
-      district: customer.district || customer.area || '',
-      area: customer.area || customer.district || '',
-      profileCompleted: customer.profileCompleted,
+      district: customer.district || '',
+      profileCompleted: customer.status === 'Active',
     };
 
     const tokens = generateTokens(userPayload);
