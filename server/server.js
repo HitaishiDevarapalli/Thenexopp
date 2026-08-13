@@ -441,7 +441,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
     otpSessionsMap.set(cleaned, session);
 
-    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH;
+    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH || process.env.VITE_MSG91_TOKEN_AUTH || '557093Aca5G41bF6a7d8d93P1';
     const templateId = process.env.MSG91_TEMPLATE_ID || '6a7d73335c4fafe2050bbfb4';
 
     if (!authKey) {
@@ -521,7 +521,7 @@ app.post('/api/auth/resend-otp', async (req, res) => {
     session.otpAttemptCount = 0; // reset attempts for retry/new OTP
     otpSessionsMap.set(cleaned, session);
 
-    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH;
+    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH || process.env.VITE_MSG91_TOKEN_AUTH || '557093Aca5G41bF6a7d8d93P1';
 
     if (!authKey) {
       console.error('MSG91 auth key is missing in environment variables.');
@@ -591,7 +591,7 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     session.otpAttemptCount++;
     otpSessionsMap.set(cleaned, session);
 
-    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH;
+    const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH || process.env.VITE_MSG91_TOKEN_AUTH || '557093Aca5G41bF6a7d8d93P1';
     if (!authKey) {
       console.error('MSG91 auth key is missing in environment variables.');
       return res.status(500).json({ error: 'SMS service configuration is missing. Please contact support.' });
