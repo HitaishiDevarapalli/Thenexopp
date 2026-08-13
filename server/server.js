@@ -650,7 +650,6 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
             name: existing.name || targetName,
             gender: existing.gender || gender,
             district: existing.district || district,
-            area: existing.area || district || 'Hyderabad',
             lastLoginAt: timestamp,
             loginCount: existing.loginCount + 1,
           },
@@ -665,7 +664,6 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
             phone: verifiedMobile,
             gender: gender || 'Male',
             district: district || 'Hyderabad',
-            area: district || 'Hyderabad',
             role: 'Verified Investor',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
             lastLoginAt: timestamp,
@@ -686,7 +684,6 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
         phone: verifiedMobile,
         gender: gender || 'Male',
         district: district || 'Hyderabad',
-        area: district || 'Hyderabad',
         role: 'Verified Investor',
         profileCompleted: false
       };
@@ -911,7 +908,6 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
       data: {
         name: name.trim(),
         gender: gender || 'Male',
-        area: area || '',
         district: area || '',
         propertyInterest: Boolean(propertyInterest),
         businessInterest: Boolean(businessInterest),
