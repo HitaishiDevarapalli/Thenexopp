@@ -898,15 +898,47 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
       return res.status(400).json({ error: 'Full Name is required.' });
     }
 
-    const customer = await prisma.customer.update({
-      where: { id: req.user.id },
-      data: {
-        name: name.trim(),
-        gender: gender || 'Male',
-        district: area || '',
-        status: 'Active'
-      }
-    });
+    const userMobile = req.user.mobile || req.user.phone || (req.user.id && req.user.id.startsWith('cust-') ? req.user.id.replace('cust-', '') : null);
+
+    let customer = null;
+    if (req.user.id && !req.user.id.startsWith('cust-')) {
+      customer = await prisma.customer.findUnique({ where: { id: req.user.id } }).catch(() => null);
+    }
+
+    if (!customer && userMobile) {
+      customer = await prisma.customer.findFirst({
+        where: { OR: [{ mobile: userMobile }, { phone: userMobile }] }
+      }).catch(() => null);
+    }
+
+    if (customer) {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          name: name.trim(),
+          gender: gender || 'Male',
+          district: area || '',
+          status: 'Active'
+        }
+      });
+    } else {
+      customer = await prisma.customer.create({
+        data: {
+          name: name.trim(),
+          email: `${userMobile || 'user'}@nexopp.in`,
+          mobile: userMobile,
+          phone: userMobile,
+          gender: gender || 'Male',
+          district: area || 'Hyderabad',
+          role: 'Verified Investor',
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007A55&color=fff`,
+          lastLoginAt: new Date().toLocaleString(),
+          loginCount: 1,
+          status: 'Active',
+          registeredDate: new Date().toLocaleDateString()
+        }
+      });
+    }
 
     // Record Activity
     await prisma.userActivity.create({
