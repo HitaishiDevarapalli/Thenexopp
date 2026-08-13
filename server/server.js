@@ -2339,34 +2339,60 @@ app.put('/api/settings', async (req, res, next) => {
   }
 });
 
-// ── ADMIN MODULES ENDPOINTS ──────────────────────────────────────────────────
+// ── ADMIN MODULES ENDPOINTS (Persistent Server Storage + DB) ───────────────
+const modulesStorePath = path.join(__dirname, 'admin_modules_store.json');
+
+const loadAdminModulesFromFile = () => {
+  try {
+    if (fs.existsSync(modulesStorePath)) {
+      const raw = fs.readFileSync(modulesStorePath, 'utf8');
+      return JSON.parse(raw);
+    }
+  } catch (_) {}
+  return null;
+};
+
+const saveAdminModulesToFile = (modules) => {
+  try {
+    fs.writeFileSync(modulesStorePath, JSON.stringify(modules, null, 2), 'utf8');
+  } catch (_) {}
+};
+
+const DEFAULT_ADMIN_MODULES = [
+  { id: 'properties', label: 'Property Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+  { id: 'franchises', label: 'Franchise Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+  { id: 'business', label: 'Business Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+  { id: 'demand_regions', label: 'Demand Regions', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+  { id: 'master_filters', label: 'Filters & Categories Control', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
+  { id: 'brokers', label: 'Broker Management', category: 'USER MANAGEMENT', isActive: true, custom: false },
+  { id: 'users_data', label: 'User Management', category: 'USER MANAGEMENT', isActive: true, custom: false },
+  { id: 'team_members', label: 'Team Members', category: 'USER MANAGEMENT', isActive: true, custom: false },
+  { id: 'roles_permissions', label: 'Roles & Permissions', category: 'USER MANAGEMENT', isActive: true, custom: false },
+  { id: 'ai_assistant', label: 'AI Assistant', category: 'SITE MANAGEMENT', isActive: true, custom: false },
+  { id: 'main_page_settings', label: 'Main Page Settings', category: 'SITE MANAGEMENT', isActive: true, custom: false },
+];
+
 app.get('/api/admin-modules', async (req, res) => {
   try {
-    let modules = await prisma.adminModule.findMany({ orderBy: { id: 'asc' } }).catch(() => []);
-    if (modules.length === 0) {
-      const defaultModules = [
-        { id: 'properties', label: 'Property Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
-        { id: 'franchises', label: 'Franchise Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
-        { id: 'business', label: 'Business Management', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
-        { id: 'demand_regions', label: 'Demand Regions', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
-        { id: 'master_filters', label: 'Filters & Categories Control', category: 'CONTENT MANAGEMENT', isActive: true, custom: false },
-        { id: 'brokers', label: 'Broker Management', category: 'USER MANAGEMENT', isActive: true, custom: false },
-        { id: 'users_data', label: 'User Management', category: 'USER MANAGEMENT', isActive: true, custom: false },
-        { id: 'team_members', label: 'Team Members', category: 'USER MANAGEMENT', isActive: true, custom: false },
-        { id: 'roles_permissions', label: 'Roles & Permissions', category: 'USER MANAGEMENT', isActive: true, custom: false },
-        { id: 'ai_assistant', label: 'AI Assistant', category: 'SITE MANAGEMENT', isActive: true, custom: false },
-        { id: 'main_page_settings', label: 'Main Page Settings', category: 'SITE MANAGEMENT', isActive: true, custom: false },
-      ];
-      await prisma.adminModule.createMany({
-        data: defaultModules,
-        skipDuplicates: true
-      }).catch(() => {});
-      modules = defaultModules;
+    let modules = null;
+    if (prisma.adminModule && typeof prisma.adminModule.findMany === 'function') {
+      modules = await prisma.adminModule.findMany({ orderBy: { id: 'asc' } }).catch(() => null);
     }
+
+    if (!modules || modules.length === 0) {
+      modules = loadAdminModulesFromFile();
+    }
+
+    if (!modules || modules.length === 0) {
+      modules = DEFAULT_ADMIN_MODULES;
+      saveAdminModulesToFile(modules);
+    }
+
     return res.json(modules);
   } catch (err) {
     logger.error({ error: err.message }, 'Failed to fetch admin modules');
-    return res.json([]);
+    const fallback = loadAdminModulesFromFile() || DEFAULT_ADMIN_MODULES;
+    return res.json(fallback);
   }
 });
 
@@ -2374,22 +2400,47 @@ app.put('/api/admin-modules/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const { isActive, label, category } = req.body;
-    const updated = await prisma.adminModule.upsert({
-      where: { id },
-      update: {
-        ...(isActive !== undefined && { isActive: Boolean(isActive) }),
-        ...(label !== undefined && { label }),
-        ...(category !== undefined && { category }),
-      },
-      create: {
-        id,
-        label: label || id,
-        category: category || 'CONTENT MANAGEMENT',
-        isActive: isActive !== undefined ? Boolean(isActive) : true,
-        custom: false,
-      }
-    });
-    return res.json(updated);
+
+    let updatedModule = {
+      id,
+      label: label || id,
+      category: category || 'CONTENT MANAGEMENT',
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
+      custom: false,
+    };
+
+    if (prisma.adminModule && typeof prisma.adminModule.upsert === 'function') {
+      try {
+        updatedModule = await prisma.adminModule.upsert({
+          where: { id },
+          update: {
+            ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+            ...(label !== undefined && { label }),
+            ...(category !== undefined && { category }),
+          },
+          create: {
+            id,
+            label: label || id,
+            category: category || 'CONTENT MANAGEMENT',
+            isActive: isActive !== undefined ? Boolean(isActive) : true,
+            custom: false,
+          }
+        });
+      } catch (_) {}
+    }
+
+    // Always update server file store
+    const currentModules = loadAdminModulesFromFile() || DEFAULT_ADMIN_MODULES;
+    const exists = currentModules.find(m => m.id === id);
+    let newModules;
+    if (exists) {
+      newModules = currentModules.map(m => m.id === id ? { ...m, ...(isActive !== undefined && { isActive: Boolean(isActive) }), ...(label && { label }), ...(category && { category }) } : m);
+    } else {
+      newModules = [...currentModules, updatedModule];
+    }
+    saveAdminModulesToFile(newModules);
+
+    return res.json(updatedModule);
   } catch (err) {
     logger.error({ err }, `Failed to update admin module ${req.params.id}`);
     next(err);
@@ -2399,16 +2450,22 @@ app.put('/api/admin-modules/:id', async (req, res, next) => {
 app.post('/api/admin-modules', async (req, res, next) => {
   try {
     const { id, label, category, isActive, custom } = req.body;
-    const created = await prisma.adminModule.create({
-      data: {
-        id,
-        label,
-        category,
-        isActive: isActive !== undefined ? isActive : true,
-        custom: custom !== undefined ? custom : true,
-      }
-    });
-    return res.json(created);
+    const newItem = {
+      id: id || `mod_${Date.now()}`,
+      label: label || 'Custom Module',
+      category: category || 'CONTENT MANAGEMENT',
+      isActive: isActive !== undefined ? Boolean(isActive) : true,
+      custom: custom !== undefined ? custom : true,
+    };
+
+    if (prisma.adminModule && typeof prisma.adminModule.create === 'function') {
+      await prisma.adminModule.create({ data: newItem }).catch(() => {});
+    }
+
+    const currentModules = loadAdminModulesFromFile() || DEFAULT_ADMIN_MODULES;
+    saveAdminModulesToFile([...currentModules, newItem]);
+
+    return res.json(newItem);
   } catch (err) {
     next(err);
   }

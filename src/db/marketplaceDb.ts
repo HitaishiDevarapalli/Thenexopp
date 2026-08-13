@@ -583,6 +583,25 @@ export const defaultAdminModules: AdminModuleItem[] = [
   { id: 'main_page_settings', label: 'Main Page Settings', category: 'SITE MANAGEMENT', isActive: true },
 ];
 
+// Storage helpers for permanent persistence across reloads
+const saveToStorage = (key: string, data: any) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, JSON.stringify(data));
+    }
+  } catch (e) {}
+};
+
+const loadFromStorage = <T>(key: string, fallback: T): T => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem(key);
+      if (saved) return JSON.parse(saved);
+    }
+  } catch (e) {}
+  return fallback;
+};
+
 // Exported Reactive Data Variables
 export let dealersDb: Dealer[] = [];
 export let propertiesDb: PropertyListing[] = [];
@@ -597,7 +616,7 @@ export let teamMembersDb: TeamMember[] = [];
 export let employeeUsersDb: EmployeeUser[] = [];
 export let rolesDb: Role[] = [];
 export let demandRegionsDb: DemandRegion[] = [];
-export let adminModulesDb: AdminModuleItem[] = [...defaultAdminModules];
+export let adminModulesDb: AdminModuleItem[] = loadFromStorage('nexopp_admin_modules', [...defaultAdminModules]);
 
 export interface ShowcaseVideo {
   id: string;
@@ -636,24 +655,7 @@ export const setSelectedCity = (city: string) => {
   window.dispatchEvent(new CustomEvent('nexopp_data_changed'));
 };
 
-// Storage helpers for permanent persistence across reloads
-const saveToStorage = (key: string, data: any) => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem(key, JSON.stringify(data));
-    }
-  } catch (e) {}
-};
 
-const loadFromStorage = <T>(key: string, fallback: T): T => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = window.localStorage.getItem(key);
-      if (saved) return JSON.parse(saved);
-    }
-  } catch (e) {}
-  return fallback;
-};
 
 export const isModuleActive = (moduleId: string): boolean => {
   const item = adminModulesDb.find(m => 
@@ -682,6 +684,7 @@ export const toggleAdminModuleActive = (id: string) => {
   } else {
     adminModulesDb = [...adminModulesDb, { id, label: id, category: 'CONTENT MANAGEMENT', isActive: newActive, custom: false }];
   }
+  saveToStorage('nexopp_admin_modules', adminModulesDb);
   notifyDataChanged();
   
   fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
