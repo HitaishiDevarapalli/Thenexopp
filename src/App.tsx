@@ -124,7 +124,7 @@ export const App: React.FC = () => {
 
   // Auto-open login modal if user session is active but profile is incomplete
   useEffect(() => {
-    if (user && user.profileCompleted === false) {
+    if (user && user.profileCompleted !== true) {
       openLoginModal();
     }
   }, [user, openLoginModal]);

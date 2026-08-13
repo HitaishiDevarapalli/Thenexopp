@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   openLoginModal: () => set({ isLoginModalOpen: true }),
   closeLoginModal: () => {
     set((state) => {
-      if (state.user && state.user.profileCompleted === false) {
+      if (state.user && state.user.profileCompleted !== true) {
         // Run logout asynchronously to prevent state transition conflicts
         setTimeout(() => {
           useAuthStore.getState().logout();
@@ -111,6 +111,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       district: customDistrict,
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formattedName || 'G')}&background=007A55&color=fff&size=128&bold=true`,
       role: role as any,
+      profileCompleted: true,
     };
 
     set({ user: newUser, isLoginModalOpen: false });

@@ -412,7 +412,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
   // Auto-jump to profile step if session has an incomplete profile
   useEffect(() => {
-    if (user && user.profileCompleted === false) {
+    if (user && user.profileCompleted !== true) {
       setStep('profile');
       if (user.phone) {
         setMobile(user.phone);
