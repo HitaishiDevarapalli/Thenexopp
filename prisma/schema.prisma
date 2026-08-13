@@ -162,6 +162,8 @@ model Property {
   features      PropertyFeature[]
   favorites     Favorite[]
   views         PropertyView[]
+  customerFavorites CustomerFavorite[]
+  bookings          Booking[]
 }
 
 model PropertyImage {
@@ -217,6 +219,13 @@ model Enquiry {
 
   userId              String?
   user                User?    @relation(fields: [userId], references: [id])
+  customerId          String?
+  customer            Customer? @relation(fields: [customerId], references: [id])
+  listingType         String?   @default("PROPERTY")
+  listingId           String?
+  message             String?
+  preferredTime       String?
+  updatedAt           DateTime  @updatedAt @default(now())
 }
 
 model SellRequest {
@@ -257,20 +266,100 @@ model AuthToken {
 }
 
 model Customer {
-  id             String   @id @default(uuid())
-  name           String
-  email          String?
-  phone          String?
-  gender         String?  @default("Male")
-  district       String?  @default("Guntur")
-  role           String?  @default("Verified Investor")
-  avatar         String?
-  lastLoginAt    String?
-  loginCount     Int      @default(1)
-  status         String   @default("Active")
-  registeredDate String?
-  createdAt      DateTime @default(now())
+  id               String   @id @default(uuid())
+  name             String
+  email            String?
+  mobile           String?  @unique
+  phone            String?
+  gender           String?  @default("Male")
+  district         String?  @default("Guntur")
+  area             String?  @default("")
+  role             String?  @default("Verified Investor")
+  avatar           String?
+  lastLoginAt      String?
+  loginCount       Int      @default(1)
+  status           String   @default("Active")
+  registeredDate   String?
+  profileCompleted Boolean  @default(false)
+  propertyInterest Boolean  @default(false)
+  businessInterest Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt @default(now())
+
+  loginHistory     CustomerLoginHistory[]
+  favorites        CustomerFavorite[]
+  enquiries        Enquiry[]
+  bookings         Booking[]
+  activities       UserActivity[]
 }
+
+model CustomerLoginHistory {
+  id              String    @id @default(uuid())
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  loginAt         DateTime  @default(now())
+  logoutAt        DateTime?
+  loginMethod     String    @default("OTP")
+  deviceType      String?
+  browser         String?
+  operatingSystem String?
+  ipAddress       String?
+  userAgent       String?
+  sessionId       String?
+  status          String    @default("Active")
+  createdAt       DateTime  @default(now())
+}
+
+model CustomerFavorite {
+  id            String    @id @default(uuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  listingType   String    // PROPERTY or BUSINESS
+  listingId     String
+  status        String    @default("ACTIVE") // ACTIVE or REMOVED
+  removalReason String?
+  createdAt     DateTime  @default(now())
+  removedAt     DateTime?
+
+  propertyId    String?
+  property      Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  businessId    String?
+  business      Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, listingType, listingId])
+}
+
+model Booking {
+  id            String    @id @default(uuid())
+  customerId    String
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  listingType   String    // PROPERTY or BUSINESS
+  listingId     String
+  enquiryId     String?
+  bookingDate   String
+  bookingTime   String
+  status        String    @default("REQUESTED") // REQUESTED, CONFIRMED, RESCHEDULED, COMPLETED, CANCELLED
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  propertyId    String?
+  property      Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  businessId    String?
+  business      Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model UserActivity {
+  id            String   @id @default(uuid())
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  activityType  String   // LOGIN, VIEW_PROPERTY, FAVORITE_ADD, etc.
+  listingType   String?
+  listingId     String?
+  description   String
+  createdAt     DateTime @default(now())
+}
+
 
 model Franchise {
   id                   String   @id @default(uuid())
@@ -328,6 +417,8 @@ model Business {
   trustScore      Int      @default(95)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt @default(now())
+  customerFavorites CustomerFavorite[]
+  bookings          Booking[]
 }
 
 model ShowcaseVideo {

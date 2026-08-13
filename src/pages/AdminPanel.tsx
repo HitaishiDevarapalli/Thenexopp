@@ -42,7 +42,12 @@ import {
   FaImage,
   FaTrophy,
   FaCompass,
-  FaRobot
+  FaRobot,
+  FaTimes,
+  FaLock,
+  FaHeart,
+  FaInbox,
+  FaHistory
 } from 'react-icons/fa';
 import { 
   propertiesDb, 
@@ -160,6 +165,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [brokerSubTab, setBrokerSubTab] = useState<string>('directory');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
+  // CRM Customer Management states
+  const [userTabSection, setUserTabSection] = useState<'customers' | 'bookings' | 'employees'>('customers');
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerAreaFilter, setCustomerAreaFilter] = useState('');
+  const [customerInterestFilter, setCustomerInterestFilter] = useState('');
+  const [customerStatusFilter, setCustomerStatusFilter] = useState('');
+  const [customerDateFilter, setCustomerDateFilter] = useState('');
+  const [customerPage, setCustomerPage] = useState(1);
+  const [customersData, setCustomersData] = useState<any[]>([]);
+  const [customerTotalPages, setCustomerTotalPages] = useState(1);
+  const [customerTotalCount, setCustomerTotalCount] = useState(0);
+  const [selectedCustomerProfile, setSelectedCustomerProfile] = useState<any | null>(null);
+  const [customerProfileActiveTab, setCustomerProfileActiveTab] = useState<'overview' | 'logins' | 'favorites' | 'enquiries' | 'bookings' | 'activity'>('overview');
+  
+  // Dashboard & Enquiries/Bookings states
+  const [adminStats, setAdminStats] = useState<any>(null);
+  const [allEnquiries, setAllEnquiries] = useState<any[]>([]);
+  const [allBookings, setAllBookings] = useState<any[]>([]);
+
   const SUB_MENU_ITEMS: Record<string, { id: string; label: string; icon: any }[]> = {
     properties: [
       { id: 'listings', label: 'All Properties', icon: <FaListAlt /> },
@@ -240,16 +264,135 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [customerDistrictFilter, setCustomerDistrictFilter] = useState('All');
 
-  const fetchRegisteredCustomers = () => {
-    fetch(`${API_BASE_URL}/api/customers`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setRegisteredCustomers(data);
-        }
-      })
-      .catch(err => console.error("Error fetching customers:", err));
+  const fetchCustomerDetails = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/customers/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedCustomerProfile(data);
+        setCustomerProfileActiveTab('overview');
+      }
+    } catch (e) {
+      console.error('Failed to fetch customer profile details:', e);
+    }
   };
+
+  const customerLimit = 10;
+
+  const fetchCustomersList = async () => {
+    try {
+      const queryParams = new URLSearchParams({
+        search: customerSearch,
+        area: customerAreaFilter,
+        interest: customerInterestFilter,
+        status: customerStatusFilter,
+        joinedDate: customerDateFilter,
+        page: String(customerPage),
+        limit: String(customerLimit)
+      });
+      const res = await fetch(`${API_BASE_URL}/api/admin/customers?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomersData(data.customers || []);
+        setCustomerTotalPages(data.totalPages || 1);
+        setCustomerTotalCount(data.total || 0);
+        setRegisteredCustomers(data.customers || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch customers:', e);
+    }
+  };
+
+  const fetchAdminDashboardStats = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-stats`);
+      if (res.ok) {
+        const data = await res.json();
+        setAdminStats(data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch admin stats:', e);
+    }
+  };
+
+  const fetchAllEnquiriesAndBookings = async () => {
+    try {
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries`);
+      if (enqRes.ok) {
+        const data = await enqRes.json();
+        setAllEnquiries(data || []);
+      }
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings`);
+      if (bookRes.ok) {
+        const data = await bookRes.json();
+        setAllBookings(data || []);
+      }
+    } catch (e) {
+      console.error('Failed to fetch enquiries/bookings:', e);
+    }
+  };
+
+  const fetchRegisteredCustomers = () => {
+    fetchCustomersList();
+  };
+
+  const handleUpdateEnquiryStatus = async (id: string, newStatus: string) => {
+    const isDbEnq = allEnquiries.some(e => e.id === id);
+    if (isDbEnq) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          triggerRefresh();
+        }
+      } catch (err) {
+        console.error('Failed to update enquiry status:', err);
+      }
+    } else {
+      updateEnquiryStatus(id, newStatus as any);
+      triggerRefresh();
+    }
+  };
+
+  const handleDeleteEnquiry = async (id: string) => {
+    const isDbEnq = allEnquiries.some(e => e.id === id);
+    if (isDbEnq) {
+      if (window.confirm('Are you sure you want to delete this enquiry?')) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
+            method: 'DELETE'
+          });
+          if (res.ok) {
+            triggerRefresh();
+          }
+        } catch (err) {
+          console.error('Failed to delete enquiry:', err);
+        }
+      }
+    } else {
+      deleteEnquiry(id);
+      triggerRefresh();
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'users' && userTabSection === 'customers') {
+      fetchCustomersList();
+    }
+  }, [customerSearch, customerAreaFilter, customerInterestFilter, customerStatusFilter, customerDateFilter, customerPage, activeTab, userTabSection]);
+
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      fetchAdminDashboardStats();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchAllEnquiriesAndBookings();
+  }, [tick]);
 
   useEffect(() => {
     fetchRegisteredCustomers();
@@ -1505,6 +1648,75 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   </div>
                 </div>
               </div>
+
+              {/* NEW ROW: Customer Access Metrics & Recent Logins Feed */}
+              {adminStats && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '16px' }}>
+                  {/* Left Column: Customer Access Statistics */}
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '22px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
+                    <h4 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Real-Time Customer Access Metrics
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                      {[
+                        { label: 'Total Customers', val: adminStats.totalCustomers, desc: 'Registered customers' },
+                        { label: 'New Today', val: adminStats.newCustomersToday, desc: 'Registered today', isNew: true },
+                        { label: 'Active Status', val: adminStats.activeCustomers, desc: 'Active customer accounts' },
+                        { label: 'Logged In Today', val: adminStats.customersLoggedInToday, desc: 'Unique logins today' },
+                        { label: 'Logged In This Week', val: adminStats.customersLoggedInThisWeek, desc: 'Unique logins this week' },
+                        { label: 'Logged In This Month', val: adminStats.customersLoggedInThisMonth, desc: 'Unique logins this month' },
+                      ].map((item, idx) => (
+                        <div key={idx} style={{ padding: '14px', border: '1px solid #F1F5F9', borderRadius: '10px', backgroundColor: '#F8FAFC' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>{item.label}</span>
+                          <strong style={{ fontSize: '1.4rem', fontWeight: 800, color: item.isNew && item.val > 0 ? '#10B981' : '#0F172A', display: 'block', margin: '4px 0 2px' }}>{item.val}</strong>
+                          <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>{item.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Recent Customer Logins */}
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '22px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column' }}>
+                    <h4 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Recent Customer Logins
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', maxHeight: '180px', flexGrow: 1 }}>
+                      {adminStats.recentLogins && adminStats.recentLogins.length > 0 ? (
+                        adminStats.recentLogins.map((login: any) => (
+                          <div 
+                            key={login.id} 
+                            onClick={() => {
+                              fetchCustomerDetails(login.customerId);
+                            }}
+                            style={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between', 
+                              alignItems: 'center', 
+                              padding: '8px 12px', 
+                              borderBottom: '1px solid #F1F5F9',
+                              cursor: 'pointer',
+                              borderRadius: '6px',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <div>
+                              <strong style={{ fontSize: '0.85rem', color: '#334155', display: 'block' }}>{login.name}</strong>
+                              <span style={{ fontSize: '0.72rem', color: '#64748B' }}>+91 {login.mobile} • {login.deviceType} ({login.browser})</span>
+                            </div>
+                            <span style={{ fontSize: '0.72rem', color: '#007A55', fontWeight: 700 }}>
+                              {new Date(login.loginAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: '#94A3B8', fontStyle: 'italic' }}>No customer logins recorded today.</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
             {/* ROW 2: 3 Columns Grid (Overview Analytics Line Chart, Recent Activity, Top Performing Locations Pie Chart) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', alignItems: 'stretch' }}>
@@ -3649,178 +3861,965 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         {/* ================= CATEGORY 5: CONTACT INQUIRIES ================= */}
         {activeTab === 'inquiries' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {enquiriesDb.length === 0 ? (
-              <div style={{ backgroundColor: '#FFFFFF', padding: '60px', textAlign: 'center', border: '1px solid #E2E8F0', color: '#64748B', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.1rem', fontWeight: 700 }}>
-                NO CUSTOMER INQUIRIES RECEIVED YET.
-              </div>
-            ) : (
-              enquiriesDb.map(enq => (
-                <div key={enq.id} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-                      <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.03em' }}>{enq.customerName}</h4>
-                      <span style={{ padding: '2px 10px', fontSize: '0.72rem', fontWeight: 700, backgroundColor: enq.status === 'New' ? '#FEE2E2' : '#EFF6FF', color: enq.status === 'New' ? '#DC2626' : '#1E40AF', border: enq.status === 'New' ? '1px solid #FECACA' : '1px solid #BFDBFE', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{enq.status.toUpperCase()}</span>
-                      <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>{enq.date}</span>
-                    </div>
-                    <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#475569' }}>Inquired about: <strong style={{ color: '#0F172A' }}>{enq.listingTitle}</strong></p>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>📞 {enq.phone} • ✉️ {enq.email}</p>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <select
-                      value={enq.status}
-                      onChange={e => updateEnquiryStatus(enq.id, e.target.value as any)}
-                      style={{ padding: '8px 14px', border: '1px solid #E2E8F0', fontWeight: 700, fontSize: '0.85rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}
-                    >
-                      <option value="New">STATUS: NEW</option>
-                      <option value="Contacted">STATUS: CONTACTED</option>
-                      <option value="Follow-up">STATUS: FOLLOW-UP</option>
-                      <option value="Closed">STATUS: CLOSED</option>
-                    </select>
-                    <button
-                      onClick={() => deleteEnquiry(enq.id)}
-                      style={{ padding: '8px 14px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', cursor: 'pointer' }}
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
+            {(() => {
+              const enquiriesToShow = allEnquiries.length > 0 ? allEnquiries : enquiriesDb;
+              
+              return enquiriesToShow.length === 0 ? (
+                <div style={{ backgroundColor: '#FFFFFF', padding: '60px', textAlign: 'center', border: '1px solid #E2E8F0', color: '#64748B', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.1rem', fontWeight: 700 }}>
+                  NO CUSTOMER INQUIRIES RECEIVED YET.
                 </div>
-              ))
-            )}
+              ) : (
+                enquiriesToShow.map(enq => (
+                  <div key={enq.id} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                        <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.03em' }}>{enq.customerName}</h4>
+                        <span style={{ padding: '2px 10px', fontSize: '0.72rem', fontWeight: 700, backgroundColor: enq.status === 'New' ? '#FEE2E2' : '#EFF6FF', color: enq.status === 'New' ? '#DC2626' : '#1E40AF', border: enq.status === 'New' ? '1px solid #FECACA' : '1px solid #BFDBFE', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{enq.status.toUpperCase()}</span>
+                        <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>{enq.date || new Date(enq.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#475569' }}>
+                        Inquired about: <strong style={{ color: '#0F172A' }}>{enq.listingTitle}</strong>
+                        {enq.enquiryType === 'SLOT_BOOKING' && <span style={{ marginLeft: '8px', padding: '2px 8px', backgroundColor: '#FEF3C7', color: '#D97706', fontSize: '0.72rem', fontWeight: 700, borderRadius: '4px' }}>SLOT BOOKING</span>}
+                      </p>
+                      {enq.message && <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#475569', backgroundColor: '#F8FAFC', padding: '8px 12px', borderRadius: '6px', borderLeft: '3px solid #007A55' }}>"{enq.message}"</p>}
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>📞 {enq.phone} • ✉️ {enq.email}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <select
+                        value={enq.status}
+                        onChange={e => handleUpdateEnquiryStatus(enq.id, e.target.value)}
+                        style={{ padding: '8px 14px', border: '1px solid #E2E8F0', fontWeight: 700, fontSize: '0.85rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", borderRadius: '6px', outline: 'none' }}
+                      >
+                        <option value="New">STATUS: NEW</option>
+                        <option value="Contacted">STATUS: CONTACTED</option>
+                        <option value="Follow-up">STATUS: FOLLOW-UP</option>
+                        <option value="Closed">STATUS: CLOSED</option>
+                      </select>
+                      <button
+                        onClick={() => handleDeleteEnquiry(enq.id)}
+                        style={{ padding: '8px 14px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', cursor: 'pointer', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              );
+            })()}
           </div>
         )}
 
         {activeTab === 'users' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0' }}>
-              <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>CREATE EMPLOYEE CREDENTIALS</h3>
-              <p style={{ margin: '0 0 20px 0', color: '#64748B', fontSize: '0.85rem' }}>Set up admin portal access for staff members (Property Editors, Data Managers, etc.)</p>
-              
-              <form onSubmit={handleAddEmployee} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>FULL NAME *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Sarah Jenkins"
-                    value={newEmployee.fullName}
-                    onChange={e => setNewEmployee({ ...newEmployee, fullName: e.target.value })}
-                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>USERNAME (EMAIL) *</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="sarah@nexopp.com"
-                    value={newEmployee.email}
-                    onChange={e => setNewEmployee({ ...newEmployee, email: e.target.value })}
-                    style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>PASSWORD *</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showNewEmpPassword ? 'text' : 'password'}
-                      required
-                      placeholder="Secure password"
-                      value={newEmployee.password}
-                      onChange={e => setNewEmployee({ ...newEmployee, password: e.target.value })}
-                      style={{ width: '100%', padding: '12px 40px 12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', borderRadius: '4px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewEmpPassword(!showNewEmpPassword)}
-                      style={{
-                        position: 'absolute',
-                        right: '12px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: '#64748B',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '4px',
-                        fontSize: '1rem'
-                      }}
-                      title={showNewEmpPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showNewEmpPassword ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN ROLE *</label>
-                  <input
-                    type="text"
-                    required
-                    autoComplete="off"
-                    placeholder="Enter Role Name (e.g. Sales Executive, Property Editor, Manager)"
-                    value={newEmployee.role}
-                    onChange={e => setNewEmployee({ ...newEmployee, role: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      border: '1px solid #CBD5E1',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: '8px',
-                      fontWeight: 600,
-                      color: '#0F172A'
-                    }}
-                  />
-                  <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', marginTop: '4px', fontWeight: 500 }}>
-                    Type any role name manually to assign
-                  </span>
-                </div>
-                <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                  <button
-                    type="submit"
-                    style={{ padding: '14px 28px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.04em', borderRadius: '8px' }}
-                  >
-                    <FaCheckCircle /> GENERATE CREDENTIALS
-                  </button>
-                </div>
-              </form>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+            
+            {/* Tab Section Switcher */}
+            <div style={{ display: 'flex', gap: '12px', borderBottom: '2px solid #E2E8F0', paddingBottom: '12px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setUserTabSection('customers')}
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  backgroundColor: userTabSection === 'customers' ? '#007A55' : 'transparent',
+                  color: userTabSection === 'customers' ? '#FFFFFF' : '#64748B',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                CUSTOMERS DIRECTORY ({customerTotalCount})
+              </button>
+              <button
+                onClick={() => setUserTabSection('bookings')}
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  backgroundColor: userTabSection === 'bookings' ? '#007A55' : 'transparent',
+                  color: userTabSection === 'bookings' ? '#FFFFFF' : '#64748B',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                ALL SLOT BOOKINGS ({allBookings.length})
+              </button>
+              <button
+                onClick={() => setUserTabSection('employees')}
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  backgroundColor: userTabSection === 'employees' ? '#007A55' : 'transparent',
+                  color: userTabSection === 'employees' ? '#FFFFFF' : '#64748B',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                STAFF CREDENTIALS ({employeeUsersDb.length})
+              </button>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
-              <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 20px 0', fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>REGISTERED EMPLOYEES & CREDENTIALS ({employeeUsersDb.length})</h3>
-              
-              {employeeUsersDb.length === 0 ? (
-                <p style={{ color: '#64748B', fontStyle: 'italic' }}>No employee accounts created yet.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {employeeUsersDb.map((emp) => (
-                    <div key={emp.id} style={{ border: '1px solid #E2E8F0', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC', borderRadius: '10px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <h4 style={{ margin: 0, color: '#0F172A', fontSize: '1.1rem', fontWeight: 800 }}>{emp.fullName}</h4>
-                          <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.78rem' }}>{emp.role}</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#475569', fontSize: '0.85rem', fontWeight: 500 }}>
-                          <span><strong>Username:</strong> {emp.email}</span>
-                          <span>•</span>
-                          <span><strong>Password:</strong> <code style={{ backgroundColor: '#E2E8F0', padding: '2px 8px', borderRadius: '4px', color: '#0F172A', fontFamily: 'monospace' }}>{emp.password}</code></span>
-                        </div>
+            {/* SECTION 1: CUSTOMERS DIRECTORY */}
+            {userTabSection === 'customers' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* Advanced Filter Panel */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+                  <div style={{ flexGrow: 1, minWidth: '220px', position: 'relative' }}>
+                    <FaSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                    <input
+                      type="text"
+                      placeholder="Search name or mobile..."
+                      value={customerSearch}
+                      onChange={(e) => { setCustomerSearch(e.target.value); setCustomerPage(1); }}
+                      style={{ width: '100%', padding: '10px 14px 10px 38px', border: '1.5px solid #E2E8F0', borderRadius: '8px', outline: 'none', fontSize: '0.88rem' }}
+                    />
+                  </div>
+
+                  <div style={{ minWidth: '150px' }}>
+                    <select
+                      value={customerInterestFilter}
+                      onChange={(e) => { setCustomerInterestFilter(e.target.value); setCustomerPage(1); }}
+                      style={{ width: '100%', padding: '10px', border: '1.5px solid #E2E8F0', borderRadius: '8px', outline: 'none', fontSize: '0.88rem', backgroundColor: '#FFFFFF', fontWeight: 600, color: '#334155' }}
+                    >
+                      <option value="">All Interests</option>
+                      <option value="PROPERTY">Property Interest</option>
+                      <option value="BUSINESS">Business Interest</option>
+                    </select>
+                  </div>
+
+                  <div style={{ minWidth: '150px' }}>
+                    <select
+                      value={customerStatusFilter}
+                      onChange={(e) => { setCustomerStatusFilter(e.target.value); setCustomerPage(1); }}
+                      style={{ width: '100%', padding: '10px', border: '1.5px solid #E2E8F0', borderRadius: '8px', outline: 'none', fontSize: '0.88rem', backgroundColor: '#FFFFFF', fontWeight: 600, color: '#334155' }}
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="Blocked">Blocked</option>
+                    </select>
+                  </div>
+
+                  <div style={{ minWidth: '150px' }}>
+                    <input
+                      type="text"
+                      placeholder="Filter Area/District..."
+                      value={customerAreaFilter}
+                      onChange={(e) => { setCustomerAreaFilter(e.target.value); setCustomerPage(1); }}
+                      style={{ width: '100%', padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', outline: 'none', fontSize: '0.88rem' }}
+                    />
+                  </div>
+
+                  <div>
+                    <input
+                      type="date"
+                      value={customerDateFilter}
+                      onChange={(e) => { setCustomerDateFilter(e.target.value); setCustomerPage(1); }}
+                      style={{ padding: '9px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', outline: 'none', fontSize: '0.88rem', color: '#475569' }}
+                    />
+                  </div>
+
+                  {(customerSearch || customerAreaFilter || customerInterestFilter || customerStatusFilter || customerDateFilter) && (
+                    <button
+                      onClick={() => {
+                        setCustomerSearch('');
+                        setCustomerAreaFilter('');
+                        setCustomerInterestFilter('');
+                        setCustomerStatusFilter('');
+                        setCustomerDateFilter('');
+                        setCustomerPage(1);
+                      }}
+                      style={{ padding: '10px 16px', border: 'none', backgroundColor: '#F1F5F9', color: '#64748B', fontWeight: 700, borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+
+                {/* Customers Table */}
+                <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                  {customersData.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+                      <FaUsers style={{ fontSize: '2.5rem', color: '#CBD5E1', marginBottom: '1rem' }} />
+                      <h3 style={{ color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>No customers found</h3>
+                      <p style={{ color: '#64748B', fontSize: '0.9rem', marginTop: '0.25rem' }}>No customer records match your filter criteria.</p>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1.5px solid #E2E8F0' }}>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Customer Name</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Mobile</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Gender</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Area / Location</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Interests</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Joined Date</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Last Login</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Status</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800, textAlign: 'center' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {customersData.map((customer) => (
+                            <tr key={customer.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'all 0.15s' }}>
+                              <td style={{ padding: '16px 18px', fontWeight: 700, color: '#0F172A' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <img 
+                                    src={customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=007A55&color=fff`} 
+                                    alt={customer.name} 
+                                    style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                                  />
+                                  <span>{customer.name}</span>
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 18px', color: '#475569', fontWeight: 600 }}>+91 {customer.mobile || customer.phone || 'N/A'}</td>
+                              <td style={{ padding: '16px 18px', color: '#64748B', fontSize: '0.88rem' }}>{customer.gender || 'Male'}</td>
+                              <td style={{ padding: '16px 18px', color: '#334155', fontSize: '0.88rem' }}>{customer.area || customer.district || 'N/A'}</td>
+                              <td style={{ padding: '16px 18px', fontSize: '0.8rem' }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                  {customer.propertyInterest && (
+                                    <span style={{ backgroundColor: '#E6F4EA', color: '#007A55', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>Property</span>
+                                  )}
+                                  {customer.businessInterest && (
+                                    <span style={{ backgroundColor: '#FFF3E0', color: '#E65100', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>Business</span>
+                                  )}
+                                  {!customer.propertyInterest && !customer.businessInterest && (
+                                    <span style={{ color: '#94A3B8' }}>None</span>
+                                  )}
+                                </div>
+                              </td>
+                              <td style={{ padding: '16px 18px', color: '#64748B', fontSize: '0.85rem' }}>
+                                {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : customer.registeredDate || 'N/A'}
+                              </td>
+                              <td style={{ padding: '16px 18px', color: '#64748B', fontSize: '0.85rem' }} title={customer.lastLoginAt}>
+                                {customer.lastLoginAt ? customer.lastLoginAt.split(',')[0] : 'Never'}
+                              </td>
+                              <td style={{ padding: '16px 18px' }}>
+                                <span style={{
+                                  backgroundColor: customer.status === 'Active' ? '#ECFDF5' : '#FEE2E2',
+                                  color: customer.status === 'Active' ? '#059669' : '#DC2626',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 800,
+                                  padding: '4px 10px',
+                                  borderRadius: '6px'
+                                }}>
+                                  {customer.status}
+                                </span>
+                              </td>
+                              <td style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                <button
+                                  onClick={() => fetchCustomerDetails(customer.id)}
+                                  style={{
+                                    backgroundColor: '#ECFDF5',
+                                    color: '#007A55',
+                                    border: '1px solid #A7F3D0',
+                                    padding: '6px 14px',
+                                    borderRadius: '6px',
+                                    fontWeight: 700,
+                                    fontSize: '0.8rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s'
+                                  }}
+                                >
+                                  VIEW PROFILE
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Pagination Row */}
+                  {customerTotalPages > 1 && (
+                    <div style={{ padding: '16px 20px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>
+                        Showing Page <strong>{customerPage}</strong> of <strong>{customerTotalPages}</strong>
+                      </span>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => setCustomerPage(prev => Math.max(prev - 1, 1))}
+                          disabled={customerPage === 1}
+                          style={{ padding: '6px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', backgroundColor: '#FFFFFF', cursor: customerPage === 1 ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 600, opacity: customerPage === 1 ? 0.5 : 1 }}
+                        >
+                          Previous
+                        </button>
+                        <button
+                          onClick={() => setCustomerPage(prev => Math.min(prev + 1, customerTotalPages))}
+                          disabled={customerPage === customerTotalPages}
+                          style={{ padding: '6px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', backgroundColor: '#FFFFFF', cursor: customerPage === customerTotalPages ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 600, opacity: customerPage === customerTotalPages ? 0.5 : 1 }}
+                        >
+                          Next
+                        </button>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* SECTION 1.5: ALL SLOT BOOKINGS */}
+            {userTabSection === 'bookings' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <h3 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase' }}>
+                    ALL SCHEDULED SLOT VIEWINGS ({allBookings.length})
+                  </h3>
+                  <p style={{ margin: '0 0 16px 0', color: '#64748B', fontSize: '0.85rem' }}>
+                    Manage slot bookings submitted by customers. You can view customer profiles, confirm, reschedule, or cancel slots.
+                  </p>
+
+                  {allBookings.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                      <FaCalendarAlt style={{ fontSize: '2.5rem', color: '#CBD5E1', marginBottom: '1rem' }} />
+                      <p style={{ color: '#64748B', fontStyle: 'italic', margin: 0 }}>No slot viewings booked yet.</p>
+                    </div>
+                  ) : (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1.5px solid #E2E8F0' }}>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Customer</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Listing Title</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Type</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Date</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Time</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Notes</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800 }}>Status</th>
+                            <th style={{ padding: '14px 18px', color: '#475569', fontSize: '0.82rem', fontWeight: 800, textAlign: 'center' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allBookings.map((book) => {
+                            let details = book.property || book.business || propertiesDb.find(p => p.id === book.listingId) || businessDb.find(b => b.id === book.listingId);
+                            const title = details?.title || details?.name || `Listing ID #${book.listingId.substring(0, 6)}`;
+                            
+                            const getStatusColor = (status: string) => {
+                              switch (status) {
+                                case 'CONFIRMED': return '#059669';
+                                case 'RESCHEDULED': return '#D97706';
+                                case 'CANCELLED': return '#DC2626';
+                                case 'COMPLETED': return '#3B82F6';
+                                default: return '#64748B';
+                              }
+                            };
+
+                            return (
+                              <tr key={book.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'all 0.15s' }}>
+                                <td style={{ padding: '16px 18px', fontWeight: 700, color: '#0F172A' }}>
+                                  <div 
+                                    onClick={() => fetchCustomerDetails(book.customerId)}
+                                    style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                                    title="Click to view profile"
+                                  >
+                                    <span>{book.customer?.name || 'Unknown User'}</span>
+                                    <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 500 }}>+91 {book.customer?.mobile || book.customer?.phone || ''}</span>
+                                  </div>
+                                </td>
+                                <td style={{ padding: '16px 18px', color: '#334155', fontWeight: 600 }}>{title}</td>
+                                <td style={{ padding: '16px 18px', fontSize: '0.82rem', fontWeight: 700 }}>
+                                  <span style={{ backgroundColor: book.listingType === 'PROPERTY' ? '#E6F4EA' : '#FFF3E0', color: book.listingType === 'PROPERTY' ? '#007A55' : '#E65100', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                                    {book.listingType}
+                                  </span>
+                                </td>
+                                <td style={{ padding: '16px 18px', color: '#475569', fontSize: '0.88rem' }}>{book.bookingDate}</td>
+                                <td style={{ padding: '16px 18px', color: '#475569', fontSize: '0.88rem' }}>{book.bookingTime}</td>
+                                <td style={{ padding: '16px 18px', color: '#64748B', fontSize: '0.85rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={book.notes}>
+                                  {book.notes || '-'}
+                                </td>
+                                <td style={{ padding: '16px 18px' }}>
+                                  <select
+                                    value={book.status}
+                                    onChange={async (e) => {
+                                      const newStatus = e.target.value;
+                                      try {
+                                        const res = await fetch(`${API_BASE_URL}/api/bookings/${book.id}`, {
+                                          method: 'PUT',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ status: newStatus })
+                                        });
+                                        if (res.ok) {
+                                          triggerRefresh();
+                                        }
+                                      } catch (err) {
+                                        console.error('Failed to update booking status:', err);
+                                      }
+                                    }}
+                                    style={{ 
+                                      padding: '6px 10px', 
+                                      border: '1px solid #CBD5E1', 
+                                      borderRadius: '6px', 
+                                      fontSize: '0.82rem', 
+                                      fontWeight: 700,
+                                      color: getStatusColor(book.status),
+                                      backgroundColor: '#FFFFFF',
+                                      outline: 'none'
+                                    }}
+                                  >
+                                    <option value="REQUESTED">Requested</option>
+                                    <option value="CONFIRMED">Confirmed</option>
+                                    <option value="RESCHEDULED">Rescheduled</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                  </select>
+                                </td>
+                                <td style={{ padding: '16px 18px', textAlign: 'center' }}>
+                                  <button
+                                    onClick={() => fetchCustomerDetails(book.customerId)}
+                                    style={{
+                                      backgroundColor: '#ECFDF5',
+                                      color: '#007A55',
+                                      border: '1px solid #A7F3D0',
+                                      padding: '6px 14px',
+                                      borderRadius: '6px',
+                                      fontWeight: 700,
+                                      fontSize: '0.8rem',
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    VIEW CUSTOMER
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 2: STAFF / EMPLOYEES CREDENTIALS */}
+            {userTabSection === 'employees' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>CREATE EMPLOYEE CREDENTIALS</h3>
+                  <p style={{ margin: '0 0 20px 0', color: '#64748B', fontSize: '0.85rem' }}>Set up admin portal access for staff members (Property Editors, Data Managers, etc.)</p>
+                  
+                  <form onSubmit={handleAddEmployee} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>FULL NAME *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Sarah Jenkins"
+                        value={newEmployee.fullName}
+                        onChange={e => setNewEmployee({ ...newEmployee, fullName: e.target.value })}
+                        style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>USERNAME (EMAIL) *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="sarah@nexopp.com"
+                        value={newEmployee.email}
+                        onChange={e => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                        style={{ width: '100%', padding: '12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>PASSWORD *</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showNewEmpPassword ? 'text' : 'password'}
+                          required
+                          placeholder="Secure password"
+                          value={newEmployee.password}
+                          onChange={e => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                          style={{ width: '100%', padding: '12px 40px 12px 14px', border: '1px solid #CBD5E1', outline: 'none', boxSizing: 'border-box', borderRadius: '4px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewEmpPassword(!showNewEmpPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            color: '#64748B',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '4px',
+                            fontSize: '1rem'
+                          }}
+                          title={showNewEmpPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showNewEmpPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '6px', color: '#334155', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN ROLE *</label>
+                      <input
+                        type="text"
+                        required
+                        autoComplete="off"
+                        placeholder="Enter Role Name (e.g. Sales Executive, Property Editor, Manager)"
+                        value={newEmployee.role}
+                        onChange={e => setNewEmployee({ ...newEmployee, role: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '12px 14px',
+                          border: '1px solid #CBD5E1',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '8px',
+                          fontWeight: 600,
+                          color: '#0F172A'
+                        }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block', marginTop: '4px', fontWeight: 500 }}>
+                        Type any role name manually to assign
+                      </span>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
                       <button
-                        onClick={() => handleDeleteEmployee(emp.id, emp.fullName)}
-                        style={{ backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.85rem' }}
+                        type="submit"
+                        style={{ padding: '14px 28px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', letterSpacing: '0.04em', borderRadius: '8px' }}
                       >
-                        <FaTrash /> REVOKE ACCESS
+                        <FaCheckCircle /> GENERATE CREDENTIALS
                       </button>
                     </div>
-                  ))}
+                  </form>
                 </div>
-              )}
-            </div>
+
+                <div style={{ backgroundColor: '#FFFFFF', padding: '28px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 20px 0', fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>REGISTERED EMPLOYEES & CREDENTIALS ({employeeUsersDb.length})</h3>
+                  
+                  {employeeUsersDb.length === 0 ? (
+                    <p style={{ color: '#64748B', fontStyle: 'italic' }}>No employee accounts created yet.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {employeeUsersDb.map((emp) => (
+                        <div key={emp.id} style={{ border: '1px solid #E2E8F0', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC', borderRadius: '10px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <h4 style={{ margin: 0, color: '#0F172A', fontSize: '1.1rem', fontWeight: 800 }}>{emp.fullName}</h4>
+                              <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '4px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.78rem' }}>{emp.role}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#475569', fontSize: '0.85rem', fontWeight: 500 }}>
+                              <span><strong>Username:</strong> {emp.email}</span>
+                              <span>•</span>
+                              <span><strong>Password:</strong> <code style={{ backgroundColor: '#E2E8F0', padding: '2px 8px', borderRadius: '4px', color: '#0F172A', fontFamily: 'monospace' }}>{emp.password}</code></span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteEmployee(emp.id, emp.fullName)}
+                            style={{ backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', padding: '10px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.85rem' }}
+                          >
+                            <FaTrash /> REVOKE ACCESS
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* CUSTOMER DETAILED PROFILE MODAL */}
+            {selectedCustomerProfile && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                backdropFilter: 'blur(4px)',
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '24px'
+              }}>
+                <div style={{
+                  backgroundColor: '#FFFFFF',
+                  width: '100%',
+                  maxWidth: '960px',
+                  height: '85vh',
+                  borderRadius: '16px',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden'
+                }}>
+                  {/* Modal Header */}
+                  <div style={{
+                    padding: '20px 28px',
+                    borderBottom: '1px solid #E2E8F0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: '#F8FAFC'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <img 
+                        src={selectedCustomerProfile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCustomerProfile.name)}&background=007A55&color=fff`} 
+                        alt={selectedCustomerProfile.name} 
+                        style={{ width: '45px', height: '45px', borderRadius: '50%' }}
+                      />
+                      <div>
+                        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                          {selectedCustomerProfile.name}
+                        </h2>
+                        <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
+                          Customer ID: {selectedCustomerProfile.id}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCustomerProfile(null)}
+                      style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '1.4rem', padding: '6px' }}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+
+                  {/* Profile Sub-Tabs */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '6px',
+                    padding: '12px 28px',
+                    backgroundColor: '#FFFFFF',
+                    borderBottom: '1px solid #E2E8F0',
+                    overflowX: 'auto'
+                  }}>
+                    {[
+                      { id: 'overview', label: 'Overview', icon: <FaUsers /> },
+                      { id: 'logins', label: 'Login History', icon: <FaLock /> },
+                      { id: 'favorites', label: 'Favorites', icon: <FaHeart /> },
+                      { id: 'enquiries', label: 'Property Enquiries', icon: <FaInbox /> },
+                      { id: 'bookings', label: 'Slot Bookings', icon: <FaCalendarAlt /> },
+                      { id: 'activity', label: 'Activity Logs', icon: <FaHistory /> },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setCustomerProfileActiveTab(tab.id as any)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 16px',
+                          border: 'none',
+                          borderRadius: '8px',
+                          backgroundColor: customerProfileActiveTab === tab.id ? 'rgba(0,122,85,0.08)' : 'transparent',
+                          color: customerProfileActiveTab === tab.id ? '#007A55' : '#64748B',
+                          fontWeight: 700,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {tab.icon} {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Modal Body (Scrollable Content) */}
+                  <div style={{ padding: '24px 28px', overflowY: 'auto', flexGrow: 1, backgroundColor: '#F8FAFC' }}>
+                    
+                    {/* PROFILE TAB 1: OVERVIEW */}
+                    {customerProfileActiveTab === 'overview' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        
+                        {/* Left Card: Personal Details */}
+                        <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                          <h4 style={{ margin: '0 0 16px 0', fontSize: '0.9rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                            Personal Profile
+                          </h4>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Full Name</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B' }}>{selectedCustomerProfile.name}</span>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Mobile Number</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B' }}>+91 {selectedCustomerProfile.mobile || selectedCustomerProfile.phone || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Email Address</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B' }}>{selectedCustomerProfile.email || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Gender</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B' }}>{selectedCustomerProfile.gender || 'Male'}</span>
+                            </div>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Area / Location</span>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B' }}>{selectedCustomerProfile.area || selectedCustomerProfile.district || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Card: Account Stats */}
+                        <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                          <h4 style={{ margin: '0 0 16px 0', fontSize: '0.9rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                            Activity Statistics
+                          </h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                            <div style={{ padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #F1F5F9' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Total Logins</span>
+                              <strong style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'block', marginTop: '4px' }}>{selectedCustomerProfile.loginCount}</strong>
+                            </div>
+                            <div style={{ padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #F1F5F9' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Saved Favorites</span>
+                              <strong style={{ fontSize: '1.25rem', fontWeight: 800, color: '#007A55', display: 'block', marginTop: '4px' }}>{selectedCustomerProfile.favorites?.length || 0}</strong>
+                            </div>
+                            <div style={{ padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #F1F5F9' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Enquiries raised</span>
+                              <strong style={{ fontSize: '1.25rem', fontWeight: 800, color: '#007A55', display: 'block', marginTop: '4px' }}>{selectedCustomerProfile.enquiries?.length || 0}</strong>
+                            </div>
+                            <div style={{ padding: '12px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #F1F5F9' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Slot Bookings</span>
+                              <strong style={{ fontSize: '1.25rem', fontWeight: 800, color: '#007A55', display: 'block', marginTop: '4px' }}>{selectedCustomerProfile.bookings?.length || 0}</strong>
+                            </div>
+                          </div>
+                          
+                          <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#FFFBEB', borderRadius: '8px', border: '1px solid #FCD34D', fontSize: '0.82rem', color: '#B45309', fontWeight: 600 }}>
+                            ⭐ Interest Match: {selectedCustomerProfile.propertyInterest ? 'Property' : ''} {selectedCustomerProfile.propertyInterest && selectedCustomerProfile.businessInterest ? ' & ' : ''} {selectedCustomerProfile.businessInterest ? 'Business' : ''}
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+
+                    {/* PROFILE TAB 2: LOGIN HISTORY */}
+                    {customerProfileActiveTab === 'logins' && (
+                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                        {selectedCustomerProfile.loginHistory?.length === 0 ? (
+                          <p style={{ padding: '24px', color: '#64748B', fontStyle: 'italic', margin: 0 }}>No login audits recorded.</p>
+                        ) : (
+                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Date & Time</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Method</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Device</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Browser / OS</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>IP Address</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedCustomerProfile.loginHistory.map((login: any) => (
+                                <tr key={login.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.85rem', color: '#334155', fontWeight: 600 }}>
+                                    {new Date(login.loginAt).toLocaleString()}
+                                  </td>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.82rem', fontWeight: 700, color: '#007A55' }}>
+                                    {login.loginMethod}
+                                  </td>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.85rem', color: '#475569' }}>
+                                    {login.deviceType || 'Desktop'}
+                                  </td>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.85rem', color: '#475569' }}>
+                                    {login.browser || 'Chrome'} / {login.operatingSystem || 'Windows'}
+                                  </td>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.85rem', color: '#64748B', fontFamily: 'monospace' }}>
+                                    {login.ipAddress || '127.0.0.1'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    )}
+
+                    {/* PROFILE TAB 3: FAVORITES */}
+                    {customerProfileActiveTab === 'favorites' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {selectedCustomerProfile.favorites?.length === 0 ? (
+                          <p style={{ color: '#64748B', fontStyle: 'italic', padding: '12px 0' }}>This customer has not bookmarked any listings.</p>
+                        ) : (
+                          selectedCustomerProfile.favorites.map((fav: any) => {
+                            const details = fav.property || fav.business;
+                            const title = details?.title || details?.name || `Listing ID #${fav.listingId}`;
+                            const isRemoved = fav.status === 'REMOVED';
+
+                            return (
+                              <div key={fav.id} style={{ border: '1px solid #E2E8F0', padding: '14px 20px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isRemoved ? '#FFF5F5' : '#FFFFFF' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span style={{ fontSize: '0.7rem', color: fav.listingType === 'PROPERTY' ? '#007A55' : '#D97706', fontWeight: 800 }}>{fav.listingType}</span>
+                                  <strong style={{ fontSize: '0.95rem', color: '#1E293B' }}>{title}</strong>
+                                  <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Saved on {new Date(fav.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <span style={{
+                                  backgroundColor: isRemoved ? '#FEE2E2' : '#ECFDF5',
+                                  color: isRemoved ? '#DC2626' : '#059669',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 800,
+                                  padding: '4px 10px',
+                                  borderRadius: '6px'
+                                }}>
+                                  {isRemoved ? `REMOVED (${fav.removalReason || 'Sold Out'})` : 'ACTIVE'}
+                                </span>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+
+                    {/* PROFILE TAB 4: ENQUIRIES */}
+                    {customerProfileActiveTab === 'enquiries' && (
+                      <div style={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
+                        {selectedCustomerProfile.enquiries?.length === 0 ? (
+                          <p style={{ padding: '24px', color: '#64748B', fontStyle: 'italic', margin: 0 }}>No inquiries raised yet.</p>
+                        ) : (
+                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                              <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Listing Title</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Date</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Message</th>
+                                <th style={{ padding: '12px 16px', color: '#475569', fontSize: '0.8rem', fontWeight: 800 }}>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedCustomerProfile.enquiries.map((enq: any) => (
+                                <tr key={enq.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.85rem', fontWeight: 700, color: '#334155' }}>
+                                    {enq.listingTitle}
+                                  </td>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.82rem', color: '#64748B' }}>
+                                    {new Date(enq.createdAt).toLocaleDateString()}
+                                  </td>
+                                  <td style={{ padding: '12px 16px', fontSize: '0.85rem', color: '#475569', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={enq.message}>
+                                    {enq.message}
+                                  </td>
+                                  <td style={{ padding: '12px 16px' }}>
+                                    <span style={{
+                                      backgroundColor: '#ECFDF5',
+                                      color: '#059669',
+                                      fontSize: '0.75rem',
+                                      fontWeight: 800,
+                                      padding: '4px 10px',
+                                      borderRadius: '6px'
+                                    }}>
+                                      {enq.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    )}
+
+                    {/* PROFILE TAB 5: BOOKINGS */}
+                    {customerProfileActiveTab === 'bookings' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {selectedCustomerProfile.bookings?.length === 0 ? (
+                          <p style={{ color: '#64748B', fontStyle: 'italic', padding: '12px 0' }}>No slot viewings booked.</p>
+                        ) : (
+                          selectedCustomerProfile.bookings.map((book: any) => {
+                            const details = book.property || book.business;
+                            const title = details?.title || details?.name || `Listing Slot #${book.listingId}`;
+
+                            return (
+                              <div key={book.id} style={{ border: '1px solid #E2E8F0', padding: '14px 20px', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  <span style={{ fontSize: '0.7rem', color: '#007A55', fontWeight: 800, textTransform: 'uppercase' }}>{book.listingType} Slot</span>
+                                  <strong style={{ fontSize: '0.95rem', color: '#1E293B' }}>{title}</strong>
+                                  <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
+                                    <span>Date: <strong>{book.bookingDate}</strong></span>
+                                    <span>Time: <strong>{book.bookingTime}</strong></span>
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <select
+                                    value={book.status}
+                                    onChange={async (e) => {
+                                      const newStatus = e.target.value;
+                                      try {
+                                        const res = await fetch(`${API_BASE_URL}/api/bookings/${book.id}`, {
+                                          method: 'PUT',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ status: newStatus })
+                                        });
+                                        if (res.ok) {
+                                          // Refresh customer details modal state
+                                          fetchCustomerDetails(selectedCustomerProfile.id);
+                                          triggerRefresh();
+                                        }
+                                      } catch (err) {
+                                        console.error('Failed to update booking status:', err);
+                                      }
+                                    }}
+                                    style={{ padding: '6px 10px', border: '1px solid #CBD5E1', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}
+                                  >
+                                    <option value="REQUESTED">Requested</option>
+                                    <option value="CONFIRMED">Confirmed</option>
+                                    <option value="RESCHEDULED">Rescheduled</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                  </select>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+
+                    {/* PROFILE TAB 6: USER ACTIVITY LOG */}
+                    {customerProfileActiveTab === 'activity' && (
+                      <div style={{ position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '16px', marginLeft: '8px' }}>
+                        {selectedCustomerProfile.activities?.length === 0 ? (
+                          <p style={{ color: '#64748B', fontStyle: 'italic', margin: 0, paddingLeft: '12px' }}>No user activities logged.</p>
+                        ) : (
+                          selectedCustomerProfile.activities.map((act: any) => (
+                            <div key={act.id} style={{ position: 'relative' }}>
+                              <div style={{
+                                position: 'absolute',
+                                left: 'calc(-1.5rem - 6px)',
+                                top: '4px',
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '50%',
+                                backgroundColor: '#007A55',
+                                border: '2px solid #FFFFFF',
+                                boxShadow: '0 0 0 2px #A3D9C9'
+                              }} />
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <strong style={{ fontSize: '0.9rem', color: '#1E293B' }}>{act.description}</strong>
+                                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>{new Date(act.createdAt).toLocaleString()}</span>
+                              </div>
+                              <span style={{ display: 'inline-block', fontSize: '0.68rem', backgroundColor: 'rgba(0,122,85,0.06)', color: '#007A55', padding: '2px 8px', borderRadius: '4px', marginTop: '4px', fontWeight: 700 }}>
+                                {act.activityType}
+                              </span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 

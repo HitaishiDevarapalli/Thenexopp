@@ -11,7 +11,8 @@ import {
   FaArrowRight, 
   FaLock,
   FaKey,
-  FaEdit
+  FaEdit,
+  FaMapMarkerAlt
 } from 'react-icons/fa';
 
 interface RegisteredUser {
@@ -48,10 +49,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   const [success, setSuccess] = useState('');
 
   // Custom Mobile OTP States
-  const [mobileOtpStep, setMobileOtpStep] = useState<'input' | 'verify'>('input');
+  const [mobileOtpStep, setMobileOtpStep] = useState<'input' | 'verify' | 'complete-profile'>('input');
   const [mobileOtpDigits, setMobileOtpDigits] = useState<string[]>(Array(6).fill(''));
   const [resendCountdown, setResendCountdown] = useState<number>(0);
   const otpInputsRef = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Profile completion states
+  const [profileGender, setProfileGender] = useState<'Male' | 'Female' | 'Other'>('Male');
+  const [profileArea, setProfileArea] = useState<string>('');
+  const [profilePropInterest, setProfilePropInterest] = useState<boolean>(false);
+  const [profileBizInterest, setProfileBizInterest] = useState<boolean>(false);
 
   // Mobile OTP resend countdown timer
   useEffect(() => {
@@ -274,10 +281,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     setError('');
     setSuccess('');
 
-    if (!fullName.trim()) {
-      setError('Please enter your full name');
-      return;
-    }
+
     if (!mobile || mobile.length !== 10 || !/^\d+$/.test(mobile)) {
       setError('Please enter a valid 10-digit mobile number');
       return;
@@ -353,12 +357,76 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
         mobile: mobile.trim(),
       });
 
+      // If user profile is not completed, transition to profile completion step
+      if (!data.user.profileCompleted) {
+        setMobileOtpStep('complete-profile');
+        setSuccess('Mobile verified! Please complete your profile details.');
+        return;
+      }
+
       const userEmail = `${mobile.trim()}@nexopp.in`;
-      loginWithGmail(userEmail, 'Verified Investor', fullName.trim(), mobile.trim());
+      loginWithGmail(
+        userEmail,
+        'Verified Investor',
+        fullName.trim(),
+        mobile.trim(),
+        data.user.gender,
+        data.user.district || data.user.area
+      );
       onClose?.();
     } catch (err: any) {
       setLoading(false);
       setError(err.message || 'OTP verification failed. Please try again.');
+    }
+  };
+
+  const handleCompleteProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!profilePropInterest && !profileBizInterest) {
+      setError('Please select at least one area of interest (Property or Business).');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+      const res = await fetch(`${apiBase}/auth/complete-profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fullName.trim(),
+          gender: profileGender,
+          area: profileArea.trim(),
+          propertyInterest: profilePropInterest,
+          businessInterest: profileBizInterest
+        })
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to complete profile. Please try again.');
+      }
+
+      setSuccess('Profile completed successfully!');
+      
+      const userEmail = `${mobile.trim()}@nexopp.in`;
+      loginWithGmail(
+        userEmail, 
+        'Verified Investor', 
+        data.user.fullName, 
+        data.user.mobile,
+        data.user.gender,
+        data.user.area
+      );
+      onClose?.();
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || 'Failed to complete profile. Please try again.');
     }
   };
 
@@ -1158,43 +1226,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           {authMethod === 'mobile' && (
             mobileOtpStep === 'input' ? (
               <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-                {/* 1. Full Name */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-                    Full Name <span style={{ color: '#DC2626' }}>*</span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <FaUser style={{
-                      position: 'absolute',
-                      left: '16px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#007A55',
-                      fontSize: '15px'
-                    }} />
-                    <input
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => {
-                        setFullName(e.target.value);
-                        setError('');
-                      }}
-                      placeholder="e.g. Rahul Sharma"
-                      style={{
-                        width: '100%',
-                        padding: '14px 16px 14px 44px',
-                        borderRadius: '12px',
-                        border: '1.5px solid #E2E8F0',
-                        fontSize: '0.95rem',
-                        color: '#0F172A',
-                        backgroundColor: '#F8FAFC',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
 
                 {/* 2. Mobile Number */}
                 <div>
@@ -1278,7 +1309,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
                   {loading ? 'Sending OTP Code...' : 'Send OTP'} <FaArrowRight style={{ fontSize: '14px' }} />
                 </button>
               </form>
-            ) : (
+            ) : mobileOtpStep === 'verify' ? (
               <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                 {/* Header Information */}
                 <div style={{
@@ -1342,12 +1373,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
                         onKeyDown={(e) => handleOtpKeyDown(e, idx)}
                         onPaste={idx === 0 ? handleOtpPaste : undefined}
                         style={{
-                          width: '45px',
-                          height: '50px',
+                          width: '100%',
+                          maxWidth: '46px',
+                          aspectRatio: '1 / 1.1',
                           borderRadius: '8px',
                           border: '1.5px solid #E2E8F0',
                           textAlign: 'center',
-                          fontSize: '1.25rem',
+                          fontSize: 'min(1.25rem, 5vw)',
                           fontWeight: 800,
                           color: '#0F172A',
                           backgroundColor: '#F8FAFC',
@@ -1410,6 +1442,184 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
                   }}
                 >
                   {loading ? 'Verifying OTP Code...' : 'Verify OTP'} <FaArrowRight style={{ fontSize: '14px' }} />
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleCompleteProfile} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  alignItems: 'center',
+                  backgroundColor: '#E6F4EA',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid #A3D9C9',
+                  marginBottom: '6px'
+                }}>
+                  <div style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: 700, textTransform: 'uppercase' }}>Profile Completion Required</div>
+                  <div style={{ fontSize: '0.88rem', color: '#047857', fontWeight: 500, textAlign: 'center' }}>
+                    Please complete your details to finish setting up your account.
+                  </div>
+                </div>
+
+                {/* 1. Full Name */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Full Name <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <FaUser style={{
+                      position: 'absolute',
+                      left: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#007A55',
+                      fontSize: '15px'
+                    }} />
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="e.g. Rahul Sharma"
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px 14px 44px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #E2E8F0',
+                        fontSize: '0.95rem',
+                        color: '#0F172A',
+                        backgroundColor: '#F8FAFC',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Gender Selection */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Gender <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    {(['Male', 'Female', 'Other'] as const).map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => setProfileGender(g)}
+                        style={{
+                          padding: '12px',
+                          borderRadius: '10px',
+                          border: profileGender === g ? '2px solid #007A55' : '1.5px solid #E2E8F0',
+                          backgroundColor: profileGender === g ? 'rgba(0, 122, 85, 0.08)' : '#FFFFFF',
+                          color: profileGender === g ? '#007A55' : '#475569',
+                          fontWeight: 700,
+                          fontSize: '0.88rem',
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Area / Location */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Area / Location <span style={{ color: '#DC2626' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <FaMapMarkerAlt style={{
+                      position: 'absolute',
+                      left: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#007A55',
+                      fontSize: '15px'
+                    }} />
+                    <input
+                      type="text"
+                      value={profileArea}
+                      onChange={(e) => {
+                        setProfileArea(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="e.g. Guntur, Vijayawada, Hyderabad"
+                      style={{
+                        width: '100%',
+                        padding: '14px 16px 14px 44px',
+                        borderRadius: '12px',
+                        border: '1.5px solid #E2E8F0',
+                        fontSize: '0.95rem',
+                        color: '#0F172A',
+                        backgroundColor: '#F8FAFC',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* 4. Interests (Checkbox Group) */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Areas of Interest <span style={{ color: '#DC2626' }}>* (Select at least one)</span>
+                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.92rem', color: '#334155', fontWeight: 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={profilePropInterest}
+                        onChange={(e) => setProfilePropInterest(e.target.checked)}
+                        style={{ width: '18px', height: '18px', accentColor: '#007A55', cursor: 'pointer' }}
+                      />
+                      Property (Buy/Sell/Rent Residential, Lands, Villas)
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '0.92rem', color: '#334155', fontWeight: 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={profileBizInterest}
+                        onChange={(e) => setProfileBizInterest(e.target.checked)}
+                        style={{ width: '18px', height: '18px', accentColor: '#007A55', cursor: 'pointer' }}
+                      />
+                      Business (Operational Business Buy/Sell, Resales)
+                    </label>
+                  </div>
+                </div>
+
+                {/* Complete Profile Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    backgroundColor: '#007A55',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    boxShadow: '0 8px 20px rgba(0, 122, 85, 0.25)',
+                    transition: 'all 0.2s ease',
+                    marginTop: '8px'
+                  }}
+                >
+                  {loading ? 'Completing Profile...' : 'Complete Profile & Login'} <FaArrowRight style={{ fontSize: '14px' }} />
                 </button>
               </form>
             )

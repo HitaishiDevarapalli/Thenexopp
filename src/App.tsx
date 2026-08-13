@@ -19,6 +19,7 @@ import { FranchiseDetailsPage } from './components/FranchiseDetailsPage';
 import { NewFranchisePage } from './components/NewFranchisePage';
 import { BusinessListingsPage } from './components/BusinessListingsPage';
 import PropertyDetailsPage from './components/PropertyDetailsPage';
+import EnquiryPage from './components/EnquiryPage';
 import CloseDealPage from './components/CloseDealPage';
 import AdminPanel from './pages/AdminPanel';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -30,7 +31,7 @@ import { SellPropertyPage } from './components/forms/SellPropertyPage';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 import LoadingScreen from './components/common/LoadingScreen';
 
-type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage';
+type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -176,6 +177,7 @@ export const App: React.FC = () => {
   const [selectedBusinessIndustry, setSelectedBusinessIndustry] = useState<'Food' | 'Healthcare' | 'Retail & Stores' | null>(routeData.industry || null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(routeData.propertyId || null);
   const [selectedBuyPropertyId, setSelectedBuyPropertyId] = useState<string | null>(routeData.buyPropertyId || null);
+  const [enquiryTargetId, setEnquiryTargetId] = useState<string | null>(null);
   const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
 
   const navigateToUrl = (url: string) => {
@@ -363,6 +365,20 @@ export const App: React.FC = () => {
             setSelectedBuyPropertyId(id);
             navigateTo('closeDeal');
           }}
+          onContactBroker={(id) => {
+            setEnquiryTargetId(id);
+            navigateTo('enquiryPage');
+          }}
+          onBookSlot={(id) => {
+            setEnquiryTargetId(id);
+            navigateTo('bookSlotPage');
+          }}
+        />
+      ) : (currentPage === 'enquiryPage' || currentPage === 'bookSlotPage') && enquiryTargetId ? (
+        <EnquiryPage
+          propertyId={enquiryTargetId}
+          mode={currentPage === 'bookSlotPage' ? 'book' : 'contact'}
+          onBack={navigateBack}
         />
       ) : currentPage === 'closeDeal' && selectedBuyPropertyId ? (
         <CloseDealPage 

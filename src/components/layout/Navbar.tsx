@@ -445,12 +445,6 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
 
-          {/* Saved */}
-          <button onClick={onOpenWishlist} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '40px', padding: '0 10px', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-            <FaRegHeart style={{ color: '#EF4444', fontSize: '14px' }} />
-            <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '12.5px' }}>Saved {wishlistItems.length > 0 && `(${wishlistItems.length})`}</span>
-          </button>
-
           {/* Login / Profile */}
           {user ? (
             <div style={{ position: 'relative' }}>
@@ -471,7 +465,17 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
                     <div style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>{user.name}</div>
                     <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', wordBreak: 'break-all' as const }}>{user.email}</div>
                   </div>
-                  <button onClick={() => { setOpenDropdown(null); if (onNavigateToPage) onNavigateToPage('admin'); }} style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button 
+                    onClick={() => { 
+                      setOpenDropdown(null); 
+                      if (user?.role === 'Verified Investor') {
+                        onOpenWishlist();
+                      } else if (onNavigateToPage) {
+                        onNavigateToPage('admin'); 
+                      }
+                    }} 
+                    style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
                     <FaUser style={{ color: '#10B981' }} /> My Dashboard
                   </button>
                   <button onClick={() => { logout(); setOpenDropdown(null); }} style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #F1F5F9' }}>
@@ -502,9 +506,6 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             </button>
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
-          <button onClick={onOpenWishlist} style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <FaRegHeart style={{ color: '#EF4444', fontSize: '16px' }} />
-          </button>
         </div>
       </div>
 
@@ -587,25 +588,54 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
                 <FaUser style={{ color: '#FDE68A' }} /> Login / <FaUserPlus style={{ color: '#A7F3D0' }} /> Register
               </button>
             ) : (
-              <button
-                onClick={() => {
-                  logout();
-                  setMobileMenuOpen(false);
-                }}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#FEF2F2',
-                  color: '#EF4444',
-                  border: '1px solid #FCA5A5',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  cursor: 'pointer'
-                }}
-              >
-                Logout ({user.name})
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (user?.role === 'Verified Investor') {
+                      onOpenWishlist();
+                    } else if (onNavigateToPage) {
+                      onNavigateToPage('admin');
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#F0FDF4',
+                    color: '#16A34A',
+                    border: '1.5px solid #BBF7D0',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '15px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <FaUser style={{ color: '#16A34A' }} /> My Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    backgroundColor: '#FEF2F2',
+                    color: '#EF4444',
+                    border: '1px solid #FCA5A5',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '15px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Logout ({user.name})
+                </button>
+              </div>
             )}
           </div>
         </div>

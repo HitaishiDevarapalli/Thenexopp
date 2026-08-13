@@ -111,13 +111,17 @@ interface PropertyDetailsPageProps {
   onBack: () => void;
   onPropertyClick: (id: string) => void;
   onBuyProperty?: (id: string) => void;
+  onContactBroker?: (id: string) => void;
+  onBookSlot?: (id: string) => void;
 }
 
 export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ 
   propertyId, 
   onBack, 
   onPropertyClick,
-  onBuyProperty
+  onBuyProperty,
+  onContactBroker,
+  onBookSlot
 }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -140,14 +144,11 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
   const handleOpenContactModal = (mode: 'contact' | 'book' = 'contact') => {
-    setModalMode(mode);
-    setContactName('');
-    setContactPhone('');
-    setContactPrice(property ? property.priceDisplay : '');
-    setBookingDate('');
-    setBookingTime('');
-    setContactSubmitted(false);
-    setShowContactModal(true);
+    if (mode === 'contact' && onContactBroker) {
+      onContactBroker(propertyId);
+    } else if (mode === 'book' && onBookSlot) {
+      onBookSlot(propertyId);
+    }
   };
 
   const handleContactSubmit = (e: React.FormEvent) => {
@@ -1408,104 +1409,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 ))
               )}
             </div>
-          </div>
-        </div>
-      )}
-      {/* Contact Enquiry Modal */}
-      {showContactModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.35)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 11000, padding: '20px' }}>
-          <div style={{ backgroundColor: '#FFFFFF', padding: '0', borderRadius: '24px', width: '90%', maxWidth: '460px', boxShadow: '0 20px 50px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', margin: 'auto', textAlign: 'left', overflow: 'hidden' }}>
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
-              <div>
-                <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  {modalMode === 'book' ? 'Book Visit Slot' : 'Contact Broker'}
-                </h3>
-                <p style={{ margin: '4px 0 0 0', color: '#64748B', fontSize: '0.85rem' }}>{property?.title}</p>
-              </div>
-              <button 
-                onClick={() => setShowContactModal(false)} 
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', fontWeight: 'bold', color: '#64748B', cursor: 'pointer' }}
-              >
-                &times;
-              </button>
-            </div>
-
-            {contactSubmitted ? (
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <span style={{ fontSize: '3rem' }}>✅</span>
-                <h4 style={{ color: '#16A34A', fontSize: '1.2rem', fontWeight: 800, marginTop: '12px' }}>Inquiry Sent Successfully!</h4>
-                <p style={{ color: '#64748B', fontSize: '0.85rem', marginTop: '6px' }}>The broker will reach out to you shortly.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Your Name *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={contactName} 
-                    onChange={e => setContactName(e.target.value)} 
-                    placeholder="Enter your full name" 
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} 
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Phone Number *</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={contactPhone} 
-                    onChange={e => setContactPhone(e.target.value)} 
-                    placeholder="Enter 10-digit number" 
-                    style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} 
-                  />
-                </div>
-
-                {modalMode === 'contact' ? (
-                  <div>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Offered Price (Lakhs/Crores)</label>
-                    <input 
-                      type="text" 
-                      value={contactPrice} 
-                      onChange={e => setContactPrice(e.target.value)} 
-                      placeholder="e.g. ₹ 75 Lakh" 
-                      style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem' }} 
-                    />
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div>
-                      <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Select Date *</label>
-                      <input 
-                        type="date" 
-                        required 
-                        value={bookingDate} 
-                        onChange={e => setBookingDate(e.target.value)} 
-                        style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Select Time *</label>
-                      <input 
-                        type="time" 
-                        required 
-                        value={bookingTime} 
-                        onChange={e => setBookingTime(e.target.value)} 
-                        style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} 
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <button 
-                  type="submit" 
-                  style={{ width: '100%', padding: '14px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', marginTop: '8px', boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)' }}
-                >
-                  {modalMode === 'book' ? '📅 Confirm Booking Slot' : '✉ Submit Details to Broker'}
-                </button>
-              </form>
-            )}
           </div>
         </div>
       )}

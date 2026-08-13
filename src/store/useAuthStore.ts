@@ -2,13 +2,17 @@ import { create } from 'zustand';
 import { API_BASE_URL } from '../db/marketplaceDb';
 
 export interface User {
+  id?: string;
   name: string;
   email: string;
   phone?: string;
   gender?: string;
   district?: string;
   avatar?: string;
-  role?: 'Verified Investor' | 'Franchise Partner' | 'Business Buyer' | 'Capital Partner';
+  role?: 'Verified Investor' | 'Franchise Partner' | 'Business Buyer' | 'Capital Partner' | 'SUPER_ADMIN' | 'ADMIN';
+  profileCompleted?: boolean;
+  propertyInterest?: boolean;
+  businessInterest?: boolean;
 }
 
 interface AuthState {
@@ -16,6 +20,7 @@ interface AuthState {
   isLoginModalOpen: boolean;
   openLoginModal: () => void;
   closeLoginModal: () => void;
+  initializeAuth: () => Promise<void>;
   loginWithGmail: (
     email: string,
     role?: string,
@@ -33,6 +38,34 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   openLoginModal: () => set({ isLoginModalOpen: true }),
   closeLoginModal: () => set({ isLoginModalOpen: false }),
+
+  initializeAuth: async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          set({
+            user: {
+              id: data.user.id,
+              name: data.user.fullName || data.user.name,
+              email: data.user.email,
+              phone: data.user.mobile || data.user.phone,
+              gender: data.user.gender,
+              district: data.user.district || data.user.area,
+              role: data.user.role,
+              avatar: data.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.fullName || 'U')}&background=007A55&color=fff`,
+              profileCompleted: data.user.profileCompleted,
+              propertyInterest: data.user.propertyInterest,
+              businessInterest: data.user.businessInterest
+            } as any
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Initialize auth failed:', e);
+    }
+  },
 
   loginWithGmail: (
     emailInput: string,

@@ -196,6 +196,45 @@ app.post('/api/upload', async (req, res, next) => {
   }
 });
 
+function parseUserAgent(uaString) {
+  if (!uaString) {
+    return { browser: 'Unknown', os: 'Unknown', device: 'Desktop' };
+  }
+  let browser = 'Unknown';
+  let os = 'Unknown';
+  let device = 'Desktop';
+
+  if (/mobile|android|iphone|ipad|phone/i.test(uaString)) {
+    device = 'Mobile';
+  }
+
+  if (/windows/i.test(uaString)) {
+    os = 'Windows';
+  } else if (/macintosh|mac os x/i.test(uaString)) {
+    os = 'MacOS';
+  } else if (/iphone|ipad|ipod/i.test(uaString)) {
+    os = 'iOS';
+  } else if (/android/i.test(uaString)) {
+    os = 'Android';
+  } else if (/linux/i.test(uaString)) {
+    os = 'Linux';
+  }
+
+  if (/chrome|crios/i.test(uaString) && !/edge|edg/i.test(uaString) && !/opr|opera/i.test(uaString)) {
+    browser = 'Chrome';
+  } else if (/safari/i.test(uaString) && !/chrome|crios/i.test(uaString)) {
+    browser = 'Safari';
+  } else if (/firefox|fxios/i.test(uaString)) {
+    browser = 'Firefox';
+  } else if (/edge|edg/i.test(uaString)) {
+    browser = 'Edge';
+  } else if (/opr|opera/i.test(uaString)) {
+    browser = 'Opera';
+  }
+
+  return { browser, os, device };
+}
+
 // ── EMAIL OTP AUTHENTICATION ENDPOINTS ──────────────────────────────────────
 const emailOtpsMap = new Map();
 
@@ -596,36 +635,44 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     const targetName = fullName || 'Verified Investor';
 
     let customer = null;
+    let isNewCustomer = false;
     try {
       const existing = await prisma.customer.findFirst({
-        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
+        where: { OR: [{ mobile: verifiedMobile }, { phone: verifiedMobile }, { email: mockEmail }] },
       });
 
       if (existing) {
         customer = await prisma.customer.update({
           where: { id: existing.id },
           data: {
+            mobile: existing.mobile || verifiedMobile,
+            phone: existing.phone || verifiedMobile,
             name: existing.name || targetName,
             gender: existing.gender || gender,
             district: existing.district || district,
+            area: existing.area || district || 'Hyderabad',
             lastLoginAt: timestamp,
             loginCount: existing.loginCount + 1,
           },
         });
       } else {
+        isNewCustomer = true;
         customer = await prisma.customer.create({
           data: {
             name: targetName,
             email: mockEmail,
+            mobile: verifiedMobile,
             phone: verifiedMobile,
             gender: gender || 'Male',
             district: district || 'Hyderabad',
+            area: district || 'Hyderabad',
             role: 'Verified Investor',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
             lastLoginAt: timestamp,
             loginCount: 1,
             status: 'Active',
             registeredDate: new Date().toLocaleDateString(),
+            profileCompleted: false
           },
         });
       }
@@ -635,11 +682,47 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
         id: `cust-${verifiedMobile}`,
         name: targetName,
         email: mockEmail,
+        mobile: verifiedMobile,
         phone: verifiedMobile,
         gender: gender || 'Male',
         district: district || 'Hyderabad',
+        area: district || 'Hyderabad',
         role: 'Verified Investor',
+        profileCompleted: false
       };
+    }
+
+    // Record Login History and User Activity
+    if (customer && customer.id && !customer.id.startsWith('cust-')) {
+      try {
+        const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+        const userAgent = req.headers['user-agent'] || '';
+        const uaInfo = parseUserAgent(userAgent);
+
+        await prisma.customerLoginHistory.create({
+          data: {
+            customerId: customer.id,
+            loginMethod: 'OTP',
+            deviceType: uaInfo.device,
+            browser: uaInfo.browser,
+            operatingSystem: uaInfo.os,
+            ipAddress: String(ipAddress),
+            userAgent: userAgent,
+            sessionId: `sess-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            status: 'Active'
+          }
+        });
+
+        await prisma.userActivity.create({
+          data: {
+            customerId: customer.id,
+            activityType: 'LOGIN',
+            description: isNewCustomer ? 'New customer registered and logged in using OTP' : 'Customer logged in using OTP'
+          }
+        });
+      } catch (logErr) {
+        console.error('Failed to log login history/activity:', logErr);
+      }
     }
 
     // Generate JWT Token
@@ -647,10 +730,13 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
       id: customer.id,
       email: customer.email,
       fullName: customer.name,
-      mobile: customer.phone,
+      mobile: customer.mobile || customer.phone || '',
+      phone: customer.mobile || customer.phone || '',
       role: customer.role || 'Verified Investor',
       gender: customer.gender,
-      district: customer.district,
+      district: customer.district || customer.area || '',
+      area: customer.area || customer.district || '',
+      profileCompleted: customer.profileCompleted || false,
     };
 
     const tokens = generateTokens(userPayload);
@@ -772,12 +858,619 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
 });
 
 app.get('/api/auth/me', authMiddleware, async (req, res) => {
-  return res.json({ success: true, user: req.user });
+  try {
+    if (req.user && req.user.role === 'Verified Investor') {
+      const customer = await prisma.customer.findUnique({
+        where: { id: req.user.id }
+      });
+      if (customer) {
+        return res.json({
+          success: true,
+          user: {
+            id: customer.id,
+            email: customer.email,
+            fullName: customer.name,
+            mobile: customer.mobile || customer.phone || '',
+            phone: customer.mobile || customer.phone || '',
+            role: customer.role || 'Verified Investor',
+            gender: customer.gender,
+            district: customer.district || customer.area || '',
+            area: customer.area || customer.district || '',
+            profileCompleted: customer.profileCompleted,
+            propertyInterest: customer.propertyInterest,
+            businessInterest: customer.businessInterest,
+            status: customer.status,
+            avatar: customer.avatar
+          }
+        });
+      }
+    }
+    return res.json({ success: true, user: req.user });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to retrieve profile' });
+  }
 });
 
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('auth_token');
   return res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// ── EXTENDED CRM & CUSTOMER PORTAL ENDPOINTS ──────────────────────────────────
+
+// 1. Complete Profile
+app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) => {
+  try {
+    const { name, gender, area, propertyInterest, businessInterest } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Full Name is required.' });
+    }
+
+    const customer = await prisma.customer.update({
+      where: { id: req.user.id },
+      data: {
+        name: name.trim(),
+        gender: gender || 'Male',
+        area: area || '',
+        district: area || '',
+        propertyInterest: Boolean(propertyInterest),
+        businessInterest: Boolean(businessInterest),
+        profileCompleted: true
+      }
+    });
+
+    // Record Activity
+    await prisma.userActivity.create({
+      data: {
+        customerId: customer.id,
+        activityType: 'PROFILE_COMPLETED',
+        description: 'Completed mandatory customer profile details'
+      }
+    });
+
+    // Generate fresh tokens with updated profileCompleted state
+    const userPayload = {
+      id: customer.id,
+      email: customer.email,
+      fullName: customer.name,
+      mobile: customer.mobile || customer.phone || '',
+      phone: customer.mobile || customer.phone || '',
+      role: customer.role || 'Verified Investor',
+      gender: customer.gender,
+      district: customer.district || customer.area || '',
+      area: customer.area || customer.district || '',
+      profileCompleted: customer.profileCompleted,
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Profile completed successfully.',
+      user: userPayload,
+      tokens
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 2. Favorites
+app.get('/api/favorites', authMiddleware, async (req, res, next) => {
+  try {
+    const favorites = await prisma.customerFavorite.findMany({
+      where: { customerId: req.user.id, status: 'ACTIVE' },
+      include: { property: true, business: true }
+    });
+    return res.json(favorites);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/favorites', authMiddleware, async (req, res, next) => {
+  try {
+    const { listingType, listingId } = req.body;
+    if (!listingType || !listingId) {
+      return res.status(400).json({ error: 'listingType and listingId are required.' });
+    }
+
+    let listingTitle = 'Unknown Listing';
+    if (listingType === 'PROPERTY') {
+      const p = await prisma.property.findUnique({ where: { id: listingId } });
+      if (p) listingTitle = p.title;
+    } else if (listingType === 'BUSINESS') {
+      const b = await prisma.business.findUnique({ where: { id: listingId } });
+      if (b) listingTitle = b.name;
+    }
+
+    const existing = await prisma.customerFavorite.findUnique({
+      where: {
+        customerId_listingType_listingId: {
+          customerId: req.user.id,
+          listingType,
+          listingId
+        }
+      }
+    });
+
+    if (existing) {
+      await prisma.customerFavorite.update({
+        where: { id: existing.id },
+        data: { status: 'ACTIVE', removedAt: null, removalReason: null }
+      });
+    } else {
+      await prisma.customerFavorite.create({
+        data: {
+          customerId: req.user.id,
+          listingType,
+          listingId,
+          propertyId: listingType === 'PROPERTY' ? listingId : null,
+          businessId: listingType === 'BUSINESS' ? listingId : null,
+          status: 'ACTIVE'
+        }
+      });
+    }
+
+    // Log Activity
+    await prisma.userActivity.create({
+      data: {
+        customerId: req.user.id,
+        activityType: 'FAVORITE_ADD',
+        listingType,
+        listingId,
+        description: `Added "${listingTitle}" to favorites`
+      }
+    });
+
+    return res.json({ success: true, message: 'Added to favorites successfully.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/favorites/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const fav = await prisma.customerFavorite.findUnique({ where: { id } });
+    if (!fav || fav.customerId !== req.user.id) {
+      return res.status(404).json({ error: 'Favorite not found.' });
+    }
+
+    let listingTitle = 'Unknown Listing';
+    if (fav.listingType === 'PROPERTY') {
+      const p = await prisma.property.findUnique({ where: { id: fav.listingId } });
+      if (p) listingTitle = p.title;
+    } else if (fav.listingType === 'BUSINESS') {
+      const b = await prisma.business.findUnique({ where: { id: fav.listingId } });
+      if (b) listingTitle = b.name;
+    }
+
+    await prisma.customerFavorite.update({
+      where: { id },
+      data: {
+        status: 'REMOVED',
+        removedAt: new Date(),
+        removalReason: 'USER_REMOVED'
+      }
+    });
+
+    // Log Activity
+    await prisma.userActivity.create({
+      data: {
+        customerId: req.user.id,
+        activityType: 'FAVORITE_REMOVE',
+        listingType: fav.listingType,
+        listingId: fav.listingId,
+        description: `Removed "${listingTitle}" from favorites`
+      }
+    });
+
+    return res.json({ success: true, message: 'Removed from favorites successfully.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 3. Enquiries
+app.get('/api/enquiries', authMiddleware, async (req, res, next) => {
+  try {
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
+    const enquiries = await prisma.enquiry.findMany({
+      where: isAdmin ? {} : { customerId: req.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: { customer: true }
+    });
+    return res.json(enquiries);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/enquiries', authMiddleware, async (req, res, next) => {
+  try {
+    const { listingType, listingId, enquiryType, message, preferredDate, preferredTime } = req.body;
+    if (!listingType || !listingId) {
+      return res.status(400).json({ error: 'listingType and listingId are required.' });
+    }
+
+    let listingTitle = 'Unknown Listing';
+    if (listingType === 'PROPERTY') {
+      const p = await prisma.property.findUnique({ where: { id: listingId } });
+      if (p) listingTitle = p.title;
+    } else if (listingType === 'BUSINESS') {
+      const b = await prisma.business.findUnique({ where: { id: listingId } });
+      if (b) listingTitle = b.name;
+    }
+
+    const customer = await prisma.customer.findUnique({ where: { id: req.user.id } });
+
+    const enquiry = await prisma.enquiry.create({
+      data: {
+        customerId: req.user.id,
+        customerName: customer ? customer.name : req.user.fullName,
+        phone: customer ? (customer.mobile || customer.phone || '') : '',
+        email: customer ? (customer.email || '') : req.user.email,
+        listingTitle,
+        listingType,
+        listingId,
+        enquiryType: enquiryType || 'GENERAL_ENQUIRY',
+        message: message || '',
+        preferredMoveInDate: preferredDate || '',
+        date: preferredDate || '',
+        preferredTime: preferredTime || '',
+        status: 'New'
+      }
+    });
+
+    // Log Activity
+    await prisma.userActivity.create({
+      data: {
+        customerId: req.user.id,
+        activityType: enquiryType === 'SLOT_BOOKING' ? 'BOOKING_REQUEST' : 'ENQUIRY_RAISED',
+        listingType,
+        listingId,
+        description: enquiryType === 'SLOT_BOOKING' 
+          ? `Requested slot booking for "${listingTitle}"` 
+          : `Raised enquiry on "${listingTitle}"`
+      }
+    });
+
+    return res.json({ success: true, enquiry });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 4. Slot Bookings
+app.get('/api/bookings', authMiddleware, async (req, res, next) => {
+  try {
+    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
+    const bookings = await prisma.booking.findMany({
+      where: isAdmin ? {} : { customerId: req.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: { customer: true, property: true, business: true }
+    });
+    return res.json(bookings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/bookings', authMiddleware, async (req, res, next) => {
+  try {
+    const { listingType, listingId, bookingDate, bookingTime, notes } = req.body;
+    if (!listingType || !listingId || !bookingDate || !bookingTime) {
+      return res.status(400).json({ error: 'Missing required booking fields.' });
+    }
+
+    let listingTitle = 'Unknown Listing';
+    if (listingType === 'PROPERTY') {
+      const p = await prisma.property.findUnique({ where: { id: listingId } });
+      if (p) listingTitle = p.title;
+    } else if (listingType === 'BUSINESS') {
+      const b = await prisma.business.findUnique({ where: { id: listingId } });
+      if (b) listingTitle = b.name;
+    }
+
+    const customer = await prisma.customer.findUnique({ where: { id: req.user.id } });
+
+    const booking = await prisma.booking.create({
+      data: {
+        customerId: req.user.id,
+        listingType,
+        listingId,
+        bookingDate,
+        bookingTime,
+        notes: notes || '',
+        status: 'REQUESTED',
+        propertyId: listingType === 'PROPERTY' ? listingId : null,
+        businessId: listingType === 'BUSINESS' ? listingId : null,
+      }
+    });
+
+    // Create shadow Enquiry for compatibility/admin panel view
+    await prisma.enquiry.create({
+      data: {
+        customerId: req.user.id,
+        customerName: customer ? customer.name : req.user.fullName,
+        phone: customer ? (customer.mobile || customer.phone || '') : '',
+        email: customer ? (customer.email || '') : req.user.email,
+        listingTitle,
+        listingType,
+        listingId,
+        enquiryType: 'SLOT_BOOKING',
+        message: `Slot requested: ${bookingDate} at ${bookingTime}. Notes: ${notes || ''}`,
+        preferredMoveInDate: bookingDate,
+        date: bookingDate,
+        preferredTime: bookingTime,
+        status: 'New'
+      }
+    });
+
+    // Log Activity
+    await prisma.userActivity.create({
+      data: {
+        customerId: req.user.id,
+        activityType: 'BOOKING_REQUEST',
+        listingType,
+        listingId,
+        description: `Requested slot booking for "${listingTitle}" on ${bookingDate} at ${bookingTime}`
+      }
+    });
+
+    return res.json({ success: true, booking });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/bookings/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, bookingDate, bookingTime, notes } = req.body;
+
+    const existing = await prisma.booking.findUnique({ where: { id }, include: { customer: true } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Booking not found.' });
+    }
+
+    let listingTitle = 'Unknown Listing';
+    if (existing.listingType === 'PROPERTY') {
+      const p = await prisma.property.findUnique({ where: { id: existing.listingId } });
+      if (p) listingTitle = p.title;
+    } else if (existing.listingType === 'BUSINESS') {
+      const b = await prisma.business.findUnique({ where: { id: existing.listingId } });
+      if (b) listingTitle = b.name;
+    }
+
+    const updated = await prisma.booking.update({
+      where: { id },
+      data: {
+        status: status || existing.status,
+        bookingDate: bookingDate || existing.bookingDate,
+        bookingTime: bookingTime || existing.bookingTime,
+        notes: notes || existing.notes
+      }
+    });
+
+    // Log Activity
+    await prisma.userActivity.create({
+      data: {
+        customerId: existing.customerId,
+        activityType: `BOOKING_${status}`,
+        listingType: existing.listingType,
+        listingId: existing.listingId,
+        description: `Booking for "${listingTitle}" status updated to "${status}" by Admin`
+      }
+    });
+
+    return res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put('/api/enquiries/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updated = await prisma.enquiry.update({
+      where: { id },
+      data: { status }
+    });
+    return res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/enquiries/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.enquiry.delete({ where: { id } });
+    return res.json({ success: true, message: 'Enquiry deleted successfully.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 5. Activity Logs
+app.get('/api/activity', authMiddleware, async (req, res, next) => {
+  try {
+    const activities = await prisma.userActivity.findMany({
+      where: { customerId: req.user.id },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json(activities);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 6. Admin CRM Dashboard Statistics
+app.get('/api/admin/dashboard-stats', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const startOfToday = new Date();
+    startOfToday.setHours(0,0,0,0);
+
+    const startOfThisWeek = new Date();
+    startOfThisWeek.setDate(startOfThisWeek.getDate() - startOfThisWeek.getDay());
+    startOfThisWeek.setHours(0,0,0,0);
+
+    const startOfThisMonth = new Date();
+    startOfThisMonth.setDate(1);
+    startOfThisMonth.setHours(0,0,0,0);
+
+    const totalCustomers = await prisma.customer.count();
+    const newCustomersToday = await prisma.customer.count({
+      where: { createdAt: { gte: startOfToday } }
+    });
+    const activeCustomers = await prisma.customer.count({
+      where: { status: 'Active' }
+    });
+
+    const loggedInTodayList = await prisma.customerLoginHistory.findMany({
+      where: { loginAt: { gte: startOfToday } },
+      distinct: ['customerId']
+    });
+    const loggedInThisWeekList = await prisma.customerLoginHistory.findMany({
+      where: { loginAt: { gte: startOfThisWeek } },
+      distinct: ['customerId']
+    });
+    const loggedInThisMonthList = await prisma.customerLoginHistory.findMany({
+      where: { loginAt: { gte: startOfThisMonth } },
+      distinct: ['customerId']
+    });
+
+    const recentLogins = await prisma.customerLoginHistory.findMany({
+      take: 10,
+      orderBy: { loginAt: 'desc' },
+      include: { customer: true }
+    });
+
+    return res.json({
+      totalCustomers,
+      newCustomersToday,
+      activeCustomers,
+      customersLoggedInToday: loggedInTodayList.length,
+      customersLoggedInThisWeek: loggedInThisWeekList.length,
+      customersLoggedInThisMonth: loggedInThisMonthList.length,
+      recentLogins: recentLogins.map(log => ({
+        id: log.id,
+        customerId: log.customerId,
+        name: log.customer?.name || 'Unknown User',
+        mobile: log.customer?.mobile || log.customer?.phone || '',
+        loginAt: log.loginAt,
+        deviceType: log.deviceType || 'Desktop',
+        browser: log.browser || 'Chrome'
+      }))
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 7. Admin CRM Customers List (Search, Filter, Pagination, Sort)
+app.get('/api/admin/customers', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const { search, area, interest, status, joinedDate, page = 1, limit = 10 } = req.query;
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    // Filters
+    const where = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: String(search), mode: 'insensitive' } },
+        { mobile: { contains: String(search), mode: 'insensitive' } },
+        { phone: { contains: String(search), mode: 'insensitive' } }
+      ];
+    }
+
+    if (area) {
+      where.OR = [
+        { area: { contains: String(area), mode: 'insensitive' } },
+        { district: { contains: String(area), mode: 'insensitive' } }
+      ];
+    }
+
+    if (interest) {
+      if (String(interest).toUpperCase() === 'PROPERTY') {
+        where.propertyInterest = true;
+      } else if (String(interest).toUpperCase() === 'BUSINESS') {
+        where.businessInterest = true;
+      }
+    }
+
+    if (status) {
+      where.status = String(status);
+    }
+
+    if (joinedDate) {
+      const parsedDate = new Date(String(joinedDate));
+      if (!isNaN(parsedDate.getTime())) {
+        const nextDay = new Date(parsedDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        where.createdAt = {
+          gte: parsedDate,
+          lt: nextDay
+        };
+      }
+    }
+
+    const total = await prisma.customer.count({ where });
+    const customers = await prisma.customer.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { lastLoginAt: 'desc' }
+    });
+
+    return res.json({
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / take),
+      customers
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 8. Admin CRM Customer Detailed Profile Fetch
+app.get('/api/admin/customers/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      include: {
+        loginHistory: { orderBy: { loginAt: 'desc' } },
+        favorites: { include: { property: true, business: true }, orderBy: { createdAt: 'desc' } },
+        enquiries: { orderBy: { createdAt: 'desc' } },
+        bookings: { include: { property: true, business: true }, orderBy: { createdAt: 'desc' } },
+        activities: { orderBy: { createdAt: 'desc' } }
+      }
+    });
+
+    if (!customer) {
+      return res.status(404).json({ error: 'Customer profile not found.' });
+    }
+
+    return res.json(customer);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.post('/api/auth/register', async (req, res, next) => {
@@ -1005,6 +1698,22 @@ app.put('/api/properties/:id', async (req, res, next) => {
       where: { id },
       data: updateData,
     });
+
+    if (updateData.listingStatus && ['SOLD', 'ARCHIVED', 'EXPIRED', 'HIDDEN', 'RESERVED'].includes(updateData.listingStatus)) {
+      try {
+        await prisma.customerFavorite.updateMany({
+          where: { propertyId: id, status: 'ACTIVE' },
+          data: {
+            status: 'REMOVED',
+            removalReason: `PROPERTY_${updateData.listingStatus}`,
+            removedAt: new Date()
+          }
+        });
+      } catch (favErr) {
+        console.error('Failed to auto-remove property favorites:', favErr);
+      }
+    }
+
     return res.json(updated);
   } catch (err) {
     next(err);
@@ -1204,6 +1913,22 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.status !== undefined) updateData.status = b.status;
 
     const updated = await prisma.business.update({ where: { id }, data: updateData });
+
+    if (updateData.status && ['SOLD', 'CLOSED', 'UNAVAILABLE', 'INACTIVE'].includes(updateData.status)) {
+      try {
+        await prisma.customerFavorite.updateMany({
+          where: { businessId: id, status: 'ACTIVE' },
+          data: {
+            status: 'REMOVED',
+            removalReason: `BUSINESS_${updateData.status}`,
+            removedAt: new Date()
+          }
+        });
+      } catch (favErr) {
+        console.error('Failed to auto-remove business favorites:', favErr);
+      }
+    }
+
     return res.json(updated);
   } catch (err) {
     next(err);

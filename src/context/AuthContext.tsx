@@ -24,6 +24,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const store = useAuthStore();
 
+  React.useEffect(() => {
+    store.initializeAuth();
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
