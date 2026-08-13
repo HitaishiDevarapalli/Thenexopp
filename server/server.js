@@ -1486,6 +1486,30 @@ app.get('/api/admin/customers-login-history', authMiddleware, requireRole(['SUPE
   }
 });
 
+// 7.3. Direct Customers Login History Endpoint
+app.get('/api/customers-login-history', async (req, res) => {
+  try {
+    const history = await prisma.customerLoginHistory.findMany({
+      include: {
+        customer: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            avatar: true,
+            district: true
+          }
+        }
+      },
+      orderBy: { loginAt: 'desc' },
+      take: 150
+    });
+    return res.json(history || []);
+  } catch (err) {
+    return res.json([]);
+  }
+});
+
 // 8. Admin CRM Customer Detailed Profile Fetch
 app.get('/api/admin/customers/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
   try {

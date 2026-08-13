@@ -268,10 +268,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchCustomerLoginHistory = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/customers-login-history`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/customers-login-history`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        setCustomerLoginHistory(data || []);
+        setCustomerLoginHistory(Array.isArray(data) ? data : []);
+      } else {
+        const fallbackRes = await fetch(`${API_BASE_URL}/api/customers-login-history`);
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json();
+          setCustomerLoginHistory(Array.isArray(data) ? data : []);
+        }
       }
     } catch (e) {
       console.error('Failed to fetch login history:', e);
@@ -280,7 +286,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchCustomerDetails = async (id: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/customers/${id}`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/customers/${id}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setSelectedCustomerProfile(data);
@@ -304,13 +310,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         page: String(customerPage),
         limit: String(customerLimit)
       });
-      const res = await fetch(`${API_BASE_URL}/api/admin/customers?${queryParams.toString()}`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/customers?${queryParams.toString()}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setCustomersData(data.customers || []);
         setCustomerTotalPages(data.totalPages || 1);
         setCustomerTotalCount(data.total || 0);
-        setRegisteredCustomers(data.customers || []);
+        if (Array.isArray(data.customers)) {
+          setRegisteredCustomers(data.customers);
+        }
       }
     } catch (e) {
       console.error('Failed to fetch customers:', e);
@@ -319,7 +327,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchAdminDashboardStats = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-stats`);
+      const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-stats`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setAdminStats(data);
@@ -346,9 +354,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     }
   };
 
-  const fetchRegisteredCustomers = () => {
+  const fetchRegisteredCustomers = async () => {
     fetchCustomersList();
     fetchCustomerLoginHistory();
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/customers`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setRegisteredCustomers(data);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch registered customers list:', e);
+    }
   };
 
   const handleUpdateEnquiryStatus = async (id: string, newStatus: string) => {
