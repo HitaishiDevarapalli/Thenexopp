@@ -101,7 +101,7 @@ const parseUrl = (path: string) => {
 };
 
 export const App: React.FC = () => {
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   
@@ -121,6 +121,13 @@ export const App: React.FC = () => {
     }, 450);
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-open login modal if user session is active but profile is incomplete
+  useEffect(() => {
+    if (user && user.profileCompleted === false) {
+      openLoginModal();
+    }
+  }, [user, openLoginModal]);
 
   // Dynamic SEO Document Title update
   useEffect(() => {

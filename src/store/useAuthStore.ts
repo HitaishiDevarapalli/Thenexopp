@@ -37,7 +37,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoginModalOpen: false,
 
   openLoginModal: () => set({ isLoginModalOpen: true }),
-  closeLoginModal: () => set({ isLoginModalOpen: false }),
+  closeLoginModal: () => {
+    set((state) => {
+      if (state.user && state.user.profileCompleted === false) {
+        // Run logout asynchronously to prevent state transition conflicts
+        setTimeout(() => {
+          useAuthStore.getState().logout();
+        }, 50);
+      }
+      return { isLoginModalOpen: false };
+    });
+  },
 
   initializeAuth: async () => {
     try {

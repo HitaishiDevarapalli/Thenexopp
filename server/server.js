@@ -864,9 +864,6 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
         where: { id: req.user.id }
       });
       if (customer) {
-        if (customer.profileCompleted === false) {
-          return res.json({ success: false, user: null, error: 'Profile incomplete.' });
-        }
         return res.json({
           success: true,
           user: {
@@ -887,9 +884,6 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
           }
         });
       }
-    }
-    if (req.user && req.user.profileCompleted === false) {
-      return res.json({ success: false, user: null, error: 'Profile incomplete.' });
     }
     return res.json({ success: true, user: req.user });
   } catch (err) {

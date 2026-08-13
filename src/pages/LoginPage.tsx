@@ -374,7 +374,7 @@ const DecorativeDots = () => (
 /* ─────────────── Main Component ─────────────── */
 export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }) => {
   useInjectStyles(STYLES);
-  const { loginWithGmail } = useAuth();
+  const { loginWithGmail, logout, user } = useAuth();
 
   type Step = 'phone' | 'otp' | 'profile' | 'success';
   const [step, setStep] = useState<Step>('phone');
@@ -409,6 +409,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       if (rem) setMobile(rem);
     } catch (_) {}
   }, []);
+
+  // Auto-jump to profile step if session has an incomplete profile
+  useEffect(() => {
+    if (user && user.profileCompleted === false) {
+      setStep('profile');
+      if (user.phone) {
+        setMobile(user.phone);
+      }
+    }
+  }, [user]);
 
   // Countdown timer
   useEffect(() => {

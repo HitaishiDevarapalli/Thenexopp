@@ -444,9 +444,8 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
             </button>
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
-
           {/* Login / Profile */}
-          {user ? (
+          {user && user.profileCompleted !== false ? (
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
@@ -563,7 +562,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
           </ul>
 
           <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
-            {!user ? (
+            {!user || user.profileCompleted === false ? (
               <button
                 onClick={() => {
                   openLoginModal();
