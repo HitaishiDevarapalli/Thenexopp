@@ -81,3 +81,29 @@ export const requireRole = (allowedRoles = []) => {
     next();
   };
 };
+
+/**
+ * Optional Express Middleware: Attaches req.user if valid token exists, but does not block requests if not present
+ */
+export const optionalAuthMiddleware = (req, res, next) => {
+  let token = null;
+
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.cookies && req.cookies.auth_token) {
+    token = req.cookies.auth_token;
+  }
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+    } catch (_) {
+      // Ignore invalid or expired token for optional auth
+    }
+  }
+
+  next();
+};
+

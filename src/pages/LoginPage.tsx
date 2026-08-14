@@ -457,7 +457,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   const cardPad = isMobile ? '32px 24px' : '48px 44px';
 
   /* ── API helpers ── */
-  const apiBase = () => (import.meta.env.VITE_API_BASE_URL || '/api');
+  const apiBase = () => (import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : '/api');
 
   const sendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -475,6 +475,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       const res = await fetch(`${apiBase()}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ mobile: clean }),
       });
       const data = await res.json();
@@ -509,6 +510,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       const res = await fetch(`${apiBase()}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ mobile: clean, otp: code, fullName: '' }),
       });
       const data = await res.json();
@@ -567,6 +569,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       const res = await fetch(`${apiBase()}/auth/complete-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name: profileName.trim(),
           gender: profileGender,
@@ -610,6 +613,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       const res = await fetch(`${apiBase()}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ mobile: clean }),
       });
       const data = await res.json();

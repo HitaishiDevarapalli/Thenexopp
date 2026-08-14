@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { franchiseDb, dealersDb, addFranchiseEnquiry, demandRegionsDb, getDistance } from '../db/marketplaceDb';
+import { franchiseDb, dealersDb, addFranchiseEnquiry, demandRegionsDb, getDistance, API_BASE_URL } from '../db/marketplaceDb';
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -80,6 +80,33 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
       assignedBrokerId: assignedBroker?.id || 'D1',
       assignedBrokerName: assignedBroker?.name || 'RealtyPlus Advisors'
     });
+
+    // Async backend sync
+    try {
+      fetch(`${API_BASE_URL}/api/enquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          customerName: custName.trim(),
+          phone: mobile.trim(),
+          email: email.trim(),
+          listingTitle: franchise.brand,
+          listingType: 'BUSINESS',
+          listingId: franchise.id,
+          enquiryType: modalMode === 'book' ? 'SLOT_BOOKING' : 'FRANCHISE_ENQUIRY',
+          message: modalMode === 'book' 
+            ? `Franchise visit slot requested for ${bookingDate} at ${bookingTime}. Budget: ${budget}` 
+            : `Franchise enquiry: ${franchise.brand}. Budget: ${budget}, Location: ${locationPref}`,
+          preferredMoveInDate: modalMode === 'book' ? bookingDate : '',
+          date: modalMode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          preferredTime: modalMode === 'book' ? bookingTime : '',
+          source: 'Franchise Details Page',
+          mode: modalMode
+        })
+      }).catch(err => console.warn('Franchise enquiry backend sync warning:', err));
+    } catch (_) {}
+
     showNotification?.(modalMode === 'book' ? `Booking slot submitted for ${franchise.brand}!` : `Enquiry submitted successfully for ${franchise.brand}! An advisor will contact you within 24 hours.`, 'success');
     setIsEnquiryModalOpen(false);
     setCustName('');

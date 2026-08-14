@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useWishlistStore } from '../store/useWishlistStore';
 import { useAuth } from './AuthContext';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { API_BASE_URL } from '../db/marketplaceDb';
 
 interface WishlistContextType {
   wishlistItems: string[];
@@ -18,8 +17,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   const { user, openLoginModal } = useAuth();
 
   const fetchUserFavorites = async () => {
-    if (!user || user.profileCompleted !== true) {
-      store.clearWishlist();
+    if (!user) {
       return;
     }
     try {
@@ -41,7 +39,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [user]);
 
   const toggleWishlist = async (listingId: string, listingType: 'PROPERTY' | 'BUSINESS' = 'PROPERTY') => {
-    if (!user || user.profileCompleted !== true) {
+    if (!user) {
       openLoginModal();
       return;
     }

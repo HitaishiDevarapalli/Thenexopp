@@ -6,7 +6,8 @@ import {
 } from 'react-icons/fa';
 import { 
   propertiesDb, franchiseDb, businessDb, demandRegionsDb, 
-  dealersDb, siteSettingsDb, getDistance, isModuleActive 
+  dealersDb, siteSettingsDb, getDistance, isModuleActive,
+  enquiriesDb, notifyDataChanged, API_BASE_URL
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
@@ -574,6 +575,48 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
     }
 
     if (opt.action === 'confirm_visit') {
+      const visitTimeText = opt.value || 'Upcoming Slot';
+      const activePropertyTitle = propertiesDb[0]?.title || 'Featured Listing';
+
+      enquiriesDb.push({
+        id: `ENQ-AI-${Date.now()}`,
+        customerName: 'AI Assistant User',
+        phone: 'Direct Inquiry',
+        email: 'ai-lead@nexopp.in',
+        listingTitle: activePropertyTitle,
+        brokerName: 'Senior Portfolio Advisor',
+        status: 'New',
+        priority: 'High',
+        source: 'NexOpp AI Assistant',
+        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        name: 'AI Lead',
+        interest: `Requested Visit: ${visitTimeText}`,
+        message: `Booked via AI Assistant for ${visitTimeText}`
+      });
+      notifyDataChanged();
+
+      try {
+        fetch(`${API_BASE_URL}/api/enquiries`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            customerName: 'AI Assistant User',
+            phone: '',
+            email: '',
+            listingTitle: activePropertyTitle,
+            listingType: 'PROPERTY',
+            listingId: propertiesDb[0]?.id || 'P1',
+            enquiryType: 'SLOT_BOOKING',
+            message: `Booked via AI Assistant for ${visitTimeText}`,
+            date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+            preferredTime: visitTimeText,
+            source: 'NexOpp AI Assistant',
+            mode: 'book'
+          })
+        }).catch(() => {});
+      } catch (_) {}
+
       setMessages(prev => [
         ...prev,
         {

@@ -429,6 +429,8 @@ export interface CustomerEnquiry {
   date: string;
   name?: string;
   interest?: string;
+  message?: string;
+  notes?: string;
 }
 
 export interface TeamMember {

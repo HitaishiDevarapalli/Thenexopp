@@ -12,7 +12,7 @@ import pino from 'pino';
 import cookieParser from 'cookie-parser';
 
 import { prisma, checkDatabaseConnection } from './db.js';
-import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole } from './auth.js';
+import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole, optionalAuthMiddleware } from './auth.js';
 import { optimizeAndSaveImage } from './imageProcessor.js';
 import { verifyWidgetToken } from './services/msg91WidgetService.js';
 import {
@@ -48,6 +48,16 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(hpp());
+
+// ── CANONICAL DOMAIN & HTTPS REDIRECTION (301 Permanent Redirect) ─────────────
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  if (host.startsWith('www.thenexopp.com')) {
+    return res.redirect(301, `https://thenexopp.com${req.originalUrl}`);
+  }
+  next();
+});
+
 
 // Configure CORS
 const allowedOrigins = [
@@ -94,7 +104,80 @@ subDirs.forEach(sub => {
   const p = path.join(uploadDir, sub);
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 });
-app.use('/uploads', express.static(uploadDir, { maxAge: '30d' }));
+
+// Image Referrer & Anti-Hotlink Protection Middleware (OLX-style security)
+const imageProtectionGuard = (req, res, next) => {
+  const referer = req.headers.referer || req.headers.referrer || '';
+  const secFetchSite = req.headers['sec-fetch-site'] || '';
+  const secFetchMode = req.headers['sec-fetch-mode'] || '';
+  const isAllowedHost = !referer || referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('thenexopp.com') || referer.includes('vercel.app');
+
+  // If cross-site unauthorized scraper or direct unauthorized navigation
+  if (secFetchSite === 'cross-site' || (secFetchMode === 'navigate' && !isAllowedHost)) {
+    return res.status(204).set({
+      'Content-Type': 'image/webp',
+      'Content-Length': '0',
+      'Cache-Control': 'public, max-age=86400',
+      'X-Content-Type-Options': 'nosniff'
+    }).end();
+  }
+  next();
+};
+
+app.use('/uploads', imageProtectionGuard, express.static(uploadDir, { maxAge: '30d' }));
+
+// OLX-Style Dynamic Protected Image Delivery Route
+app.get(['/api/images/view', '/api/images/serve', '/api/images/secure', '/image'], async (req, res) => {
+  try {
+    const { src, id, s, q, f } = req.query;
+    const referer = req.headers.referer || req.headers.referrer || '';
+    const secFetchSite = req.headers['sec-fetch-site'] || '';
+    const isAllowed = !referer || referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('thenexopp.com') || referer.includes('vercel.app');
+
+    // Return 204 No Content for unauthorized direct inspection/external hotlinks
+    if (!isAllowed && secFetchSite === 'cross-site') {
+      return res.status(204).set({
+        'Content-Type': 'image/webp',
+        'Content-Length': '0',
+        'Cache-Control': 'public, max-age=86400',
+        'X-Content-Type-Options': 'nosniff'
+      }).end();
+    }
+
+    if (!src) {
+      return res.status(204).set({
+        'Content-Type': 'image/webp',
+        'Content-Length': '0'
+      }).end();
+    }
+
+    const targetSrc = decodeURIComponent(String(src));
+
+    if (targetSrc.startsWith('http://') || targetSrc.startsWith('https://')) {
+      const response = await fetch(targetSrc).catch(() => null);
+      if (!response || !response.ok) {
+        return res.status(204).end();
+      }
+      const buffer = await response.arrayBuffer();
+      res.set({
+        'Content-Type': response.headers.get('content-type') || 'image/jpeg',
+        'Cache-Control': 'public, max-age=86400',
+        'X-Content-Type-Options': 'nosniff'
+      });
+      return res.send(Buffer.from(buffer));
+    } else {
+      const sanitized = targetSrc.replace(/^\/uploads\//, '').replace(/^uploads\//, '');
+      const localPath = path.join(uploadDir, sanitized);
+      if (fs.existsSync(localPath)) {
+        return res.sendFile(localPath);
+      }
+      return res.status(204).end();
+    }
+  } catch (err) {
+    return res.status(204).end();
+  }
+});
+
 
 // Ensure PostgreSQL is connected & initialize Location DB
 checkDatabaseConnection().then(async (connected) => {
@@ -986,32 +1069,47 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
 });
 
 // 2. Favorites
-app.get('/api/favorites', authMiddleware, async (req, res, next) => {
+app.get('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.json([]);
+    }
     const favorites = await prisma.customerFavorite.findMany({
       where: { customerId: req.user.id, status: 'ACTIVE' },
       include: { property: true, business: true }
     });
-    return res.json(favorites);
+    return res.json(favorites || []);
   } catch (err) {
     next(err);
   }
 });
 
-app.post('/api/favorites', authMiddleware, async (req, res, next) => {
+app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Please log in to add items to your favorites.' });
+    }
     const { listingType, listingId } = req.body;
     if (!listingType || !listingId) {
       return res.status(400).json({ error: 'listingType and listingId are required.' });
     }
 
     let listingTitle = 'Unknown Listing';
+    let validPropertyId = null;
+    let validBusinessId = null;
+
     if (listingType === 'PROPERTY') {
-      const p = await prisma.property.findUnique({ where: { id: listingId } });
-      if (p) listingTitle = p.title;
+      const p = await prisma.property.findUnique({ where: { id: listingId } }).catch(() => null);
+      if (p) {
+        validPropertyId = p.id;
+        listingTitle = p.title;
+      }
     } else if (listingType === 'BUSINESS') {
-      const b = await prisma.business.findUnique({ where: { id: listingId } });
-      if (b) listingTitle = b.name;
+      const b = await prisma.business.findUnique({ where: { id: listingId } }).catch(() => null);
+      if (b) {
+        validBusinessId = b.id;
+        listingTitle = b.name;
+      }
     }
 
     const existing = await prisma.customerFavorite.findUnique({
@@ -1035,8 +1133,8 @@ app.post('/api/favorites', authMiddleware, async (req, res, next) => {
           customerId: req.user.id,
           listingType,
           listingId,
-          propertyId: listingType === 'PROPERTY' ? listingId : null,
-          businessId: listingType === 'BUSINESS' ? listingId : null,
+          propertyId: validPropertyId,
+          businessId: validBusinessId,
           status: 'ACTIVE'
         }
       });
@@ -1063,8 +1161,11 @@ app.post('/api/favorites', authMiddleware, async (req, res, next) => {
   }
 });
 
-app.delete('/api/favorites/:id', authMiddleware, async (req, res, next) => {
+app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized.' });
+    }
     const { id } = req.params;
     const fav = await prisma.customerFavorite.findUnique({ where: { id } });
     if (!fav || fav.customerId !== req.user.id) {
@@ -1090,15 +1191,19 @@ app.delete('/api/favorites/:id', authMiddleware, async (req, res, next) => {
     });
 
     // Log Activity
-    await prisma.userActivity.create({
-      data: {
-        customerId: req.user.id,
-        activityType: 'FAVORITE_REMOVE',
-        listingType: fav.listingType,
-        listingId: fav.listingId,
-        description: `Removed "${listingTitle}" from favorites`
-      }
-    });
+    if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+      try {
+        await prisma.userActivity.create({
+          data: {
+            customerId: req.user.id,
+            activityType: 'FAVORITE_REMOVE',
+            listingType: fav.listingType,
+            listingId: fav.listingId,
+            description: `Removed "${listingTitle}" from favorites`
+          }
+        });
+      } catch (_) {}
+    }
 
     return res.json({ success: true, message: 'Removed from favorites successfully.' });
   } catch (err) {
@@ -1107,129 +1212,276 @@ app.delete('/api/favorites/:id', authMiddleware, async (req, res, next) => {
 });
 
 // 3. Enquiries
-app.get('/api/enquiries', authMiddleware, async (req, res, next) => {
+app.get('/api/enquiries', optionalAuthMiddleware, async (req, res, next) => {
   try {
-    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
+    // If authenticated standard customer, filter for customer's enquiries
+    if (req.user && !['SUPER_ADMIN', 'ADMIN'].includes(req.user.role)) {
+      const enquiries = await prisma.enquiry.findMany({
+        where: {
+          OR: [
+            { customerId: req.user.id },
+            req.user.email ? { email: req.user.email } : undefined,
+            req.user.mobile ? { phone: req.user.mobile } : undefined,
+            req.user.phone ? { phone: req.user.phone } : undefined,
+          ].filter(Boolean)
+        },
+        orderBy: { createdAt: 'desc' },
+        include: { customer: true }
+      });
+      return res.json(enquiries || []);
+    }
+
+    // Admin, CRM, or public sync fetching all enquiries
     const enquiries = await prisma.enquiry.findMany({
-      where: isAdmin ? {} : { customerId: req.user.id },
       orderBy: { createdAt: 'desc' },
       include: { customer: true }
     });
-    return res.json(enquiries);
+    return res.json(enquiries || []);
   } catch (err) {
     next(err);
   }
 });
 
-app.post('/api/enquiries', authMiddleware, async (req, res, next) => {
+app.post('/api/enquiries', optionalAuthMiddleware, async (req, res, next) => {
   try {
-    const { listingType, listingId, enquiryType, message, preferredDate, preferredTime } = req.body;
-    if (!listingType || !listingId) {
-      return res.status(400).json({ error: 'listingType and listingId are required.' });
+    const customerName = req.body.customerName || req.body.name || (req.user ? req.user.fullName : 'Guest Investor');
+    const phone = req.body.phone || req.body.mobile || (req.user ? req.user.phone : '');
+    const email = req.body.email || (req.user ? req.user.email : '');
+    const listingTitle = req.body.listingTitle || req.body.title || 'General Enquiry';
+    const listingType = req.body.listingType || 'PROPERTY';
+    const listingId = req.body.listingId || req.body.propertyId || 'general';
+    const enquiryType = req.body.enquiryType || (req.body.preferredTime || req.body.mode === 'book' ? 'SLOT_BOOKING' : 'GENERAL_ENQUIRY');
+    const message = req.body.message || '';
+    const date = req.body.date || req.body.preferredMoveInDate || req.body.bookingDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const preferredMoveInDate = req.body.preferredMoveInDate || req.body.bookingDate || date;
+    const preferredTime = req.body.preferredTime || req.body.bookingTime || '';
+    const brokerName = req.body.brokerName || 'NEXOPP Advisor';
+    const priority = req.body.priority || 'High';
+    const source = req.body.source || 'Website';
+    const notes = req.body.notes || '';
+
+    let customerId = req.user ? req.user.id : null;
+
+    // Find or create customer record in database
+    if (!customerId && (phone || email)) {
+      try {
+        let existingCustomer = await prisma.customer.findFirst({
+          where: {
+            OR: [
+              phone ? { phone } : undefined,
+              email ? { email } : undefined,
+            ].filter(Boolean),
+          },
+        });
+
+        if (existingCustomer) {
+          customerId = existingCustomer.id;
+        } else {
+          const newCust = await prisma.customer.create({
+            data: {
+              name: customerName || 'Guest User',
+              email: email || `${phone || Date.now()}@nexopp.in`,
+              phone: phone || '',
+              gender: 'Male',
+              district: 'Hyderabad',
+              role: 'Verified Investor',
+              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(customerName || 'User')}&background=007A55&color=fff`,
+              lastLoginAt: new Date().toLocaleString(),
+              loginCount: 1,
+              status: 'Active',
+              registeredDate: new Date().toLocaleDateString(),
+            },
+          });
+          customerId = newCust.id;
+        }
+      } catch (custErr) {
+        console.warn('Customer auto-link warning:', custErr);
+      }
     }
 
-    let listingTitle = 'Unknown Listing';
-    if (listingType === 'PROPERTY') {
-      const p = await prisma.property.findUnique({ where: { id: listingId } });
-      if (p) listingTitle = p.title;
-    } else if (listingType === 'BUSINESS') {
-      const b = await prisma.business.findUnique({ where: { id: listingId } });
-      if (b) listingTitle = b.name;
-    }
-
-    const customer = await prisma.customer.findUnique({ where: { id: req.user.id } });
+    const finalMessage = notes ? (message ? `${message} (Notes: ${notes})` : notes) : message;
 
     const enquiry = await prisma.enquiry.create({
       data: {
-        customerId: req.user.id,
-        customerName: customer ? customer.name : req.user.fullName,
-        phone: customer ? (customer.mobile || customer.phone || '') : '',
-        email: customer ? (customer.email || '') : req.user.email,
+        id: req.body.id || `enq-${Date.now()}`,
+        customerId,
+        customerName,
+        phone,
+        email,
         listingTitle,
         listingType,
         listingId,
-        enquiryType: enquiryType || 'GENERAL_ENQUIRY',
-        message: message || '',
-        preferredMoveInDate: preferredDate || '',
-        date: preferredDate || '',
-        preferredTime: preferredTime || '',
+        enquiryType,
+        message: finalMessage,
+        preferredMoveInDate,
+        date,
+        preferredTime,
+        brokerName,
+        priority,
+        source,
         status: 'New'
       }
     });
 
-    // Log Activity
-    await prisma.userActivity.create({
-      data: {
-        customerId: req.user.id,
-        activityType: enquiryType === 'SLOT_BOOKING' ? 'BOOKING_REQUEST' : 'ENQUIRY_RAISED',
-        listingType,
-        listingId,
-        description: enquiryType === 'SLOT_BOOKING' 
-          ? `Requested slot booking for "${listingTitle}"` 
-          : `Raised enquiry on "${listingTitle}"`
-      }
-    });
+    // If this is a Slot Booking enquiry, also create a corresponding Booking record
+    if (enquiryType === 'SLOT_BOOKING' || preferredTime || req.body.mode === 'book') {
+      try {
+        let validPropertyId = null;
+        let validBusinessId = null;
+        if (listingType === 'PROPERTY') {
+          const p = await prisma.property.findUnique({ where: { id: listingId } }).catch(() => null);
+          if (p) validPropertyId = p.id;
+        } else if (listingType === 'BUSINESS') {
+          const b = await prisma.business.findUnique({ where: { id: listingId } }).catch(() => null);
+          if (b) validBusinessId = b.id;
+        }
 
-    return res.json({ success: true, enquiry });
+        await prisma.booking.create({
+          data: {
+            id: `book-${Date.now()}`,
+            customerId,
+            listingType,
+            listingId,
+            bookingDate: date,
+            bookingTime: preferredTime || '10:00 AM',
+            notes: finalMessage || `Slot requested for ${listingTitle}`,
+            status: 'REQUESTED',
+            propertyId: validPropertyId,
+            businessId: validBusinessId,
+          }
+        });
+      } catch (bErr) {
+        console.warn('Shadow booking creation notice:', bErr);
+      }
+    }
+
+    // Log Activity
+    if (customerId && prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+      try {
+        await prisma.userActivity.create({
+          data: {
+            customerId,
+            activityType: enquiryType === 'SLOT_BOOKING' ? 'BOOKING_REQUEST' : 'ENQUIRY_RAISED',
+            listingType,
+            listingId,
+            description: enquiryType === 'SLOT_BOOKING' 
+              ? `Requested slot booking for "${listingTitle}" on ${date} at ${preferredTime}` 
+              : `Submitted enquiry for "${listingTitle}"`
+          }
+        });
+      } catch (_) {}
+    }
+
+    return res.status(201).json({ success: true, enquiry });
   } catch (err) {
     next(err);
   }
 });
 
 // 4. Slot Bookings
-app.get('/api/bookings', authMiddleware, async (req, res, next) => {
+app.get('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
   try {
-    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
+    if (req.user && !['SUPER_ADMIN', 'ADMIN'].includes(req.user.role)) {
+      const bookings = await prisma.booking.findMany({
+        where: { customerId: req.user.id },
+        orderBy: { createdAt: 'desc' },
+        include: { customer: true, property: true, business: true }
+      });
+      return res.json(bookings || []);
+    }
+
     const bookings = await prisma.booking.findMany({
-      where: isAdmin ? {} : { customerId: req.user.id },
       orderBy: { createdAt: 'desc' },
       include: { customer: true, property: true, business: true }
     });
-    return res.json(bookings);
+    return res.json(bookings || []);
   } catch (err) {
     next(err);
   }
 });
 
-app.post('/api/bookings', authMiddleware, async (req, res, next) => {
+app.post('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
   try {
-    const { listingType, listingId, bookingDate, bookingTime, notes } = req.body;
-    if (!listingType || !listingId || !bookingDate || !bookingTime) {
-      return res.status(400).json({ error: 'Missing required booking fields.' });
+    const { listingType = 'PROPERTY', listingId, bookingDate, bookingTime, notes, customerName, phone, email } = req.body;
+    if (!listingId || !bookingDate || !bookingTime) {
+      return res.status(400).json({ error: 'listingId, bookingDate, and bookingTime are required.' });
     }
 
     let listingTitle = 'Unknown Listing';
+    let validPropertyId = null;
+    let validBusinessId = null;
+
     if (listingType === 'PROPERTY') {
-      const p = await prisma.property.findUnique({ where: { id: listingId } });
-      if (p) listingTitle = p.title;
+      const p = await prisma.property.findUnique({ where: { id: listingId } }).catch(() => null);
+      if (p) {
+        validPropertyId = p.id;
+        listingTitle = p.title;
+      }
     } else if (listingType === 'BUSINESS') {
-      const b = await prisma.business.findUnique({ where: { id: listingId } });
-      if (b) listingTitle = b.name;
+      const b = await prisma.business.findUnique({ where: { id: listingId } }).catch(() => null);
+      if (b) {
+        validBusinessId = b.id;
+        listingTitle = b.name;
+      }
     }
 
-    const customer = await prisma.customer.findUnique({ where: { id: req.user.id } });
+    let customerId = req.user ? req.user.id : null;
+    let custName = customerName || (req.user ? req.user.fullName : 'Guest Investor');
+    let custPhone = phone || (req.user ? req.user.phone : '');
+    let custEmail = email || (req.user ? req.user.email : '');
+
+    if (!customerId && (custPhone || custEmail)) {
+      try {
+        const existing = await prisma.customer.findFirst({
+          where: { OR: [custPhone ? { phone: custPhone } : undefined, custEmail ? { email: custEmail } : undefined].filter(Boolean) }
+        });
+        if (existing) {
+          customerId = existing.id;
+          custName = existing.name;
+        } else {
+          const newCust = await prisma.customer.create({
+            data: {
+              name: custName,
+              email: custEmail || `${custPhone || Date.now()}@nexopp.in`,
+              phone: custPhone || '',
+              gender: 'Male',
+              district: 'Hyderabad',
+              role: 'Verified Investor',
+              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(custName)}&background=007A55&color=fff`,
+              lastLoginAt: new Date().toLocaleString(),
+              loginCount: 1,
+              status: 'Active',
+              registeredDate: new Date().toLocaleDateString(),
+            }
+          });
+          customerId = newCust.id;
+        }
+      } catch (_) {}
+    }
 
     const booking = await prisma.booking.create({
       data: {
-        customerId: req.user.id,
+        id: req.body.id || `book-${Date.now()}`,
+        customerId,
         listingType,
         listingId,
         bookingDate,
         bookingTime,
         notes: notes || '',
         status: 'REQUESTED',
-        propertyId: listingType === 'PROPERTY' ? listingId : null,
-        businessId: listingType === 'BUSINESS' ? listingId : null,
+        propertyId: validPropertyId,
+        businessId: validBusinessId,
       }
     });
 
-    // Create shadow Enquiry for compatibility/admin panel view
+    // Create shadow Enquiry for compatibility & CRM
     await prisma.enquiry.create({
       data: {
-        customerId: req.user.id,
-        customerName: customer ? customer.name : req.user.fullName,
-        phone: customer ? (customer.mobile || customer.phone || '') : '',
-        email: customer ? (customer.email || '') : req.user.email,
+        id: `enq-bk-${Date.now()}`,
+        customerId,
+        customerName: custName,
+        phone: custPhone,
+        email: custEmail,
         listingTitle,
         listingType,
         listingId,
@@ -1243,23 +1495,27 @@ app.post('/api/bookings', authMiddleware, async (req, res, next) => {
     });
 
     // Log Activity
-    await prisma.userActivity.create({
-      data: {
-        customerId: req.user.id,
-        activityType: 'BOOKING_REQUEST',
-        listingType,
-        listingId,
-        description: `Requested slot booking for "${listingTitle}" on ${bookingDate} at ${bookingTime}`
-      }
-    });
+    if (customerId && prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+      try {
+        await prisma.userActivity.create({
+          data: {
+            customerId,
+            activityType: 'BOOKING_REQUEST',
+            listingType,
+            listingId,
+            description: `Requested slot booking for "${listingTitle}" on ${bookingDate} at ${bookingTime}`
+          }
+        });
+      } catch (_) {}
+    }
 
-    return res.json({ success: true, booking });
+    return res.status(201).json({ success: true, booking });
   } catch (err) {
     next(err);
   }
 });
 
-app.put('/api/bookings/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+app.put('/api/bookings/:id', optionalAuthMiddleware, async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status, bookingDate, bookingTime, notes } = req.body;
@@ -1289,15 +1545,19 @@ app.put('/api/bookings/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN'
     });
 
     // Log Activity
-    await prisma.userActivity.create({
-      data: {
-        customerId: existing.customerId,
-        activityType: `BOOKING_${status}`,
-        listingType: existing.listingType,
-        listingId: existing.listingId,
-        description: `Booking for "${listingTitle}" status updated to "${status}" by Admin`
-      }
-    });
+    if (existing.customerId && prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+      try {
+        await prisma.userActivity.create({
+          data: {
+            customerId: existing.customerId,
+            activityType: `BOOKING_${status || 'UPDATED'}`,
+            listingType: existing.listingType,
+            listingId: existing.listingId,
+            description: `Booking for "${listingTitle}" status updated to "${status}"`
+          }
+        });
+      } catch (_) {}
+    }
 
     return res.json(updated);
   } catch (err) {
@@ -1305,13 +1565,12 @@ app.put('/api/bookings/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN'
   }
 });
 
-app.put('/api/enquiries/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+app.put('/api/enquiries/:id', optionalAuthMiddleware, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
     const updated = await prisma.enquiry.update({
       where: { id },
-      data: { status }
+      data: req.body
     });
     return res.json(updated);
   } catch (err) {
@@ -1319,15 +1578,16 @@ app.put('/api/enquiries/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN
   }
 });
 
-app.delete('/api/enquiries/:id', authMiddleware, requireRole(['SUPER_ADMIN', 'ADMIN']), async (req, res, next) => {
+app.delete('/api/enquiries/:id', optionalAuthMiddleware, async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.enquiry.delete({ where: { id } });
-    return res.json({ success: true, message: 'Enquiry deleted successfully.' });
+    await prisma.enquiry.deleteMany({ where: { id } });
+    return res.json({ success: true, message: 'Enquiry deleted successfully.', id });
   } catch (err) {
     next(err);
   }
 });
+
 
 // 5. Activity Logs
 app.get('/api/activity', authMiddleware, async (req, res, next) => {
@@ -1624,8 +1884,9 @@ app.post('/api/customers', async (req, res, next) => {
       },
     });
 
+    let custRecord;
     if (existing) {
-      const updated = await prisma.customer.update({
+      custRecord = await prisma.customer.update({
         where: { id: existing.id },
         data: {
           name: name || existing.name,
@@ -1637,9 +1898,8 @@ app.post('/api/customers', async (req, res, next) => {
           loginCount: existing.loginCount + 1,
         },
       });
-      return res.json(updated);
     } else {
-      const newCust = await prisma.customer.create({
+      custRecord = await prisma.customer.create({
         data: {
           name: name || 'Anonymous User',
           email: email || `${phone || Date.now()}@nexopp.in`,
@@ -1654,8 +1914,36 @@ app.post('/api/customers', async (req, res, next) => {
           registeredDate: new Date().toLocaleDateString(),
         },
       });
-      return res.status(201).json(newCust);
     }
+
+    const userPayload = {
+      id: custRecord.id,
+      email: custRecord.email,
+      fullName: custRecord.name,
+      mobile: custRecord.mobile || custRecord.phone || '',
+      phone: custRecord.mobile || custRecord.phone || '',
+      role: custRecord.role || 'Verified Investor',
+      gender: custRecord.gender,
+      district: custRecord.district || '',
+      profileCompleted: true,
+    };
+
+    const tokens = generateTokens(userPayload);
+
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      id: custRecord.id,
+      user: userPayload,
+      tokens,
+      ...custRecord
+    });
   } catch (err) {
     next(err);
   }
@@ -2284,37 +2572,6 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
   }
 });
 
-// ── ENQUIRIES ENDPOINTS (Admin/Public Mutators) ───────────────────────────────────
-
-app.post('/api/enquiries', async (req, res, next) => {
-  try {
-    const newEnquiry = { id: req.body.id || `enq-pg-${Date.now()}`, date: new Date().toLocaleDateString(), ...req.body };
-    const created = await prisma.enquiry.create({ data: newEnquiry });
-    return res.status(201).json(created);
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.put('/api/enquiries/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const updated = await prisma.enquiry.update({ where: { id }, data: req.body });
-    return res.json(updated);
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.delete('/api/enquiries/:id', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    await prisma.enquiry.deleteMany({ where: { id } });
-    return res.json({ success: true, id });
-  } catch (err) {
-    next(err);
-  }
-});
 
 // ── SETTINGS ENDPOINTS ────────────────────────────────────────────────────────
 app.get('/api/settings', async (req, res) => {

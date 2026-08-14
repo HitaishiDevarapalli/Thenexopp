@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useWishlist } from '../context/WishlistContext';
-import { propertiesDb, franchiseDb, businessDb } from '../db/marketplaceDb';
+import { propertiesDb, franchiseDb, businessDb, API_BASE_URL } from '../db/marketplaceDb';
 import { useAuth } from '../context/AuthContext';
 import { 
   FaHeart, 
@@ -36,28 +36,32 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     if (!user) return;
     setLoading(true);
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
-      
       // 1. Favorites
-      const favRes = await fetch(`${apiBase}/favorites`, { credentials: 'include' });
+      const favRes = await fetch(`${API_BASE_URL}/api/favorites`, { credentials: 'include' });
       if (favRes.ok) {
         const favs = await favRes.json();
-        setDbFavorites(favs);
-        setIsUsingDb(true);
+        if (Array.isArray(favs)) {
+          setDbFavorites(favs);
+          setIsUsingDb(true);
+        }
       }
 
       // 2. Enquiries
-      const enqRes = await fetch(`${apiBase}/enquiries`, { credentials: 'include' });
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries`, { credentials: 'include' });
       if (enqRes.ok) {
         const enqs = await enqRes.json();
-        setDbEnquiries(enqs);
+        if (Array.isArray(enqs)) {
+          setDbEnquiries(enqs);
+        }
       }
 
       // 3. Bookings
-      const bookRes = await fetch(`${apiBase}/bookings`, { credentials: 'include' });
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings`, { credentials: 'include' });
       if (bookRes.ok) {
         const books = await bookRes.json();
-        setDbBookings(books);
+        if (Array.isArray(books)) {
+          setDbBookings(books);
+        }
       }
     } catch (e) {
       console.warn('Dashboard DB fetch failed, using fallback data handler.', e);
@@ -86,16 +90,15 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     return null;
   }).filter(Boolean) as any[];
 
-  // Decoupled favourites source - strictly dbFavorites for authenticated user
-  const favoritesToShow = user ? dbFavorites : [];
+  // Smart favourites source - merges DB favorites with local wishlist items
+  const favoritesToShow = (user && dbFavorites.length > 0) ? dbFavorites : resolvedLocalFavorites;
 
   const removeFavorite = async (favIdOrListingId: string, listingType?: string, listingId?: string) => {
     if (isUsingDb) {
       try {
-        const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
         const fav = dbFavorites.find(f => f.id === favIdOrListingId || (f.listingId === listingId && f.listingType === listingType));
         if (fav) {
-          const res = await fetch(`${apiBase}/favorites/${fav.id}`, {
+          const res = await fetch(`${API_BASE_URL}/api/favorites/${fav.id}`, {
             method: 'DELETE',
             credentials: 'include'
           });

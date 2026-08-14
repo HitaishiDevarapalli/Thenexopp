@@ -1,46 +1,110 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock, FaCheckCircle, FaBuilding, FaShieldAlt, FaBriefcase, FaCoins } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
 
 export const ContactUs: React.FC = () => {
-  const { user, openLoginModal } = useAuth();
+  const { user } = useAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const lenis = (window as any).lenis;
     if (lenis) {
       lenis.scrollTo(0, { immediate: true });
     }
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, []);
+
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
+    name: user?.name || '',
+    phone: user?.phone || '',
+    email: user?.email || '',
     category: 'Properties',
     message: ''
   });
-  const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        phone: prev.phone || user.phone || '',
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
+
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      alert('🔒 Login required to submit contact inquiries. Please sign in to continue.');
-      openLoginModal();
+    setErrorMsg('');
+
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.email.trim()) {
+      setErrorMsg('Please provide your name, phone number, and email.');
       return;
     }
 
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        category: 'Properties',
-        message: ''
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/enquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          customerName: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          listingTitle: `Advisory Consultation: ${formData.category}`,
+          listingType: 'GENERAL',
+          listingId: 'advisory-desk',
+          enquiryType: 'GENERAL_ENQUIRY',
+          message: formData.message.trim() ? `[Category: ${formData.category}] ${formData.message.trim()}` : `General consultation requested for ${formData.category}`,
+          source: 'Contact Us Page',
+          priority: 'High',
+          brokerName: 'Senior Portfolio Director',
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+        })
       });
-    }, 4000);
+
+      if (res.ok) {
+        // Also update local in-memory store for instant UI sync
+        enquiriesDb.push({
+          id: `ENQ-CU-${Date.now()}`,
+          customerName: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          listingTitle: `Advisory Consultation: ${formData.category}`,
+          brokerName: 'Senior Portfolio Director',
+          status: 'New' as const,
+          priority: 'High' as const,
+          source: 'Contact Us Page',
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          name: formData.name.trim(),
+          interest: `Category: ${formData.category}`,
+          message: formData.message.trim()
+        });
+        notifyDataChanged();
+      }
+    } catch (err) {
+      console.warn('Backend enquiry save notice:', err);
+    } finally {
+      setSubmitting(false);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({
+          name: user?.name || '',
+          phone: user?.phone || '',
+          email: user?.email || '',
+          category: 'Properties',
+          message: ''
+        });
+      }, 5000);
+    }
   };
+
 
   return (
     <section id="contact" className="section-padding contact-section" style={{ backgroundColor: '#F8FAFC', padding: '60px 20px', minHeight: '80vh', fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif" }}>
@@ -315,15 +379,16 @@ export const ContactUs: React.FC = () => {
 
                 <button 
                   type="submit" 
+                  disabled={submitting}
                   style={{ 
-                    backgroundColor: '#059669', 
+                    backgroundColor: submitting ? '#9CA3AF' : '#059669', 
                     color: '#FFFFFF', 
                     border: 'none', 
                     padding: '16px 28px', 
                     borderRadius: '14px', 
                     fontSize: '1.05rem', 
                     fontWeight: 800, 
-                    cursor: 'pointer', 
+                    cursor: submitting ? 'not-allowed' : 'pointer', 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
@@ -334,7 +399,7 @@ export const ContactUs: React.FC = () => {
                   }}
                 >
                   <FaPaperPlane />
-                  <span>Request Confidential Callback</span>
+                  <span>{submitting ? 'Registering Inquiry...' : 'Submit Inquiry & Request Callback'}</span>
                 </button>
               </form>
             )}

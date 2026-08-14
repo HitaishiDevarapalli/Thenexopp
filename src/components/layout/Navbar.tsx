@@ -89,21 +89,28 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
   const rawMenuItems = [
     { id: 'hero', label: 'Home', icon: <FaHome /> },
     { id: 'properties', label: 'Property', icon: <FaHome />, dropdown: [
-      { name: 'Buy Property', link: 'buyProperty', subIcon: <FaBuilding /> },
-      { name: 'Sell Property', link: 'sellProperty', subIcon: <FaHandHoldingUsd /> },
-      { name: 'Rent Property', link: 'rentProperty', subIcon: <FaStore /> },
+      { name: 'Buy Property', link: 'propertiesPage', subIcon: <FaBuilding /> },
+      { name: 'Flats & Apartments', link: 'flatsPage', subIcon: <FaBuilding /> },
+      { name: 'Villas', link: 'villasPage', subIcon: <FaHome /> },
+      { name: 'Independent Houses', link: 'housesPage', subIcon: <FaHome /> },
+      { name: 'Plots & Lands', link: 'landPage', subIcon: <FaMapMarkedAlt /> },
+      { name: 'Rent Property', link: 'rentPage', subIcon: <FaStore /> },
+      { name: 'Sell Property', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd /> },
     ]},
     { id: 'franchise', label: 'Franchise', icon: <FaBuilding />, dropdown: [
-      { name: 'New Franchise', link: '#franchise', subIcon: <FaStore /> },
-      { name: 'Existing Franchise', link: '#franchise', subIcon: <FaBriefcase /> },
+      { name: 'Franchise Marketplace', link: 'franchisePage', subIcon: <FaBuilding /> },
+      { name: 'New Franchise', link: 'newFranchise', subIcon: <FaStore /> },
+      { name: 'Existing Franchise', link: 'franchiseResales', subIcon: <FaBriefcase /> },
     ]},
     { id: 'business', label: 'Business', icon: <FaBriefcase />, dropdown: [
-      { name: 'Buy Business', link: 'buyBusiness', subIcon: <FaShoppingBag /> },
-      { name: 'Sell Business', link: 'sellBusiness', subIcon: <FaHandHoldingUsd /> },
+      { name: 'Buy Business', link: 'businessPage', subIcon: <FaShoppingBag /> },
+      { name: 'Sell Business', link: 'sellBusinessPage', subIcon: <FaHandHoldingUsd /> },
     ]},
     { id: 'finance', label: 'Finance', icon: <FaCoins />, dropdown: [
-      { name: 'Loans', link: '#finance', subIcon: <FaHandHoldingUsd /> },
-      { name: 'Insurance', link: '#finance', subIcon: <FaShieldAlt /> },
+      { name: 'All Finance Solutions', link: 'financePage', subIcon: <FaCoins /> },
+      { name: 'Loans', link: 'loansPage', subIcon: <FaHandHoldingUsd /> },
+      { name: 'Insurance', link: 'insurancePage', subIcon: <FaShieldAlt /> },
+      { name: 'Advisory Desk', link: 'financeServicePage', subIcon: <FaChartLine /> },
     ]},
     { id: 'about', label: 'About Us', icon: <FaInfoCircle /> },
     { id: 'contact', label: 'Contact Us', icon: <FaEnvelope /> },
@@ -177,46 +184,13 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
     handleScrollTo(itemId);
   };
 
-  const handleDropdownClick = (itemId: string, subName: string, subLink: string, e: React.MouseEvent) => {
+  const handleDropdownClick = (_itemId: string, _subName: string, subLink: string, e: React.MouseEvent) => {
     setOpenDropdown(null);
     e.preventDefault();
-
-    if (itemId === 'business') {
-      if (subLink === 'buyBusiness') {
-        if (onNavigateToPage) onNavigateToPage('businessPage');
-      } else if (subLink === 'sellBusiness') {
-        if (onNavigateToPage) onNavigateToPage('sellBusinessPage');
-      } else if (onNavigateBusiness) {
-        onNavigateBusiness(subLink as any);
-      }
-      return;
-    }
-
-    if (onNavigateToPage) {
-      if (itemId === 'properties') {
-        if (subName === 'Buy Property' || subLink === 'buyProperty') onNavigateToPage('propertiesPage');
-        else if (subName === 'Sell Property' || subLink === 'sellProperty') onNavigateToPage('sellPropertyPage');
-        else if (subName === 'Rent Property' || subLink === 'rentProperty') onNavigateToPage('rentPage');
-      } else if (itemId === 'franchise') {
-        if (subName === 'New Franchise') onNavigateToPage('newFranchise');
-        else if (subName === 'Existing Franchise') onNavigateToPage('franchiseResales');
-      } else if (itemId === 'finance') {
-        if (subName === 'Loans') onNavigateToPage('loansPage');
-        else if (subName === 'Finance') onNavigateToPage('financeServicePage');
-        else if (subName === 'Insurance') onNavigateToPage('insurancePage');
-      }
-    } else {
-      // Fallback behavior
-      if (itemId === 'properties') {
-        if (onNavigateProperties) onNavigateProperties();
-      } else if (itemId === 'franchise') {
-        if (onNavigateFranchise) onNavigateFranchise();
-      } else if (itemId === 'finance') {
-        if (onNavigateFinance) onNavigateFinance();
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('select-finance-category', { detail: subName.toLowerCase() }));
-        }, 200);
-      }
+    if (onNavigateToPage && subLink && !subLink.startsWith('#')) {
+      onNavigateToPage(subLink);
+    } else if (onNavigateToPage) {
+      onNavigateToPage(_itemId === 'properties' ? 'propertiesPage' : _itemId === 'franchise' ? 'franchisePage' : _itemId === 'business' ? 'businessPage' : 'financePage');
     }
   };
 
@@ -594,7 +568,7 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
                     if (user?.role === 'Verified Investor') {
                       onOpenWishlist();
                     } else if (onNavigateToPage) {
-                      onNavigateToPage('admin');
+                      onNavigateToPage('adminPortal');
                     }
                   }}
                   style={{

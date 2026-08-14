@@ -23,15 +23,17 @@ import EnquiryPage from './components/EnquiryPage';
 import CloseDealPage from './components/CloseDealPage';
 import AdminPanel from './pages/AdminPanel';
 import { FaArrowLeft } from 'react-icons/fa';
-import { siteSettingsDb, updateSiteSettings, isModuleActive } from './db/marketplaceDb';
+import { siteSettingsDb, updateSiteSettings, isModuleActive, propertiesDb } from './db/marketplaceDb';
 import { useAuth } from './context/AuthContext';
 import { LoginModal } from './components/forms/LoginModal';
 import { SellBusinessPage } from './components/forms/SellBusinessPage';
 import { SellPropertyPage } from './components/forms/SellPropertyPage';
 import NexOppAiAssistant from './components/NexOppAiAssistant';
 import LoadingScreen from './components/common/LoadingScreen';
+import { NotFoundPage } from './components/NotFoundPage';
+import { updateSEO } from './utils/seo';
 
-type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage';
+type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -96,8 +98,13 @@ const parseUrl = (path: string) => {
   if (path.startsWith('/business/listings/')) {
     return { page: 'businessListings' as PageType, industry: decodeURIComponent(path.split('/')[3]) as 'Food' | 'Healthcare' | 'Retail & Stores' };
   }
-  
-  return { page: routeMap[path] || 'home' as PageType };
+  if (routeMap[path]) {
+    return { page: routeMap[path] };
+  }
+  if (path === '' || path === '/') {
+    return { page: 'home' as PageType };
+  }
+  return { page: 'notFound' as PageType };
 };
 
 export const App: React.FC = () => {
@@ -122,39 +129,10 @@ export const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Dynamic SEO Document Title update
+  // Dynamic SEO Metadata, Canonical & Document Title update
   useEffect(() => {
     const pageData = parseUrl(window.location.pathname);
-    const page = pageData.page;
-    switch (page) {
-      case 'home':
-        document.title = "The Nexopp – India's Trusted Platform for Verified Listings to Buy and Sell";
-        break;
-      case 'propertiesPage':
-      case 'flatsPage':
-      case 'villasPage':
-      case 'housesPage':
-      case 'landPage':
-        document.title = "Verified Real Estate Properties for Sale & Rent | The Nexopp";
-        break;
-      case 'franchisePage':
-      case 'franchiseResales':
-      case 'newFranchise':
-        document.title = "Verified Franchise Opportunities & Resales in India | The Nexopp";
-        break;
-      case 'businessPage':
-      case 'businessListings':
-        document.title = "Operational Businesses for Buy and Sell | The Nexopp";
-        break;
-      case 'adminPortal':
-        document.title = "Enterprise Admin Management Console | The Nexopp";
-        break;
-      case 'wishlist':
-        document.title = "Saved Properties & Wishlist | The Nexopp";
-        break;
-      default:
-        document.title = "The Nexopp – India's Trusted Platform for Verified Listings to Buy and Sell";
-    }
+    updateSEO(pageData.page);
   }, [currentPath]);
  
    // Sync state with URL
@@ -382,9 +360,9 @@ export const App: React.FC = () => {
             navigateTo('bookSlotPage');
           }}
         />
-      ) : (currentPage === 'enquiryPage' || currentPage === 'bookSlotPage') && enquiryTargetId ? (
+      ) : (currentPage === 'enquiryPage' || currentPage === 'bookSlotPage') ? (
         <EnquiryPage
-          propertyId={enquiryTargetId}
+          propertyId={enquiryTargetId || (propertiesDb[0]?.id || 'P1')}
           mode={currentPage === 'bookSlotPage' ? 'book' : 'contact'}
           onBack={navigateBack}
         />
@@ -573,6 +551,12 @@ export const App: React.FC = () => {
               else if (cat === 'insurance') navigateTo('insurancePage');
             }}
           />
+        </>
+
+      ) : currentPage === 'notFound' ? (
+        <>
+          <SubpageHeader title="404 – Page Not Found" onBack={() => navigateTo('home')} />
+          <NotFoundPage onNavigate={(page) => navigateTo(page as PageType)} />
         </>
 
       ) : (

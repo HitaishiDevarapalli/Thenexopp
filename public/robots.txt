@@ -1,5 +1,14 @@
+# robots.txt for The Nexopp (https://thenexopp.com/)
 User-agent: *
 Allow: /
-Disallow: /admin?*
+Disallow: /admin
+Disallow: /secret-admin
+Disallow: /portal
+Disallow: /nexopp-admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api/
+Disallow: /scratch/
 
-Sitemap: https://venturo-tawny.vercel.app/sitemap.xml
+# Sitemap location
+Sitemap: https://thenexopp.com/sitemap.xml

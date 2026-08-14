@@ -40,36 +40,40 @@ export const WhyTheNexopp: React.FC = () => {
       >
         <h2
           style={{
-            fontSize: '1.75rem',
-            fontWeight: 700,
-            color: '#1F2937',
+            fontSize: 'clamp(1.4rem, 3.5vw, 1.85rem)',
+            fontWeight: 800,
+            color: '#0F172A',
             textAlign: 'center',
-            marginBottom: 48,
+            marginBottom: 36,
+            letterSpacing: '-0.02em'
           }}
         >
-          Why Choose TheNexOpp?
+          Why Choose The Nexopp?
         </h2>
 
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-            gap: 0,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+            gap: '20px',
+            alignItems: 'center'
           }}
         >
           {stats.map((stat, idx) => (
-            <React.Fragment key={idx}>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  flex: 1,
-                  padding: '0 16px',
-                }}
-              >
+            <div
+              key={idx}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                padding: '16px 8px',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                border: '1px solid #E2E8F0',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+              }}
+            >
                 {/* Icon circle */}
                 <div
                   style={{
@@ -111,20 +115,6 @@ export const WhyTheNexopp: React.FC = () => {
                   {stat.label}
                 </span>
               </div>
-
-              {/* Vertical divider (skip after last item) */}
-              {idx < stats.length - 1 && (
-                <div
-                  style={{
-                    width: 1,
-                    height: 80,
-                    backgroundColor: '#E5E7EB',
-                    alignSelf: 'center',
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-            </React.Fragment>
           ))}
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, notifyDataChanged, API_BASE_URL } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaEnvelope, FaUser, FaCheckCircle, FaChevronLeft, FaChevronRight, FaHome, FaClock, FaBed, FaBath, FaRulerCombined, FaTag } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -102,10 +102,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
     const listingType = isProperty ? 'PROPERTY' : isBusiness ? 'BUSINESS' : 'FRANCHISE';
 
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
-
-      // Try authenticated endpoint first (for logged-in users)
-      const res = await fetch(`${apiBase}/enquiries`, {
+      const res = await fetch(`${API_BASE_URL}/api/enquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -126,19 +123,19 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
             : `Offered Price: ${contactPrice}`),
           preferredMoveInDate: mode === 'book' ? bookingDate : '',
           date: mode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          preferredTime: mode === 'book' ? bookingTime : ''
+          preferredTime: mode === 'book' ? bookingTime : '',
+          mode
         })
       });
 
       if (res.ok) {
         const data = await res.json();
-        console.log('Enquiry saved to database:', data);
-      } else {
-        throw new Error('API response not OK');
+        console.log('Enquiry/Booking saved to database:', data);
       }
     } catch (err) {
-      console.warn('Database save failed, saving locally:', err);
-      // Fallback: save to local enquiriesDb
+      console.warn('Database save warning, updating local cache:', err);
+    } finally {
+      // Fallback & sync to local enquiriesDb
       const newEnquiry = {
         id: `ENQ-${Date.now()}`,
         customerName: contactName,
@@ -158,7 +155,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
       };
       enquiriesDb.push(newEnquiry);
       notifyDataChanged();
-    } finally {
+
       setSubmitting(false);
       setSubmitted(true);
     }

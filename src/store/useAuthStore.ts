@@ -77,7 +77,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  loginWithGmail: (
+  loginWithGmail: async (
     emailInput: string,
     role: string = 'Verified Investor',
     customName?: string,
@@ -116,22 +116,33 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     set({ user: newUser, isLoginModalOpen: false });
 
-    // Sync logged-in customer profile directly to backend API
-    fetch(`${API_BASE_URL}/api/customers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: newUser.name,
-        email: newUser.email,
-        phone: newUser.phone || '',
-        gender: newUser.gender || 'Male',
-        district: newUser.district || 'Guntur',
-        role: newUser.role || 'Verified Investor',
-        avatar: newUser.avatar,
-      }),
-    })
-      .then(() => window.dispatchEvent(new Event('nexopp_data_changed')))
-      .catch((err) => console.error('Customer DB sync failed:', err));
+    // Sync logged-in customer profile directly to backend API with credentials
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/customers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: newUser.name,
+          email: newUser.email,
+          phone: newUser.phone || '',
+          gender: newUser.gender || 'Male',
+          district: newUser.district || 'Guntur',
+          role: newUser.role || 'Verified Investor',
+          avatar: newUser.avatar,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const customerId = data.id || (data.user && data.user.id);
+        if (customerId) {
+          set({ user: { ...newUser, id: customerId } });
+        }
+      }
+      window.dispatchEvent(new Event('nexopp_data_changed'));
+    } catch (err) {
+      console.error('Customer DB sync failed:', err);
+    }
   },
 
   logout: () => {

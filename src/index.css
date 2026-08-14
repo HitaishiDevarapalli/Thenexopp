@@ -9,6 +9,21 @@
   padding: 0;
 }
 
+/* Enterprise Image and Asset Protection (OLX-style) */
+img, picture, svg, video, .property-card-img, .listing-card-img, .wishlist-card-img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+
 :root {
     /* Brand Logo Tri-Color Theme: Golden Yellow (#D97706) + Deep Navy (#002B66) + Emerald Green (#059669) */
     --brand-navy: #002B66;
@@ -41,6 +56,49 @@
   --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-fast: all 0.2s ease;
 }
+
+/* Mobile Layout & Viewport Alignment Hardening */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-left: clamp(14px, 3.5vw, 28px);
+  padding-right: clamp(14px, 3.5vw, 28px);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .subpage-header {
+    padding: 14px 0 !important;
+  }
+  .subpage-title {
+    font-size: 1.15rem !important;
+  }
+  .circle-back-btn {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
 
 /* Logo Transparency Pulsing Loading Animation (100% -> 50% -> 100%) */
 @keyframes logoPulseTransparency {
