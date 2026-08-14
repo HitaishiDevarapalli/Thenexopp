@@ -13,8 +13,8 @@ const DEFAULT_IMAGE = 'https://thenexopp.com/logo.png';
 
 export const SEO_CONFIG: Record<string, PageSEO> = {
   home: {
-    title: "The Nexopp – India's Trusted Platform for Verified Listings to Buy and Sell",
-    description: "The Nexopp is India's trusted platform for verified listings to buy and sell residential properties, luxury villas, commercial spaces, operational businesses, and franchise rights.",
+    title: "TheNexopp – India's Trusted Platform for Verified Listings to Buy and Sell",
+    description: "TheNexopp is India's trusted platform for verified listings to buy and sell residential properties, luxury villas, commercial spaces, operational businesses, and franchise rights.",
     canonicalPath: '/',
     robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
     breadcrumbs: [
@@ -22,7 +22,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   propertiesPage: {
-    title: "Properties for Sale & Rent | The Nexopp",
+    title: "Properties for Sale & Rent | TheNexopp",
     description: "Explore 100% verified residential and commercial properties for buy and rent across India. Verified legal titles, verified broker connections, transparent pricing.",
     canonicalPath: '/properties',
     robots: 'index, follow',
@@ -32,7 +32,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   rentPage: {
-    title: "Rental Properties & Apartments | The Nexopp",
+    title: "Rental Properties & Apartments | TheNexopp",
     description: "Browse verified rental flats, independent houses, villas, and commercial spaces across India. Zero fake listings.",
     canonicalPath: '/properties/rent',
     robots: 'index, follow',
@@ -43,8 +43,8 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   sellPropertyPage: {
-    title: "Sell Your Property Online | The Nexopp",
-    description: "List your residential, commercial, or plot property on The Nexopp to reach verified buyers and investors across India.",
+    title: "Sell Your Property Online | TheNexopp",
+    description: "List your residential, commercial, or plot property on TheNexopp to reach verified buyers and investors across India.",
     canonicalPath: '/properties/sell',
     robots: 'index, follow',
     breadcrumbs: [
@@ -54,7 +54,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   flatsPage: {
-    title: "Flats & Apartments for Sale | The Nexopp",
+    title: "Flats & Apartments for Sale | TheNexopp",
     description: "Discover verified 2BHK, 3BHK, 4BHK flats and gated community apartments across prime locations in India.",
     canonicalPath: '/properties/flats',
     robots: 'index, follow',
@@ -65,7 +65,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   villasPage: {
-    title: "Villas for Sale | The Nexopp",
+    title: "Villas for Sale | TheNexopp",
     description: "Explore verified luxury villas, duplexes, and private gated community residences with clear legal titles.",
     canonicalPath: '/properties/villas',
     robots: 'index, follow',
@@ -76,7 +76,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   housesPage: {
-    title: "Independent Houses for Sale | The Nexopp",
+    title: "Independent Houses for Sale | TheNexopp",
     description: "Browse verified independent houses, row houses, and standalone residential homes across top Indian cities.",
     canonicalPath: '/properties/houses',
     robots: 'index, follow',
@@ -87,7 +87,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   landPage: {
-    title: "Plots & Lands for Sale | The Nexopp",
+    title: "Plots & Lands for Sale | TheNexopp",
     description: "Buy verified land parcels, residential plots, and commercial development sites with clear title deeds.",
     canonicalPath: '/properties/lands',
     robots: 'index, follow',
@@ -98,7 +98,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   franchisePage: {
-    title: "Franchises for Sale | The Nexopp",
+    title: "Franchises for Sale | TheNexopp",
     description: "Explore verified franchise opportunities across F&B, Retail, Healthcare, and Education in India. Transparent ROI and master rights.",
     canonicalPath: '/franchise',
     robots: 'index, follow',
@@ -108,7 +108,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   franchiseResales: {
-    title: "Franchise Resales & Running Outlets | The Nexopp",
+    title: "Franchise Resales & Running Outlets | TheNexopp",
     description: "Acquire running, revenue-generating franchise outlets with established customer bases and operational staff.",
     canonicalPath: '/franchise/existing',
     robots: 'index, follow',
@@ -119,7 +119,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   newFranchise: {
-    title: "New Brand Franchises & Master Rights | The Nexopp",
+    title: "New Brand Franchises & Master Rights | TheNexopp",
     description: "Acquire new brand franchise territories and master rights with complete operational guidance.",
     canonicalPath: '/franchise/new',
     robots: 'index, follow',
@@ -130,7 +130,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   businessPage: {
-    title: "Businesses for Sale | The Nexopp",
+    title: "Businesses for Sale | TheNexopp",
     description: "India's trusted marketplace to buy and sell verified operational businesses across retail, manufacturing, tech, and services.",
     canonicalPath: '/business',
     robots: 'index, follow',
@@ -140,7 +140,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   businessListings: {
-    title: "Businesses for Sale | The Nexopp",
+    title: "Businesses for Sale | TheNexopp",
     description: "Review financial turnover, EBITDA, and asset valuations for verified businesses available for acquisition.",
     canonicalPath: '/business',
     robots: 'index, follow',
@@ -150,7 +150,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   sellBusinessPage: {
-    title: "Sell Your Business Confidentially | The Nexopp",
+    title: "Sell Your Business Confidentially | TheNexopp",
     description: "Connect with high-net-worth individual buyers and corporate investors under strict confidentiality.",
     canonicalPath: '/business/sell',
     robots: 'index, follow',
@@ -161,7 +161,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   financePage: {
-    title: "Finance Solutions | The Nexopp",
+    title: "Finance Solutions | TheNexopp",
     description: "Access tailored financial advisory, home loans, commercial credit, and asset protection insurance from top institutional partners.",
     canonicalPath: '/finance',
     robots: 'index, follow',
@@ -171,7 +171,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   loansPage: {
-    title: "Home Loans & Business Acquisition Loans | The Nexopp",
+    title: "Home Loans & Business Acquisition Loans | TheNexopp",
     description: "Competitive real estate mortgage loans, commercial financing, and quick pre-approvals.",
     canonicalPath: '/finance/loans',
     robots: 'index, follow',
@@ -182,7 +182,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   insurancePage: {
-    title: "Commercial & Asset Insurance | The Nexopp",
+    title: "Commercial & Asset Insurance | TheNexopp",
     description: "Asset protection insurance policies for commercial properties, high-value homes, and businesses.",
     canonicalPath: '/finance/insurance',
     robots: 'index, follow',
@@ -193,7 +193,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   financeServicePage: {
-    title: "Financial & Due Diligence Advisory | The Nexopp",
+    title: "Financial & Due Diligence Advisory | TheNexopp",
     description: "Professional transactional due diligence, valuation, and legal structuring services.",
     canonicalPath: '/finance/advisory',
     robots: 'index, follow',
@@ -204,8 +204,8 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   aboutUsPage: {
-    title: "About The Nexopp – India's Verified Asset Platform",
-    description: "Learn about The Nexopp's mission, executive team, and innovative ecosystem for property, business, and franchise transactions.",
+    title: "About TheNexopp – India's Verified Asset Platform",
+    description: "Learn about TheNexopp's mission, executive team, and innovative ecosystem for property, business, and franchise transactions.",
     canonicalPath: '/about',
     robots: 'index, follow',
     breadcrumbs: [
@@ -214,8 +214,8 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   contactUsPage: {
-    title: "Contact Us | The Nexopp",
-    description: "Get in touch with The Nexopp acquisition team. Submit your property, franchise, or business requirement for personalized advisory.",
+    title: "Contact Us | TheNexopp",
+    description: "Get in touch with TheNexopp acquisition team. Submit your property, franchise, or business requirement for personalized advisory.",
     canonicalPath: '/contact',
     robots: 'index, follow',
     breadcrumbs: [
@@ -224,37 +224,37 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   wishlist: {
-    title: "Saved Properties & Wishlist | The Nexopp",
+    title: "Saved Properties & Wishlist | TheNexopp",
     description: "View and manage your shortlisted properties, favorited businesses, and active site visit bookings.",
     canonicalPath: '/favourites',
     robots: 'noindex, follow'
   },
   enquiryPage: {
-    title: "Inquire / Book a Visit | The Nexopp",
+    title: "Inquire / Book a Visit | TheNexopp",
     description: "Schedule an in-person site visit or submit an executive price inquiry.",
     canonicalPath: '/contact',
     robots: 'noindex, follow'
   },
   bookSlotPage: {
-    title: "Book a Property Visit Slot | The Nexopp",
+    title: "Book a Property Visit Slot | TheNexopp",
     description: "Reserve a guaranteed inspection time with the verified property broker.",
     canonicalPath: '/contact',
     robots: 'noindex, follow'
   },
   closeDeal: {
-    title: "Complete Acquisition & Close Deal | The Nexopp",
+    title: "Complete Acquisition & Close Deal | TheNexopp",
     description: "Direct settlement assistance, escrow coordination, and verified documentation.",
     canonicalPath: '/contact',
     robots: 'noindex, follow'
   },
   adminPortal: {
-    title: "Management Console | The Nexopp",
+    title: "Management Console | TheNexopp",
     description: "Enterprise administration portal for listing management, dealer approvals, and customer analytics.",
     canonicalPath: '/admin',
     robots: 'noindex, nofollow'
   },
   notFound: {
-    title: "404 - Page Not Found | The Nexopp",
+    title: "404 - Page Not Found | TheNexopp",
     description: "The page you are looking for does not exist or has been moved. Explore our verified properties, franchises, and business opportunities.",
     canonicalPath: '/404',
     robots: 'noindex, follow'

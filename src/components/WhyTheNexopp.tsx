@@ -48,7 +48,7 @@ export const WhyTheNexopp: React.FC = () => {
             letterSpacing: '-0.02em'
           }}
         >
-          Why Choose The Nexopp?
+          Why Choose TheNexopp?
         </h2>
 
         <div

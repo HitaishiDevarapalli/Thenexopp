@@ -1,4 +1,4 @@
-# robots.txt for The Nexopp (https://thenexopp.com/)
+# robots.txt for TheNexopp (https://thenexopp.com/)
 User-agent: *
 Allow: /
 Disallow: /admin
