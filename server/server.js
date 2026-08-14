@@ -64,7 +64,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:8081',
   'https://thenexopp.com',
-  'https://venturo-tawny.vercel.app',
+  'https://www.thenexopp.com',
 ];
 app.use(cors({
   origin: (origin, callback) => {
@@ -110,7 +110,7 @@ const imageProtectionGuard = (req, res, next) => {
   const referer = req.headers.referer || req.headers.referrer || '';
   const secFetchSite = req.headers['sec-fetch-site'] || '';
   const secFetchMode = req.headers['sec-fetch-mode'] || '';
-  const isAllowedHost = !referer || referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('thenexopp.com') || referer.includes('vercel.app');
+  const isAllowedHost = !referer || referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('thenexopp.com');
 
   // If cross-site unauthorized scraper or direct unauthorized navigation
   if (secFetchSite === 'cross-site' || (secFetchMode === 'navigate' && !isAllowedHost)) {
@@ -132,7 +132,7 @@ app.get(['/api/images/view', '/api/images/serve', '/api/images/secure', '/image'
     const { src, id, s, q, f } = req.query;
     const referer = req.headers.referer || req.headers.referrer || '';
     const secFetchSite = req.headers['sec-fetch-site'] || '';
-    const isAllowed = !referer || referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('thenexopp.com') || referer.includes('vercel.app');
+    const isAllowed = !referer || referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('thenexopp.com');
 
     // Return 204 No Content for unauthorized direct inspection/external hotlinks
     if (!isAllowed && secFetchSite === 'cross-site') {
