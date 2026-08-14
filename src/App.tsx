@@ -132,7 +132,7 @@ export const App: React.FC = () => {
   // Dynamic SEO Metadata, Canonical & Document Title update
   useEffect(() => {
     const pageData = parseUrl(window.location.pathname);
-    updateSEO(pageData.page);
+    updateSEO(pageData.page, { path: window.location.pathname });
   }, [currentPath]);
  
    // Sync state with URL

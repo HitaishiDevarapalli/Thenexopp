@@ -326,6 +326,7 @@ export function updateSEO(pageKey: string, dynamicData?: { title?: string; descr
   setMetaTag('name', 'twitter:title', title);
   setMetaTag('name', 'twitter:description', description);
   setMetaTag('name', 'twitter:image', image);
+  setMetaTag('name', 'twitter:url', canonicalUrl);
 
   // 6. BreadcrumbList Structured Data (JSON-LD)
   if (config.breadcrumbs && config.breadcrumbs.length > 1) {
