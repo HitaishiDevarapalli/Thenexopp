@@ -396,8 +396,8 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <PropertyCategories 
-            title="Properties Marketplace"
-            subtitle="Explore verified residential, commercial, plots and new projects across India"
+            title="Verified Properties for Sale & Rent in India"
+            subtitle="Explore verified residential, commercial, plots and new projects across India."
           onBack={navigateBack}
           searchQuery={globalSearchQuery}
           onClearSearch={() => setGlobalSearchQuery('')}

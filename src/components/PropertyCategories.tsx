@@ -948,10 +948,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             )}
             <div>
               <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
-                {title || 'Properties Marketplace'}
+                {title || 'Verified Properties for Sale & Rent in India'}
               </h1>
               <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0 0', fontWeight: 500 }}>
-                {subtitle || 'Explore verified residential, commercial, plots and new projects across India'}
+                {subtitle || 'Explore verified residential, commercial, plots and new projects across India.'}
               </p>
             </div>
           </div>
@@ -1201,9 +1201,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '14px' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                Filter By
-              </h3>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                Explore Properties by Type
+              </h2>
               <button
                 onClick={clearAllFilters}
                 style={{
@@ -1703,13 +1703,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                   <React.Fragment key={prop.id + '-wrap'}>
                     {showSeparator && (
                       <div style={{ gridColumn: '1 / -1', marginTop: index > 0 ? '12px' : '0', marginBottom: '8px', paddingBottom: '12px', borderBottom: '2px solid #E2E8F0' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#475569', fontWeight: 700 }}>
+                        <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#475569', fontWeight: 700 }}>
                           {currentTier === 50 ? `Properties within 50 kms from ${targetCity}` :
                            currentTier === 100 ? `Properties above 50 kms from ${targetCity}` :
                            currentTier === 150 ? `Properties above 100 kms from ${targetCity}` :
                            currentTier >= 200 ? `Properties above 150 kms from ${targetCity}` :
                            `Properties within ${currentTier} kms from ${targetCity}`}
-                        </h3>
+                        </h2>
                       </div>
                     )}
                   <div

@@ -22,7 +22,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   propertiesPage: {
-    title: "Properties for Sale & Rent | TheNexopp",
+    title: "Verified Properties for Sale & Rent in India | TheNexopp",
     description: "Explore 100% verified residential and commercial properties for buy and rent across India. Verified legal titles, verified broker connections, transparent pricing.",
     canonicalPath: '/properties',
     robots: 'index, follow',
