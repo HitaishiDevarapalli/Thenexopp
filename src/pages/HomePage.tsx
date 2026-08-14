@@ -352,7 +352,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               margin: '0 0 20px 0',
               letterSpacing: '-0.03em'
             }}>
-              Your Next Opportunity Is Just <span style={{ color: '#00A86B' }}>One Click Away</span>
+              TheNexopp – <span style={{ color: '#00A86B' }}>Verified Properties, Businesses & Franchises</span> in India
             </h1>
 
             {/* Subtitle */}

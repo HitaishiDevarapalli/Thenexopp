@@ -13,8 +13,8 @@ const DEFAULT_IMAGE = 'https://thenexopp.com/logo.png';
 
 export const SEO_CONFIG: Record<string, PageSEO> = {
   home: {
-    title: "TheNexopp – India's Trusted Platform for Verified Listings to Buy and Sell",
-    description: "TheNexopp is India's trusted platform for verified listings to buy and sell residential properties, luxury villas, commercial spaces, operational businesses, and franchise rights.",
+    title: "TheNexopp – India's Trusted Platform for Verified Properties, Businesses & Franchises",
+    description: "TheNexopp is India's marketplace for verified properties, businesses and franchises. Buy, sell, rent and discover your next opportunity across India.",
     canonicalPath: '/',
     robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
     breadcrumbs: [
