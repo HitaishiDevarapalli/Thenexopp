@@ -361,7 +361,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               margin: '0 0 20px 0',
               letterSpacing: '-0.03em'
             }}>
-              TheNexopp – <span style={{ color: '#00A86B' }}>Verified Properties, Businesses & Franchises</span> in India
+              TheNexopp – <span style={{ color: '#00A86B' }}>Verified Properties, Businesses, Franchises & Listings</span> in India
             </h1>
 
             {/* Subtitle */}
