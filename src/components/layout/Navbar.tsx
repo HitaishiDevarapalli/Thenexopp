@@ -58,19 +58,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollPos = window.scrollY || document.documentElement.scrollTop;
-      setScrolled(scrollPos > 30);
+      setScrolled(scrollPos > 20);
 
-      if (scrollPos < 120) {
+      // If at top of homepage, force 'hero' (Home) as active section
+      if (scrollPos < 150) {
         setActiveSection('hero');
         return;
       }
 
-      const sections = ['properties', 'franchise', 'business', 'finance', 'about', 'contact'];
+      // Check if at the bottom of the page
+      if (window.innerHeight + scrollPos >= (document.documentElement.scrollHeight - 180)) {
+        setActiveSection('contact');
+        return;
+      }
+
+      const sections = ['properties', 'franchise', 'business', 'finance', 'about'];
       for (const section of sections) {
         const el = document.getElementById(section);
         if (el) {
           const rect = el.getBoundingClientRect();
-          if (rect.top <= 200 && rect.bottom >= 150) {
+          if (rect.top <= 140 && rect.bottom >= 180) {
             setActiveSection(section);
             break;
           }
@@ -195,7 +202,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       borderBottom: '1px solid #E2E8F0',
       boxShadow: scrolled ? '0 4px 20px -2px rgba(15, 23, 42, 0.08)' : '0 1px 3px rgba(15, 23, 42, 0.03)',
       transition: 'all 0.25s ease-in-out',
-      height: '74px',
+      height: '78px',
       display: 'flex',
       alignItems: 'center',
     }}>
@@ -203,7 +210,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         maxWidth: '1440px',
         width: '100%',
         margin: '0 auto',
-        padding: '0 24px',
+        padding: '0 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -211,7 +218,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       }}>
 
         {/* 1. Left: Mobile Toggle + Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginRight: '16px' }}>
           <button
             className="mobile-only"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -256,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* 2. Center: Clean & Professional Desktop Navigation */}
-        <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {menuItems.map((item) => {
             const isActive = activeSection === item.id;
             const isDropdownOpen = openDropdown === item.id;
@@ -281,8 +288,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     backgroundColor: isActive ? '#ECFDF5' : isDropdownOpen ? '#F8FAFC' : 'transparent',
                     color: isActive ? '#059669' : '#1E293B',
                     border: 'none',
-                    borderRadius: '10px',
-                    padding: '8px 14px',
+                    borderRadius: '12px',
+                    padding: '8px 16px',
                     fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
                     fontSize: '14.5px',
                     fontWeight: isActive ? 700 : 600,
@@ -403,7 +410,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* 3. Right: Location Pill, Saved Wishlist, Sell CTA, Sign In */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: '16px' }}>
           
           {/* Location Selector Pill */}
           <div style={{ position: 'relative' }}>

@@ -911,7 +911,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     <section
       style={{
         backgroundColor: '#F8FAFC',
-        paddingTop: '115px',
+        paddingTop: '120px',
         paddingBottom: '60px',
         minHeight: '100vh',
         fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif",
