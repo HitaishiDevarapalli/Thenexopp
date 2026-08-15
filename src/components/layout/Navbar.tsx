@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, FaChevronDown, FaMapMarkedAlt, FaStore, FaHandHoldingUsd, FaChartLine, FaShieldAlt, FaEnvelope, FaUtensils, FaMedkit, FaSearch, FaRegHeart, FaUser, FaUserPlus, FaBars, FaShoppingBag } from 'react-icons/fa';
+import { 
+  FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, 
+  FaChevronDown, FaMapMarkerAlt, FaStore, FaHandHoldingUsd, 
+  FaChartLine, FaShieldAlt, FaEnvelope, FaRegHeart, FaHeart, 
+  FaUser, FaBars, FaShoppingBag, FaPlus, FaTimes, FaLayerGroup
+} from 'react-icons/fa';
 import { selectedCity, setSelectedCity, siteSettingsDb, isModuleActive } from '../../db/marketplaceDb';
 import { Logo } from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
@@ -19,63 +24,58 @@ interface NavbarProps {
   onNavigateToPage?: (page: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpenWishlist, onNavigateBusiness, onNavigateProperties, onNavigateFranchise, onNavigateFinance, onGoHome, isSubpage: _isSubpage, onNavigateToPage }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  heroBgIndex: _heroBgIndex,
+  onOpenWishlist,
+  onNavigateBusiness,
+  onNavigateProperties,
+  onNavigateFranchise,
+  onNavigateFinance,
+  onGoHome,
+  isSubpage: _isSubpage,
+  onNavigateToPage
+}) => {
   const { user, openLoginModal, logout } = useAuth();
   const { wishlistItems } = useWishlist();
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentCity, setCurrentCityState] = useState(selectedCity);
+  const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
+  const [, setCurrentCityState] = useState(selectedCity);
 
   // Location Context & Panel State
   const { location, isLocationPickerOpen, openLocationPicker, closeLocationPicker } = useLocationStore();
 
-
-
-  const [, setModuleRefresh] = useState(0);
-
   useEffect(() => {
     const handler = () => {
       setCurrentCityState(selectedCity);
-      setModuleRefresh((prev) => prev + 1);
     };
     window.addEventListener('nexopp_data_changed', handler);
     return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);
 
-
-
   useEffect(() => {
     const handleScroll = () => {
       const scrollPos = window.scrollY || document.documentElement.scrollTop;
-      if (scrollPos > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(scrollPos > 30);
 
-      // If at top of homepage, force 'hero' (Home) as active section
       if (scrollPos < 120) {
         setActiveSection('hero');
         return;
       }
 
-      // Simple active section detection based on page scroll
       const sections = ['properties', 'franchise', 'business', 'finance', 'about', 'contact'];
-      let current = 'hero';
       for (const section of sections) {
         const el = document.getElementById(section);
         if (el) {
           const rect = el.getBoundingClientRect();
           if (rect.top <= 200 && rect.bottom >= 150) {
-            current = section;
+            setActiveSection(section);
             break;
           }
         }
       }
-      setActiveSection(current);
     };
 
     handleScroll();
@@ -83,61 +83,63 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const showFranchise = siteSettingsDb.showFranchiseSection !== false;
-
   const rawMenuItems = [
     { id: 'hero', label: 'Home', icon: <FaHome /> },
-    { id: 'properties', label: 'Property', icon: <FaHome />, dropdown: [
-      { name: 'Buy Property', link: 'propertiesPage', subIcon: <FaBuilding /> },
-      { name: 'Flats & Apartments', link: 'flatsPage', subIcon: <FaBuilding /> },
-      { name: 'Villas', link: 'villasPage', subIcon: <FaHome /> },
-      { name: 'Independent Houses', link: 'housesPage', subIcon: <FaHome /> },
-      { name: 'Plots & Lands', link: 'landPage', subIcon: <FaMapMarkedAlt /> },
-      { name: 'Rent Property', link: 'rentPage', subIcon: <FaStore /> },
-      { name: 'Sell Property', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd /> },
-    ]},
-    { id: 'franchise', label: 'Franchise', icon: <FaBuilding />, dropdown: [
-      { name: 'Franchise Marketplace', link: 'franchisePage', subIcon: <FaBuilding /> },
-      { name: 'New Franchise', link: 'newFranchise', subIcon: <FaStore /> },
-      { name: 'Existing Franchise', link: 'franchiseResales', subIcon: <FaBriefcase /> },
-    ]},
-    { id: 'business', label: 'Business', icon: <FaBriefcase />, dropdown: [
-      { name: 'Buy Business', link: 'businessPage', subIcon: <FaShoppingBag /> },
-      { name: 'Sell Business', link: 'sellBusinessPage', subIcon: <FaHandHoldingUsd /> },
-    ]},
-    { id: 'finance', label: 'Finance', icon: <FaCoins />, dropdown: [
-      { name: 'All Finance Solutions', link: 'financePage', subIcon: <FaCoins /> },
-      { name: 'Loans', link: 'loansPage', subIcon: <FaHandHoldingUsd /> },
-      { name: 'Insurance', link: 'insurancePage', subIcon: <FaShieldAlt /> },
-      { name: 'Advisory Desk', link: 'financeServicePage', subIcon: <FaChartLine /> },
-    ]},
+    { 
+      id: 'properties', 
+      label: 'Properties', 
+      icon: <FaBuilding />, 
+      dropdown: [
+        { name: 'All Properties', desc: 'Browse verified real estate listings', link: 'propertiesPage', subIcon: <FaBuilding />, color: '#059669' },
+        { name: 'Flats & Apartments', desc: '1, 2, 3, 4+ BHK Gated communities', link: 'flatsPage', subIcon: <FaBuilding />, color: '#002B66' },
+        { name: 'Luxury Villas & Houses', desc: 'Premium standalone duplex & villas', link: 'villasPage', subIcon: <FaHome />, color: '#D97706' },
+        { name: 'Plots & Lands', desc: 'RERA & DTCP approved commercial lands', link: 'landPage', subIcon: <FaLayerGroup />, color: '#2563EB' },
+        { name: 'Rental Properties', desc: 'Residential & corporate office rentals', link: 'rentPage', subIcon: <FaStore />, color: '#7C3AED' },
+        { name: 'Sell / Post Property', desc: 'List your property to thousands of buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#059669', isCta: true },
+      ]
+    },
+    { 
+      id: 'franchise', 
+      label: 'Franchises', 
+      icon: <FaStore />, 
+      dropdown: [
+        { name: 'Franchise Marketplace', desc: 'Explore all high-ROI brand opportunities', link: 'franchisePage', subIcon: <FaBuilding />, color: '#059669' },
+        { name: 'New Brand Expansion', desc: 'Fresh franchise setups with training', link: 'newFranchise', subIcon: <FaStore />, color: '#D97706' },
+        { name: 'Running Franchise Resales', desc: 'Operational units with existing cash flow', link: 'franchiseResales', subIcon: <FaBriefcase />, color: '#002B66' },
+      ]
+    },
+    { 
+      id: 'business', 
+      label: 'Businesses', 
+      icon: <FaBriefcase />, 
+      dropdown: [
+        { name: 'Buy Operational Business', desc: 'Verified companies across retail, tech & F&B', link: 'businessPage', subIcon: <FaShoppingBag />, color: '#059669' },
+        { name: 'Sell a Business', desc: 'Confidential valuation & buyer matchmaking', link: 'sellBusinessPage', subIcon: <FaHandHoldingUsd />, color: '#D97706', isCta: true },
+      ]
+    },
+    { 
+      id: 'finance', 
+      label: 'Finance', 
+      icon: <FaCoins />, 
+      dropdown: [
+        { name: 'Finance & Advisory Desk', desc: 'Comprehensive loan & capital advisory', link: 'financePage', subIcon: <FaCoins />, color: '#059669' },
+        { name: 'Home & Property Loans', desc: 'Competitive interest rates with top banks', link: 'loansPage', subIcon: <FaHandHoldingUsd />, color: '#002B66' },
+        { name: 'Asset & Business Insurance', desc: 'Risk mitigation & equity protection', link: 'insurancePage', subIcon: <FaShieldAlt />, color: '#2563EB' },
+        { name: 'Investment Advisory', desc: 'Due diligence & transaction guidance', link: 'financeServicePage', subIcon: <FaChartLine />, color: '#D97706' },
+      ]
+    },
     { id: 'about', label: 'About Us', icon: <FaInfoCircle /> },
     { id: 'contact', label: 'Contact Us', icon: <FaEnvelope /> },
   ];
 
   const menuItems = rawMenuItems.filter(item => item.id === 'hero' || item.id === 'about' || item.id === 'contact' || isModuleActive(item.id));
 
-  const handleScrollTo = (id: string) => {
-    if (window.location.pathname !== '/' && onGoHome) {
-      onGoHome();
-    }
-    setTimeout(() => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
-    setOpenDropdown(null);
-  };
-
   const handleNavItemClick = (itemId: string) => {
     if (itemId === 'hero') {
       if (onGoHome) onGoHome();
-      else handleScrollTo('hero');
       setOpenDropdown(null);
       return;
     }
-    // For category pages, navigate to the dedicated page instead of scrolling
     if (itemId === 'properties' && onNavigateProperties) {
       onNavigateProperties();
       setOpenDropdown(null);
@@ -158,17 +160,6 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       setOpenDropdown(null);
       return;
     }
-    if (itemId === 'adminPortal') {
-      if (onNavigateToPage) onNavigateToPage('adminPortal');
-      else window.location.href = '/admin';
-      setOpenDropdown(null);
-      return;
-    }
-    if (itemId === 'hero' && onGoHome) {
-      onGoHome();
-      setOpenDropdown(null);
-      return;
-    }
     if (itemId === 'about' && onNavigateToPage) {
       onNavigateToPage('aboutUsPage');
       setOpenDropdown(null);
@@ -179,73 +170,79 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
       setOpenDropdown(null);
       return;
     }
-    // Fallback scroll
-    handleScrollTo(itemId);
   };
 
   const handleDropdownClick = (_itemId: string, _subName: string, subLink: string, e: React.MouseEvent) => {
     setOpenDropdown(null);
     e.preventDefault();
-    if (onNavigateToPage && subLink && !subLink.startsWith('#')) {
+    if (onNavigateToPage && subLink) {
       onNavigateToPage(subLink);
-    } else if (onNavigateToPage) {
-      onNavigateToPage(_itemId === 'properties' ? 'propertiesPage' : _itemId === 'franchise' ? 'franchisePage' : _itemId === 'business' ? 'businessPage' : 'financePage');
     }
   };
 
-  const getNavTextColor = (itemId: string) => {
-    if (activeSection === itemId || hoveredItem === itemId) return '#059669';
-    return '#002B66';
-  };
+  const displayLocation = location?.area || location?.locality || location?.city || selectedCity || 'Hyderabad';
 
   return (
-    <nav className="navbar" style={{
-      backgroundColor: '#FFFFFF',
+    <header className="navbar" style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      zIndex: 999999,
+      backgroundColor: 'rgba(255, 255, 255, 0.98)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
       borderBottom: '1px solid #E2E8F0',
-      boxShadow: scrolled ? '0 4px 14px rgba(0,27,102,0.08)' : 'none',
-      transition: 'box-shadow 0.3s ease',
+      boxShadow: scrolled ? '0 4px 20px -2px rgba(15, 23, 42, 0.08)' : '0 1px 3px rgba(15, 23, 42, 0.03)',
+      transition: 'all 0.25s ease-in-out',
+      height: '74px',
+      display: 'flex',
+      alignItems: 'center',
     }}>
-      <div className="navbar-container" style={{
+      <div style={{
         maxWidth: '1440px',
+        width: '100%',
         margin: '0 auto',
-        padding: '0 16px',
+        padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '100%',
         boxSizing: 'border-box',
-        height: '96px'
       }}>
 
-        {/* Left: Mobile Hamburger + Logo (Fixed position on left) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginRight: '16px' }}>
+        {/* 1. Left: Mobile Toggle + Brand Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
           <button
             className="mobile-only"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Menu"
             style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              color: '#1E293B',
-              cursor: 'pointer',
-              padding: '4px',
+              background: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '10px',
+              width: '40px',
+              height: '40px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              color: '#0F172A',
+              fontSize: '18px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
             }}
           >
-            <FaBars />
+            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
 
           <a
-            href="#hero"
+            href="/"
             onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
             onDoubleClick={(e) => {
               e.stopPropagation();
               if (onNavigateToPage) onNavigateToPage('adminPortal');
-              else window.location.href = '/secret-admin';
+              else window.location.href = '/admin';
             }}
-            title="Double-click for Admin Portal"
+            title="TheNexopp – India's Trusted Marketplace"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -254,238 +251,485 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
               flexShrink: 0,
             }}
           >
-            <Logo size="lg" />
+            <Logo size="md" />
           </a>
         </div>
 
-        {/* Center: Desktop Nav Items (Spread evenly in middle with same spacing gap) */}
-        <ul className="navbar-menu desktop-only" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-evenly',
-          flexGrow: 1,
-          listStyle: 'none',
-          margin: '0 12px',
-          padding: 0,
-        }}>
-          {menuItems.map((item) => (
-            <li
-              key={item.id}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '96px' }}
-              onMouseEnter={() => {
-                setHoveredItem(item.id);
-                if (item.dropdown) setOpenDropdown(item.id);
-              }}
-              onMouseLeave={() => {
-                setHoveredItem(null);
-                setOpenDropdown(null);
-              }}
-            >
-              <button
-                onClick={() => handleNavItemClick(item.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: getNavTextColor(item.id),
-                  transition: 'all 0.2s ease',
-                  whiteSpace: 'nowrap',
-                  position: 'relative'
+        {/* 2. Center: Clean & Professional Desktop Navigation */}
+        <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {menuItems.map((item) => {
+            const isActive = activeSection === item.id;
+            const isDropdownOpen = openDropdown === item.id;
+
+            return (
+              <div
+                key={item.id}
+                style={{ position: 'relative' }}
+                onMouseEnter={() => {
+                  if (item.dropdown) setOpenDropdown(item.id);
                 }}
-                onMouseEnter={(e) => {
-                  if (activeSection !== item.id) (e.currentTarget as HTMLElement).style.backgroundColor = '#F8FAFC';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                onMouseLeave={() => {
+                  setOpenDropdown(null);
                 }}
               >
-                <span>{item.label}</span>
-                {activeSection === item.id && item.id !== 'hero' && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '0px',
-                    left: '0',
-                    width: '100%',
-                    height: '2px',
-                    backgroundColor: '#16A34A',
-                    borderRadius: '2px'
-                  }} />
+                <button
+                  onClick={() => handleNavItemClick(item.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: isActive ? '#ECFDF5' : isDropdownOpen ? '#F8FAFC' : 'transparent',
+                    color: isActive ? '#059669' : '#1E293B',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '8px 14px',
+                    fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+                    fontSize: '14.5px',
+                    fontWeight: isActive ? 700 : 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease-in-out',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.color = '#059669';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = isDropdownOpen ? '#F8FAFC' : 'transparent';
+                      e.currentTarget.style.color = '#1E293B';
+                    }
+                  }}
+                >
+                  <span>{item.label}</span>
+                  {item.dropdown && (
+                    <FaChevronDown style={{
+                      fontSize: '10px',
+                      color: isActive ? '#059669' : '#94A3B8',
+                      transition: 'transform 0.2s ease',
+                      transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }} />
+                  )}
+                </button>
+
+                {/* Modern Floating Dropdown Card */}
+                {item.dropdown && isDropdownOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 4px)',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      backgroundColor: '#FFFFFF',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '16px',
+                      boxShadow: '0 20px 40px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.02)',
+                      padding: '8px',
+                      minWidth: '290px',
+                      zIndex: 10000,
+                      animation: 'fadeIn 0.15s ease-out',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      {item.dropdown.map((sub, idx) => (
+                        <a
+                          key={idx}
+                          href="#"
+                          onClick={(e) => handleDropdownClick(item.id, sub.name, sub.link, e)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '10px 12px',
+                            borderRadius: '12px',
+                            textDecoration: 'none',
+                            transition: 'all 0.15s ease',
+                            backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
+                            border: sub.isCta ? '1px dashed #86EFAC' : 'none',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = sub.isCta ? '#DCFCE7' : '#F8FAFC';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = sub.isCta ? '#F0FDF4' : 'transparent';
+                          }}
+                        >
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '10px',
+                            backgroundColor: sub.isCta ? '#059669' : `${sub.color}14`,
+                            color: sub.isCta ? '#FFFFFF' : sub.color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '15px',
+                            flexShrink: 0,
+                          }}>
+                            {sub.subIcon}
+                          </div>
+                          <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <div style={{
+                              fontSize: '13.5px',
+                              fontWeight: 700,
+                              color: sub.isCta ? '#059669' : '#0F172A',
+                              lineHeight: 1.25,
+                            }}>
+                              {sub.name}
+                            </div>
+                            {sub.desc && (
+                              <div style={{
+                                fontSize: '11.5px',
+                                color: '#64748B',
+                                marginTop: '2px',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}>
+                                {sub.desc}
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {item.dropdown && (
-                  <FaChevronDown style={{
-                    fontSize: '10px',
-                    transition: 'transform 0.2s ease',
-                    transform: openDropdown === item.id ? 'rotate(180deg)' : 'rotate(0deg)',
-                    opacity: 0.7,
-                  }} />
-                )}
-              </button>
+              </div>
+            );
+          })}
+        </nav>
 
-              {item.dropdown && openDropdown === item.id && (
-                <ul style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: '0',
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '10px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                  padding: '8px 0',
-                  minWidth: '200px',
-                  listStyle: 'none',
-                  margin: 0,
-                  zIndex: 1001,
-                  animation: 'fadeIn 0.15s ease',
-                }}>
-                  {item.dropdown.map((sub, idx) => (
-                    <li key={idx}>
-                      <a
-                        href="#"
-                        onClick={(e) => handleDropdownClick(item.id, sub.name, sub.link, e)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: '10px 18px',
-                          color: '#374151',
-                          textDecoration: 'none',
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          transition: 'background-color 0.15s ease, color 0.15s ease',
-                          cursor: 'pointer',
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLElement).style.backgroundColor = '#F0FDF4';
-                          (e.currentTarget as HTMLElement).style.color = '#16A34A';
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                          (e.currentTarget as HTMLElement).style.color = '#374151';
-                        }}
-                      >
-                        {sub.subIcon && <span style={{ fontSize: '15px', opacity: 0.75, display: 'flex', alignItems: 'center' }}>{sub.subIcon}</span>}
-                        <span>{sub.name}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {/* Right Side Group: DESKTOP ONLY — Location, Saved, Login (Fixed position on right) */}
-        <div className="desktop-only" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          flexShrink: 0,
-        }}>
-          <div style={{ width: '1px', height: '22px', backgroundColor: '#CBD5E1', marginRight: '4px' }} />
-
-          {/* Location Button */}
+        {/* 3. Right: Location Pill, Saved Wishlist, Sell CTA, Sign In */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+          
+          {/* Location Selector Pill */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={openLocationPicker}
+              title={`Selected Location: ${displayLocation}`}
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
-                backgroundColor: isLocationPickerOpen ? '#F0FDF4' : '#FFFFFF',
+                gap: '7px',
+                backgroundColor: isLocationPickerOpen ? '#ECFDF5' : '#F8FAFC',
                 border: '1px solid',
-                borderColor: isLocationPickerOpen ? '#16A34A' : '#E2E8F0',
-                height: '40px',
-                padding: '0 10px',
-                borderRadius: '20px',
+                borderColor: isLocationPickerOpen ? '#059669' : '#E2E8F0',
+                height: '42px',
+                padding: '0 14px',
+                borderRadius: '24px',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                boxShadow: isLocationPickerOpen ? '0 0 0 3px rgba(22,163,74,0.1)' : 'none',
+                fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+                boxShadow: isLocationPickerOpen ? '0 0 0 3px rgba(5,150,105,0.12)' : 'none',
+              }}
+              onMouseEnter={(e) => {
+                if (!isLocationPickerOpen) {
+                  e.currentTarget.style.backgroundColor = '#F1F5F9';
+                  e.currentTarget.style.borderColor = '#CBD5E1';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLocationPickerOpen) {
+                  e.currentTarget.style.backgroundColor = '#F8FAFC';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                }
               }}
             >
-              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '14px' }} />
-              <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '12.5px', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                📍 {location?.area || location?.locality || location?.city || 'Location'}
+              <FaMapMarkerAlt style={{ color: '#059669', fontSize: '13px' }} />
+              <span style={{
+                color: '#0F172A',
+                fontWeight: 700,
+                fontSize: '13px',
+                maxWidth: '120px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}>
+                {displayLocation}
               </span>
-              <FaChevronDown style={{ color: '#64748B', fontSize: '10px', marginLeft: '1px', transition: 'transform 0.2s', transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              <FaChevronDown style={{
+                color: '#94A3B8',
+                fontSize: '10px',
+                transition: 'transform 0.2s ease',
+                transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              }} />
             </button>
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
-          {/* Login / Profile */}
+
+          {/* Saved / Wishlist Button */}
+          <button
+            onClick={onOpenWishlist}
+            className="desktop-only"
+            title="Saved Properties & Wishlist"
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: wishlistItems.length > 0 ? '#EF4444' : '#64748B',
+              fontSize: '15px',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F1F5F9';
+              e.currentTarget.style.borderColor = '#CBD5E1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#F8FAFC';
+              e.currentTarget.style.borderColor = '#E2E8F0';
+            }}
+          >
+            {wishlistItems.length > 0 ? <FaHeart style={{ color: '#EF4444' }} /> : <FaRegHeart />}
+            {wishlistItems.length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '-3px',
+                right: '-3px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                fontSize: '10px',
+                fontWeight: 800,
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 5px rgba(5,150,105,0.4)',
+              }}>
+                {wishlistItems.length}
+              </span>
+            )}
+          </button>
+
+          {/* Post Property Quick Action */}
+          <button
+            onClick={() => onNavigateToPage?.('sellPropertyPage')}
+            className="desktop-only"
+            title="List your property or business"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: '#FFFFFF',
+              color: '#002B66',
+              border: '1.5px solid #002B66',
+              height: '42px',
+              padding: '0 16px',
+              borderRadius: '24px',
+              fontWeight: 700,
+              fontSize: '13px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#002B66';
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+              e.currentTarget.style.color = '#002B66';
+            }}
+          >
+            <FaPlus style={{ fontSize: '11px', color: '#D97706' }} />
+            <span>Post Property</span>
+          </button>
+
+          {/* User Sign In / Account Dropdown */}
           {user && user.profileCompleted === true ? (
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', height: '40px', padding: '0 10px 0 6px', borderRadius: '20px', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#002B66',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  height: '42px',
+                  padding: '0 14px 0 6px',
+                  borderRadius: '24px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(0, 43, 102, 0.2)',
+                }}
               >
-                <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#10B981', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12.5px', fontWeight: 700 }}>
+                <div style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  backgroundColor: '#059669',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ color: '#1E293B', fontWeight: 700, fontSize: '12.5px' }}>{user.name}</span>
-                <FaChevronDown style={{ fontSize: '10px', color: '#64748B', marginLeft: '1px' }} />
+                <span style={{
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  maxWidth: '90px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {user.name}
+                </span>
+                <FaChevronDown style={{ fontSize: '10px', opacity: 0.8 }} />
               </button>
+
               {openDropdown === 'user' && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', minWidth: '220px', zIndex: 50, overflow: 'hidden', padding: '6px 0' }}>
-                  <div style={{ padding: '8px 16px', borderBottom: '1px solid #F1F5F9' }}>
-                    <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 600 }}>PROFILE DETAILS</div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>{user.name}</div>
-                    <div style={{ fontSize: '12px', color: '#475569', marginTop: '2px', wordBreak: 'break-all' as const }}>{user.email}</div>
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '16px',
+                  boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12)',
+                  minWidth: '220px',
+                  zIndex: 10000,
+                  overflow: 'hidden',
+                  padding: '6px 0',
+                }}>
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9' }}>
+                    <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Signed In As</div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{user.name}</div>
+                    <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', wordBreak: 'break-all' }}>{user.email}</div>
                   </div>
-                  <button 
-                    onClick={() => { 
-                      setOpenDropdown(null); 
-                      if (user?.role === 'Verified Investor') {
-                        onOpenWishlist();
-                      } else if (onNavigateToPage) {
-                        onNavigateToPage('admin'); 
-                      }
-                    }} 
-                    style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  <button
+                    onClick={() => {
+                      setOpenDropdown(null);
+                      if (onNavigateToPage) onNavigateToPage('admin');
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '10px 16px',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <FaUser style={{ color: '#10B981' }} /> My Dashboard
+                    <FaUser style={{ color: '#059669' }} /> My Portal / Dashboard
                   </button>
-                  <button onClick={() => { logout(); setOpenDropdown(null); }} style={{ width: '100%', textAlign: 'left' as const, padding: '10px 16px', background: 'none', border: 'none', fontSize: '13px', fontWeight: 600, color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #F1F5F9' }}>
-                    Logout
+                  <button
+                    onClick={() => {
+                      setOpenDropdown(null);
+                      onOpenWishlist();
+                    }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '10px 16px',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <FaHeart style={{ color: '#EF4444' }} /> Saved Listings
+                  </button>
+                  <button
+                    onClick={() => { logout(); setOpenDropdown(null); }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '10px 16px',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#EF4444',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      borderTop: '1px solid #F1F5F9',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEF2F2'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Log Out
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <button onClick={openLoginModal} style={{ display: 'flex', alignItems: 'center', gap: '5px', backgroundColor: '#002B66', color: '#FFFFFF', border: 'none', padding: '8px 14px', borderRadius: '20px', fontWeight: 800, fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(0,43,102,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <FaUser style={{ fontSize: '12px', color: '#F59E0B' }} />
-              <span>Login</span>
-              <span style={{ color: 'rgba(255,255,255,0.4)', margin: '0 1px' }}>/</span>
-              <FaUserPlus style={{ fontSize: '13px', color: '#10B981' }} />
-              <span>Register</span>
+            <button
+              onClick={openLoginModal}
+              title="Sign in to your account"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                backgroundColor: '#002B66',
+                color: '#FFFFFF',
+                border: 'none',
+                height: '42px',
+                padding: '0 20px',
+                borderRadius: '24px',
+                fontWeight: 700,
+                fontSize: '13.5px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(0, 43, 102, 0.25)',
+                fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#001E47';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 43, 102, 0.35)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#002B66';
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 43, 102, 0.25)';
+              }}
+            >
+              <FaUser style={{ fontSize: '12px', color: '#10B981' }} />
+              <span>Sign In</span>
             </button>
           )}
         </div>
-
-        {/* Right: MOBILE ONLY — compact icons */}
-        <div className="mobile-only" style={{ display: 'none', alignItems: 'center', gap: '10px' }}>
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={openLocationPicker}
-              style={{ background: 'none', border: '1px solid #E2E8F0', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-            >
-              <FaMapMarkedAlt style={{ color: '#16A34A', fontSize: '16px' }} />
-            </button>
-            <LocationSelectorPanel onClose={closeLocationPicker} />
-          </div>
-        </div>
       </div>
 
-      {/* Mobile Menu Drawer Overlay */}
+      {/* 4. Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div style={{
           position: 'fixed',
-          top: '70px',
+          top: '74px',
           left: 0,
           right: 0,
           bottom: 0,
@@ -494,125 +738,170 @@ export const Navbar: React.FC<NavbarProps> = ({ heroBgIndex: _heroBgIndex, onOpe
           overflowY: 'auto',
           padding: '20px 24px',
           boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          animation: 'fadeIn 0.2s ease'
+          animation: 'fadeIn 0.2s ease',
         }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {menuItems.map((item) => (
-              <li key={item.id} style={{ borderBottom: '1px solid #F1F5F9', padding: '14px 0' }}>
-                <div
-                  onClick={() => {
-                    handleNavItemClick(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '16px', fontWeight: 700, color: '#0F172A', cursor: 'pointer' }}
-                >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ color: '#16A34A', fontSize: '18px' }}>{item.icon}</span>
-                    {item.label}
-                  </span>
-                  {item.dropdown && <FaChevronDown style={{ fontSize: '12px', color: '#94A3B8' }} />}
-                </div>
+          {/* Mobile Search / Location Header */}
+          <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+            <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
+              Your Location
+            </div>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                openLocationPicker();
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: '#0F172A',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FaMapMarkerAlt style={{ color: '#059669' }} /> {displayLocation}
+              </span>
+              <span style={{ fontSize: '12px', color: '#059669' }}>Change</span>
+            </button>
+          </div>
 
-                {item.dropdown && (
-                  <div style={{ paddingLeft: '30px', marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {item.dropdown.map((sub, sIdx) => (
-                      <div
-                        key={sIdx}
-                        onClick={(e) => {
-                          handleDropdownClick(item.id, sub.name, sub.link, e);
-                          setMobileMenuOpen(false);
-                        }}
-                        style={{ fontSize: '14px', fontWeight: 600, color: '#475569', padding: '6px 0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
-                      >
-                        {sub.subIcon && <span style={{ opacity: 0.7 }}>{sub.subIcon}</span>}
-                        {sub.name}
-                      </div>
-                    ))}
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {menuItems.map((item) => {
+              const isExpanded = mobileExpandedSection === item.id;
+
+              return (
+                <li key={item.id} style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '4px' }}>
+                  <div
+                    onClick={() => {
+                      if (item.dropdown) {
+                        setMobileExpandedSection(isExpanded ? null : item.id);
+                      } else {
+                        handleNavItemClick(item.id);
+                        setMobileMenuOpen(false);
+                      }
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 8px',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ color: '#059669', fontSize: '16px' }}>{item.icon}</span>
+                      {item.label}
+                    </span>
+                    {item.dropdown && (
+                      <FaChevronDown style={{
+                        fontSize: '12px',
+                        color: '#94A3B8',
+                        transition: 'transform 0.2s ease',
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      }} />
+                    )}
                   </div>
-                )}
-              </li>
-            ))}
+
+                  {item.dropdown && isExpanded && (
+                    <div style={{ paddingLeft: '28px', paddingBottom: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {item.dropdown.map((sub, sIdx) => (
+                        <a
+                          key={sIdx}
+                          href="#"
+                          onClick={(e) => {
+                            setMobileMenuOpen(false);
+                            handleDropdownClick(item.id, sub.name, sub.link, e);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 10px',
+                            color: sub.isCta ? '#059669' : '#334155',
+                            textDecoration: 'none',
+                            fontSize: '13.5px',
+                            fontWeight: sub.isCta ? 800 : 600,
+                            borderRadius: '8px',
+                            backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
+                          }}
+                        >
+                          <span style={{ color: sub.color || '#059669', fontSize: '13px' }}>{sub.subIcon}</span>
+                          <span>{sub.name}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
-          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #E2E8F0' }}>
-            {!user || user.profileCompleted !== true ? (
+          {/* Mobile Bottom Actions */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigateToPage?.('sellPropertyPage');
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <FaPlus /> Post Property Listing
+            </button>
+
+            {(!user || !user.profileCompleted) && (
               <button
                 onClick={() => {
-                  openLoginModal();
                   setMobileMenuOpen(false);
+                  openLoginModal();
                 }}
                 style={{
                   width: '100%',
-                  backgroundColor: '#16A34A',
+                  padding: '12px',
+                  backgroundColor: '#002B66',
                   color: '#FFFFFF',
                   border: 'none',
-                  padding: '12px',
                   borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '15px',
+                  fontSize: '14px',
+                  fontWeight: 800,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '8px',
                 }}
               >
-                <FaUser style={{ color: '#FDE68A' }} /> Login / <FaUserPlus style={{ color: '#A7F3D0' }} /> Register
+                <FaUser style={{ color: '#10B981' }} /> Sign In / Register
               </button>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    if (user?.role === 'Verified Investor') {
-                      onOpenWishlist();
-                    } else if (onNavigateToPage) {
-                      onNavigateToPage('adminPortal');
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#F0FDF4',
-                    color: '#16A34A',
-                    border: '1.5px solid #BBF7D0',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  <FaUser style={{ color: '#16A34A' }} /> My Dashboard
-                </button>
-                <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#FEF2F2',
-                    color: '#EF4444',
-                    border: '1px solid #FCA5A5',
-                    padding: '12px',
-                    borderRadius: '12px',
-                    fontWeight: 700,
-                    fontSize: '15px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Logout ({user.name})
-                </button>
-              </div>
             )}
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
+
 export default Navbar;
