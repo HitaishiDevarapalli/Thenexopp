@@ -134,12 +134,11 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           resolve(null);
         },
         (_error) => {
-          // If permission denied: do not show disruptive errors, open location picker modal smoothly
+          // If permission denied: gracefully fallback without disrupting the page view
           setIsDetectingGPS(false);
-          openLocationPicker();
           resolve(null);
         },
-        { timeout: 8000 }
+        { timeout: 5000 }
       );
     });
   }, [setLocation, openLocationPicker]);
