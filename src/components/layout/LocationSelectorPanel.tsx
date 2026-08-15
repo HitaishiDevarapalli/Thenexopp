@@ -1,6 +1,9 @@
-import React from 'react';
-import { OLXLocationPickerModal } from './OLXLocationPickerModal';
+import React, { lazy, Suspense } from 'react';
 import { useLocationStore } from '../../context/LocationContext';
+
+const OLXLocationPickerModal = lazy(() =>
+  import('./OLXLocationPickerModal').then((m) => ({ default: m.OLXLocationPickerModal }))
+);
 
 interface LocationSelectorPanelProps {
   onClose: () => void;
@@ -8,6 +11,12 @@ interface LocationSelectorPanelProps {
 
 export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ onClose }) => {
   const { isLocationPickerOpen } = useLocationStore();
-  return <OLXLocationPickerModal isOpen={isLocationPickerOpen} onClose={onClose} />;
-};
 
+  if (!isLocationPickerOpen) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <OLXLocationPickerModal isOpen={isLocationPickerOpen} onClose={onClose} />
+    </Suspense>
+  );
+};

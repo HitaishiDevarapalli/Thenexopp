@@ -262,7 +262,7 @@ export const NewFranchisePage: React.FC<NewFranchisePageProps> = ({ onBack, onPr
                   </div>
                   <button className="btn btn-gold w-100 mt-4" style={{marginTop: '1.5rem', width: '100%'}} onClick={() => alert(`Contacting ${selectedDealer.companyName}...`)}>Contact Seller</button>
                   <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                    <a href="https://www.instagram.com/thenexopp?igsh=MTcxc21nMXJ3Y2lzeA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
                       📸 Instagram: @thenexopp
                     </a>
                   </div>

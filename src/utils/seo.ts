@@ -1,3 +1,5 @@
+import { trackPageView } from './analytics';
+
 export interface PageSEO {
   title: string;
   description: string;
@@ -13,7 +15,7 @@ const DEFAULT_IMAGE = 'https://thenexopp.com/logo.png';
 
 export const SEO_CONFIG: Record<string, PageSEO> = {
   home: {
-    title: "TheNexopp – India's Trusted Platform for Verified Properties, Businesses & Franchises",
+    title: "TheNexopp | Verified Properties, Businesses & Franchise Listings",
     description: "TheNexopp is India's marketplace for verified properties, businesses and franchises. Buy, sell, rent and discover your next opportunity across India.",
     canonicalPath: '/',
     robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
@@ -351,4 +353,7 @@ export function updateSEO(pageKey: string, dynamicData?: { title?: string; descr
     const existing = document.getElementById('seo-breadcrumb-jsonld');
     if (existing) existing.remove();
   }
+
+  // 7. Track page view in GA4 if configured
+  trackPageView(cleanPath, title);
 }

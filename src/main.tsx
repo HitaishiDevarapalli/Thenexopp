@@ -7,6 +7,12 @@ import { AuthProvider } from './context/AuthContext.tsx'
 import { LocationProvider } from './context/LocationContext.tsx'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from './api/queryClient.ts'
+import { initGA } from './utils/analytics.ts'
+
+// Initialize Google Analytics 4 asynchronously if configured
+if (typeof window !== 'undefined') {
+  initGA();
+}
 
 // Image and Media Asset Protection (OLX-style: prevents right click save on images while DevTools/Inspect remains functional)
 if (typeof window !== 'undefined') {

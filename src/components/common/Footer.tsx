@@ -205,21 +205,21 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
         {/* Column 5 - FOLLOW US */}
         <div>
           <h4 style={columnHeaderStyle}>FOLLOW US</h4>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" style={socialIconStyle}>
+          <div style={{ display: 'flex', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <a href="https://www.facebook.com/share/1DfcXBDbup/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook" style={socialIconStyle} title="Facebook">
               <FaFacebookF />
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={socialIconStyle}>
+            <a href="https://www.instagram.com/thenexopp?igsh=MTcxc21nMXJ3Y2lzeA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={socialIconStyle} title="Instagram">
               <FaInstagram />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" style={socialIconStyle}>
+            <a href="https://www.linkedin.com/in/thenexopp-private-limited-8b309042a?utm_source=share_via&utm_content=profile&utm_medium=member_ios" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" style={socialIconStyle} title="LinkedIn">
               <FaLinkedinIn />
             </a>
-            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube" style={socialIconStyle}>
+            <a href="https://youtube.com/@thenexopp?si=w64ddml2USS4JrIH" target="_blank" rel="noopener noreferrer" aria-label="YouTube" style={socialIconStyle} title="YouTube">
               <FaYoutube />
             </a>
-            <a href="https://wa.me/" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" style={socialIconStyle}>
-              <FaWhatsapp />
+            <a href="https://x.com/thenexopp?s=11" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" style={socialIconStyle} title="X (Twitter)">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
@@ -249,7 +249,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
           }}
         >
           <p style={{ color: '#64748B', fontSize: '0.85rem', margin: 0 }}>
-            © 2026 TheNexOpp. All Rights Reserved.
+            © 2026 TheNexopp. All Rights Reserved.
           </p>
           <p style={{ color: '#64748B', fontSize: '0.85rem', margin: 0 }}>
             Made with ❤️ for Your Next Opportunity

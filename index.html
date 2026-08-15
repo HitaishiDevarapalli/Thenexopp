@@ -3,19 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta name="format-detection" content="telephone=no" />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop&q=80" fetchpriority="high" />
     
     <!-- Primary SEO Title Tag -->
-    <title>TheNexopp – India's Trusted Platform for Verified Properties, Businesses & Franchises</title>
+    <title>TheNexopp | Verified Properties, Businesses &amp; Franchise Listings</title>
     
     <!-- Meta Descriptions & Search Engine Indexing -->
     <meta name="description" content="TheNexopp is India's marketplace for verified properties, businesses and franchises. Buy, sell, rent and discover your next opportunity across India." />
-    <meta name="keywords" content="TheNexopp, The Nexopp, TheNexOpp, Nexopp, NexOpp, India's Trusted Platform for Verified Listings, Buy and Sell Properties India, Verified Listings, Buy and Sell Businesses India, Verified Franchise Listings" />
+    <meta name="keywords" content="TheNexopp, verified properties, properties for sale, properties for rent, buy business India, sell business India, franchise opportunities India, commercial property India, residential flats India" />
     <meta name="author" content="TheNexopp" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://thenexopp.com/" />
@@ -24,18 +25,18 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="TheNexopp" />
     <meta property="og:url" content="https://thenexopp.com/" />
-    <meta property="og:title" content="TheNexopp – India's Trusted Platform for Verified Properties, Businesses & Franchises" />
+    <meta property="og:title" content="TheNexopp | Verified Properties, Businesses &amp; Franchise Listings" />
     <meta property="og:description" content="TheNexopp is India's marketplace for verified properties, businesses and franchises. Buy, sell, rent and discover your next opportunity across India." />
     <meta property="og:image" content="https://thenexopp.com/logo.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="TheNexopp – India's Trusted Platform for Verified Properties, Businesses & Franchises" />
+    <meta property="og:image:alt" content="TheNexopp | Verified Properties, Businesses &amp; Franchise Listings" />
     <meta property="og:locale" content="en_IN" />
 
     <!-- Twitter Social Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@thenexopp" />
-    <meta name="twitter:title" content="TheNexopp – India's Trusted Platform for Verified Properties, Businesses & Franchises" />
+    <meta name="twitter:title" content="TheNexopp | Verified Properties, Businesses &amp; Franchise Listings" />
     <meta name="twitter:description" content="TheNexopp is India's marketplace for verified properties, businesses and franchises. Buy, sell, rent and discover your next opportunity across India." />
     <meta name="twitter:image" content="https://thenexopp.com/logo.png" />
     <meta name="twitter:url" content="https://thenexopp.com/" />
@@ -43,7 +44,7 @@
     <!-- Mobile Theme Color -->
     <meta name="theme-color" content="#007A55" />
 
-    <!-- Schema.org Organization & WebSite Structured Data (JSON-LD) -->
+    <!-- Schema.org Organization, WebSite & FAQPage Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -55,12 +56,14 @@
           "alternateName": ["The Nexopp", "TheNexOpp", "Nexopp"],
           "url": "https://thenexopp.com/",
           "logo": "https://thenexopp.com/logo.png",
-          "description": "India's Trusted Platform for Verified Listings to Buy and Sell",
+          "description": "India's marketplace for verified properties, businesses and franchises.",
           "telephone": "+91 98765 43210",
           "sameAs": [
-            "https://www.linkedin.com/company/thenexopp",
-            "https://twitter.com/thenexopp",
-            "https://www.instagram.com/thenexopp"
+            "https://www.facebook.com/share/1DfcXBDbup/?mibextid=wwXIfr",
+            "https://www.instagram.com/thenexopp?igsh=MTcxc21nMXJ3Y2lzeA%3D%3D&utm_source=qr",
+            "https://www.linkedin.com/in/thenexopp-private-limited-8b309042a?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
+            "https://youtube.com/@thenexopp?si=w64ddml2USS4JrIH",
+            "https://x.com/thenexopp?s=11"
           ],
           "contactPoint": [
             {
@@ -78,7 +81,7 @@
           "url": "https://thenexopp.com/",
           "name": "TheNexopp",
           "alternateName": ["The Nexopp", "TheNexOpp", "Nexopp"],
-          "description": "Properties, Businesses & Franchises",
+          "description": "Verified Properties, Businesses & Franchises across India",
           "publisher": {
             "@id": "https://thenexopp.com/#organization"
           },
@@ -87,20 +90,157 @@
             "target": "https://thenexopp.com/properties?query={search_term_string}",
             "query-input": "required name=search_term_string"
           }
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://thenexopp.com/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is TheNexopp?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "TheNexopp is India's trusted platform and marketplace for verified properties, commercial real estate, profitable business acquisitions, and high-ROI franchise opportunities."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does TheNexopp verify property and business listings?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Every listing on TheNexopp undergoes a rigorous multi-tier verification process including ownership authentication, legal title verification, physical inspection where applicable, and broker credential validation to eliminate fake or misleading listings."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I buy, sell, or rent residential and commercial properties on TheNexopp?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. TheNexopp features verified apartments, luxury villas, independent houses, commercial office spaces, retail shops, and residential/commercial plots for both sale and rent across major cities in India."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What franchise and business investment opportunities are available on TheNexopp?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "TheNexopp connects entrepreneurs and investors with verified operational businesses for sale across retail, food & beverage, healthcare, and services, as well as established brand franchises with proven ROI and territorial rights."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Which cities and regions does TheNexopp serve in India?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "TheNexopp actively serves prime residential, commercial, and industrial corridors including Hyderabad, Vijayawada, Guntur, Visakhapatnam, Amaravati, Bengaluru, and expanding growth markets across India."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does TheNexopp assist with loans, finance, and transaction closing?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. TheNexopp provides dedicated advisory support, connecting buyers and business investors with leading institutional partners for real estate home loans, business acquisition financing, and asset insurance."
+              }
+            }
+          ]
         }
       ]
     }
     </script>
 
-    <!-- Google Fonts Preconnect & Styling Fonts -->
+    <!-- Google Fonts Preconnect & Optimized Font Delivery -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   </head>
   <body>
     <div id="root">
-      <!-- Pre-React Initial Page Loading Screen matching clinformatiq style -->
-      <div style="position: fixed; inset: 0; background-color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;">
+      <!-- Semantic Static HTML Shell for Non-JS Crawlers & LLM Scrapers -->
+      <div class="seo-crawler-shell" style="max-width: 1200px; margin: 0 auto; padding: 20px; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; color: #0F172A; line-height: 1.6;">
+        <header style="border-bottom: 1px solid #E2E8F0; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+          <a href="/" style="font-size: 1.5rem; font-weight: 900; color: #002B66; text-decoration: none;">The<span style="color: #D97706;">Nex</span><span style="color: #059669;">opp</span></a>
+          <nav style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <a href="/properties" style="color: #002B66; font-weight: 700; text-decoration: none;">Properties</a>
+            <a href="/properties/rent" style="color: #002B66; font-weight: 700; text-decoration: none;">Rent</a>
+            <a href="/properties/flats" style="color: #002B66; font-weight: 700; text-decoration: none;">Flats</a>
+            <a href="/properties/villas" style="color: #002B66; font-weight: 700; text-decoration: none;">Villas</a>
+            <a href="/properties/lands" style="color: #002B66; font-weight: 700; text-decoration: none;">Plots &amp; Lands</a>
+            <a href="/franchise" style="color: #D97706; font-weight: 700; text-decoration: none;">Franchise</a>
+            <a href="/business" style="color: #002B66; font-weight: 700; text-decoration: none;">Business</a>
+            <a href="/finance" style="color: #059669; font-weight: 700; text-decoration: none;">Finance</a>
+            <a href="/about" style="color: #475569; font-weight: 600; text-decoration: none;">About</a>
+            <a href="/contact" style="color: #475569; font-weight: 600; text-decoration: none;">Contact</a>
+          </nav>
+        </header>
+
+        <main>
+          <section>
+            <h1 style="font-size: 2.2rem; font-weight: 900; color: #0F172A; margin-bottom: 16px;">TheNexopp – Verified Properties, Businesses &amp; Franchises in India</h1>
+            <p style="font-size: 1.1rem; color: #475569; margin-bottom: 24px;">Discover verified residential properties, premium commercial spaces, profitable running businesses, and high-ROI franchise opportunities across India. Verified listings, transparent pricing, and direct broker advisory.</p>
+          </section>
+
+          <section style="margin-top: 32px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #002B66; margin-bottom: 12px;">Verified Properties for Sale and Rent</h2>
+            <p style="color: #475569; margin-bottom: 16px;">Explore 100% verified real estate listings with authenticated legal titles, RERA compliance, and transparent market valuations.</p>
+            <ul style="padding-left: 20px; color: #334155; margin-bottom: 24px;">
+              <li><strong>Flats &amp; Apartments:</strong> 1 BHK, 2 BHK, 3 BHK &amp; 4+ BHK luxury apartments in gated communities.</li>
+              <li><strong>Luxury Villas &amp; Independent Houses:</strong> Premium standalone homes, row houses, and gated villas.</li>
+              <li><strong>Plots &amp; Commercial Lands:</strong> RERA and DTCP approved residential layouts, industrial plots, and commercial parcels.</li>
+              <li><strong>Rental Properties:</strong> Verified residential flats and commercial office spaces for rent.</li>
+            </ul>
+          </section>
+
+          <section style="margin-top: 32px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #D97706; margin-bottom: 12px;">Business Opportunities &amp; Acquisitions</h2>
+            <p style="color: #475569; margin-bottom: 16px;">Acquire verified operational businesses across retail, food &amp; beverage, healthcare, manufacturing, and tech with complete financial due diligence and transaction confidentiality.</p>
+          </section>
+
+          <section style="margin-top: 32px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #059669; margin-bottom: 12px;">Franchise Opportunities &amp; Master Rights</h2>
+            <p style="color: #475569; margin-bottom: 16px;">Invest in high-performing brand franchises and running resale outlets with proven customer footfalls, established supply chains, and training support.</p>
+          </section>
+
+          <section style="margin-top: 32px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin-bottom: 12px;">Why Choose TheNexopp?</h2>
+            <ul style="padding-left: 20px; color: #334155; margin-bottom: 24px;">
+              <li><strong>100% Verified Listings:</strong> Strict multi-step verification process to prevent fraudulent listings.</li>
+              <li><strong>Verified Broker Network:</strong> Work directly with top licensed real estate advisors and business brokers.</li>
+              <li><strong>Comprehensive Ecosystem:</strong> Real estate, business sales, franchises, loans, and insurance under one roof.</li>
+              <li><strong>Transparent Pricing:</strong> Direct valuations without hidden markups or inflated broker fees.</li>
+            </ul>
+          </section>
+
+          <section style="margin-top: 32px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin-bottom: 12px;">Cities &amp; Locations Served</h2>
+            <p style="color: #475569; margin-bottom: 24px;">TheNexopp actively provides verified property, business, and franchise opportunities across major Indian hubs including Hyderabad, Vijayawada, Guntur, Visakhapatnam, Amaravati Capital Region, Bengaluru, and expanding regional corridors.</p>
+          </section>
+
+          <section style="margin-top: 32px;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin-bottom: 12px;">Frequently Asked Questions (FAQs)</h2>
+            <div style="margin-bottom: 16px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #002B66; margin-bottom: 6px;">What is TheNexopp?</h3>
+              <p style="color: #475569;">TheNexopp is India's trusted marketplace for verified properties, profitable businesses for sale, and franchise opportunities.</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #002B66; margin-bottom: 6px;">How can I buy or rent a property on TheNexopp?</h3>
+              <p style="color: #475569;">Browse our verified listings, filter by location, budget, and BHK, and connect directly with verified advisors to schedule site visits and close deals securely.</p>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #002B66; margin-bottom: 6px;">How does selling a business or property work on TheNexopp?</h3>
+              <p style="color: #475569;">Submit your listing details on our Sell Property or Sell Business pages. Our verification team reviews the documents, authenticates ownership, and publishes it to thousands of active buyers.</p>
+            </div>
+          </section>
+        </main>
+
+        <footer style="margin-top: 48px; border-top: 1px solid #E2E8F0; padding-top: 20px; font-size: 0.85rem; color: #64748B; display: flex; justify-content: space-between; flex-wrap: wrap;">
+          <p>© 2026 TheNexopp. All Rights Reserved.</p>
+          <p>India's Trusted Marketplace for Verified Listings</p>
+        </footer>
+      </div>
+
+      <!-- Pre-React Initial Page Loading Screen matching brand style -->
+      <div id="initial-page-loader" style="position: fixed; inset: 0; background-color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;">
         <div style="animation: logoPulseTransparency 1.4s ease-in-out infinite; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px;">
           <svg viewBox="0 0 480 230" fill="none" xmlns="http://www.w3.org/2000/svg" style="height: 75px; width: auto; display: block;">
             <path d="M 135 90 L 205 28 L 275 90 H 260 L 205 42 L 150 90 Z" fill="#002B66" />
@@ -120,7 +260,7 @@
           </svg>
         </div>
         <div style="font-size: 1.05rem; font-weight: 700; color: #475569; letter-spacing: 0.02em; display: flex; align-items: center; gap: 4px;">
-          <span>Loading...</span>
+          <span>Loading TheNexopp...</span>
         </div>
         <style>
           @keyframes logoPulseTransparency {

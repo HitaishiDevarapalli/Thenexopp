@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { useWishlist } from '../context/WishlistContext';
-import { ShowcaseVideoCarousel } from '../components/ShowcaseVideoCarousel';
+const ShowcaseVideoCarousel = React.lazy(() =>
+  import('../components/ShowcaseVideoCarousel').then((m) => ({ default: m.ShowcaseVideoCarousel }))
+);
 import {
   FaBuilding,
   FaHome,
@@ -31,7 +33,13 @@ import {
   FaUsers,
   FaCity,
   FaCoins,
-  FaSmile
+  FaSmile,
+  FaQuestionCircle,
+  FaChevronUp,
+  FaHandshake,
+  FaFileContract,
+  FaLayerGroup,
+  FaChartLine
 } from 'react-icons/fa';
 
 interface HomePageProps {
@@ -49,7 +57,7 @@ const HERO_SLIDES = [
     baths: '5 Bath',
     area: '3200 Sq.ft',
     type: 'Villa',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format&fit=crop&q=80',
     isPremium: true,
     isVerified: true
   },
@@ -62,7 +70,7 @@ const HERO_SLIDES = [
     baths: '3 Bath',
     area: '2400 Sq.ft',
     type: 'Apartment',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
     isPremium: true,
     isVerified: true
   },
@@ -75,7 +83,7 @@ const HERO_SLIDES = [
     baths: 'N/A',
     area: '240 Sq.Yds',
     type: 'Plots/Land',
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop&q=80',
     isPremium: false,
     isVerified: true
   }
@@ -93,6 +101,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
   // Hero Carousel Index State
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
 
   const s = siteSettingsDb.mainPageStats || {
     propertiesListed: '18,500+',
@@ -416,6 +425,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               <img
                 src={currentSlide.image}
                 alt={currentSlide.title}
+                loading="eager"
+                decoding="async"
+                width={1200}
+                height={380}
                 style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(1.15) contrast(1.05)' }}
               />
               
@@ -904,6 +917,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   <img 
                     src={item.image} 
                     alt={item.title} 
+                    loading="lazy"
+                    decoding="async"
+                    width={400}
+                    height={400}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
                     onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
@@ -1103,6 +1120,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   <img 
                     src={item.image} 
                     alt={item.title} 
+                    loading="lazy"
+                    decoding="async"
+                    width={400}
+                    height={400}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
                     onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
@@ -1378,84 +1399,299 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
       {/* 4. SHOWCASE & FEATURED PROPERTIES */}
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
-        <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
+        <React.Suspense fallback={<div style={{ minHeight: '260px' }} />}>
+          <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
+        </React.Suspense>
       </div>
 
-      {/* 5. RECENTLY SOLD PROPERTIES SECTION */}
-      {isModuleActive('properties') && recentlySoldListings.length > 0 && (
-        <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '40px 24px 60px 24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-              Recently Sold
+      {/* 6. WHAT IS THENEXOPP & MARKETPLACE OVERVIEW SECTION */}
+      <div style={{ maxWidth: '1360px', margin: '0 auto 48px auto', padding: '0 24px' }}>
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '24px',
+          padding: '40px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)'
+        }}>
+          <div style={{ maxWidth: '900px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: '#059669', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+              India's Multi-Asset Marketplace
+            </span>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.2, margin: '0 0 16px 0', letterSpacing: '-0.02em' }}>
+              What is TheNexopp?
             </h2>
-            <p style={{ color: '#64748B', margin: 0, fontSize: '0.92rem', fontWeight: 500 }}>
-              Explore properties successfully sold through NexOpp.
+            <p style={{ fontSize: '1.05rem', color: '#475569', lineHeight: 1.7, margin: '0 0 20px 0' }}>
+              <strong>TheNexopp</strong> is India's premier multi-asset platform designed to unify verified real estate transactions, operational business acquisitions, and brand franchise investments into a single transparent ecosystem. Whether you are looking to buy a verified luxury apartment, acquire a profitable running business, or expand a franchise footprint, TheNexopp provides verified inventory, vetted brokers, legal due diligence assistance, and institutional financing support.
             </p>
           </div>
-          <div className="responsive-property-grid">
-            {recentlySoldListings.map((prop, idx) => (
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginTop: '28px' }}>
+            <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E40AF', marginBottom: '14px', fontSize: '20px' }}>
+                <FaHome />
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>Verified Properties</h3>
+              <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, margin: 0 }}>
+                Explore 100% verified residential apartments, independent villas, commercial office spaces, and approved land plots with clear legal titles and transparent pricing.
+              </p>
+            </div>
+
+            <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706', marginBottom: '14px', fontSize: '20px' }}>
+                <FaBriefcase />
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>Business Opportunities</h3>
+              <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, margin: 0 }}>
+                Acquire running, revenue-generating businesses across retail, F&amp;B, healthcare, and tech with comprehensive turnover analysis and confidential deal execution.
+              </p>
+            </div>
+
+            <div style={{ backgroundColor: '#F8FAFC', borderRadius: '16px', padding: '24px', border: '1px solid #E2E8F0' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', marginBottom: '14px', fontSize: '20px' }}>
+                <FaStore />
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>Franchise Growth</h3>
+              <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, margin: 0 }}>
+                Invest in established national brand franchises and turnkey resale outlets with documented ROI, established customer traction, and complete operational support.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 7. HOW THENEXOPP WORKS (3-STEP GUIDED JOURNEY) */}
+      <div style={{ maxWidth: '1360px', margin: '0 auto 48px auto', padding: '0 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 800, color: '#002B66', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+            Simple &amp; Transparent Process
+          </span>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+            How TheNexopp Works
+          </h2>
+          <p style={{ color: '#64748B', fontSize: '1rem', marginTop: '8px', maxWidth: '600px', margin: '8px auto 0 auto' }}>
+            A streamlined, safe experience designed to protect buyers, sellers, and investors at every step.
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '32px 24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.02)', textAlign: 'center' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#EFF6FF', color: '#002B66', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', margin: '0 auto 16px auto', fontWeight: 800 }}>
+              1
+            </div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>Search &amp; Discover</h3>
+            <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, margin: 0 }}>
+              Explore authenticated listings filtered by city, budget, BHK, or business turnover. Every opportunity contains verified photos, legal attributes, and clear pricing.
+            </p>
+          </div>
+
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '32px 24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.02)', textAlign: 'center' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', margin: '0 auto 16px auto', fontWeight: 800 }}>
+              2
+            </div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>Inspect &amp; Verify</h3>
+            <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, margin: 0 }}>
+              Book an in-person site inspection or video tour with certified brokers. Review title deeds, financial documentation, and RERA approvals with full transparency.
+            </p>
+          </div>
+
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', padding: '32px 24px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.02)', textAlign: 'center' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', margin: '0 auto 16px auto', fontWeight: 800 }}>
+              3
+            </div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '8px' }}>Close Deal Securely</h3>
+            <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6, margin: 0 }}>
+              Finalize agreements with legal contract support, escrow coordination, and institutional bank financing options for immediate, stress-free settlement.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 8. CITIES & LOCATIONS SERVED */}
+      <div style={{ maxWidth: '1360px', margin: '0 auto 48px auto', padding: '0 24px' }}>
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '24px',
+          padding: '36px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+            <div>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#D97706', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                Strategic Regional Coverage
+              </span>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                Cities &amp; Growth Corridors Served
+              </h2>
+            </div>
+            <button
+              onClick={() => onNavigate('propertiesPage')}
+              style={{
+                backgroundColor: '#EFF6FF',
+                color: '#002B66',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: '12px',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer'
+              }}
+            >
+              Browse by Location →
+            </button>
+          </div>
+
+          <p style={{ fontSize: '0.95rem', color: '#64748B', lineHeight: 1.6, margin: '0 0 24px 0' }}>
+            TheNexopp operates across high-demand residential, commercial, and industrial corridors in South India and prime metropolitan markets across India:
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            {[
+              { name: 'Hyderabad', state: 'Telangana', areas: 'Gachibowli, Madhapur, Hitec City, Kondapur, Jubilee Hills' },
+              { name: 'Vijayawada', state: 'Andhra Pradesh', areas: 'Benz Circle, MG Road, Gannavaram, Governorpet' },
+              { name: 'Guntur', state: 'Andhra Pradesh', areas: 'Brodipet, SVN Colony, Kothapet, Mangalagiri' },
+              { name: 'Visakhapatnam', state: 'Andhra Pradesh', areas: 'Maddilapalem, MVP Colony, Gajuwaka, Rushikonda' },
+              { name: 'Amaravati Region', state: 'Andhra Pradesh', areas: 'Capital Growth Zone, Tulluru, Mangalagiri Corridors' },
+              { name: 'Bengaluru & Metro Hubs', state: 'Karnataka & Pan-India', areas: 'Expanding Tech Parks, Prime Commercial & Retail Zones' },
+            ].map((loc, idx) => (
               <div
                 key={idx}
-                onClick={() => onPropertyClick ? onPropertyClick(prop.id) : onNavigate(`propertyDetails_${prop.id}`)}
+                onClick={() => onNavigate('propertiesPage', `?location=${encodeURIComponent(loc.name)}`)}
                 style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: '14px',
+                  padding: '16px',
                   border: '1px solid #E2E8F0',
-                  overflow: 'hidden',
                   cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  position: 'relative'
+                  transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 25px rgba(0,0,0,0.08)';
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#059669';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#F8FAFC';
+                  e.currentTarget.style.borderColor = '#E2E8F0';
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
                 }}
               >
-                <div style={{ position: 'relative', height: '200px' }}>
-                  <img src={prop.image} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  {/* Red SOLD Badge */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '12px',
-                    left: '12px',
-                    backgroundColor: '#DC2626',
-                    color: '#FFFFFF',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)',
-                    zIndex: 10,
-                    fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
-                  }}>
-                    SOLD
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <FaMapMarkerAlt style={{ color: '#059669', fontSize: '13px' }} />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{loc.name}</span>
                 </div>
-                <div style={{ padding: '16px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', marginBottom: '4px' }}>{prop.price}</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.title}</div>
-                  <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
-                    <FaMapMarkerAlt /> {prop.location}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#475569', fontSize: '0.85rem', fontWeight: 600 }}>
-                      <FaBed style={{ color: '#94A3B8' }} /> {prop.bhk}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#475569', fontSize: '0.85rem', fontWeight: 600 }}>
-                      <FaRulerCombined style={{ color: '#94A3B8' }} /> {prop.area}
-                    </div>
-                  </div>
-                </div>
+                <div style={{ fontSize: '0.78rem', color: '#002B66', fontWeight: 700, marginBottom: '6px' }}>{loc.state}</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', lineHeight: 1.4 }}>{loc.areas}</div>
               </div>
             ))}
           </div>
         </div>
-      )}
+      </div>
+
+      {/* 9. FREQUENTLY ASKED QUESTIONS (FAQ ACCORDION) */}
+      <div style={{ maxWidth: '1360px', margin: '0 auto 20px auto', padding: '0 24px' }}>
+        <div style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '24px',
+          padding: '40px 32px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: '#059669', letterSpacing: '0.06em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+              Clear Answers to Common Questions
+            </span>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+              Frequently Asked Questions
+            </h2>
+            <p style={{ color: '#64748B', fontSize: '0.95rem', marginTop: '8px' }}>
+              Everything you need to know about buying, selling, and investing with TheNexopp.
+            </p>
+          </div>
+
+          <div style={{ maxWidth: '860px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {[
+              {
+                q: 'What is TheNexopp?',
+                a: "TheNexopp is India's trusted platform and marketplace for verified properties, commercial real estate, profitable business acquisitions, and high-ROI franchise opportunities."
+              },
+              {
+                q: 'How does TheNexopp verify property and business listings?',
+                a: 'Every listing on TheNexopp undergoes a rigorous multi-tier verification process including ownership authentication, legal title verification, physical inspection where applicable, and broker credential validation to eliminate fake or misleading listings.'
+              },
+              {
+                q: 'Can I buy, sell, or rent residential and commercial properties on TheNexopp?',
+                a: 'Yes. TheNexopp features verified apartments, luxury villas, independent houses, commercial office spaces, retail shops, and residential/commercial plots for both sale and rent across major cities in India.'
+              },
+              {
+                q: 'What franchise and business investment opportunities are available on TheNexopp?',
+                a: 'TheNexopp connects entrepreneurs and investors with verified operational businesses for sale across retail, food & beverage, healthcare, and services, as well as established brand franchises with proven ROI and territorial rights.'
+              },
+              {
+                q: 'Which cities and regions does TheNexopp serve in India?',
+                a: 'TheNexopp actively serves prime residential, commercial, and industrial corridors including Hyderabad, Vijayawada, Guntur, Visakhapatnam, Amaravati Capital Region, Bengaluru, and expanding growth markets across India.'
+              },
+              {
+                q: 'Does TheNexopp assist with loans, finance, and transaction closing?',
+                a: 'Yes. TheNexopp provides dedicated advisory support, connecting buyers and business investors with leading institutional partners for real estate home loans, business acquisition financing, and asset insurance.'
+              }
+            ].map((faq, idx) => {
+              const isExpanded = expandedFaqIndex === idx;
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    border: isExpanded ? '1.5px solid #002B66' : '1px solid #E2E8F0',
+                    borderRadius: '16px',
+                    backgroundColor: isExpanded ? '#F8FAFC' : '#FFFFFF',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <button
+                    onClick={() => setExpandedFaqIndex(isExpanded ? null : idx)}
+                    style={{
+                      width: '100%',
+                      padding: '18px 22px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      gap: '12px'
+                    }}
+                  >
+                    <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                      {faq.q}
+                    </span>
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      backgroundColor: isExpanded ? '#002B66' : '#F1F5F9',
+                      color: isExpanded ? '#FFFFFF' : '#64748B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      flexShrink: 0
+                    }}>
+                      {isExpanded ? <FaChevronUp /> : <FaChevronDown />}
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div style={{ padding: '0 22px 18px 22px', color: '#475569', fontSize: '0.95rem', lineHeight: 1.65, borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
     </div>
   );

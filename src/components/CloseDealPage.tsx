@@ -307,7 +307,7 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
                       <span style={{ color: 'var(--gold)', fontSize: '1.1rem' }}>📸</span>
                       <div>
                         <span style={{ fontSize: '0.85rem', display: 'block', color: 'var(--text-secondary)' }}>Instagram</span>
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.95rem', textDecoration: 'underline' }}>@thenexopp</a>
+                        <a href="https://www.instagram.com/thenexopp?igsh=MTcxc21nMXJ3Y2lzeA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '0.95rem', textDecoration: 'underline' }}>@thenexopp</a>
                       </div>
                     </div>
                   </div>
