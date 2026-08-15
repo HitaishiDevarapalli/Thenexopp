@@ -8,7 +8,8 @@ import {
   notifyDataChanged,
   sellPropertyRequestsDb,
   updateSellPropertyRequest,
-  deleteSellPropertyRequest
+  deleteSellPropertyRequest,
+  setPropertyViewCount
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
@@ -834,10 +835,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     />
                   </th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Property Details</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category & Type ↕</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category &amp; Type ↕</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Assigned Broker</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Price ↕</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Views 👁️</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Status ↕</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -845,7 +847,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               <tbody>
                 {filteredProperties.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
+                    <td colSpan={9} style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
                       <p style={{ fontSize: '1.05rem', fontWeight: 600, margin: '0 0 12px 0' }}>No property listings matched your filters.</p>
                       {activeModuleTab === 'listings' && (
                         <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}>+ Add New Property</button>
@@ -915,6 +917,51 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>{prop.priceDisplay}</div>
                           <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>{prop.negotiable ? 'Negotiable' : 'Non-Negotiable'}</div>
                         </td>
+                        {/* Views Column */}
+                        <td style={{ padding: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '5px 10px',
+                              backgroundColor: '#F8FAFC',
+                              borderRadius: '8px',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              color: '#0F172A',
+                              border: '1px solid #CBD5E1'
+                            }}>
+                              <FaEye style={{ color: '#059669', fontSize: '0.9rem' }} />
+                              <span>{(prop.viewsCount || 0).toLocaleString()}</span>
+                            </div>
+                            <button
+                              onClick={() => setViewAnalyticsProperty(prop)}
+                              title="Adjust Views Count"
+                              style={{
+                                padding: '4px 8px',
+                                backgroundColor: '#FFFFFF',
+                                color: '#002B66',
+                                border: '1px solid #CBD5E1',
+                                borderRadius: '6px',
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                              }}
+                            >
+                              <FaEdit style={{ fontSize: '0.7rem' }} /> Adjust
+                            </button>
+                          </div>
+                          {prop.uniqueVisitorsCount ? (
+                            <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '3px' }}>
+                              {prop.uniqueVisitorsCount.toLocaleString()} uniques
+                            </div>
+                          ) : null}
+                        </td>
                         <td style={{ padding: '16px' }}>
                           <span style={{
                             padding: '2px 6px',
@@ -932,19 +979,36 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '4px' }}>Recently updated</div>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'right' }}>
-                          {activeModuleTab === 'editProperty' ? (
-                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                            <button
+                              onClick={() => setViewAnalyticsProperty(prop)}
+                              title="View & Adjust Views Count"
+                              style={{
+                                padding: '6px 10px',
+                                backgroundColor: '#F0FDF4',
+                                color: '#059669',
+                                border: '1px solid #BBF7D0',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <FaEye /> Views ({(prop.viewsCount || 0).toLocaleString()})
+                            </button>
+                            {activeModuleTab === 'editProperty' ? (
                               <button
                                 onClick={() => openEditModal(prop)}
                                 title="Edit Property"
-                                style={{ padding: '8px 14px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                style={{ padding: '6px 10px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                               >
                                 <FaEdit /> Edit
                               </button>
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>View Only</span>
-                          )}
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1056,9 +1120,132 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       {/* ================= MODULE 3: PROPERTY ANALYTICS DASHBOARD ================= */}
       {activeModuleTab === 'analytics' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Top Views KPI Summary Cards */}
+          {(() => {
+            const totalViews = propertiesDb.reduce((acc, p) => acc + (p.viewsCount || 0), 0);
+            const totalUniques = propertiesDb.reduce((acc, p) => acc + (p.uniqueVisitorsCount || Math.floor((p.viewsCount || 0) * 0.75)), 0);
+            const avgViews = propertiesDb.length > 0 ? Math.round(totalViews / propertiesDb.length) : 0;
+            const topProp = [...propertiesDb].sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0))[0];
+
+            return (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Property Views</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#059669', marginTop: '6px' }}>👁️ {totalViews.toLocaleString()}</div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>Across all active listings</div>
+                </div>
+
+                <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Unique Visitors</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#002B66', marginTop: '6px' }}>👤 {totalUniques.toLocaleString()}</div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>Audience reach count</div>
+                </div>
+
+                <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Views / Property</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#D97706', marginTop: '6px' }}>📊 {avgViews.toLocaleString()}</div>
+                  <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>Listing engagement index</div>
+                </div>
+
+                <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top Viewed Property</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginTop: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {topProp?.title || 'N/A'}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, marginTop: '4px' }}>
+                    {(topProp?.viewsCount || 0).toLocaleString()} views
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Individual Property Views Intelligence Table */}
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>Individual Property Views &amp; Traffic Table</h4>
+                <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#64748B' }}>Monitor and adjust view counts for each individual property</p>
+              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', backgroundColor: '#ECFDF5', padding: '4px 10px', borderRadius: '6px' }}>
+                {propertiesDb.length} Total Properties
+              </span>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Property</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category &amp; Price</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Views Count 👁️</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Unique Visitors 👤</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Last Viewed</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right' }}>Quick Adjust</th>
+                </tr>
+              </thead>
+              <tbody>
+                {propertiesDb.map(prop => (
+                  <tr key={prop.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background 0.15s' }}>
+                    <td style={{ padding: '14px 20px' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        <img src={prop.image || prop.images?.[0]} alt="" style={{ width: '48px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.85rem' }}>{prop.title}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{prop.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 20px' }}>
+                      <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.82rem' }}>{prop.category}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700 }}>{prop.priceDisplay}</div>
+                    </td>
+                    <td style={{ padding: '14px 20px', fontSize: '0.8rem', color: '#475569' }}>
+                      {prop.area}, {prop.city}
+                    </td>
+                    <td style={{ padding: '14px 20px' }}>
+                      <span style={{ padding: '4px 10px', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: '1px solid #BBF7D0' }}>
+                        👁️ {(prop.viewsCount || 0).toLocaleString()}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 20px' }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                        👤 {(prop.uniqueVisitorsCount || Math.max(0, Math.floor((prop.viewsCount || 0) * 0.75))).toLocaleString()}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B' }}>
+                      {prop.lastViewedAt || 'Recently Active'}
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                      <button
+                        onClick={() => setViewAnalyticsProperty(prop)}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#002B66',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <FaEdit /> Adjust Views
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Category & City Distribution Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-            <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
-              <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 16px 0', fontSize: '1.1rem' }}>Category Distribution</h4>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <h4 style={{ margin: '0 0 16px 0', fontSize: '1.05rem', fontWeight: 800 }}>Category Distribution</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {(() => {
                   const categoryCounts = propertiesDb.reduce((acc, p) => {
@@ -1093,8 +1280,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
-              <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 16px 0', fontSize: '1.1rem' }}>Top Selling Cities</h4>
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <h4 style={{ margin: '0 0 16px 0', fontSize: '1.05rem', fontWeight: 800 }}>Top Selling Cities</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {(() => {
                   const cityCounts = propertiesDb.reduce((acc, p) => {
@@ -2483,18 +2670,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         </div>
       )}
 
-      {/* Property View Analytics Modal (Admin Only) */}
+      {/* Property View Analytics & Adjust Views Modal (Admin Only) */}
       {viewAnalyticsProperty && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', maxWidth: '460px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #E2E8F0', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
-            <div style={{ backgroundColor: '#059669', padding: '24px', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #E2E8F0', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
+            <div style={{ backgroundColor: '#002B66', padding: '20px 24px', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
                   👁️
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF' }}>Property View Analytics</h3>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#93C5FD', fontWeight: 500 }}>Admin Only • Live Database Insights</p>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF' }}>Adjust &amp; Manage Property Views</h3>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#93C5FD', fontWeight: 500 }}>Live Individual Property Analytics</p>
                 </div>
               </div>
               <button onClick={() => setViewAnalyticsProperty(null)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.4rem', cursor: 'pointer', opacity: 0.8 }} title="Close">✕</button>
@@ -2502,82 +2689,166 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
             <div style={{ padding: '24px' }}>
               <div style={{ display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '20px', backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
-                <img src={viewAnalyticsProperty.image || viewAnalyticsProperty.images?.[0]} alt="" style={{ width: '60px', height: '50px', objectFit: 'cover', borderRadius: '8px' }} />
+                <img src={viewAnalyticsProperty.image || viewAnalyticsProperty.images?.[0]} alt="" style={{ width: '64px', height: '54px', objectFit: 'cover', borderRadius: '8px' }} />
                 <div>
                   <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0F172A', lineClamp: 1, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{viewAnalyticsProperty.title}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>{viewAnalyticsProperty.city} • {viewAnalyticsProperty.priceDisplay}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, marginTop: '2px' }}>ID: {viewAnalyticsProperty.id} • {viewAnalyticsProperty.category}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px' }}>{viewAnalyticsProperty.city} • {viewAnalyticsProperty.priceDisplay}</div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginBottom: '20px' }}>
-                <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Views</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#059669', marginTop: '4px' }}>👁️ {viewAnalyticsProperty.viewsCount || 0}</div>
-                  <div style={{ display: 'flex', gap: '4px', marginTop: '10px' }}>
-                    <button
-                      onClick={() => {
-                        const amt = prompt('Enter new views count:', String(viewAnalyticsProperty.viewsCount || 0));
-                        if (amt !== null && !isNaN(Number(amt))) {
-                          updateProperty(viewAnalyticsProperty.id, { viewsCount: Number(amt) });
-                          setViewAnalyticsProperty({ ...viewAnalyticsProperty, viewsCount: Number(amt) });
-                          notifyDataChanged();
-                        }
-                      }}
-                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#059669', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        updateProperty(viewAnalyticsProperty.id, { viewsCount: 0 });
-                        setViewAnalyticsProperty({ ...viewAnalyticsProperty, viewsCount: 0 });
-                        notifyDataChanged();
-                      }}
-                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #FCA5A5', backgroundColor: '#FEF2F2', color: '#EF4444', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      Reset
-                    </button>
-                  </div>
+              {/* Total Views Section */}
+              <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', padding: '16px', borderRadius: '16px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Total Views Count
+                  </label>
+                  <span style={{ fontSize: '0.75rem', color: '#15803D', fontWeight: 700 }}>
+                    Current: {(viewAnalyticsProperty.viewsCount || 0).toLocaleString()}
+                  </span>
                 </div>
-                <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', padding: '16px', borderRadius: '16px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unique Visitors</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#14532D', marginTop: '4px' }}>👤 {viewAnalyticsProperty.uniqueVisitorsCount || Math.max(0, Math.floor((viewAnalyticsProperty.viewsCount || 0) * 0.75))}</div>
-                  <div style={{ display: 'flex', gap: '4px', marginTop: '10px' }}>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    value={viewAnalyticsProperty.viewsCount ?? 0}
+                    onChange={e => {
+                      const val = Math.max(0, parseInt(e.target.value) || 0);
+                      setViewAnalyticsProperty({
+                        ...viewAnalyticsProperty,
+                        viewsCount: val,
+                        uniqueVisitorsCount: Math.max(0, Math.floor(val * 0.75))
+                      });
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 14px',
+                      fontSize: '1.2rem',
+                      fontWeight: 800,
+                      color: '#0F172A',
+                      border: '2px solid #86EFAC',
+                      borderRadius: '10px',
+                      outline: 'none',
+                      backgroundColor: '#FFFFFF'
+                    }}
+                  />
+                </div>
+
+                {/* Quick Add Preset Buttons */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {[50, 100, 500, 1000, 5000].map(amt => (
                     <button
+                      key={amt}
+                      type="button"
                       onClick={() => {
-                        const amt = prompt('Enter new unique visitors count:', String(viewAnalyticsProperty.uniqueVisitorsCount || 0));
-                        if (amt !== null && !isNaN(Number(amt))) {
-                          updateProperty(viewAnalyticsProperty.id, { uniqueVisitorsCount: Number(amt) });
-                          setViewAnalyticsProperty({ ...viewAnalyticsProperty, uniqueVisitorsCount: Number(amt) });
-                          notifyDataChanged();
-                        }
+                        const nextVal = (viewAnalyticsProperty.viewsCount || 0) + amt;
+                        setViewAnalyticsProperty({
+                          ...viewAnalyticsProperty,
+                          viewsCount: nextVal,
+                          uniqueVisitorsCount: Math.max(0, Math.floor(nextVal * 0.75))
+                        });
                       }}
-                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#059669', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        updateProperty(viewAnalyticsProperty.id, { uniqueVisitorsCount: 0 });
-                        setViewAnalyticsProperty({ ...viewAnalyticsProperty, uniqueVisitorsCount: 0 });
-                        notifyDataChanged();
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #86EFAC',
+                        color: '#166534',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
                       }}
-                      style={{ flex: 1, padding: '4px 6px', border: '1px solid #FCA5A5', backgroundColor: '#FEF2F2', color: '#EF4444', fontSize: '0.62rem', fontWeight: 700, borderRadius: '4px', cursor: 'pointer' }}
                     >
-                      Reset
+                      +{amt.toLocaleString()}
                     </button>
-                  </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewAnalyticsProperty({
+                        ...viewAnalyticsProperty,
+                        viewsCount: 0,
+                        uniqueVisitorsCount: 0
+                      });
+                    }}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FCA5A5',
+                      color: '#DC2626',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Reset to 0
+                  </button>
                 </div>
               </div>
 
-              <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '14px 18px', borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#64748B' }}>Last Viewed Date & Time:</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0F172A' }}>{viewAnalyticsProperty.lastViewedAt || 'Not viewed yet'}</span>
+              {/* Unique Visitors Section */}
+              <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '14px 16px', borderRadius: '14px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569' }}>
+                    Estimated Unique Visitors
+                  </label>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  value={viewAnalyticsProperty.uniqueVisitorsCount ?? Math.max(0, Math.floor((viewAnalyticsProperty.viewsCount || 0) * 0.75))}
+                  onChange={e => {
+                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                    setViewAnalyticsProperty({
+                      ...viewAnalyticsProperty,
+                      uniqueVisitorsCount: val
+                    });
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    color: '#334155',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '8px',
+                    outline: 'none',
+                    backgroundColor: '#FFFFFF',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Last Viewed Info */}
+              <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '12px 16px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}>
+                <span style={{ fontWeight: 700, color: '#64748B' }}>Last Viewed Timestamp:</span>
+                <span style={{ fontWeight: 800, color: '#0F172A' }}>{viewAnalyticsProperty.lastViewedAt || 'Recently Active'}</span>
               </div>
             </div>
 
-            <div style={{ padding: '16px 24px', backgroundColor: '#F1F5F9', borderTop: '1px solid #E2E8F0', textAlign: 'right' }}>
-              <button onClick={() => setViewAnalyticsProperty(null)} style={{ padding: '10px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer' }}>Close</button>
+            <div style={{ padding: '16px 24px', backgroundColor: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setViewAnalyticsProperty(null)}
+                style={{ padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#64748B', border: '1px solid #CBD5E1', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const targetViews = viewAnalyticsProperty.viewsCount || 0;
+                  const targetUniques = viewAnalyticsProperty.uniqueVisitorsCount ?? Math.max(0, Math.floor(targetViews * 0.75));
+                  setPropertyViewCount(viewAnalyticsProperty.id, targetViews, targetUniques);
+                  showNotification?.(`Views count for "${viewAnalyticsProperty.title}" updated to ${targetViews.toLocaleString()}!`, "success");
+                  setViewAnalyticsProperty(null);
+                }}
+                style={{ padding: '10px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 2px 8px rgba(5,150,105,0.3)' }}
+              >
+                ✓ Save &amp; Apply Views
+              </button>
             </div>
           </div>
         </div>

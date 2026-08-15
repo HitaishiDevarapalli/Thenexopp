@@ -983,6 +983,24 @@ export const togglePropertyTrending = (id: string) => {
   if (item) updateProperty(id, { trending: !item.trending });
 };
 
+export const setPropertyViewCount = (id: string, newViewsCount: number, newUniqueVisitors?: number) => {
+  const count = Math.max(0, Math.floor(newViewsCount));
+  const uniques = newUniqueVisitors !== undefined 
+    ? Math.max(0, Math.floor(newUniqueVisitors)) 
+    : Math.max(0, Math.floor(count * 0.75));
+    
+  const nowFormatted = new Date().toLocaleString('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  });
+
+  updateProperty(id, {
+    viewsCount: count,
+    uniqueVisitorsCount: uniques,
+    lastViewedAt: nowFormatted
+  });
+};
+
 export const incrementPropertyViewCount = (id: string) => {
   const prop = propertiesDb.find(p => p.id === id);
   if (!prop) return;
