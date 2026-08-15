@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocationStore } from '../../context/LocationContext';
 
 const OLXLocationPickerModal = lazy(() =>
@@ -14,9 +15,10 @@ export const LocationSelectorPanel: React.FC<LocationSelectorPanelProps> = ({ on
 
   if (!isLocationPickerOpen) return null;
 
-  return (
+  return createPortal(
     <Suspense fallback={null}>
       <OLXLocationPickerModal isOpen={isLocationPickerOpen} onClose={onClose} />
-    </Suspense>
+    </Suspense>,
+    document.body
   );
 };

@@ -19,11 +19,14 @@ interface OLXLocationPickerModalProps {
 
 const POPULAR_CITY_CARDS = [
   { city: 'Hyderabad', state: 'Telangana', listings: '450+', lat: 17.3850, lng: 78.4867 },
-  { city: 'Bangalore', state: 'Karnataka', listings: '320+', lat: 12.9716, lng: 77.5946 },
-  { city: 'Chennai', state: 'Tamil Nadu', listings: '280+', lat: 13.0827, lng: 80.2707 },
+  { city: 'Guntur', state: 'Andhra Pradesh', listings: '220+', lat: 16.3067, lng: 80.4365 },
+  { city: 'Vijayawada', state: 'Andhra Pradesh', listings: '260+', lat: 16.5062, lng: 80.6480 },
+  { city: 'Visakhapatnam', state: 'Andhra Pradesh', listings: '310+', lat: 17.6868, lng: 83.2185 },
+  { city: 'Bangalore', state: 'Karnataka', listings: '380+', lat: 12.9716, lng: 77.5946 },
+  { city: 'Chennai', state: 'Tamil Nadu', listings: '290+', lat: 13.0827, lng: 80.2707 },
   { city: 'Mumbai', state: 'Maharashtra', listings: '610+', lat: 19.0760, lng: 72.8777 },
-  { city: 'Delhi', state: 'Delhi', listings: '540+', lat: 28.7041, lng: 77.1025 },
-  { city: 'Pune', state: 'Maharashtra', listings: '210+', lat: 18.5204, lng: 73.8567 },
+  { city: 'Delhi', state: 'Delhi NCR', listings: '540+', lat: 28.7041, lng: 77.1025 },
+  { city: 'Pune', state: 'Maharashtra', listings: '240+', lat: 18.5204, lng: 73.8567 },
 ];
 
 const DEFAULT_LEFT_RESULTS: LocationData[] = [
@@ -222,19 +225,24 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
 
   return (
     <div
+      className="olx-modal-overlay"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.65)',
-        backdropFilter: 'blur(6px)',
-        zIndex: 9999,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(15, 23, 42, 0.72)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        zIndex: 99999999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '20px',
+        boxSizing: 'border-box',
         animation: 'fadeIn 0.2s ease-out',
       }}
       onClick={(e) => {
@@ -248,16 +256,17 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
         className="olx-location-modal"
         style={{
           width: '100%',
-          maxWidth: '880px',
-          maxHeight: '90vh',
+          maxWidth: '860px',
+          maxHeight: '88vh',
           backgroundColor: '#FFFFFF',
           borderRadius: '24px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
+          fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
           border: '1px solid #E2E8F0',
+          position: 'relative',
         }}
       >
         {/* Header Bar */}
@@ -820,25 +829,29 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            fontSize: '0.8rem',
+            fontSize: '0.82rem',
             color: '#64748B',
+            flexWrap: 'wrap',
+            gap: '12px'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FaMapMarkerAlt style={{ color: '#16A34A', fontSize: '14px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#DCFCE7', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', flexShrink: 0 }}>
+              <FaMapMarkerAlt />
+            </div>
             <div>
-              <span>Current: <strong style={{ color: '#0F172A' }}>{currentLocation?.displayName}</strong></span>
-              <div style={{ fontSize: '0.74rem', color: '#94A3B8' }}>
-                Lat: {currentLocation?.lat.toFixed(4)}, Lng: {currentLocation?.lng.toFixed(4)}
-              </div>
+              <span style={{ color: '#64748B' }}>Selected Location: </span>
+              <strong style={{ color: '#0F172A' }}>
+                {currentLocation?.area ? `${currentLocation.area}, ${currentLocation.city}` : currentLocation?.city || 'Hyderabad'}
+              </strong>
+              {currentLocation?.state && (
+                <span style={{ color: '#64748B' }}>, {currentLocation.state}</span>
+              )}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'right' }}>
-            <FaShieldAlt style={{ color: '#16A34A', fontSize: '16px' }} />
-            <div>
-              <span style={{ color: '#16A34A', fontWeight: 700 }}>Powered by OpenStreetMap</span>
-              <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Accurate • Reliable • Free</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FaShieldAlt style={{ color: '#059669', fontSize: '15px' }} />
+            <span style={{ color: '#059669', fontWeight: 700, fontSize: '0.78rem' }}>Verified GPS Location Intelligence</span>
           </div>
         </div>
       </div>
