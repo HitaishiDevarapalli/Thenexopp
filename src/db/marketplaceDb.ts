@@ -1001,17 +1001,32 @@ export const setPropertyViewCount = (id: string, newViewsCount: number, newUniqu
   });
 };
 
+const lastTrackedViewsTimestamp: Record<string, number> = {};
+
 export const incrementPropertyViewCount = (id: string) => {
+  if (!id) return;
+  const now = Date.now();
+  // Prevent duplicate increments within 4 seconds for the same property
+  if (lastTrackedViewsTimestamp[id] && now - lastTrackedViewsTimestamp[id] < 4000) {
+    return;
+  }
+  lastTrackedViewsTimestamp[id] = now;
+
   const prop = propertiesDb.find(p => p.id === id);
   if (!prop) return;
   
   const currentViews = prop.viewsCount || 0;
   const currentUniques = prop.uniqueVisitorsCount || Math.max(1, Math.floor(currentViews * 0.75));
   
-  const sessionKey = `viewed_prop_${id}`;
-  const isNewVisitor = !sessionStorage.getItem(sessionKey);
-  if (isNewVisitor) {
-    sessionStorage.setItem(sessionKey, 'true');
+  let isNewVisitor = false;
+  try {
+    const sessionKey = `viewed_prop_${id}`;
+    isNewVisitor = !sessionStorage.getItem(sessionKey);
+    if (isNewVisitor) {
+      sessionStorage.setItem(sessionKey, 'true');
+    }
+  } catch (_err) {
+    // ignore storage errors
   }
 
   const updatedViews = currentViews + 1;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaShoppingCart, FaEye } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
 import { propertiesDb, getDistance } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
@@ -122,7 +122,9 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
               <div className="property-details">
                 <div className="property-meta-top">
                   <span className="property-type">{prop.category}</span>
-                  <span className="property-type" style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '8px' }}>👁️ {prop.viewsCount || 0}</span>
+                  <span className="property-type" style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '8px', fontWeight: 700 }}>
+                    <FaEye style={{ fontSize: '0.78rem' }} /> {prop.viewsCount || 0}
+                  </span>
                   <span className="property-area">{prop.areaSqFt || prop.area}</span>
                 </div>
                 <h3 

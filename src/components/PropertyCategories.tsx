@@ -26,6 +26,7 @@ import {
   FaMinus,
   FaExpand,
   FaFilter,
+  FaEye,
 } from 'react-icons/fa';
 import { LiveLocationMap } from './ui/LiveLocationMap';
 import { useLocationStore } from '../context/LocationContext';
@@ -1822,7 +1823,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         </h4>
                         <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 500, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span>{prop.location}</span>
-                          <span style={{ color: '#16A34A', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>👁️ {prop.viewsCount || 0}</span>
+                          <span style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}>
+                            <FaEye style={{ fontSize: '0.78rem' }} /> {prop.viewsCount || 0}
+                          </span>
                         </div>
 
                         {/* Specs Row */}

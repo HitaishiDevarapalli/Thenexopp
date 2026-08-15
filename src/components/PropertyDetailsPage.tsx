@@ -4,7 +4,7 @@ import type { Dealer } from '../db/marketplaceDb';
 import { 
   FaArrowLeft, FaHeart, FaRegHeart, FaShareAlt, 
   FaMapMarkerAlt, FaShoppingCart, FaPhone, 
-  FaChevronLeft, FaChevronRight 
+  FaChevronLeft, FaChevronRight, FaEye
 } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
 import L from 'leaflet';
@@ -299,6 +299,8 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     return null;
   }, [propertyId]);
 
+  const lastIncrementedPropIdRef = React.useRef<string | null>(null);
+
   // Reset all state, scroll to top, and increment property view count when propertyId changes
   useEffect(() => {
     setActiveImageIndex(0);
@@ -306,7 +308,8 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     setMessage('');
     setShowSellerPortfolio(false);
     setAmenityCache({});
-    if (propertyId) {
+    if (propertyId && lastIncrementedPropIdRef.current !== propertyId) {
+      lastIncrementedPropIdRef.current = propertyId;
       incrementPropertyViewCount(propertyId);
     }
 
@@ -894,7 +897,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             {/* Price Box */}
             <div className="prop-right-box prop-price-box">
               <div className="price-box-header">
-                <h2 className="price-title">₹ {property.priceDisplay}</h2>
+                <h2 className="price-title">{property.priceDisplay?.startsWith('₹') ? property.priceDisplay : `₹ ${property.priceDisplay}`}</h2>
                 <div className="price-actions">
                   <button className="action-circle-btn" onClick={handleShare} title="Share Link">
                     <FaShareAlt />
@@ -936,10 +939,26 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 </div>
               )}
               
-              <div className="price-box-footer">
-                <span className="price-loc"><FaMapMarkerAlt /> {property.area}, {property.city}</span>
-                <span className="price-date">Posted: {property.createdDate}</span>
-                <span className="price-date" style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: '4px' }}>👁️ {property.viewsCount || 0} Views</span>
+              <div className="price-box-footer" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
+                  <span className="price-loc"><FaMapMarkerAlt /> {property.area}, {property.city}</span>
+                  <span className="price-date">Posted: {property.createdDate}</span>
+                </div>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  color: '#059669',
+                  fontWeight: 700,
+                  backgroundColor: '#ECFDF5',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  border: '1px solid #A7F3D0'
+                }}>
+                  <FaEye style={{ fontSize: '0.8rem', color: '#059669' }} />
+                  <span>{(property.viewsCount || 0).toLocaleString()} Views</span>
+                </div>
               </div>
 
               {dealer && (

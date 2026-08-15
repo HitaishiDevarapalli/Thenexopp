@@ -20,7 +20,7 @@ import {
   FaCheck, FaChartBar, FaGlobe, FaMap, FaCity, FaCompass, 
   FaEnvelope, FaCrosshairs, FaExternalLinkAlt, FaTimes, 
   FaArrowRight, FaCheckCircle, FaLightbulb, FaList, FaLayerGroup, 
-  FaMoneyBillWave, FaCamera, FaUserTie, FaShareAlt, FaEye
+  FaMoneyBillWave, FaCamera, FaUserTie, FaShareAlt, FaEye, FaUserAlt
 } from 'react-icons/fa';
 
 interface PropertyManagementSystemProps {
@@ -839,7 +839,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Assigned Broker</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Price ↕</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Views 👁️</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <FaEye style={{ color: '#059669', fontSize: '0.85rem' }} /> Views
+                    </span>
+                  </th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Status ↕</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -1131,13 +1135,17 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
                 <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Property Views</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#059669', marginTop: '6px' }}>👁️ {totalViews.toLocaleString()}</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#059669', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaEye style={{ fontSize: '1.5rem', color: '#059669' }} /> {totalViews.toLocaleString()}
+                  </div>
                   <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>Across all active listings</div>
                 </div>
 
                 <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Unique Visitors</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#002B66', marginTop: '6px' }}>👤 {totalUniques.toLocaleString()}</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#002B66', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaUserAlt style={{ fontSize: '1.3rem', color: '#002B66' }} /> {totalUniques.toLocaleString()}
+                  </div>
                   <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>Audience reach count</div>
                 </div>
 
@@ -1152,8 +1160,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', marginTop: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {topProp?.title || 'N/A'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, marginTop: '4px' }}>
-                    {(topProp?.viewsCount || 0).toLocaleString()} views
+                  <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <FaEye style={{ fontSize: '0.75rem' }} /> {(topProp?.viewsCount || 0).toLocaleString()} views
                   </div>
                 </div>
               </div>
@@ -1178,8 +1186,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Property</th>
                   <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category &amp; Price</th>
                   <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
-                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Views Count 👁️</th>
-                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Unique Visitors 👤</th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <FaEye style={{ color: '#059669' }} /> Views Count
+                    </span>
+                  </th>
+                  <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <FaUserAlt style={{ color: '#002B66' }} /> Unique Visitors
+                    </span>
+                  </th>
                   <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Last Viewed</th>
                   <th style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right' }}>Quick Adjust</th>
                 </tr>
@@ -1204,13 +1220,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       {prop.area}, {prop.city}
                     </td>
                     <td style={{ padding: '14px 20px' }}>
-                      <span style={{ padding: '4px 10px', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: '1px solid #BBF7D0' }}>
-                        👁️ {(prop.viewsCount || 0).toLocaleString()}
+                      <span style={{ padding: '4px 10px', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 800, border: '1px solid #BBF7D0', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <FaEye style={{ fontSize: '0.8rem', color: '#059669' }} /> {(prop.viewsCount || 0).toLocaleString()}
                       </span>
                     </td>
                     <td style={{ padding: '14px 20px' }}>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
-                        👤 {(prop.uniqueVisitorsCount || Math.max(0, Math.floor((prop.viewsCount || 0) * 0.75))).toLocaleString()}
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <FaUserAlt style={{ fontSize: '0.72rem', color: '#64748B' }} /> {(prop.uniqueVisitorsCount || Math.max(0, Math.floor((prop.viewsCount || 0) * 0.75))).toLocaleString()}
                       </span>
                     </td>
                     <td style={{ padding: '14px 20px', fontSize: '0.75rem', color: '#64748B' }}>
@@ -2676,8 +2692,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #E2E8F0', overflow: 'hidden', animation: 'fadeIn 0.2s ease-out' }}>
             <div style={{ backgroundColor: '#002B66', padding: '20px 24px', color: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
-                  👁️
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FaEye style={{ fontSize: '1.3rem', color: '#FFFFFF' }} />
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#FFFFFF' }}>Adjust &amp; Manage Property Views</h3>
