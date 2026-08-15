@@ -15,7 +15,7 @@ const DEFAULT_IMAGE = 'https://thenexopp.com/logo.png';
 
 export const SEO_CONFIG: Record<string, PageSEO> = {
   home: {
-    title: "TheNexopp | Verified Properties, Businesses & Franchise Listings",
+    title: "TheNexopp | Verified Properties, Businesses & Listings",
     description: "TheNexopp is India's marketplace for verified properties, businesses and franchises. Buy, sell, rent and discover your next opportunity across India.",
     canonicalPath: '/',
     robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
