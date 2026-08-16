@@ -726,27 +726,33 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
          const dist = getDistance(searchLat, searchLng, item.latitude, item.longitude);
          distanceKm = dist;
          
-         const targetLoc = (location?.city || location?.displayName || locStr).toLowerCase();
+         const targetLoc = (location?.area || location?.locality || location?.city || location?.displayName || locStr).toLowerCase();
          const itemCity = (item.city || '').toLowerCase();
+         const itemArea = (item.area || '').toLowerCase();
+         const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
          const itemLocStr = (item.location || '').toLowerCase();
          
          if (targetLoc) {
-             exactLocationMatch = itemCity === targetLoc || itemLocStr.includes(targetLoc) || (item.title || '').toLowerCase().includes(targetLoc);
+             exactLocationMatch = itemCity === targetLoc || itemArea.includes(targetLoc) || itemSubLoc.includes(targetLoc) || itemLocStr.includes(targetLoc) || (item.title || '').toLowerCase().includes(targetLoc);
          } else {
-             exactLocationMatch = dist <= 5;
+             exactLocationMatch = dist <= 10;
          }
       } else if (hasLocalSearch) {
          // Fallback to string only if no lat/lng found anywhere
+         const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
          const matchLoc =
           (item.city && item.city.toLowerCase().includes(locStr)) ||
+          (item.area && item.area.toLowerCase().includes(locStr)) ||
+          (itemSubLoc && itemSubLoc.includes(locStr)) ||
           (item.location && item.location.toLowerCase().includes(locStr)) ||
           (item.title && item.title.toLowerCase().includes(locStr)) ||
           (item.type && item.type.toLowerCase().includes(locStr));
          if (!matchLoc) return false;
          
          const itemCity = (item.city || '').toLowerCase();
+         const itemArea = (item.area || '').toLowerCase();
          const itemLocStr = (item.location || '').toLowerCase();
-         exactLocationMatch = itemCity === locStr || itemLocStr.includes(locStr) || (item.title || '').toLowerCase().includes(locStr);
+         exactLocationMatch = itemCity === locStr || itemArea.includes(locStr) || itemSubLoc.includes(locStr) || itemLocStr.includes(locStr) || (item.title || '').toLowerCase().includes(locStr);
       } else {
          // If no search, exactLocationMatch is true (shows all by default if no filters)
          exactLocationMatch = true; 

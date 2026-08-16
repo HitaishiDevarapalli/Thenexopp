@@ -30,6 +30,7 @@ import {
   FaBalanceScale,
 } from 'react-icons/fa';
 import { LiveLocationMap } from './ui/LiveLocationMap';
+import { useLocationStore } from '../context/LocationContext';
 
 interface BusinessMarketplaceProps {
   onExploreCategory?: (category: any) => void;
@@ -47,6 +48,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   subtitle,
   onBack,
 }) => {
+  const { location } = useLocationStore();
   const [, setForceUpdate] = useState(0);
   useEffect(() => {
     const handler = () => setForceUpdate((prev) => prev + 1);
@@ -56,10 +58,19 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
 
   // Top Search Card State
   const [activeTab, setActiveTab] = useState<string>('All');
-  const [locationText, setLocationText] = useState('All Locations');
+  const [locationText, setLocationText] = useState(() => {
+    return location?.area || location?.city || location?.displayName || 'All Locations';
+  });
   const [industry, setIndustry] = useState('All Categories');
   const [valuation, setValuation] = useState('Any Budget');
   const [revenue, setRevenue] = useState('Any Revenue');
+
+  useEffect(() => {
+    if (location) {
+      const locName = location.area || location.city || location.displayName;
+      if (locName) setLocationText(locName);
+    }
+  }, [location]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);

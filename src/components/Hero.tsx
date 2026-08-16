@@ -22,6 +22,7 @@ import {
   FaCrosshairs,
 } from 'react-icons/fa';
 import { siteSettingsDb, selectedCity } from '../db/marketplaceDb';
+import { useLocationStore } from '../context/LocationContext';
 
 interface HeroProps {
   currentBg?: number;
@@ -31,8 +32,11 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
+  const { location, openLocationPicker, detectCurrentLocation, isDetectingGPS } = useLocationStore();
   const [activeTab, setActiveTab] = useState<'Property' | 'Franchise' | 'Business' | 'Plots/Land' | 'Commercial'>('Property');
-  const [locationText, setLocationText] = useState(selectedCity || '');
+  const [locationText, setLocationText] = useState(() => {
+    return location?.area || location?.city || location?.displayName || selectedCity || '';
+  });
   const [radius, setRadius] = useState('5 KM');
   const [budget, setBudget] = useState('₹10L - ₹5 Cr');
   const [propertyType, setPropertyType] = useState('All Types');
@@ -41,12 +45,15 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [sliderIndex, setSliderIndex] = useState(0);
 
-  // Sync location text if selectedCity changes
+  // Sync location text if global location changes
   useEffect(() => {
-    if (selectedCity && selectedCity !== 'All India') {
+    if (location) {
+      const locLabel = location.area || location.city || location.displayName;
+      if (locLabel) setLocationText(locLabel);
+    } else if (selectedCity && selectedCity !== 'All India') {
       setLocationText(selectedCity);
     }
-  }, [selectedCity]);
+  }, [location, selectedCity]);
 
   // Sync dropdown defaults when activeTab changes
   useEffect(() => {
@@ -283,17 +290,28 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
+                    cursor: 'pointer',
                   }}
+                  onClick={openLocationPicker}
                 >
-                  <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px', cursor: 'pointer' }}>
                     <FaMapMarkerAlt style={{ color: '#16A34A' }} /> Search Location
                   </label>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <input
                       type="text"
                       value={locationText}
-                      onChange={(e) => setLocationText(e.target.value)}
-                      style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 600, color: '#0F172A', width: '100%' }}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        setLocationText(e.target.value);
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLocationPicker();
+                      }}
+                      placeholder="Select City or Area..."
+                      readOnly
+                      style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', fontWeight: 700, color: '#0F172A', width: '100%', cursor: 'pointer' }}
                     />
                     <FaChevronDown style={{ fontSize: '10px', color: '#94A3B8' }} />
                   </div>
@@ -473,11 +491,36 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
                   </select>
 
                   <button
-                    onClick={() => alert('Opening More Filters...')}
+                    type="button"
+                    onClick={openLocationPicker}
                     style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '8px 12px', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    <span>⚙ More Filters</span>
+                    <span>⚙ Change Location</span>
                     <FaChevronDown style={{ fontSize: '10px' }} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await detectCurrentLocation();
+                    }}
+                    disabled={isDetectingGPS}
+                    style={{
+                      backgroundColor: '#ECFDF5',
+                      border: '1px solid #A7F3D0',
+                      borderRadius: '10px',
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#047857',
+                      cursor: isDetectingGPS ? 'wait' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <FaCrosshairs style={{ animation: isDetectingGPS ? 'spin 1s linear infinite' : 'none' }} />
+                    <span>{isDetectingGPS ? 'Detecting...' : 'Live GPS'}</span>
                   </button>
                 </div>
               </div>

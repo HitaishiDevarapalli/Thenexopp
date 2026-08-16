@@ -29,6 +29,7 @@ import {
   FaCoins,
 } from 'react-icons/fa';
 import { LiveLocationMap } from './ui/LiveLocationMap';
+import { useLocationStore } from '../context/LocationContext';
 
 interface FranchiseMarketplaceProps {
   onExploreResales?: () => void;
@@ -47,12 +48,22 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
   subtitle,
   onBack,
 }) => {
+  const { location } = useLocationStore();
   // Top Search Card State
   const [activeTab, setActiveTab] = useState<'All' | 'Food' | 'Retail' | 'Education' | 'Healthcare'>('All');
-  const [locationText, setLocationText] = useState('Hyderabad & Andhra Pradesh');
+  const [locationText, setLocationText] = useState(() => {
+    return location?.area || location?.city || location?.displayName || 'Hyderabad & Andhra Pradesh';
+  });
   const [brandCategory, setBrandCategory] = useState('All Brands');
   const [investment, setInvestment] = useState('₹ 10L - 2Cr+');
   const [spaceReq, setSpaceReq] = useState('Any Size');
+
+  useEffect(() => {
+    if (location) {
+      const locName = location.area || location.city || location.displayName;
+      if (locName) setLocationText(locName);
+    }
+  }, [location]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
