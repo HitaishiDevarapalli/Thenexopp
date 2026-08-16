@@ -1000,7 +1000,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
+                  <div className="card-price-btn-row" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
                     <div>
                       <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>
                         Asking Price
@@ -1010,7 +1010,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                       </span>
                     </div>
                     
-                    <button style={{
+                    <button className="card-details-btn" style={{
                       backgroundColor: '#1E40AF',
                       color: '#FFFFFF',
                       border: 'none',
@@ -1203,7 +1203,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
+                  <div className="card-price-btn-row" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
                     <div>
                       <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>
                         Valuation / Price
@@ -1213,7 +1213,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                       </span>
                     </div>
                     
-                    <button style={{
+                    <button className="card-details-btn" style={{
                       backgroundColor: '#D97706',
                       color: '#FFFFFF',
                       border: 'none',

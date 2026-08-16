@@ -6603,3 +6603,28 @@ table {
   }
 }
 
+/* Card Price & Details Button Stacking on Mobile */
+.card-price-btn-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-details-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .card-price-btn-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .card-details-btn {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+  }
+}
+
