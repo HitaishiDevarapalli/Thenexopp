@@ -794,119 +794,98 @@ const loadData = async () => {
     sellPropertyRequestsDb = [];
     sellBusinessRequestsDb = [];
 
-    // 2. Fetch from backend server API if available, replacing with server state as source of truth
-    fetch(`${API_BASE_URL}/api/properties`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          propertiesDb = data;
-          recalculateAllDemandRegions();
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    // 2. Fetch from backend server API with resilient error protection
+    const safeFetchJson = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    };
 
-    fetch(`${API_BASE_URL}/api/franchises`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          franchiseDb = data;
-          recalculateAllDemandRegions();
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/properties`).then(data => {
+      if (Array.isArray(data)) {
+        propertiesDb = data;
+        recalculateAllDemandRegions();
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/businesses`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          businessDb = data;
-          recalculateAllDemandRegions();
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/franchises`).then(data => {
+      if (Array.isArray(data)) {
+        franchiseDb = data;
+        recalculateAllDemandRegions();
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/dealers`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          dealersDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/businesses`).then(data => {
+      if (Array.isArray(data)) {
+        businessDb = data;
+        recalculateAllDemandRegions();
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/employees`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          employeeUsersDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/dealers`).then(data => {
+      if (Array.isArray(data)) {
+        dealersDb = data;
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/roles`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          rolesDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/employees`).then(data => {
+      if (Array.isArray(data)) {
+        employeeUsersDb = data;
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/team-members`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          teamMembersDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/roles`).then(data => {
+      if (Array.isArray(data)) {
+        rolesDb = data;
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/demand-regions`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          demandRegionsDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/team-members`).then(data => {
+      if (Array.isArray(data)) {
+        teamMembersDb = data;
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/enquiries`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          enquiriesDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/demand-regions`).then(data => {
+      if (Array.isArray(data)) {
+        demandRegionsDb = data;
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/franchise-enquiries`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          franchiseEnquiriesDb = data;
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/enquiries`).then(data => {
+      if (Array.isArray(data)) {
+        enquiriesDb = data;
+        notifyDataChanged();
+      }
+    });
 
-    fetch(`${API_BASE_URL}/api/settings`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-          siteSettingsDb = { ...siteSettingsDb, ...data };
-          notifyDataChanged();
-        }
-      })
-      .catch(err => console.error('API Sync Error:', err));
+    safeFetchJson(`${API_BASE_URL}/api/franchise-enquiries`).then(data => {
+      if (Array.isArray(data)) {
+        franchiseEnquiriesDb = data;
+        notifyDataChanged();
+      }
+    });
+
+    safeFetchJson(`${API_BASE_URL}/api/settings`).then(data => {
+      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        siteSettingsDb = { ...siteSettingsDb, ...data };
+        notifyDataChanged();
+      }
+    });
 
     fetch(`${API_BASE_URL}/api/admin-modules`)
       .then(res => {
