@@ -21,7 +21,7 @@ import {
   FaSmile,
   FaCrosshairs,
 } from 'react-icons/fa';
-import { siteSettingsDb, selectedCity } from '../db/marketplaceDb';
+import { siteSettingsDb, selectedCity, isModuleActive } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 
 interface HeroProps {
@@ -90,13 +90,15 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
     }
   };
 
-  const tabs = [
-    { id: 'Property' as const, label: 'Property', icon: FaHome },
-    { id: 'Franchise' as const, label: 'Franchise', icon: FaStore },
-    { id: 'Business' as const, label: 'Business', icon: FaBriefcase },
-    { id: 'Plots/Land' as const, label: 'Plots/Land', icon: FaMapMarkerAlt },
-    { id: 'Commercial' as const, label: 'Commercial', icon: FaBuilding },
+  // Filter tabs dynamically based on active modules
+  const rawTabs = [
+    { id: 'Property' as const, label: 'Property', icon: FaHome, mod: 'properties' },
+    { id: 'Franchise' as const, label: 'Franchise', icon: FaStore, mod: 'franchises' },
+    { id: 'Business' as const, label: 'Business', icon: FaBriefcase, mod: 'business' },
+    { id: 'Plots/Land' as const, label: 'Plots/Land', icon: FaMapMarkerAlt, mod: 'properties' },
+    { id: 'Commercial' as const, label: 'Commercial', icon: FaBuilding, mod: 'properties' },
   ];
+  const tabs = rawTabs.filter(t => isModuleActive(t.mod));
 
   const s = siteSettingsDb.mainPageStats || {
     propertiesListed: '18,500+',
@@ -107,14 +109,15 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
     happyClients: '15K+',
   };
 
-  const stats = [
-    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed' },
-    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount, label: 'Franchises' },
+  const rawStats = [
+    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed', mod: 'properties' },
+    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount, label: 'Franchises', mod: 'franchises' },
     { icon: FaUsers, color: '#16A34A', bg: '#DCFCE7', value: s.verifiedBrokers, label: 'Verified Brokers' },
     { icon: FaCity, color: '#0D9488', bg: '#CCFBF1', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value' },
+    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
     { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
   ];
+  const stats = rawStats.filter(st => !st.mod || isModuleActive(st.mod));
 
   return (
     <section

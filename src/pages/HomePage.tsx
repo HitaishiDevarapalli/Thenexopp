@@ -112,14 +112,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     happyClients: '15K+',
   };
 
-  const stats = [
-    { icon: FaHome, color: '#059669', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed' },
-    { icon: FaStore, color: '#D97706', bg: '#FEF3C7', value: s.franchisesCount, label: 'Franchises' },
+  const rawStats = [
+    { icon: FaHome, color: '#059669', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed', mod: 'properties' },
+    { icon: FaStore, color: '#D97706', bg: '#FEF3C7', value: s.franchisesCount, label: 'Franchises', mod: 'franchises' },
     { icon: FaUsers, color: '#002B66', bg: '#EFF6FF', value: s.verifiedBrokers, label: 'Verified Brokers' },
     { icon: FaCity, color: '#059669', bg: '#ECFDF5', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#D97706', bg: '#FEF3C7', value: s.totalPropertyValue, label: 'Total Property Value' },
+    { icon: FaCoins, color: '#D97706', bg: '#FEF3C7', value: s.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
     { icon: FaSmile, color: '#002B66', bg: '#EFF6FF', value: s.happyClients, label: 'Happy Clients' },
   ];
+  const stats = rawStats.filter(st => !st.mod || isModuleActive(st.mod));
 
   // Search Bar Filter States
   const [activeSearchTab, setActiveSearchTab] = useState<'Property' | 'Franchise' | 'Business' | 'Plots/Land' | 'Commercial'>('Property');
@@ -169,14 +170,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const currentSlide = HERO_SLIDES[currentSlideIndex];
 
   // Category Cards List matching brand tri-color theme
-  const popularCategories = [
-    { title: 'Residential', subtitle: 'Find your dream home', icon: FaHome, bg: '#EFF6FF', color: '#002B66', page: 'flatsPage' },
-    { title: 'Commercial', subtitle: 'Office, Shops & Spaces', icon: FaBuilding, bg: '#FEF3C7', color: '#D97706', page: 'propertiesPage' },
-    { title: 'Plots & Land', subtitle: 'Invest in Prime Land', icon: FaLeaf, bg: '#ECFDF5', color: '#059669', page: 'landPage' },
-    { title: 'Franchise', subtitle: 'Start your Business', icon: FaStore, bg: '#FEF3C7', color: '#D97706', page: 'franchisePage' },
-    { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#EFF6FF', color: '#002B66', page: 'businessPage' },
+  const rawPopularCategories = [
+    { title: 'Residential', subtitle: 'Find your dream home', icon: FaHome, bg: '#EFF6FF', color: '#002B66', page: 'flatsPage', mod: 'properties' },
+    { title: 'Commercial', subtitle: 'Office, Shops & Spaces', icon: FaBuilding, bg: '#FEF3C7', color: '#D97706', page: 'propertiesPage', mod: 'properties' },
+    { title: 'Plots & Land', subtitle: 'Invest in Prime Land', icon: FaLeaf, bg: '#ECFDF5', color: '#059669', page: 'landPage', mod: 'properties' },
+    { title: 'Franchise', subtitle: 'Start your Business', icon: FaStore, bg: '#FEF3C7', color: '#D97706', page: 'franchisePage', mod: 'franchises' },
+    { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#EFF6FF', color: '#002B66', page: 'businessPage', mod: 'business' },
     { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#ECFDF5', color: '#059669', page: 'financePage' },
   ];
+  const popularCategories = rawPopularCategories.filter(c => !c.mod || isModuleActive(c.mod));
 
   const activeProperties = React.useMemo(() => propertiesDb.filter(p => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'), [propertiesDb]);
   const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb]);
@@ -814,15 +816,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569', marginRight: '4px' }}>
                 Popular Searches:
               </span>
-              {['Apartment', 'Villa', 'Plots', 'Commercial', 'Franchise', 'Farm Land'].map((tag) => (
+              {[
+                { tag: 'Apartment', mod: 'properties', page: 'flatsPage' },
+                { tag: 'Villa', mod: 'properties', page: 'propertiesPage' },
+                { tag: 'Plots', mod: 'properties', page: 'landPage' },
+                { tag: 'Commercial', mod: 'properties', page: 'propertiesPage' },
+                { tag: 'Franchise', mod: 'franchises', page: 'franchisePage' },
+                { tag: 'Farm Land', mod: 'properties', page: 'landPage' },
+              ].filter(item => !item.mod || isModuleActive(item.mod)).map(({ tag, page }) => (
                 <button
                   key={tag}
                   onClick={() => {
                     setSelectedTag(tag);
-                    if (tag === 'Apartment') onNavigate('flatsPage');
-                    else if (tag === 'Plots') onNavigate('landPage');
-                    else if (tag === 'Franchise') onNavigate('franchisePage');
-                    else onNavigate('propertiesPage');
+                    onNavigate(page as any);
                   }}
                   style={{
                     padding: '6px 14px',

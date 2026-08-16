@@ -685,35 +685,58 @@ export const isModuleActive = (moduleId: string): boolean => {
     (moduleId === 'business' && m.id === 'business') ||
     (moduleId === 'businesses' && m.id === 'business')
   );
+  if (item) {
+    if (item.isActive === false) return false;
+  }
+  // Cross check with siteSettings for franchise
+  if (moduleId === 'franchise' || moduleId === 'franchises') {
+    if (siteSettingsDb.showFranchiseSection === false) return false;
+  }
   return item ? item.isActive !== false : true;
 };
 
 export const saveAdminModules = (modules: AdminModuleItem[]) => {
   adminModulesDb = modules;
+  saveToStorage('nexopp_admin_modules', adminModulesDb);
   notifyDataChanged();
 };
 
 export const toggleAdminModuleActive = (id: string) => {
-  const current = adminModulesDb.find(m => m.id === id);
+  const normalizedId = id === 'franchise' ? 'franchises' : id;
+  const current = adminModulesDb.find(m => m.id === normalizedId || (normalizedId === 'franchises' && m.id === 'franchise'));
   const newActive = current ? !current.isActive : false;
 
-  if (current) {
-    adminModulesDb = adminModulesDb.map(m => m.id === id ? { ...m, isActive: newActive } : m);
-  } else {
-    adminModulesDb = [...adminModulesDb, { id, label: id, category: 'CONTENT MANAGEMENT', isActive: newActive, custom: false }];
+  let exists = false;
+  adminModulesDb = adminModulesDb.map(m => {
+    if (m.id === normalizedId || (normalizedId === 'franchises' && m.id === 'franchise')) {
+      exists = true;
+      return { ...m, id: normalizedId, isActive: newActive };
+    }
+    return m;
+  });
+
+  if (!exists) {
+    adminModulesDb.push({ id: normalizedId, label: normalizedId, category: 'CONTENT MANAGEMENT', isActive: newActive, custom: false });
   }
+
+  if (normalizedId === 'franchises') {
+    siteSettingsDb = { ...siteSettingsDb, showFranchiseSection: newActive };
+    saveToStorage('nexopp_site_settings', siteSettingsDb);
+  }
+
   saveToStorage('nexopp_admin_modules', adminModulesDb);
   notifyDataChanged();
   
-  fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
+  fetch(`${API_BASE_URL}/api/admin-modules/${normalizedId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ isActive: newActive, id })
+    body: JSON.stringify({ isActive: newActive, id: normalizedId })
   }).catch(err => console.error('API Sync Error:', err));
 };
 
 export const deleteAdminModule = (id: string) => {
   adminModulesDb = adminModulesDb.filter(m => m.id !== id);
+  saveToStorage('nexopp_admin_modules', adminModulesDb);
   notifyDataChanged();
 
   fetch(`${API_BASE_URL}/api/admin-modules/${id}`, {
@@ -725,6 +748,7 @@ export const addAdminModule = (label: string, category: AdminModuleItem['categor
   const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '_');
   const newItem: AdminModuleItem = { id, label, category, isActive: true, custom: true };
   adminModulesDb = [...adminModulesDb, newItem];
+  saveToStorage('nexopp_admin_modules', adminModulesDb);
   notifyDataChanged();
 
   fetch(`${API_BASE_URL}/api/admin-modules`, {
@@ -891,7 +915,16 @@ const loadData = async () => {
       })
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          adminModulesDb = data;
+          const map = new Map();
+          defaultAdminModules.forEach(m => map.set(m.id, { ...m }));
+          data.forEach((m: any) => {
+            if (m && m.id) {
+              const prev = map.get(m.id) || { id: m.id, category: 'CONTENT MANAGEMENT', custom: true };
+              map.set(m.id, { ...prev, ...m, isActive: m.isActive !== false });
+            }
+          });
+          adminModulesDb = Array.from(map.values());
+          saveToStorage('nexopp_admin_modules', adminModulesDb);
           notifyDataChanged();
         }
       })

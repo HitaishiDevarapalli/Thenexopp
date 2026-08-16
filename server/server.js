@@ -2699,22 +2699,43 @@ const DEFAULT_ADMIN_MODULES = [
   { id: 'main_page_settings', label: 'Main Page Settings', category: 'SITE MANAGEMENT', isActive: true, custom: false },
 ];
 
+// Helper to merge defaults, file store, and database records into a complete, consistent list
+const getMergedAdminModules = async () => {
+  let dbModules = [];
+  if (prisma.adminModule && typeof prisma.adminModule.findMany === 'function') {
+    dbModules = await prisma.adminModule.findMany({ orderBy: { id: 'asc' } }).catch(() => []) || [];
+  }
+
+  const fileModules = loadAdminModulesFromFile() || [];
+
+  // Start with default modules
+  const mergedMap = new Map();
+  DEFAULT_ADMIN_MODULES.forEach(m => mergedMap.set(m.id, { ...m }));
+
+  // Overlay file storage
+  fileModules.forEach(m => {
+    if (m && m.id) {
+      const existing = mergedMap.get(m.id) || { id: m.id, category: 'CONTENT MANAGEMENT', custom: true };
+      mergedMap.set(m.id, { ...existing, ...m });
+    }
+  });
+
+  // Overlay DB storage (highest priority)
+  dbModules.forEach(m => {
+    if (m && m.id) {
+      const existing = mergedMap.get(m.id) || { id: m.id, category: 'CONTENT MANAGEMENT', custom: true };
+      mergedMap.set(m.id, { ...existing, ...m });
+    }
+  });
+
+  const finalModules = Array.from(mergedMap.values());
+  saveAdminModulesToFile(finalModules);
+  return finalModules;
+};
+
 app.get('/api/admin-modules', async (req, res) => {
   try {
-    let modules = null;
-    if (prisma.adminModule && typeof prisma.adminModule.findMany === 'function') {
-      modules = await prisma.adminModule.findMany({ orderBy: { id: 'asc' } }).catch(() => null);
-    }
-
-    if (!modules || modules.length === 0) {
-      modules = loadAdminModulesFromFile();
-    }
-
-    if (!modules || modules.length === 0) {
-      modules = DEFAULT_ADMIN_MODULES;
-      saveAdminModulesToFile(modules);
-    }
-
+    const modules = await getMergedAdminModules();
     return res.json(modules);
   } catch (err) {
     logger.error({ error: err.message }, 'Failed to fetch admin modules');
@@ -2727,12 +2748,13 @@ app.put('/api/admin-modules/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const { isActive, label, category } = req.body;
+    const boolActive = isActive !== undefined ? Boolean(isActive) : true;
 
     let updatedModule = {
       id,
       label: label || id,
       category: category || 'CONTENT MANAGEMENT',
-      isActive: isActive !== undefined ? Boolean(isActive) : true,
+      isActive: boolActive,
       custom: false,
     };
 
@@ -2741,7 +2763,7 @@ app.put('/api/admin-modules/:id', async (req, res, next) => {
         updatedModule = await prisma.adminModule.upsert({
           where: { id },
           update: {
-            ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+            ...(isActive !== undefined && { isActive: boolActive }),
             ...(label !== undefined && { label }),
             ...(category !== undefined && { category }),
           },
@@ -2749,19 +2771,32 @@ app.put('/api/admin-modules/:id', async (req, res, next) => {
             id,
             label: label || id,
             category: category || 'CONTENT MANAGEMENT',
-            isActive: isActive !== undefined ? Boolean(isActive) : true,
+            isActive: boolActive,
             custom: false,
           }
         });
       } catch (_) {}
     }
 
+    // Sync corresponding siteSettings flags for complete cross-system synchronization
+    if (id === 'franchises' || id === 'franchise') {
+      try {
+        if (prisma.siteSettings && typeof prisma.siteSettings.upsert === 'function') {
+          await prisma.siteSettings.upsert({
+            where: { id: 'default' },
+            update: { showFranchiseSection: boolActive },
+            create: { id: 'default', showFranchiseSection: boolActive },
+          }).catch(() => {});
+        }
+      } catch (_) {}
+    }
+
     // Always update server file store
-    const currentModules = loadAdminModulesFromFile() || DEFAULT_ADMIN_MODULES;
+    const currentModules = await getMergedAdminModules();
     const exists = currentModules.find(m => m.id === id);
     let newModules;
     if (exists) {
-      newModules = currentModules.map(m => m.id === id ? { ...m, ...(isActive !== undefined && { isActive: Boolean(isActive) }), ...(label && { label }), ...(category && { category }) } : m);
+      newModules = currentModules.map(m => m.id === id ? { ...m, ...(isActive !== undefined && { isActive: boolActive }), ...(label && { label }), ...(category && { category }) } : m);
     } else {
       newModules = [...currentModules, updatedModule];
     }
