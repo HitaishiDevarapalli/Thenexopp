@@ -582,3 +582,48 @@ export const searchMapBoundsPropertiesService = async (prisma, bounds) => {
     return pLat >= s && pLat <= n && pLng >= w && pLng <= e;
   });
 };
+
+/**
+ * Search Properties by location query and optional filters
+ */
+export const searchPropertiesByLocationService = async (prisma, queryParams = {}) => {
+  const { location, city, area, type, minPrice, maxPrice, bedrooms } = queryParams;
+  const where = {};
+
+  if (city) {
+    where.city = { contains: city, mode: 'insensitive' };
+  } else if (location) {
+    where.OR = [
+      { city: { contains: location, mode: 'insensitive' } },
+      { area: { contains: location, mode: 'insensitive' } },
+      { address: { contains: location, mode: 'insensitive' } },
+      { title: { contains: location, mode: 'insensitive' } },
+    ];
+  }
+
+  if (area) {
+    where.area = { contains: area, mode: 'insensitive' };
+  }
+
+  if (type && type !== 'All' && type !== 'Any') {
+    where.type = { contains: type, mode: 'insensitive' };
+  }
+
+  if (bedrooms && bedrooms !== 'All' && bedrooms !== 'Any') {
+    const b = parseInt(bedrooms, 10);
+    if (!isNaN(b)) where.bedrooms = b;
+  }
+
+  if (minPrice || maxPrice) {
+    where.price = {};
+    if (minPrice) where.price.gte = parseFloat(minPrice);
+    if (maxPrice) where.price.lte = parseFloat(maxPrice);
+  }
+
+  const properties = await prisma.property.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+  }).catch(() => []);
+
+  return properties;
+};
