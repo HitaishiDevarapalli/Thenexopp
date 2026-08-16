@@ -47,7 +47,11 @@ import {
   FaLock,
   FaHeart,
   FaInbox,
-  FaHistory
+  FaHistory,
+  FaPhoneAlt,
+  FaWhatsapp,
+  FaCommentDots,
+  FaFilter
 } from 'react-icons/fa';
 import { 
   propertiesDb, 
@@ -60,6 +64,8 @@ import {
   deleteEnquiry, 
   updateEnquiryStatus, 
   updateSiteSettings, 
+  contactDetailsDb,
+  updateContactDetails,
   addTeamMember,
   deleteTeamMember,
   updateProperty,
@@ -109,6 +115,7 @@ import {
   isModuleActive,
   API_BASE_URL
 } from '../db/marketplaceDb';
+import type { ContactDetails } from '../db/marketplaceDb';
 import { BrokerManagementSystem } from '../components/BrokerManagementSystem';
 import { Logo } from '../components/common/Logo';
 import { PropertyManagementSystem } from '../components/PropertyManagementSystem';
@@ -158,7 +165,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newPropOwnershipInput, setNewPropOwnershipInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'media_manager' | 'ai_assistant'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'contact_settings' | 'media_manager' | 'ai_assistant'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -186,6 +193,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [adminStats, setAdminStats] = useState<any>(null);
   const [allEnquiries, setAllEnquiries] = useState<any[]>([]);
   const [allBookings, setAllBookings] = useState<any[]>([]);
+
+  // Contact Us Details CMS state
+  const [contactSettings, setContactSettings] = useState<ContactDetails>({ ...contactDetailsDb });
+  const [contactSavedToast, setContactSavedToast] = useState(false);
+
+  // Contact Inquiries Filter States
+  const [inquirySearch, setInquirySearch] = useState('');
+  const [inquiryCategoryFilter, setInquiryCategoryFilter] = useState<'ALL' | 'CONTACT_US' | 'PROPERTY' | 'SLOT_BOOKING'>('ALL');
+  const [inquiryStatusFilter, setInquiryStatusFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    setContactSettings({ ...contactDetailsDb });
+  }, [activeTab]);
+
+  const handleSaveContactSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateContactDetails(contactSettings);
+    setContactSavedToast(true);
+    setTimeout(() => setContactSavedToast(false), 3500);
+  };
 
   const SUB_MENU_ITEMS: Record<string, { id: string; label: string; icon: any }[]> = {
     properties: [
@@ -942,7 +969,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'main_stats': return { title: 'Main Page Stats & Trust Metrics', sub: 'Edit Live Homepage Statistics, Trust Badges & Numbers' };
       case 'hero_cms': return { title: 'Homepage Builder Studio & Stats', sub: 'Customize Hero Sections, Stats, Backgrounds & Visible Elements' };
       case 'customization': return { title: 'Website Settings & Customization', sub: 'Configure Showcase Feeds, Brand Interactions & Stats' };
-      case 'inquiries': return { title: 'Orders & Leads Enquiries', sub: 'Track Customer Leads, Consultation Requests & Inquiries' };
+      case 'contact_settings': return { title: '📞 Contact Us Details CMS', sub: 'Edit Company Address, Priority Phones, Emails, Working Hours & Location Map' };
+      case 'inquiries': return { title: '📬 Contact Inquiries & Leads Inbox', sub: 'Manage and respond to Contact Us messages, buyer leads & consultation requests' };
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
       case 'media_manager': return { title: '🖥️ Main Page Settings', sub: 'Manage videos and settings displayed on the homepage carousel' };
       case 'users_data': return { title: '👥 Users Data (Registered Customers)', sub: 'Database of all registered and logged-in customers across AP & Telangana' };
@@ -1377,36 +1405,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
           {/* Section: SITE MANAGEMENT */}
           {[
+            { id: 'contact_settings', label: '📞 Contact Us Details CMS', icon: <FaPhoneAlt />, perm: 'site:contact_settings' },
+            { id: 'inquiries', label: '📬 Contact Inquiries & Leads', icon: <FaEnvelope />, perm: 'site:inquiries' },
             { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
             { id: 'media_manager', label: '🖥️ Main page settings', icon: <FaVideo />, perm: 'media_manager' },
             { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
             { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
             { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
             { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine />, perm: 'site:seo' },
-            { id: 'newsletter', label: 'Newsletter', icon: <FaEnvelope />, perm: 'site:newsletter' },
           ].filter(item => hasPermission('site_settings') || hasPermission(item.perm) || hasPermission(item.id)).length > 0 && (
             <>
               <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                SITE MANAGEMENT
+                SITE & CONTACT MANAGEMENT
               </div>
               {[
+                { id: 'contact_settings', label: '📞 Contact Us Details CMS', icon: <FaPhoneAlt />, perm: 'site:contact_settings' },
+                { id: 'inquiries', label: '📬 Contact Inquiries & Leads', icon: <FaEnvelope />, perm: 'site:inquiries' },
                 { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
                 { id: 'media_manager', label: '🖥️ Main page settings', icon: <FaVideo />, perm: 'media_manager' },
                 { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
                 { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
                 { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
                 { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine />, perm: 'site:seo' },
-                { id: 'newsletter', label: 'Newsletter', icon: <FaEnvelope />, perm: 'site:newsletter' },
               ]
                 .filter(item => hasPermission('site_settings') || hasPermission(item.perm) || hasPermission(item.id))
                 .map((item) => {
-                  const isActive = activeTab === item.id || (item.id === 'seo' && activeTab === 'customization') || (item.id === 'newsletter' && activeTab === 'inquiries');
+                  const isActive = activeTab === item.id || (item.id === 'seo' && activeTab === 'customization');
                   return (
                     <button
                       key={item.id}
                       onClick={() => {
                         if (item.id === 'seo') setActiveTab('customization');
-                        else if (item.id === 'newsletter') setActiveTab('inquiries');
                         else setActiveTab(item.id as any);
                         setExpandedMenu(null);
                       }}
@@ -3999,55 +4028,651 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           <BrokerManagementSystem showNotification={showNotification} activeSubTab={brokerSubTab} onSubTabChange={setBrokerSubTab} />
         )}
 
-        {/* ================= CATEGORY 5: CONTACT INQUIRIES ================= */}
-        {activeTab === 'inquiries' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {(() => {
-              const enquiriesToShow = allEnquiries.length > 0 ? allEnquiries : enquiriesDb;
-              
-              return enquiriesToShow.length === 0 ? (
-                <div style={{ backgroundColor: '#FFFFFF', padding: '60px', textAlign: 'center', border: '1px solid #E2E8F0', color: '#64748B', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.1rem', fontWeight: 700 }}>
-                  NO CUSTOMER INQUIRIES RECEIVED YET.
+        {/* ================= CATEGORY 5: CONTACT US DETAILS CMS ================= */}
+        {activeTab === 'contact_settings' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+            
+            {/* Header / Intro Card */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '14px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                  <span style={{ backgroundColor: '#ECFDF5', color: '#059669', padding: '6px 12px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 800 }}>LIVE CONTACT CMS</span>
+                  <span style={{ fontSize: '0.85rem', color: '#64748B' }}>Changes reflect immediately across website & mobile</span>
                 </div>
-              ) : (
-                enquiriesToShow.map(enq => (
-                  <div key={enq.id} style={{ backgroundColor: '#FFFFFF', padding: '20px 24px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-                        <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.03em' }}>{enq.customerName}</h4>
-                        <span style={{ padding: '2px 10px', fontSize: '0.72rem', fontWeight: 700, backgroundColor: enq.status === 'New' ? '#FEE2E2' : '#EFF6FF', color: enq.status === 'New' ? '#DC2626' : '#1E40AF', border: enq.status === 'New' ? '1px solid #FECACA' : '1px solid #BFDBFE', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>{enq.status.toUpperCase()}</span>
-                        <span style={{ color: '#94A3B8', fontSize: '0.85rem' }}>{enq.date || new Date(enq.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <p style={{ margin: '0 0 4px 0', fontSize: '0.9rem', color: '#475569' }}>
-                        Inquired about: <strong style={{ color: '#0F172A' }}>{enq.listingTitle}</strong>
-                        {enq.enquiryType === 'SLOT_BOOKING' && <span style={{ marginLeft: '8px', padding: '2px 8px', backgroundColor: '#FEF3C7', color: '#D97706', fontSize: '0.72rem', fontWeight: 700, borderRadius: '4px' }}>SLOT BOOKING</span>}
-                      </p>
-                      {enq.message && <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#475569', backgroundColor: '#F8FAFC', padding: '8px 12px', borderRadius: '6px', borderLeft: '3px solid #007A55' }}>"{enq.message}"</p>}
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>📞 {enq.phone} • ✉️ {enq.email}</p>
-                    </div>
+                <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A' }}>Contact Information & Location Settings</h3>
+                <p style={{ margin: '4px 0 0 0', color: '#64748B', fontSize: '0.9rem' }}>Edit registry headquarters address, priority direct phone lines, support emails, and Google Maps embed.</p>
+              </div>
 
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                      <select
-                        value={enq.status}
-                        onChange={e => handleUpdateEnquiryStatus(enq.id, e.target.value)}
-                        style={{ padding: '8px 14px', border: '1px solid #E2E8F0', fontWeight: 700, fontSize: '0.85rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", borderRadius: '6px', outline: 'none' }}
-                      >
-                        <option value="New">STATUS: NEW</option>
-                        <option value="Contacted">STATUS: CONTACTED</option>
-                        <option value="Follow-up">STATUS: FOLLOW-UP</option>
-                        <option value="Closed">STATUS: CLOSED</option>
-                      </select>
-                      <button
-                        onClick={() => handleDeleteEnquiry(enq.id)}
-                        style={{ padding: '8px 14px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', cursor: 'pointer', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >
-                        <FaTrash />
-                      </button>
+              <button
+                type="button"
+                onClick={handleSaveContactSettings}
+                style={{
+                  backgroundColor: '#059669',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.92rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <FaCheckCircle /> Save Contact Details
+              </button>
+            </div>
+
+            {contactSavedToast && (
+              <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '14px 20px', borderRadius: '10px', fontWeight: 700, fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '10px', animation: 'fadeIn 0.3s ease' }}>
+                <FaCheckCircle style={{ color: '#059669', fontSize: '1.2rem' }} />
+                <span>Contact Details updated successfully! Changes are live on the Contact Us page.</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveContactSettings} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
+                
+                {/* CARD 1: Physical Office & Headquarters */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaMapMarkerAlt />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>Headquarters & Physical Office</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>Primary corporate registry location details</p>
                     </div>
                   </div>
-                ))
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Organization / Desk Name</label>
+                      <input
+                        type="text"
+                        value={contactSettings.companyName || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, companyName: e.target.value })}
+                        placeholder="e.g. TheNexopp Advisory Desk"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Headquarters Card Title</label>
+                      <input
+                        type="text"
+                        value={contactSettings.headquartersTitle || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, headquartersTitle: e.target.value })}
+                        placeholder="e.g. Registry Headquarters"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Building / Tower Name</label>
+                      <input
+                        type="text"
+                        value={contactSettings.buildingName || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, buildingName: e.target.value })}
+                        placeholder="e.g. TheNexopp Towers"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Full Headquarters Address</label>
+                      <textarea
+                        rows={3}
+                        value={contactSettings.headquartersAddress || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, headquartersAddress: e.target.value })}
+                        placeholder="e.g. Level 14, Financial District, Gachibowli, Hyderabad, Telangana - 500032"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Working / Consultation Hours</label>
+                      <input
+                        type="text"
+                        value={contactSettings.workingHours || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, workingHours: e.target.value })}
+                        placeholder="e.g. Mon – Sat: 9:00 AM – 7:30 PM"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CARD 2: Direct Priority Phone Lines & WhatsApp */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaPhoneAlt />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>Priority Direct Call Lines & WhatsApp</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>Numbers for customer direct dialing & messaging</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Primary Priority Phone Line</label>
+                      <input
+                        type="text"
+                        value={contactSettings.phone1 || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, phone1: e.target.value })}
+                        placeholder="e.g. +91 40 4900 2200"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Secondary Support Phone Line</label>
+                      <input
+                        type="text"
+                        value={contactSettings.phone2 || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, phone2: e.target.value })}
+                        placeholder="e.g. +91 80 5600 7800"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#15803D', marginBottom: '6px' }}>WhatsApp Business Number</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ padding: '10px 14px', backgroundColor: '#F0FDF4', color: '#16A34A', borderRadius: '8px', border: '1px solid #BBF7D0', fontWeight: 700, fontSize: '0.9rem' }}>
+                          <FaWhatsapp />
+                        </span>
+                        <input
+                          type="text"
+                          value={contactSettings.whatsappNumber || ''}
+                          onChange={e => setContactSettings({ ...contactSettings, whatsappNumber: e.target.value })}
+                          placeholder="e.g. +91 80 5600 7800"
+                          style={{ flexGrow: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '10px', padding: '14px', backgroundColor: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>💡 Quick Tip:</span>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.78rem', color: '#64748B', lineHeight: '1.4' }}>
+                        When users click on the phone numbers on the Contact page, it automatically triggers their phone dialer. The WhatsApp link opens WhatsApp directly with your business number.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CARD 3: Official Email Desks & Page Subtitle */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#FEF2F2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaEnvelope />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>Official Email Desks & Tagline</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>Corporate inboxes and Contact Us header text</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>General Consultation Desk Email</label>
+                      <input
+                        type="email"
+                        value={contactSettings.emailDesk || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, emailDesk: e.target.value })}
+                        placeholder="e.g. desk@thenexopp.in"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Acquisitions & Institutional Email</label>
+                      <input
+                        type="email"
+                        value={contactSettings.emailAcquisitions || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, emailAcquisitions: e.target.value })}
+                        placeholder="e.g. acquisitions@thenexopp.in"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Contact Us Page Header Subtitle</label>
+                      <textarea
+                        rows={3}
+                        value={contactSettings.contactSubtitle || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, contactSubtitle: e.target.value })}
+                        placeholder="e.g. Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you."
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CARD 4: Google Maps Embed URL & Live Map Preview */}
+                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '14px', border: '1px solid #E2E8F0', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F3E8FF', color: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaDesktop />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>Google Maps Location & Live Embed</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>Iframe embed URL shown on Contact page</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Google Maps Embed Iframe URL</label>
+                      <input
+                        type="text"
+                        value={contactSettings.mapEmbedUrl || ''}
+                        onChange={e => setContactSettings({ ...contactSettings, mapEmbedUrl: e.target.value })}
+                        placeholder="https://www.google.com/maps/embed?pb=..."
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', height: '180px', border: '1px solid #E2E8F0', marginTop: '4px' }}>
+                      {contactSettings.mapEmbedUrl ? (
+                        <iframe
+                          src={contactSettings.mapEmbedUrl}
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0 }}
+                          allowFullScreen={false}
+                          loading="lazy"
+                          title="Preview Map"
+                        />
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94A3B8', fontSize: '0.85rem', backgroundColor: '#F8FAFC' }}>
+                          No map embed URL configured
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Bottom Save Action Bar */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '18px 24px', borderRadius: '14px', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center' }}>
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: '#059669',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '12px 32px',
+                    borderRadius: '10px',
+                    fontWeight: 800,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    boxShadow: '0 4px 14px rgba(5, 150, 105, 0.3)'
+                  }}
+                >
+                  <FaCheckCircle /> Save & Publish Contact Details
+                </button>
+              </div>
+            </form>
+
+          </div>
+        )}
+
+        {/* ================= CATEGORY 5.5: CONTACT INQUIRIES & LEADS INBOX ================= */}
+        {activeTab === 'inquiries' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+            
+            {(() => {
+              const baseList = allEnquiries.length > 0 ? allEnquiries : enquiriesDb;
+              
+              // Filter inquiries based on search, category, and status
+              const filteredEnquiries = baseList.filter(enq => {
+                // Category Filter
+                if (inquiryCategoryFilter === 'CONTACT_US' && enq.source !== 'Contact Us Page') return false;
+                if (inquiryCategoryFilter === 'PROPERTY' && enq.listingType !== 'PROPERTY' && enq.source === 'Contact Us Page') return false;
+                if (inquiryCategoryFilter === 'SLOT_BOOKING' && enq.enquiryType !== 'SLOT_BOOKING') return false;
+
+                // Status Filter
+                if (inquiryStatusFilter !== 'ALL' && enq.status !== inquiryStatusFilter) return false;
+
+                // Search Filter
+                if (inquirySearch.trim()) {
+                  const q = inquirySearch.toLowerCase().trim();
+                  const name = (enq.customerName || enq.name || '').toLowerCase();
+                  const phone = (enq.phone || '').toLowerCase();
+                  const email = (enq.email || '').toLowerCase();
+                  const msg = (enq.message || '').toLowerCase();
+                  const title = (enq.listingTitle || '').toLowerCase();
+                  return name.includes(q) || phone.includes(q) || email.includes(q) || msg.includes(q) || title.includes(q);
+                }
+
+                return true;
+              });
+
+              const totalCount = baseList.length;
+              const newCount = baseList.filter(e => e.status === 'New').length;
+              const contactedCount = baseList.filter(e => e.status === 'Contacted' || e.status === 'Follow-up').length;
+              const closedCount = baseList.filter(e => e.status === 'Closed').length;
+
+              return (
+                <>
+                  {/* Top Stats Overview Row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Total Inquiries</span>
+                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#0F172A' }}>{totalCount}</h3>
+                    </div>
+
+                    <div style={{ backgroundColor: '#FEF2F2', padding: '18px 20px', borderRadius: '12px', border: '1px solid #FECACA', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#DC2626', textTransform: 'uppercase' }}>New / Unread</span>
+                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#DC2626' }}>{newCount}</h3>
+                    </div>
+
+                    <div style={{ backgroundColor: '#EFF6FF', padding: '18px 20px', borderRadius: '12px', border: '1px solid #BFDBFE', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1E40AF', textTransform: 'uppercase' }}>In Follow-Up</span>
+                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#1E40AF' }}>{contactedCount}</h3>
+                    </div>
+
+                    <div style={{ backgroundColor: '#F0FDF4', padding: '18px 20px', borderRadius: '12px', border: '1px solid #BBF7D0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#16A34A', textTransform: 'uppercase' }}>Closed Deals</span>
+                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#16A34A' }}>{closedCount}</h3>
+                    </div>
+                  </div>
+
+                  {/* Filter & Search Bar */}
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                    
+                    {/* Category Filter Pills */}
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                      {[
+                        { id: 'ALL', label: `All Inquiries (${totalCount})` },
+                        { id: 'CONTACT_US', label: `📩 Contact Us Page (${baseList.filter(e => e.source === 'Contact Us Page').length})` },
+                        { id: 'PROPERTY', label: `🏢 Property Leads (${baseList.filter(e => e.listingType === 'PROPERTY' || (e.source && e.source.includes('Property'))).length})` },
+                        { id: 'SLOT_BOOKING', label: `📅 Slot Bookings (${baseList.filter(e => e.enquiryType === 'SLOT_BOOKING').length})` },
+                      ].map(pill => (
+                        <button
+                          key={pill.id}
+                          type="button"
+                          onClick={() => setInquiryCategoryFilter(pill.id as any)}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '20px',
+                            border: inquiryCategoryFilter === pill.id ? '1px solid #059669' : '1px solid #E2E8F0',
+                            backgroundColor: inquiryCategoryFilter === pill.id ? '#ECFDF5' : '#FFFFFF',
+                            color: inquiryCategoryFilter === pill.id ? '#059669' : '#475569',
+                            fontWeight: inquiryCategoryFilter === pill.id ? 700 : 500,
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {pill.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search & Status Controls */}
+                    <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ position: 'relative', flexGrow: 1, minWidth: '260px' }}>
+                        <FaSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                        <input
+                          type="text"
+                          value={inquirySearch}
+                          onChange={e => setInquirySearch(e.target.value)}
+                          placeholder="Search inquiries by customer name, phone, email, or message..."
+                          style={{ width: '100%', padding: '10px 14px 10px 38px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Status:</span>
+                        <select
+                          value={inquiryStatusFilter}
+                          onChange={e => setInquiryStatusFilter(e.target.value)}
+                          style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem', fontWeight: 600, outline: 'none', backgroundColor: '#FFFFFF' }}
+                        >
+                          <option value="ALL">All Statuses</option>
+                          <option value="New">🔴 New</option>
+                          <option value="Contacted">🔵 Contacted</option>
+                          <option value="Follow-up">🟡 Follow-up</option>
+                          <option value="Closed">🟢 Closed</option>
+                        </select>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Inquiry Cards List */}
+                  {filteredEnquiries.length === 0 ? (
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '60px', textAlign: 'center', borderRadius: '14px', border: '1px solid #E2E8F0', color: '#64748B', fontSize: '1rem', fontWeight: 600 }}>
+                      No inquiries match the selected filters or search query.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {filteredEnquiries.map(enq => {
+                        const isNew = enq.status === 'New';
+                        const isClosed = enq.status === 'Closed';
+                        const isContacted = enq.status === 'Contacted';
+                        const isFollowUp = enq.status === 'Follow-up';
+
+                        const cleanPhone = (enq.phone || '').replace(/\D/g, '');
+
+                        return (
+                          <div
+                            key={enq.id}
+                            style={{
+                              backgroundColor: '#FFFFFF',
+                              borderRadius: '14px',
+                              padding: '20px 24px',
+                              border: isNew ? '2px solid #FECACA' : '1px solid #E2E8F0',
+                              boxShadow: isNew ? '0 4px 12px rgba(220, 38, 38, 0.06)' : '0 2px 4px rgba(0,0,0,0.02)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '12px',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {/* Top Row: Customer Name, Status Badge, Date, Source */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                                  <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+                                    {enq.customerName || enq.name || 'Anonymous Investor'}
+                                  </h4>
+
+                                  {/* Status Badge */}
+                                  <span
+                                    style={{
+                                      padding: '3px 10px',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 800,
+                                      borderRadius: '6px',
+                                      backgroundColor: isNew ? '#FEE2E2' : isClosed ? '#DCFCE7' : isContacted ? '#EFF6FF' : '#FEF3C7',
+                                      color: isNew ? '#DC2626' : isClosed ? '#16A34A' : isContacted ? '#1E40AF' : '#D97706',
+                                      border: isNew ? '1px solid #FECACA' : isClosed ? '1px solid #BBF7D0' : isContacted ? '1px solid #BFDBFE' : '1px solid #FDE68A',
+                                      textTransform: 'uppercase'
+                                    }}
+                                  >
+                                    {enq.status}
+                                  </span>
+
+                                  {/* Source Badge */}
+                                  <span style={{ padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, borderRadius: '6px', backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0' }}>
+                                    {enq.source || 'Direct Portal'}
+                                  </span>
+
+                                  {enq.enquiryType === 'SLOT_BOOKING' && (
+                                    <span style={{ padding: '3px 10px', fontSize: '0.72rem', fontWeight: 800, borderRadius: '6px', backgroundColor: '#FEF3C7', color: '#D97706', border: '1px solid #FDE68A' }}>
+                                      📅 SLOT BOOKING
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#334155' }}>
+                                  Subject / Interest: <strong style={{ color: '#0F172A' }}>{enq.listingTitle || enq.interest || 'Advisory Consultation'}</strong>
+                                </p>
+                              </div>
+
+                              <div style={{ textAlign: 'right', fontSize: '0.82rem', color: '#94A3B8' }}>
+                                {enq.date || (enq.createdAt ? new Date(enq.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent')}
+                              </div>
+                            </div>
+
+                            {/* Message Content Bubble */}
+                            {enq.message && (
+                              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '8px', borderLeft: '4px solid #059669', color: '#334155', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                                <strong style={{ color: '#059669', fontSize: '0.8rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Customer Message:</strong>
+                                "{enq.message}"
+                              </div>
+                            )}
+
+                            {/* Contact Details & Quick Action Bar */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', paddingTop: '8px', borderTop: '1px solid #F1F5F9' }}>
+                              
+                              {/* Contact Info */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', fontSize: '0.88rem', color: '#475569' }}>
+                                {enq.phone && (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    📞 <strong style={{ color: '#0F172A' }}>{enq.phone}</strong>
+                                  </span>
+                                )}
+                                {enq.email && (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    ✉️ <strong style={{ color: '#0F172A' }}>{enq.email}</strong>
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Action Buttons: WhatsApp, Call, Email, Status Changer, Delete */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                {enq.phone && cleanPhone && (
+                                  <a
+                                    href={`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      padding: '7px 12px',
+                                      backgroundColor: '#DCFCE7',
+                                      color: '#15803D',
+                                      border: '1px solid #BBF7D0',
+                                      borderRadius: '6px',
+                                      fontSize: '0.82rem',
+                                      fontWeight: 700,
+                                      textDecoration: 'none'
+                                    }}
+                                  >
+                                    <FaWhatsapp /> WhatsApp
+                                  </a>
+                                )}
+
+                                {enq.phone && (
+                                  <a
+                                    href={`tel:${enq.phone.replace(/\s+/g, '')}`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      padding: '7px 12px',
+                                      backgroundColor: '#F1F5F9',
+                                      color: '#334155',
+                                      border: '1px solid #CBD5E1',
+                                      borderRadius: '6px',
+                                      fontSize: '0.82rem',
+                                      fontWeight: 700,
+                                      textDecoration: 'none'
+                                    }}
+                                  >
+                                    <FaPhoneAlt /> Call
+                                  </a>
+                                )}
+
+                                {enq.email && (
+                                  <a
+                                    href={`mailto:${enq.email}`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      padding: '7px 12px',
+                                      backgroundColor: '#F1F5F9',
+                                      color: '#334155',
+                                      border: '1px solid #CBD5E1',
+                                      borderRadius: '6px',
+                                      fontSize: '0.82rem',
+                                      fontWeight: 700,
+                                      textDecoration: 'none'
+                                    }}
+                                  >
+                                    <FaEnvelope /> Email
+                                  </a>
+                                )}
+
+                                {/* Status Selector */}
+                                <select
+                                  value={enq.status}
+                                  onChange={e => handleUpdateEnquiryStatus(enq.id, e.target.value)}
+                                  style={{
+                                    padding: '7px 12px',
+                                    border: '1px solid #CBD5E1',
+                                    fontWeight: 700,
+                                    fontSize: '0.82rem',
+                                    borderRadius: '6px',
+                                    outline: 'none',
+                                    backgroundColor: '#FFFFFF',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <option value="New">STATUS: NEW</option>
+                                  <option value="Contacted">STATUS: CONTACTED</option>
+                                  <option value="Follow-up">STATUS: FOLLOW-UP</option>
+                                  <option value="Closed">STATUS: CLOSED</option>
+                                </select>
+
+                                {/* Delete Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteEnquiry(enq.id)}
+                                  title="Delete Inquiry Message"
+                                  style={{
+                                    padding: '7px 10px',
+                                    backgroundColor: '#FEE2E2',
+                                    color: '#DC2626',
+                                    border: '1px solid #FECACA',
+                                    cursor: 'pointer',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                </>
               );
             })()}
+
           </div>
         )}
 

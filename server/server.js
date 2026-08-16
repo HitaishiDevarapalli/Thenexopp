@@ -2666,6 +2666,49 @@ app.put('/api/settings', async (req, res, next) => {
   }
 });
 
+// ── CONTACT SETTINGS ENDPOINTS ─────────────────────────────────────────
+const contactSettingsPath = path.join(__dirname, 'contact_settings_store.json');
+const defaultContactSettings = {
+  companyName: 'TheNexopp Advisory Desk',
+  headquartersTitle: 'Registry Headquarters',
+  buildingName: 'TheNexopp Towers',
+  headquartersAddress: 'Level 14, Financial District, Gachibowli, Hyderabad, Telangana - 500032',
+  workingHours: 'Mon – Sat: 9:00 AM – 7:30 PM',
+  phone1: '+91 40 4900 2200',
+  phone2: '+91 80 5600 7800',
+  emailDesk: 'desk@thenexopp.in',
+  emailAcquisitions: 'acquisitions@thenexopp.in',
+  whatsappNumber: '+91 80 5600 7800',
+  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin',
+  contactSubtitle: 'Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you.'
+};
+
+app.get('/api/contact-settings', (req, res) => {
+  try {
+    if (fs.existsSync(contactSettingsPath)) {
+      const raw = fs.readFileSync(contactSettingsPath, 'utf8');
+      return res.json(JSON.parse(raw));
+    }
+    return res.json(defaultContactSettings);
+  } catch (err) {
+    return res.json(defaultContactSettings);
+  }
+});
+
+app.post('/api/contact-settings', (req, res) => {
+  try {
+    let existing = defaultContactSettings;
+    if (fs.existsSync(contactSettingsPath)) {
+      try { existing = JSON.parse(fs.readFileSync(contactSettingsPath, 'utf8')); } catch (_) {}
+    }
+    const updated = { ...existing, ...req.body };
+    fs.writeFileSync(contactSettingsPath, JSON.stringify(updated, null, 2), 'utf8');
+    return res.json(updated);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to save contact settings' });
+  }
+});
+
 // ── ADMIN MODULES ENDPOINTS (Persistent Server Storage + DB) ───────────────
 const modulesStorePath = path.join(__dirname, 'admin_modules_store.json');
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock, FaCheckCircle, FaBuilding, FaShieldAlt, FaBriefcase, FaCoins } from 'react-icons/fa';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock, FaCheckCircle, FaBuilding, FaShieldAlt, FaBriefcase, FaCoins, FaWhatsapp } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
+import { API_BASE_URL, enquiriesDb, contactDetailsDb, notifyDataChanged } from '../db/marketplaceDb';
 
 export const ContactUs: React.FC = () => {
   const { user } = useAuth();
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     const lenis = (window as any).lenis;
@@ -12,6 +13,10 @@ export const ContactUs: React.FC = () => {
       lenis.scrollTo(0, { immediate: true });
     }
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+    const handler = () => setTick(t => t + 1);
+    window.addEventListener('nexopp_data_changed', handler);
+    return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);
 
   const [formData, setFormData] = useState({
@@ -47,35 +52,55 @@ export const ContactUs: React.FC = () => {
     }
 
     setSubmitting(true);
+    const newEnquiry = {
+      customerName: formData.name.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      listingTitle: `Contact Us: ${formData.category}`,
+      listingType: 'GENERAL',
+      listingId: 'contact-page-inquiry',
+      enquiryType: 'GENERAL_ENQUIRY',
+      message: formData.message.trim() ? `[Category: ${formData.category}] ${formData.message.trim()}` : `General consultation requested for ${formData.category}`,
+      source: 'Contact Us Page',
+      priority: 'High',
+      brokerName: 'Senior Portfolio Director',
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    };
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/enquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          customerName: formData.name.trim(),
-          phone: formData.phone.trim(),
-          email: formData.email.trim(),
-          listingTitle: `Advisory Consultation: ${formData.category}`,
-          listingType: 'GENERAL',
-          listingId: 'advisory-desk',
-          enquiryType: 'GENERAL_ENQUIRY',
-          message: formData.message.trim() ? `[Category: ${formData.category}] ${formData.message.trim()}` : `General consultation requested for ${formData.category}`,
-          source: 'Contact Us Page',
-          priority: 'High',
-          brokerName: 'Senior Portfolio Director',
-          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-        })
+        body: JSON.stringify(newEnquiry)
       });
 
       if (res.ok) {
-        // Also update local in-memory store for instant UI sync
-        enquiriesDb.push({
+        const savedData = await res.json().catch(() => null);
+        enquiriesDb.unshift({
+          id: savedData?.id || `ENQ-CU-${Date.now()}`,
+          customerName: formData.name.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          listingTitle: `Contact Us: ${formData.category}`,
+          brokerName: 'Senior Portfolio Director',
+          status: 'New' as const,
+          priority: 'High' as const,
+          source: 'Contact Us Page',
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          name: formData.name.trim(),
+          interest: `Category: ${formData.category}`,
+          message: formData.message.trim()
+        });
+        notifyDataChanged();
+      } else {
+        // Fallback store locally
+        enquiriesDb.unshift({
           id: `ENQ-CU-${Date.now()}`,
           customerName: formData.name.trim(),
           phone: formData.phone.trim(),
           email: formData.email.trim(),
-          listingTitle: `Advisory Consultation: ${formData.category}`,
+          listingTitle: `Contact Us: ${formData.category}`,
           brokerName: 'Senior Portfolio Director',
           status: 'New' as const,
           priority: 'High' as const,
@@ -89,6 +114,22 @@ export const ContactUs: React.FC = () => {
       }
     } catch (err) {
       console.warn('Backend enquiry save notice:', err);
+      enquiriesDb.unshift({
+        id: `ENQ-CU-${Date.now()}`,
+        customerName: formData.name.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        listingTitle: `Contact Us: ${formData.category}`,
+        brokerName: 'Senior Portfolio Director',
+        status: 'New' as const,
+        priority: 'High' as const,
+        source: 'Contact Us Page',
+        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        name: formData.name.trim(),
+        interest: `Category: ${formData.category}`,
+        message: formData.message.trim()
+      });
+      notifyDataChanged();
     } finally {
       setSubmitting(false);
       setSubmitted(true);
@@ -105,25 +146,26 @@ export const ContactUs: React.FC = () => {
     }
   };
 
+  const details = contactDetailsDb;
 
   return (
     <section id="contact" className="section-padding contact-section" style={{ backgroundColor: '#F8FAFC', padding: '115px 20px 60px 20px', minHeight: '80vh', fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif" }}>
       <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Header - Matching About Us exact styling */}
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '50px' }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '2px', backgroundColor: '#EFF6FF', padding: '6px 16px', borderRadius: '20px', display: 'inline-block', marginBottom: '16px' }}>
             GET IN TOUCH
           </span>
           <h2 style={{ fontSize: '2.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 16px 0', letterSpacing: '-0.03em' }}>
-            Connect with TheNexOpp Advisory Desk
+            Connect with {details.companyName || 'TheNexOpp Advisory Desk'}
           </h2>
           <p style={{ fontSize: '1.1rem', color: '#64748B', maxWidth: '720px', margin: '0 auto', lineHeight: '1.6' }}>
-            Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you.
+            {details.contactSubtitle || 'Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you.'}
           </p>
         </div>
 
-        {/* 3 Executive Contact Info Cards Grid - Matching About Us Cards */}
+        {/* 3 Executive Contact Info Cards Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px', marginBottom: '48px' }}>
           
           {/* Card 1: Headquarters */}
@@ -153,19 +195,19 @@ export const ContactUs: React.FC = () => {
                 <FaMapMarkerAlt />
               </div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>
-                Registry Headquarters
+                {details.headquartersTitle || 'Registry Headquarters'}
               </h3>
               <p style={{ fontSize: '0.98rem', fontWeight: 700, color: '#2563EB', margin: '0 0 12px 0' }}>
-                TheNexopp Towers
+                {details.buildingName || 'TheNexopp Towers'}
               </p>
               <p style={{ fontSize: '0.95rem', color: '#64748B', lineHeight: '1.6', margin: 0 }}>
-                Level 14, Financial District, Gachibowli, Hyderabad, Telangana - 500032
+                {details.headquartersAddress || 'Level 14, Financial District, Gachibowli, Hyderabad, Telangana - 500032'}
               </p>
             </div>
             
             <div style={{ borderTop: '1px solid #F1F5F9', marginTop: '24px', paddingTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: '#059669', fontSize: '0.88rem', fontWeight: 700 }}>
               <FaClock />
-              <span>Mon – Sat: 9:00 AM – 7:30 PM</span>
+              <span>{details.workingHours || 'Mon – Sat: 9:00 AM – 7:30 PM'}</span>
             </div>
           </div>
 
@@ -202,12 +244,21 @@ export const ContactUs: React.FC = () => {
                 Immediate Assistance
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <a href="tel:+914049002200" style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', textDecoration: 'none' }}>
-                  +91 40 4900 2200
-                </a>
-                <a href="tel:+918056007800" style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', textDecoration: 'none' }}>
-                  +91 80 5600 7800
-                </a>
+                {details.phone1 && (
+                  <a href={`tel:${details.phone1.replace(/\s+/g, '')}`} style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', textDecoration: 'none' }}>
+                    {details.phone1}
+                  </a>
+                )}
+                {details.phone2 && (
+                  <a href={`tel:${details.phone2.replace(/\s+/g, '')}`} style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', textDecoration: 'none' }}>
+                    {details.phone2}
+                  </a>
+                )}
+                {details.whatsappNumber && (
+                  <a href={`https://wa.me/${details.whatsappNumber.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', fontWeight: 700, color: '#16A34A', textDecoration: 'none', marginTop: '4px' }}>
+                    <FaWhatsapp /> WhatsApp Support
+                  </a>
+                )}
               </div>
             </div>
             
@@ -250,12 +301,16 @@ export const ContactUs: React.FC = () => {
                 Written Requests & Documentation
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <a href="mailto:desk@thenexopp.in" style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none' }}>
-                  desk@thenexopp.in
-                </a>
-                <a href="mailto:acquisitions@thenexopp.in" style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none' }}>
-                  acquisitions@thenexopp.in
-                </a>
+                {details.emailDesk && (
+                  <a href={`mailto:${details.emailDesk}`} style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none' }}>
+                    {details.emailDesk}
+                  </a>
+                )}
+                {details.emailAcquisitions && (
+                  <a href={`mailto:${details.emailAcquisitions}`} style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0F172A', textDecoration: 'none' }}>
+                    {details.emailAcquisitions}
+                  </a>
+                )}
               </div>
             </div>
             
@@ -418,14 +473,14 @@ export const ContactUs: React.FC = () => {
               <div data-lenis-prevent="true" style={{ borderRadius: '18px', overflow: 'hidden', height: '280px', border: '1px solid #CBD5E1', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
                 <iframe 
                   data-lenis-prevent="true"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
+                  src={details.mapEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"} 
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
                   allowFullScreen={true} 
                   loading="lazy" 
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="TheNexopp Towers Location Map"
+                  title="TheNexopp Headquarters Location Map"
                 ></iframe>
               </div>
             </div>

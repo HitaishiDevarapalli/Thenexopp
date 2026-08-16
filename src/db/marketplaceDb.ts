@@ -630,6 +630,51 @@ export let servicesDb: ServiceProvider[] = [];
 export let enquiriesDb: CustomerEnquiry[] = [];
 export let franchiseEnquiriesDb: FranchiseEnquiry[] = [];
 export let siteSettingsDb: SiteSettings = defaultSettings;
+
+export interface ContactDetails {
+  companyName: string;
+  headquartersTitle: string;
+  buildingName: string;
+  headquartersAddress: string;
+  workingHours: string;
+  phone1: string;
+  phone2: string;
+  emailDesk: string;
+  emailAcquisitions: string;
+  whatsappNumber: string;
+  mapEmbedUrl: string;
+  contactSubtitle: string;
+}
+
+export const defaultContactDetails: ContactDetails = {
+  companyName: 'TheNexopp Advisory Desk',
+  headquartersTitle: 'Registry Headquarters',
+  buildingName: 'TheNexopp Towers',
+  headquartersAddress: 'Level 14, Financial District, Gachibowli, Hyderabad, Telangana - 500032',
+  workingHours: 'Mon – Sat: 9:00 AM – 7:30 PM',
+  phone1: '+91 40 4900 2200',
+  phone2: '+91 80 5600 7800',
+  emailDesk: 'desk@thenexopp.in',
+  emailAcquisitions: 'acquisitions@thenexopp.in',
+  whatsappNumber: '+91 80 5600 7800',
+  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin',
+  contactSubtitle: 'Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you.'
+};
+
+export let contactDetailsDb: ContactDetails = loadFromStorage('nexopp_contact_details', defaultContactDetails);
+
+export const updateContactDetails = (newDetails: Partial<ContactDetails>) => {
+  contactDetailsDb = { ...contactDetailsDb, ...newDetails };
+  saveToStorage('nexopp_contact_details', contactDetailsDb);
+  notifyDataChanged();
+  fetch(`${API_BASE_URL}/api/contact-settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(contactDetailsDb)
+  }).catch(() => {});
+};
+
 export let teamMembersDb: TeamMember[] = [];
 export let employeeUsersDb: EmployeeUser[] = [];
 export let rolesDb: Role[] = [];
@@ -883,6 +928,14 @@ const loadData = async () => {
     safeFetchJson(`${API_BASE_URL}/api/settings`).then(data => {
       if (data && typeof data === 'object' && Object.keys(data).length > 0) {
         siteSettingsDb = { ...siteSettingsDb, ...data };
+        notifyDataChanged();
+      }
+    });
+
+    safeFetchJson(`${API_BASE_URL}/api/contact-settings`).then(data => {
+      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        contactDetailsDb = { ...contactDetailsDb, ...data };
+        saveToStorage('nexopp_contact_details', contactDetailsDb);
         notifyDataChanged();
       }
     });
