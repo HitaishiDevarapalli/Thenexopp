@@ -3081,6 +3081,10 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error({ reason, promise }, 'CRITICAL: Caught unhandledRejection to prevent process crash');
 });
 
-app.listen(PORT, () => {
-  logger.info(`[NEXOPP Enterprise API] Server running on port ${PORT} (${process.env.NODE_ENV || 'production'})`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`[NEXOPP Enterprise API] Server running on http://0.0.0.0:${PORT} and http://127.0.0.1:${PORT} (${process.env.NODE_ENV || 'production'})`);
+});
+
+server.on('error', (err) => {
+  logger.error({ error: err.message }, `Server failed to start on port ${PORT}`);
 });
