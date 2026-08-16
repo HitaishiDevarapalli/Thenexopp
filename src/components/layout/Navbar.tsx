@@ -3,7 +3,7 @@ import {
   FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, 
   FaChevronDown, FaMapMarkerAlt, FaStore, FaHandHoldingUsd, 
   FaChartLine, FaShieldAlt, FaEnvelope, FaRegHeart, FaHeart, 
-  FaUser, FaBars, FaShoppingBag, FaPlus, FaTimes, FaLayerGroup
+  FaUser, FaBars, FaShoppingBag, FaPlus, FaTimes, FaLayerGroup, FaSignOutAlt
 } from 'react-icons/fa';
 import { selectedCity, setSelectedCity, siteSettingsDb, isModuleActive } from '../../db/marketplaceDb';
 import { Logo } from '../common/Logo';
@@ -730,7 +730,57 @@ export const Navbar: React.FC<NavbarProps> = ({
               <FaPlus /> Post Property Listing
             </button>
 
-            {(!user || !user.profileCompleted) && (
+            {user ? (
+              <>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onNavigateToPage?.('wishlistPage');
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#1E40AF',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <FaUser style={{ color: '#FCD34D' }} /> My Profile & Dashboard
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    backgroundColor: '#F1F5F9',
+                    color: '#475569',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <FaSignOutAlt /> Sign Out
+                </button>
+              </>
+            ) : (
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);

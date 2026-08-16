@@ -6291,6 +6291,11 @@ table {
   .navbar > div {
     padding: 0 16px !important;
   }
+  .navbar-location-btn,
+  .navbar-wishlist-btn,
+  .navbar-post-btn {
+    display: none !important;
+  }
   
   /* Make location button and profile fit nicely in top row */
   .navbar-location-btn {
