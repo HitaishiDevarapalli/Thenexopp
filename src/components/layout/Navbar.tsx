@@ -25,6 +25,7 @@ interface NavbarProps {
   onGoHome?: () => void;
   isSubpage?: boolean;
   onNavigateToPage?: (page: string) => void;
+  currentPage?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,8 +36,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateFranchise,
   onNavigateFinance,
   onGoHome,
-  isSubpage: _isSubpage,
-  onNavigateToPage
+  isSubpage,
+  onNavigateToPage,
+  currentPage
 }) => {
   const { user, openLoginModal, logout } = useAuth();
   const { wishlistItems } = useWishlist();
@@ -76,6 +78,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       const scrollPos = window.scrollY || document.documentElement.scrollTop;
       setScrolled(scrollPos > 20);
 
+      // Only perform homepage scroll section tracking if on home page
+      const isHome = (!currentPage || currentPage === 'home') && !isSubpage;
+      if (!isHome) return;
+
       // If at top of homepage, force 'hero' (Home) as active section
       if (scrollPos < 150) {
         setActiveSection('hero');
@@ -104,7 +110,57 @@ export const Navbar: React.FC<NavbarProps> = ({
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [currentPage, isSubpage]);
+
+  // Compute active navigation tab precisely so Home does not glow on other pages
+  const currentActiveTab = React.useMemo(() => {
+    if (currentPage && currentPage !== 'home') {
+      if (['propertiesPage', 'flatsPage', 'villasPage', 'landPage', 'rentPage', 'sellPropertyPage', 'propertyDetails'].includes(currentPage)) {
+        return 'properties';
+      }
+      if (['franchisePage', 'newFranchise', 'franchiseResales', 'franchiseDetails'].includes(currentPage)) {
+        return 'franchise';
+      }
+      if (['businessPage', 'businessListings', 'sellBusinessPage'].includes(currentPage)) {
+        return 'business';
+      }
+      if (['financePage', 'loansPage', 'insurancePage', 'financeServicePage'].includes(currentPage)) {
+        return 'finance';
+      }
+      if (currentPage === 'aboutUsPage') {
+        return 'about';
+      }
+      if (currentPage === 'contactUsPage') {
+        return 'contact';
+      }
+      return '';
+    }
+
+    if (isSubpage) {
+      const pathname = (window.location.pathname || '').toLowerCase();
+      if (pathname.includes('/properties') || pathname.includes('/flats') || pathname.includes('/villas') || pathname.includes('/land') || pathname.includes('/rent')) {
+        return 'properties';
+      }
+      if (pathname.includes('/franchise')) {
+        return 'franchise';
+      }
+      if (pathname.includes('/business')) {
+        return 'business';
+      }
+      if (pathname.includes('/finance') || pathname.includes('/loans') || pathname.includes('/insurance')) {
+        return 'finance';
+      }
+      if (pathname.includes('/about')) {
+        return 'about';
+      }
+      if (pathname.includes('/contact')) {
+        return 'contact';
+      }
+      return '';
+    }
+
+    return activeSection;
+  }, [currentPage, isSubpage, activeSection]);
 
   const rawMenuItems = [
     { id: 'hero', label: 'Home', icon: <FaHome /> },
@@ -282,7 +338,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* 2. Center: Clean & Professional Desktop Navigation */}
           <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {menuItems.map((item) => {
-              const isActive = activeSection === item.id;
+              const isActive = currentActiveTab === item.id;
               const isDropdownOpen = openDropdown === item.id;
 
               return (
@@ -338,7 +394,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </button>
 
-                  {/* Modern Floating Dropdown Card */}
+                  {/* Modern Floating Dropdown Card (Clean Option Names, No Sub-descriptions) */}
                   {item.dropdown && isDropdownOpen && (
                     <div
                       style={{
@@ -348,10 +404,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                         transform: 'translateX(-50%)',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #E2E8F0',
-                        borderRadius: '16px',
-                        boxShadow: '0 20px 40px -12px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.02)',
-                        padding: '8px',
-                        minWidth: '290px',
+                        borderRadius: '14px',
+                        boxShadow: '0 16px 36px -8px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.02)',
+                        padding: '6px',
+                        minWidth: '220px',
                         zIndex: 10000,
                         animation: 'fadeIn 0.15s ease-out',
                       }}
@@ -365,9 +421,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '12px',
-                              padding: '10px 12px',
-                              borderRadius: '12px',
+                              gap: '10px',
+                              padding: '8px 12px',
+                              borderRadius: '10px',
                               textDecoration: 'none',
                               transition: 'all 0.15s ease',
                               backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
@@ -381,40 +437,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                             }}
                           >
                             <div style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '10px',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '8px',
                               backgroundColor: sub.isCta ? '#059669' : `${sub.color}14`,
                               color: sub.isCta ? '#FFFFFF' : sub.color,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: '15px',
+                              fontSize: '13px',
                               flexShrink: 0,
                             }}>
                               {sub.subIcon}
                             </div>
-                            <div style={{ flex: 1, overflow: 'hidden' }}>
-                              <div style={{
-                                fontSize: '13.5px',
-                                fontWeight: 700,
-                                color: sub.isCta ? '#059669' : '#0F172A',
-                                lineHeight: 1.25,
-                              }}>
-                                {sub.name}
-                              </div>
-                              {sub.desc && (
-                                <div style={{
-                                  fontSize: '11.5px',
-                                  color: '#64748B',
-                                  marginTop: '2px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}>
-                                  {sub.desc}
-                                </div>
-                              )}
+                            <div style={{
+                              fontSize: '13.5px',
+                              fontWeight: sub.isCta ? 700 : 600,
+                              color: sub.isCta ? '#059669' : '#0F172A',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {sub.name}
                             </div>
                           </a>
                         ))}

@@ -269,6 +269,7 @@ export const App: React.FC = () => {
     <div className="app-container">
       {currentPage !== 'adminPortal' && (
         <Navbar 
+          currentPage={currentPage}
           isSubpage={currentPage !== 'home'}
           heroBgIndex={heroBgIndex} 
           onOpenWishlist={() => navigateTo('wishlist')} 
