@@ -97,6 +97,9 @@ import {
   editFilterMasterItem,
   masterLocalitiesDb,
   masterAreasDb,
+  addArea,
+  toggleAreaActive,
+  deleteArea,
   addLocality,
   toggleLocalityActive,
   adminModulesDb,
@@ -770,9 +773,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [editingFranchise, setEditingFranchise] = useState<FranchiseListing | null>(null);
   const [editingBroker, setEditingBroker] = useState<Dealer | null>(null);
 
-  // Localities Management State
+  // Areas & Localities Management State
+  const [newAreaName, setNewAreaName] = useState('');
+  const [selectedAreaCityId, setSelectedAreaCityId] = useState(masterLocationsDb[0]?.id || 'loc_3');
   const [newLocalityName, setNewLocalityName] = useState('');
-  const [selectedLocalityCityId, setSelectedLocalityCityId] = useState(masterLocationsDb[0]?.id || '');
+  const [selectedLocalityCityId, setSelectedLocalityCityId] = useState(masterLocationsDb[0]?.id || 'loc_3');
   const [selectedLocalityAreaId, setSelectedLocalityAreaId] = useState('');
 
 
@@ -3794,10 +3799,105 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
               </div>
 
+              {/* CARD 6.5: Areas by City Management */}
+              <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Areas by City</h3>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
+                    {masterAreasDb.filter(a => a.is_active).length} Active / {masterAreasDb.length} Total
+                  </span>
+                </div>
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newAreaName.trim() || !selectedAreaCityId) return;
+                    addArea(newAreaName.trim(), selectedAreaCityId);
+                    setNewAreaName('');
+                    showNotification('Area added successfully! It will now appear in filters.', 'success');
+                  }}
+                  style={{ display: 'flex', gap: '8px' }}
+                >
+                  <select 
+                    value={selectedAreaCityId} 
+                    onChange={(e) => setSelectedAreaCityId(e.target.value)}
+                    style={{ width: '38%', padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
+                  >
+                    {masterLocationsDb.filter(l => l.is_active).map(loc => (
+                      <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Add area (e.g. Brodipet, Arundelpet)..."
+                    value={newAreaName}
+                    onChange={(e) => setNewAreaName(e.target.value)}
+                    style={{ flex: 1, padding: '9px 14px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!selectedAreaCityId}
+                    style={{ backgroundColor: selectedAreaCityId ? '#059669' : '#94A3B8', color: '#FFFFFF', border: 'none', padding: '9px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: selectedAreaCityId ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FaPlus /> Add
+                  </button>
+                </form>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
+                  {masterAreasDb.filter(a => !selectedAreaCityId || a.cityId === selectedAreaCityId).map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        backgroundColor: item.is_active ? '#F8FAFC' : '#FEF2F2',
+                        border: item.is_active ? '1px solid #E2E8F0' : '1px solid #FECACA',
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
+                          📌 {item.name}
+                        </span>
+                        <span style={{ fontSize: '10.5px', color: '#64748B', marginTop: '2px', fontWeight: 600 }}>
+                          City: {masterLocationsDb.find(c => c.id === item.cityId)?.name || item.cityId}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toggleAreaActive(item.id);
+                            showNotification(`Area "${item.name}" updated`, 'info');
+                          }}
+                          style={{ backgroundColor: item.is_active ? '#10B981' : '#CBD5E1', color: '#FFFFFF', border: 'none', padding: '5px 12px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          {item.is_active ? <><FaEye /> Show</> : <><FaEyeSlash /> Hide</>}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Delete area "${item.name}"?`)) {
+                              deleteArea(item.id);
+                              showNotification(`Area "${item.name}" deleted`, 'info');
+                            }
+                          }}
+                          style={{ backgroundColor: '#EF4444', color: '#FFFFFF', border: 'none', padding: '5px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* CARD 7: Localities & Areas Management */}
               <div style={{ backgroundColor: '#FFFFFF', padding: '22px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 16px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Localities & Areas</h3>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Localities by Area</h3>
                   <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#ECFDF5', color: '#059669', padding: '4px 10px', borderRadius: '9999px' }}>
                     {masterLocalitiesDb.filter(c => c.is_active).length} Active / {masterLocalitiesDb.length} Total
                   </span>

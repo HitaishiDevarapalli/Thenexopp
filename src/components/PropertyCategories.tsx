@@ -67,23 +67,33 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [bhkFilter, setBhkFilter] = useState('Any BHK');
   const [rentCategoryFilter, setRentCategoryFilter] = useState<'All' | 'Residential' | 'Commercial'>('All');
 
+  // Dynamic Cities (Master locations + any unique cities present in propertiesDb)
+  const availableCities = useMemo(() => {
+    const masterCities = masterLocationsDb.filter(c => c.is_active);
+    const propCities = new Set<string>();
+    propertiesDb.forEach(p => {
+      if (p.city && p.city.trim()) propCities.add(p.city.trim());
+    });
+    const list = [...masterCities];
+    propCities.forEach(cName => {
+      if (!list.some(c => c.name.toLowerCase() === cName.toLowerCase())) {
+        list.push({ id: `city_${cName.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`, name: cName, is_active: true, type: 'location' });
+      }
+    });
+    return list;
+  }, [masterLocationsDb, propertiesDb]);
+
   useEffect(() => {
     const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
     if (currentGlobalCity) {
       setLocationText(currentGlobalCity);
-      // Auto-select city if it matches a master location
-      const matchedCity = masterLocationsDb.find(c => c.is_active && currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()));
-      if (matchedCity) {
+      // Auto-select city if it matches available cities
+      const matchedCity = availableCities.find(c => c.is_active && (currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(currentGlobalCity.toLowerCase())));
+      if (matchedCity && !selectedCityId) {
         setSelectedCityId(matchedCity.id);
-        // Check if the search text matches an area within that city
-        const matchedArea = masterAreasDb.find(a => a.cityId === matchedCity.id && a.is_active && currentGlobalCity.toLowerCase().includes(a.name.toLowerCase()));
-        if (matchedArea) {
-          setSelectedAreaId(matchedArea.id);
-          setAreaSearchText(matchedArea.name);
-        }
       }
     }
-  }, [location?.city, location?.displayName, selectedCity]);
+  }, [location?.city, location?.displayName, selectedCity, availableCities]);
 
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -520,7 +530,71 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setLocalitySearchText('');
   };
 
-  // cityLocalities is no longer needed — replaced by hierarchical City→Area→Locality system
+  // Dynamic Areas for Selected City (Master areas + any custom areas added to properties in this city)
+  const availableAreas = useMemo(() => {
+    if (!selectedCityId) return [];
+    const selectedCityObj = availableCities.find(c => c.id === selectedCityId);
+    const cityName = selectedCityObj ? selectedCityObj.name.toLowerCase().trim() : '';
+
+    const masterAreas = masterAreasDb.filter(a => a.is_active && (a.cityId === selectedCityId || (selectedCityObj && a.cityId === selectedCityObj.id)));
+    const areaMap = new Map<string, { id: string; name: string; cityId: string; is_active: boolean }>();
+
+    masterAreas.forEach(a => {
+      areaMap.set(a.name.toLowerCase().trim(), a);
+    });
+
+    propertiesDb.forEach(p => {
+      const pCity = (p.city || '').toLowerCase().trim();
+      if ((cityName && pCity.includes(cityName)) || !cityName) {
+        if (p.area && p.area.trim()) {
+          const areaKey = p.area.toLowerCase().trim();
+          if (!areaMap.has(areaKey)) {
+            areaMap.set(areaKey, {
+              id: `area_custom_${areaKey.replace(/[^a-z0-9]+/g, '_')}`,
+              name: p.area.trim(),
+              cityId: selectedCityId,
+              is_active: true
+            });
+          }
+        }
+      }
+    });
+
+    return Array.from(areaMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [selectedCityId, availableCities, masterAreasDb, propertiesDb]);
+
+  // Dynamic Localities for Selected Area (Master localities + any custom localities in properties)
+  const availableLocalities = useMemo(() => {
+    if (!selectedAreaId) return [];
+    const selectedAreaObj = availableAreas.find(a => a.id === selectedAreaId);
+    const areaName = selectedAreaObj ? selectedAreaObj.name.toLowerCase().trim() : '';
+
+    const masterLocs = masterLocalitiesDb.filter(l => l.is_active && (l.areaId === selectedAreaId || (selectedAreaObj && l.areaId === selectedAreaObj.id)));
+    const locMap = new Map<string, { id: string; name: string; areaId: string; is_active: boolean }>();
+
+    masterLocs.forEach(l => {
+      locMap.set(l.name.toLowerCase().trim(), l);
+    });
+
+    propertiesDb.forEach(p => {
+      const pArea = (p.area || '').toLowerCase().trim();
+      if ((areaName && pArea.includes(areaName)) || !areaName) {
+        if (p.locality && p.locality.trim()) {
+          const locKey = p.locality.toLowerCase().trim();
+          if (!locMap.has(locKey)) {
+            locMap.set(locKey, {
+              id: `loc_custom_${locKey.replace(/[^a-z0-9]+/g, '_')}`,
+              name: p.locality.trim(),
+              areaId: selectedAreaId,
+              is_active: true
+            });
+          }
+        }
+      }
+    });
+
+    return Array.from(locMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [selectedAreaId, availableAreas, masterLocalitiesDb, propertiesDb]);
 
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
@@ -657,6 +731,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         cityId: resolvedCityId,
         areaId: resolvedAreaId,
         localityId: resolvedLocalityId,
+        distanceKm: (p.latitude && p.longitude && location?.lat && location?.lng) ? getDistance(location.lat, location.lng, p.latitude, p.longitude) : 0,
       };
     });
 
@@ -680,13 +755,36 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     let filtered = baseList.filter((item) => {
       // Hierarchical Location Filter (City → Area → Locality)
       if (selectedCityId) {
-        if (item.cityId !== selectedCityId) return false;
+        const selCity = availableCities.find(c => c.id === selectedCityId);
+        const selCityName = selCity ? selCity.name.toLowerCase().trim() : '';
+        const itemCity = (item.city || '').toLowerCase().trim();
+        const itemLoc = (item.location || '').toLowerCase().trim();
+        
+        const isCityMatch = (item.cityId && item.cityId === selectedCityId) || (selCityName && (itemCity.includes(selCityName) || selCityName.includes(itemCity) || itemLoc.includes(selCityName)));
+        
+        // If an Area is specifically selected, must match that area
+        if (selectedAreaId) {
+          const selArea = availableAreas.find(a => a.id === selectedAreaId);
+          const selAreaName = selArea ? selArea.name.toLowerCase().trim() : '';
+          const itemArea = (item.area || '').toLowerCase().trim();
+          const isAreaMatch = (item.areaId && item.areaId === selectedAreaId) || (selAreaName && (itemArea.includes(selAreaName) || itemLoc.includes(selAreaName) || selAreaName.includes(itemArea)));
+          if (!isAreaMatch) return false;
+        } else if (!isCityMatch) {
+          // If no area is specified and property isn't in exact city, check distance radius (e.g. within 50km tier)
+          if (item.distanceKm && item.distanceKm <= 50) {
+            // Keep nearby property visible with distance indicator
+          } else {
+            return false;
+          }
+        }
       }
-      if (selectedAreaId) {
-        if (item.areaId !== selectedAreaId) return false;
-      }
+
       if (selectedLocalityId) {
-        if (item.localityId !== selectedLocalityId) return false;
+        const selLoc = availableLocalities.find(l => l.id === selectedLocalityId);
+        const selLocName = selLoc ? selLoc.name.toLowerCase().trim() : '';
+        const itemLocality = ((item as any).locality || '').toLowerCase().trim();
+        const isLocMatch = (item.localityId && item.localityId === selectedLocalityId) || (selLocName && itemLocality.includes(selLocName));
+        if (!isLocMatch) return false;
       }
 
       // Availability Filter
@@ -1404,79 +1502,73 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: selectedCityId ? '#0F172A' : '#94A3B8', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s' }}
                 >
                   <option value="">All Cities</option>
-                  {masterLocationsDb.filter(c => c.is_active).map(c => (
+                  {availableCities.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Area Search/Select */}
-              <div style={{ marginBottom: '12px', position: 'relative' }}>
+              {/* Area Select */}
+              <div style={{ marginBottom: '12px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Area</label>
-                <input
-                  type="text"
-                  placeholder={selectedCityId ? 'Search area...' : 'Select city first'}
+                <select
                   disabled={!selectedCityId}
-                  value={selectedAreaId ? (masterAreasDb.find(a => a.id === selectedAreaId)?.name || areaSearchText) : areaSearchText}
-                  onChange={(e) => { setAreaSearchText(e.target.value); setSelectedAreaId(''); setSelectedLocalityId(''); setLocalitySearchText(''); setAreaDropdownOpen(true); }}
-                  onFocus={() => { if (selectedCityId) setAreaDropdownOpen(true); if (selectedAreaId) { setAreaSearchText(''); setSelectedAreaId(''); setSelectedLocalityId(''); setLocalitySearchText(''); } }}
-                  onBlur={() => setTimeout(() => setAreaDropdownOpen(false), 200)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: '#0F172A', backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC', cursor: selectedCityId ? 'text' : 'not-allowed', outline: 'none', opacity: selectedCityId ? 1 : 0.6, boxSizing: 'border-box' }}
-                />
-                {areaDropdownOpen && selectedCityId && (() => {
-                  const areas = masterAreasDb.filter(a => a.cityId === selectedCityId && a.is_active && (!areaSearchText || a.name.toLowerCase().includes(areaSearchText.toLowerCase())));
-                  if (areas.length === 0) return <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px', fontSize: '13px', color: '#94A3B8', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>No areas found</div>;
-                  return (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>
-                      {areas.map(a => (
-                        <div
-                          key={a.id}
-                          onMouseDown={(e) => { e.preventDefault(); handleAreaChange(a.id); setAreaSearchText(a.name); setAreaDropdownOpen(false); }}
-                          style={{ padding: '10px 14px', fontSize: '13.5px', fontWeight: 600, color: '#334155', cursor: 'pointer', borderBottom: '1px solid #F8FAFC', transition: 'background-color 0.15s' }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                        >
-                          {a.name}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                  value={selectedAreaId}
+                  onChange={(e) => handleAreaChange(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: '1.5px solid #E2E8F0',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    color: selectedAreaId ? '#0F172A' : '#64748B',
+                    backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC',
+                    cursor: selectedCityId ? 'pointer' : 'not-allowed',
+                    outline: 'none',
+                    opacity: selectedCityId ? 1 : 0.6,
+                    transition: 'border-color 0.2s',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">{selectedCityId ? `All Areas (${availableCities.find(c => c.id === selectedCityId)?.name || 'All'})` : 'Select city first'}</option>
+                  {availableAreas.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Locality Search/Select */}
-              <div style={{ position: 'relative' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locality</label>
-                <input
-                  type="text"
-                  placeholder={selectedAreaId ? 'Search locality...' : 'Select area first'}
-                  disabled={!selectedAreaId}
-                  value={selectedLocalityId ? (masterLocalitiesDb.find(l => l.id === selectedLocalityId)?.name || localitySearchText) : localitySearchText}
-                  onChange={(e) => { setLocalitySearchText(e.target.value); setSelectedLocalityId(''); setLocalityDropdownOpen(true); }}
-                  onFocus={() => { if (selectedAreaId) setLocalityDropdownOpen(true); if (selectedLocalityId) { setLocalitySearchText(''); setSelectedLocalityId(''); } }}
-                  onBlur={() => setTimeout(() => setLocalityDropdownOpen(false), 200)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: '#0F172A', backgroundColor: selectedAreaId ? '#FFFFFF' : '#F8FAFC', cursor: selectedAreaId ? 'text' : 'not-allowed', outline: 'none', opacity: selectedAreaId ? 1 : 0.6, boxSizing: 'border-box' }}
-                />
-                {localityDropdownOpen && selectedAreaId && (() => {
-                  const localities = masterLocalitiesDb.filter(l => l.areaId === selectedAreaId && l.is_active && (!localitySearchText || l.name.toLowerCase().includes(localitySearchText.toLowerCase())));
-                  if (localities.length === 0) return <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px', fontSize: '13px', color: '#94A3B8', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>No localities found</div>;
-                  return (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50, backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '10px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: '4px' }}>
-                      {localities.map(l => (
-                        <div
-                          key={l.id}
-                          onMouseDown={(e) => { e.preventDefault(); setSelectedLocalityId(l.id); setLocalitySearchText(l.name); setLocalityDropdownOpen(false); }}
-                          style={{ padding: '10px 14px', fontSize: '13.5px', fontWeight: 600, color: '#334155', cursor: 'pointer', borderBottom: '1px solid #F8FAFC', transition: 'background-color 0.15s' }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                        >
-                          {l.name}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
+              {/* Locality Select */}
+              {availableLocalities.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locality</label>
+                  <select
+                    disabled={!selectedAreaId}
+                    value={selectedLocalityId}
+                    onChange={(e) => setSelectedLocalityId(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '10px',
+                      border: '1.5px solid #E2E8F0',
+                      fontSize: '13.5px',
+                      fontWeight: 600,
+                      color: selectedLocalityId ? '#0F172A' : '#64748B',
+                      backgroundColor: selectedAreaId ? '#FFFFFF' : '#F8FAFC',
+                      cursor: selectedAreaId ? 'pointer' : 'not-allowed',
+                      outline: 'none',
+                      opacity: selectedAreaId ? 1 : 0.6,
+                      transition: 'border-color 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="">All Localities</option>
+                    {availableLocalities.map(l => (
+                      <option key={l.id} value={l.id}>{l.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* 2. Property Type Filter Section */}
