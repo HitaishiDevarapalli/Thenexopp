@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, 
   FaChevronDown, FaMapMarkerAlt, FaStore, FaHandHoldingUsd, 
@@ -46,6 +47,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [, setCurrentCityState] = useState(selectedCity);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
 
   // Location Context & Panel State
   const { location, isLocationPickerOpen, openLocationPicker, closeLocationPicker } = useLocationStore();
@@ -829,248 +842,279 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* 4. Mobile Menu Drawer */}
-        {mobileMenuOpen && (
-          <div style={{
-            position: 'fixed',
-            top: '78px',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: '#FFFFFF',
-            zIndex: 999999,
-            overflowY: 'auto',
-            padding: '20px 24px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-            animation: 'fadeIn 0.2s ease',
-          }}>
-            {/* Mobile User Profile Card */}
-            {user && user.profileCompleted === true ? (
-              <div
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setIsProfileModalOpen(true);
-                }}
-                style={{
-                  marginBottom: '16px',
-                  padding: '14px 16px',
-                  backgroundColor: '#002B66',
-                  borderRadius: '16px',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(0, 43, 102, 0.2)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                  <div style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '50%',
-                    backgroundColor: '#059669',
-                    border: '2px solid rgba(255,255,255,0.4)',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '17px',
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}>
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ overflow: 'hidden' }}>
-                    <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>{user.name}</span>
-                      <span style={{ fontSize: '10px', backgroundColor: '#10B981', color: '#FFF', padding: '1px 6px', borderRadius: '6px' }}>Verified</span>
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#93C5FD', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {user.email}
-                    </div>
-                  </div>
-                </div>
-                <span style={{ fontSize: '12px', color: '#34D399', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
-                  My Profile →
-                </span>
-              </div>
-            ) : (
-              <div
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openLoginModal();
-                }}
-                style={{
-                  marginBottom: '16px',
-                  padding: '14px 16px',
-                  backgroundColor: '#F8FAFC',
-                  border: '1.5px dashed #CBD5E1',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#002B66', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                    <FaUser />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Sign In to Your Account</div>
-                    <div style={{ fontSize: '12px', color: '#64748B' }}>Access saved listings &amp; profile</div>
-                  </div>
-                </div>
-                <span style={{ fontSize: '12px', color: '#059669', fontWeight: 800 }}>Sign In</span>
-              </div>
-            )}
+      </header>
 
-            {/* Mobile Search / Location Header */}
-            <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
-                Your Location
-              </div>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openLocationPicker();
-                }}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  backgroundColor: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: '#0F172A',
-                  cursor: 'pointer',
-                }}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaMapMarkerAlt style={{ color: '#059669' }} /> {displayLocation}
-                </span>
-                <span style={{ fontSize: '12px', color: '#059669' }}>Change</span>
-              </button>
-            </div>
-
-            {/* Mobile Nav Menu List */}
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {menuItems.map((item) => {
-                const isExpanded = mobileExpandedSection === item.id;
-
-                return (
-                  <li key={item.id} style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '4px' }}>
-                    <div
-                      onClick={() => {
-                        if (item.dropdown) {
-                          setMobileExpandedSection(isExpanded ? null : item.id);
-                        } else {
-                          handleNavItemClick(item.id);
-                          setMobileMenuOpen(false);
-                        }
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px 8px',
-                        fontSize: '15px',
-                        fontWeight: 700,
-                        color: '#0F172A',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#059669', fontSize: '16px' }}>{item.icon}</span>
-                        {item.label}
-                      </span>
-                      {item.dropdown && (
-                        <FaChevronDown style={{
-                          fontSize: '12px',
-                          color: '#94A3B8',
-                          transition: 'transform 0.2s ease',
-                          transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                        }} />
-                      )}
-                    </div>
-
-                    {item.dropdown && isExpanded && (
-                      <div style={{ paddingLeft: '28px', paddingBottom: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {item.dropdown.map((sub, sIdx) => (
-                          <a
-                            key={sIdx}
-                            href="#"
-                            onClick={(e) => {
-                              setMobileMenuOpen(false);
-                              handleDropdownClick(item.id, sub.name, sub.link, e);
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                              padding: '8px 10px',
-                              color: sub.isCta ? '#059669' : '#334155',
-                              textDecoration: 'none',
-                              fontSize: '13.5px',
-                              fontWeight: sub.isCta ? 800 : 600,
-                              borderRadius: '8px',
-                              backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
-                            }}
-                          >
-                            <span style={{ color: sub.color || '#059669', fontSize: '13px' }}>{sub.subIcon}</span>
-                            <span>{sub.name}</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-
-            {/* Mobile Bottom Actions */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '20px' }}>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onNavigateToPage?.('sellPropertyPage');
-                }}
-                style={{
-                  width: '100%',
-                  padding: '13px',
+      {/* 4. Mobile Menu Drawer (Portalled to document.body) */}
+      {mobileMenuOpen && createPortal(
+        <div style={{
+          position: 'fixed',
+          top: '78px',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: 'calc(100vh - 78px)',
+          backgroundColor: '#FFFFFF',
+          zIndex: 99999999,
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          padding: '20px 24px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+          animation: 'fadeIn 0.2s ease',
+          boxSizing: 'border-box',
+        }}>
+          {/* Mobile User Profile Card */}
+          {user && user.profileCompleted === true ? (
+            <div
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setIsProfileModalOpen(true);
+              }}
+              style={{
+                marginBottom: '16px',
+                padding: '14px 16px',
+                backgroundColor: '#002B66',
+                borderRadius: '16px',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(0, 43, 102, 0.2)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
                   backgroundColor: '#059669',
+                  border: '2px solid rgba(255,255,255,0.4)',
                   color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
-                }}
-              >
-                <FaPlus /> Post Property Listing
-              </button>
+                  fontSize: '17px',
+                  fontWeight: 800,
+                  flexShrink: 0,
+                }}>
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{user.name}</span>
+                    <span style={{ fontSize: '10px', backgroundColor: '#10B981', color: '#FFF', padding: '1px 6px', borderRadius: '6px' }}>Verified</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#93C5FD', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.email}
+                  </div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: '#34D399', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
+                My Profile →
+              </span>
+            </div>
+          ) : (
+            <div
+              onClick={() => {
+                setMobileMenuOpen(false);
+                openLoginModal();
+              }}
+              style={{
+                marginBottom: '16px',
+                padding: '14px 16px',
+                backgroundColor: '#F8FAFC',
+                border: '1.5px dashed #CBD5E1',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#002B66', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                  <FaUser />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Sign In to Your Account</div>
+                  <div style={{ fontSize: '12px', color: '#64748B' }}>Access saved listings &amp; profile</div>
+                </div>
+              </div>
+              <span style={{ fontSize: '12px', color: '#059669', fontWeight: 800 }}>Sign In</span>
+            </div>
+          )}
 
+          {/* Mobile Search / Location Header */}
+          <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+            <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
+              Your Location
+            </div>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                openLocationPicker();
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: '#0F172A',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FaMapMarkerAlt style={{ color: '#059669' }} /> {displayLocation}
+              </span>
+              <span style={{ fontSize: '12px', color: '#059669' }}>Change</span>
+            </button>
+          </div>
+
+          {/* Mobile Nav Menu List */}
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {menuItems.map((item) => {
+              const isExpanded = mobileExpandedSection === item.id;
+
+              return (
+                <li key={item.id} style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '4px' }}>
+                  <div
+                    onClick={() => {
+                      if (item.dropdown) {
+                        setMobileExpandedSection(isExpanded ? null : item.id);
+                      } else {
+                        handleNavItemClick(item.id);
+                        setMobileMenuOpen(false);
+                      }
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 8px',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ color: '#059669', fontSize: '16px' }}>{item.icon}</span>
+                      {item.label}
+                    </span>
+                    {item.dropdown && (
+                      <FaChevronDown style={{
+                        fontSize: '12px',
+                        color: '#94A3B8',
+                        transition: 'transform 0.2s ease',
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      }} />
+                    )}
+                  </div>
+
+                  {item.dropdown && isExpanded && (
+                    <div style={{ paddingLeft: '28px', paddingBottom: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {item.dropdown.map((sub, sIdx) => (
+                        <a
+                          key={sIdx}
+                          href="#"
+                          onClick={(e) => {
+                            setMobileMenuOpen(false);
+                            handleDropdownClick(item.id, sub.name, sub.link, e);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 10px',
+                            color: sub.isCta ? '#059669' : '#334155',
+                            textDecoration: 'none',
+                            fontSize: '13.5px',
+                            fontWeight: sub.isCta ? 800 : 600,
+                            borderRadius: '8px',
+                            backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
+                          }}
+                        >
+                          <span style={{ color: sub.color || '#059669', fontSize: '13px' }}>{sub.subIcon}</span>
+                          <span>{sub.name}</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Mobile Bottom Actions */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '30px' }}>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigateToPage?.('sellPropertyPage');
+              }}
+              style={{
+                width: '100%',
+                padding: '13px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
+              }}
+            >
+              <FaPlus /> Post Property Listing
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenWishlist();
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#FFFFFF',
+                color: '#0F172A',
+                border: '1px solid #E2E8F0',
+                borderRadius: '12px',
+                fontSize: '13.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <FaHeart style={{ color: '#EF4444' }} /> Saved Wishlist ({wishlistItems.length})
+            </button>
+
+            {user && user.profileCompleted === true ? (
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  onOpenWishlist();
+                  logout();
                 }}
                 style={{
                   width: '100%',
                   padding: '12px',
-                  backgroundColor: '#FFFFFF',
-                  color: '#0F172A',
-                  border: '1px solid #E2E8F0',
+                  backgroundColor: '#FEF2F2',
+                  color: '#DC2626',
+                  border: '1px solid #FECACA',
                   borderRadius: '12px',
                   fontSize: '13.5px',
                   fontWeight: 700,
@@ -1081,63 +1125,38 @@ export const Navbar: React.FC<NavbarProps> = ({
                   gap: '8px',
                 }}
               >
-                <FaHeart style={{ color: '#EF4444' }} /> Saved Wishlist ({wishlistItems.length})
+                <FaSignOutAlt /> Log Out of Account
               </button>
-
-              {user && user.profileCompleted === true ? (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    logout();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: '#FEF2F2',
-                    color: '#DC2626',
-                    border: '1px solid #FECACA',
-                    borderRadius: '12px',
-                    fontSize: '13.5px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                  }}
-                >
-                  <FaSignOutAlt /> Log Out of Account
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    openLoginModal();
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '13px',
-                    backgroundColor: '#002B66',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 43, 102, 0.25)',
-                  }}
-                >
-                  <FaUser style={{ color: '#10B981' }} /> Sign In / Register
-                </button>
-              )}
-            </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openLoginModal();
+                }}
+                style={{
+                  width: '100%',
+                  padding: '13px',
+                  backgroundColor: '#002B66',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 43, 102, 0.25)',
+                }}
+              >
+                <FaUser style={{ color: '#10B981' }} /> Sign In / Register
+              </button>
+            )}
           </div>
-        )}
-      </header>
+        </div>,
+        document.body
+      )}
 
       {/* User Profile Modal */}
       <UserProfileModal
