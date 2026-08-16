@@ -274,7 +274,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                     <tr key={b.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
                       <td style={{ padding: '16px' }}>
                         <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                          <img src={b.imageUrl || b.image || 'https://via.placeholder.com/50'} alt={b.title} style={{ width: '64px', height: '52px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0' }} />
+                          <img src={b.imageUrl || b.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='52' viewBox='0 0 64 52'%3E%3Crect fill='%23F1F5F9' width='64' height='52'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10'%3EBusiness%3C/text%3E%3C/svg%3E"} alt={b.title} style={{ width: '64px', height: '52px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E2E8F0' }} />
                           <div>
                             <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px' }}>{b.title}</div>
                             <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{b.id}</div>
@@ -650,7 +650,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
         {businesses.filter(b => b.featured).map(b => (
           <div key={b.id} style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
-            <img src={b.imageUrl || b.image || 'https://via.placeholder.com/300x200'} alt={b.title} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
+            <img src={b.imageUrl || b.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect fill='%23F1F5F9' width='300' height='200'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16'%3EFeatured Business%3C/text%3E%3C/svg%3E"} alt={b.title} style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
             <div style={{ padding: '16px' }}>
               <h3 style={{ margin: '0 0 4px 0', fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>{b.title}</h3>
               <p style={{ margin: '0 0 16px 0', color: '#64748B', fontSize: '0.85rem', fontWeight: 550 }}>{b.category}</p>

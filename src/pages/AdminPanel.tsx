@@ -413,25 +413,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (activeTab === 'users' && userTabSection === 'customers') {
       fetchCustomersList();
     }
-  }, [customerSearch, customerAreaFilter, customerInterestFilter, customerStatusFilter, customerDateFilter, customerPage, activeTab, userTabSection]);
+  }, [customerSearch, customerAreaFilter, customerInterestFilter, customerStatusFilter, customerDateFilter, customerPage, activeTab, userTabSection, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (activeTab === 'overview') {
       fetchAdminDashboardStats();
     }
     if ((activeTab as string) === 'users_data') {
       fetchRegisteredCustomers();
     }
-  }, [activeTab]);
+  }, [activeTab, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchAllEnquiriesAndBookings();
-  }, [tick]);
+  }, [tick, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchRegisteredCustomers();
     const handler = () => {
       setTick(t => t + 1);
@@ -439,7 +443,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     };
     window.addEventListener('nexopp_data_changed', handler);
     return () => window.removeEventListener('nexopp_data_changed', handler);
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const lenis = (window as any).lenis;

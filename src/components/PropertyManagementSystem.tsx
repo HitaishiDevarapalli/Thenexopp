@@ -1461,7 +1461,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     <td style={{ padding: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ width: '60px', height: '45px', backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
-                          <img src={prop.image || 'https://via.placeholder.com/60x45'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img src={prop.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='45' viewBox='0 0 60 45'%3E%3Crect fill='%23F1F5F9' width='60' height='45'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='9'%3EProperty%3C/text%3E%3C/svg%3E"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div>
                           <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.95rem' }}>{prop.title}</div>

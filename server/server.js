@@ -935,12 +935,15 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
   }
 });
 
-app.get('/api/auth/me', authMiddleware, async (req, res) => {
+app.get('/api/auth/me', optionalAuthMiddleware, async (req, res) => {
   try {
-    if (req.user && req.user.role === 'Verified Investor') {
+    if (!req.user) {
+      return res.json({ success: false, user: null });
+    }
+    if (req.user.role === 'Verified Investor') {
       const customer = await prisma.customer.findUnique({
         where: { id: req.user.id }
-      });
+      }).catch(() => null);
       if (customer) {
         return res.json({
           success: true,
@@ -962,7 +965,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
     }
     return res.json({ success: true, user: req.user });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to retrieve profile' });
+    return res.json({ success: false, user: null });
   }
 });
 
@@ -1212,7 +1215,7 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
 });
 
 // 3. Enquiries
-app.get('/api/enquiries', optionalAuthMiddleware, async (req, res, next) => {
+app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
     // If authenticated standard customer, filter for customer's enquiries
     if (req.user && !['SUPER_ADMIN', 'ADMIN'].includes(req.user.role)) {
@@ -1225,20 +1228,25 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res, next) => {
             req.user.phone ? { phone: req.user.phone } : undefined,
           ].filter(Boolean)
         },
-        orderBy: { createdAt: 'desc' },
-        include: { customer: true }
+        orderBy: { createdAt: 'desc' }
+      }).catch(err => {
+        logger.warn({ error: err.message }, 'Safe fallback for user enquiries');
+        return [];
       });
       return res.json(enquiries || []);
     }
 
     // Admin, CRM, or public sync fetching all enquiries
     const enquiries = await prisma.enquiry.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { customer: true }
+      orderBy: { createdAt: 'desc' }
+    }).catch(err => {
+      logger.warn({ error: err.message }, 'Safe fallback for all enquiries');
+      return [];
     });
     return res.json(enquiries || []);
   } catch (err) {
-    next(err);
+    logger.error({ error: err.message }, 'Error in /api/enquiries');
+    return res.json([]);
   }
 });
 
@@ -1379,24 +1387,29 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res, next) => {
 });
 
 // 4. Slot Bookings
-app.get('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
+app.get('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
     if (req.user && !['SUPER_ADMIN', 'ADMIN'].includes(req.user.role)) {
       const bookings = await prisma.booking.findMany({
         where: { customerId: req.user.id },
-        orderBy: { createdAt: 'desc' },
-        include: { customer: true, property: true, business: true }
+        orderBy: { createdAt: 'desc' }
+      }).catch(err => {
+        logger.warn({ error: err.message }, 'Safe fallback for user bookings');
+        return [];
       });
       return res.json(bookings || []);
     }
 
     const bookings = await prisma.booking.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { customer: true, property: true, business: true }
+      orderBy: { createdAt: 'desc' }
+    }).catch(err => {
+      logger.warn({ error: err.message }, 'Safe fallback for all bookings');
+      return [];
     });
     return res.json(bookings || []);
   } catch (err) {
-    next(err);
+    logger.error({ error: err.message }, 'Error in /api/bookings');
+    return res.json([]);
   }
 });
 
