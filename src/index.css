@@ -6583,5 +6583,8 @@ table {
     width: 52px !important;
     height: 52px !important;
   }
+  .customer-dashboard-page {
+    padding-top: 90px !important;
+  }
 }
 

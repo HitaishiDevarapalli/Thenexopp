@@ -262,7 +262,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
   };
 
   return (
-    <div className="customer-dashboard-page" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '4rem' }}>
+    <div className="customer-dashboard-page" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingTop: '115px', paddingBottom: '4rem' }}>
       
       {/* ── HEADER SECTION ── */}
       <div style={{
