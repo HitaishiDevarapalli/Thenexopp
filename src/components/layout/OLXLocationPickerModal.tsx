@@ -189,9 +189,24 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
     onClose();
   };
 
+  const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
+
   const handleGPSDetect = async () => {
-    const loc = await detectCurrentLocation();
-    if (loc) onClose();
+    setGpsStatusMsg('Requesting GPS location...');
+    try {
+      const loc = await detectCurrentLocation();
+      if (loc) {
+        setGpsStatusMsg(`📍 Location detected: ${loc.displayName}`);
+        setTimeout(() => {
+          setGpsStatusMsg(null);
+          onClose();
+        }, 500);
+      } else {
+        setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below or enable location in browser settings.');
+      }
+    } catch {
+      setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below.');
+    }
   };
 
   // Helper to Highlight Matching Text
@@ -574,6 +589,24 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
 
           {/* RIGHT COLUMN: USE LOCATION, RECENT SEARCHES, POPULAR CITIES */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {gpsStatusMsg && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  backgroundColor: gpsStatusMsg.includes('⚠️') ? '#FFFBEB' : '#ECFDF5',
+                  border: gpsStatusMsg.includes('⚠️') ? '1px solid #FDE68A' : '1px solid #A7F3D0',
+                  color: gpsStatusMsg.includes('⚠️') ? '#B45309' : '#047857',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                {gpsStatusMsg}
+              </div>
+            )}
             {/* 1. USE CURRENT LOCATION CARD */}
             <button
               onClick={handleGPSDetect}
