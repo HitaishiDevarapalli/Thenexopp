@@ -187,6 +187,30 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const handleMobileItemClick = (item: any, e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (item.dropdown) {
+      setMobileExpandedSection(prev => prev === item.id ? null : item.id);
+    } else {
+      handleNavItemClick(item.id);
+      setMobileMenuOpen(false);
+    }
+  };
+
+  const handleMobileSubItemClick = (item: any, sub: any, e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMobileMenuOpen(false);
+    handleDropdownClick(item.id, sub.name, sub.link, e as any);
+  };
+
+  const toggleMobileMenu = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMobileMenuOpen(prev => !prev);
+  };
+
   const displayLocation = location?.area || location?.locality || location?.city || selectedCity || 'Hyderabad';
 
   return (
@@ -203,8 +227,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       boxShadow: scrolled ? '0 4px 20px -2px rgba(15, 23, 42, 0.08)' : '0 1px 3px rgba(15, 23, 42, 0.03)',
       transition: 'all 0.25s ease-in-out',
       height: '78px',
-      display: 'flex',
-      alignItems: 'center',
     }}>
       <div style={{
         maxWidth: '1440px',
@@ -215,13 +237,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         boxSizing: 'border-box',
+        height: '100%',
       }}>
 
         {/* 1. Left: Mobile Toggle + Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginRight: '16px' }}>
           <button
             className="mobile-only"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={toggleMobileMenu}
+            onTouchStart={toggleMobileMenu}
             aria-label="Toggle Menu"
             style={{
               background: '#F8FAFC',
@@ -621,14 +645,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               return (
                 <li key={item.id} style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '4px' }}>
                   <div
-                    onClick={() => {
-                      if (item.dropdown) {
-                        setMobileExpandedSection(isExpanded ? null : item.id);
-                      } else {
-                        handleNavItemClick(item.id);
-                        setMobileMenuOpen(false);
-                      }
-                    }}
+                    onClick={(e) => handleMobileItemClick(item, e)}
+                    onTouchStart={(e) => handleMobileItemClick(item, e)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -660,10 +678,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <a
                           key={sIdx}
                           href="#"
-                          onClick={(e) => {
-                            setMobileMenuOpen(false);
-                            handleDropdownClick(item.id, sub.name, sub.link, e);
-                          }}
+                          onClick={(e) => handleMobileSubItemClick(item, sub, e)}
+                          onTouchStart={(e) => handleMobileSubItemClick(item, sub, e)}
                           style={{
                             display: 'flex',
                             alignItems: 'center',

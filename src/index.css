@@ -518,6 +518,7 @@ p {
   background-color: var(--nav-scrolled-bg);
   box-shadow: var(--shadow-soft);
   border-bottom: 1px solid var(--border-color);
+  overflow: visible !important;
 }
 
 .navbar-container {
@@ -6285,6 +6286,7 @@ table {
 @media (max-width: 767px) {
   .navbar {
     height: 70px !important;
+    overflow: visible !important;
   }
   .navbar > div {
     padding: 0 16px !important;
@@ -6568,6 +6570,18 @@ table {
   .business-listings-grid .landscape-card .feed-card-image-wrap,
   .business-listings-grid .landscape-card .property-image-container {
     height: 100px !important;
+  }
+}
+
+/* AI Chat FAB Mobile Repositioning */
+@media (max-width: 767px) {
+  .ai-chat-fab-wrap {
+    bottom: 96px !important;
+    right: 16px !important;
+  }
+  .ai-chat-fab-btn {
+    width: 52px !important;
+    height: 52px !important;
   }
 }
 
