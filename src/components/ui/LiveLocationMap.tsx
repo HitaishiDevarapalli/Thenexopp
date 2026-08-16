@@ -214,7 +214,8 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   const handleDetectLiveGps = async () => {
     setDetectingGps(true);
     try {
-      const loc = await detectCurrentLocation();
+      const result = await detectCurrentLocation();
+      const loc = result.location;
       if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
         const areaLabel = loc.area || loc.locality || loc.city || 'Live GPS Location';
         setUserGps({
@@ -225,6 +226,8 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
         if (mapInstanceRef.current) {
           mapInstanceRef.current.flyTo([loc.lat, loc.lng], 15, { duration: 1.2 });
         }
+      } else if (result.permissionStatus === 'denied') {
+        alert('Location permission is blocked. Click the 🔒 lock icon in your address bar → set Location to "Allow" → reload the page.');
       } else {
         alert('Could not retrieve GPS location. Please check your browser location permissions.');
       }

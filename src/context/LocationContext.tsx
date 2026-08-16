@@ -25,6 +25,14 @@ export interface LocationData {
   radiusKm?: number;
 }
 
+// Permission status returned by detectCurrentLocation so the UI knows exactly what happened
+export type GeoPermissionStatus = 'granted' | 'denied' | 'prompt' | 'unavailable' | 'timeout';
+
+export interface DetectLocationResult {
+  location: LocationData | null;
+  permissionStatus: GeoPermissionStatus;
+}
+
 interface LocationContextType {
   location: LocationData | null;
   setLocation: (loc: LocationData) => void;
@@ -34,7 +42,7 @@ interface LocationContextType {
   isLocationPickerOpen: boolean;
   openLocationPicker: () => void;
   closeLocationPicker: () => void;
-  detectCurrentLocation: () => Promise<LocationData | null>;
+  detectCurrentLocation: () => Promise<DetectLocationResult>;
   isDetectingGPS: boolean;
 }
 
@@ -197,11 +205,36 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return loc;
   };
 
-  // Two-Tier Geolocation detector: High-Accuracy GPS with fallback to standard Wi-Fi position
-  const detectCurrentLocation = useCallback(async (): Promise<LocationData | null> => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      return null;
+  // ─── Check browser permission state using Permissions API ───
+  const checkGeolocationPermission = async (): Promise<GeoPermissionStatus> => {
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+        if (result.state === 'denied') return 'denied';
+        if (result.state === 'granted') return 'granted';
+        return 'prompt'; // Browser will show the Allow/Block popup
+      }
+    } catch {
+      // Permissions API not supported — assume 'prompt' (browser will handle it)
     }
+    return 'prompt';
+  };
+
+  // ─── Main GPS detection — ONLY call this from a user click handler ───
+  const detectCurrentLocation = useCallback(async (): Promise<DetectLocationResult> => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      return { location: null, permissionStatus: 'unavailable' };
+    }
+
+    // Step 0: Check if permission is already denied by the browser
+    const permState = await checkGeolocationPermission();
+    if (permState === 'denied') {
+      // Browser has permanently blocked location for this site.
+      // getCurrentPosition will NOT show a popup — it will silently fail.
+      // We must tell the user to reset permission manually.
+      return { location: null, permissionStatus: 'denied' };
+    }
+
     setIsDetectingGPS(true);
 
     const getPositionPromise = (highAccuracy: boolean, timeout: number) => {
@@ -215,16 +248,33 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     let pos: GeolocationPosition | null = null;
+    let finalStatus: GeoPermissionStatus = 'prompt';
 
     try {
-      // Step 1: Try High Accuracy GPS
-      pos = await getPositionPromise(true, 7000);
+      // Step 1: Try High Accuracy GPS — this WILL trigger the browser's Allow/Block popup
+      // if permission state is 'prompt'
+      pos = await getPositionPromise(true, 10000);
+      finalStatus = 'granted';
     } catch (err: any) {
-      // If code is not PERMISSION_DENIED (e.g. timeout or unavailable), try standard network positioning
+      if (err?.code === 1) {
+        // PERMISSION_DENIED — user clicked "Block" on the popup
+        finalStatus = 'denied';
+      } else if (err?.code === 2) {
+        // POSITION_UNAVAILABLE — GPS hardware error, try standard
+        finalStatus = 'unavailable';
+      } else if (err?.code === 3) {
+        // TIMEOUT — try lower accuracy fallback
+        finalStatus = 'timeout';
+      }
+
+      // If not a hard denial, try standard (Wi-Fi/network) positioning
       if (err?.code !== 1) {
         try {
-          pos = await getPositionPromise(false, 10000);
-        } catch {}
+          pos = await getPositionPromise(false, 15000);
+          finalStatus = 'granted';
+        } catch (fallbackErr: any) {
+          if (fallbackErr?.code === 1) finalStatus = 'denied';
+        }
       }
     }
 
@@ -235,7 +285,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (loc) {
           setLocation(loc);
           setIsDetectingGPS(false);
-          return loc;
+          return { location: loc, permissionStatus: 'granted' };
         }
       } catch (e) {
         console.warn('GPS location resolution error:', e);
@@ -243,23 +293,18 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     setIsDetectingGPS(false);
-    return null;
+    return { location: null, permissionStatus: finalStatus };
   }, [setLocation]);
 
-  // Request browser location permission immediately on website load
+  // ─── On page load: just open the location picker if no saved location ───
+  // We do NOT auto-call detectCurrentLocation() here because Chrome silently
+  // blocks geolocation requests that happen without a direct user click/gesture.
+  // The user must click "Use Current Location" to trigger the browser popup.
   useEffect(() => {
-    if (typeof window !== 'undefined' && navigator.geolocation) {
-      detectCurrentLocation().then((loc) => {
-        if (!loc && !localStorage.getItem(STORAGE_KEY)) {
-          openLocationPicker();
-        }
-      });
-    } else {
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        openLocationPicker();
-      }
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      openLocationPicker();
     }
-  }, [detectCurrentLocation, openLocationPicker]);
+  }, [openLocationPicker]);
 
   return (
     <LocationContext.Provider
@@ -288,4 +333,5 @@ export const useLocationStore = () => {
   }
   return context;
 };
+
 

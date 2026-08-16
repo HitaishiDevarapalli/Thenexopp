@@ -223,18 +223,24 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
   const [gpsConfirmedLoc, setGpsConfirmedLoc] = useState<LocationData | null>(null);
 
   const handleGPSDetect = async () => {
-    setGpsStatusMsg('Requesting high-accuracy GPS location from device...');
+    setGpsStatusMsg('📡 Requesting location from your device...');
     setGpsConfirmedLoc(null);
     try {
-      const loc = await detectCurrentLocation();
-      if (loc) {
-        setGpsConfirmedLoc(loc);
-        setGpsStatusMsg(`📍 Location detected: ${loc.displayName}`);
+      const result = await detectCurrentLocation();
+      if (result.location) {
+        setGpsConfirmedLoc(result.location);
+        setGpsStatusMsg(`📍 Location detected: ${result.location.displayName}`);
+      } else if (result.permissionStatus === 'denied') {
+        setGpsStatusMsg('DENIED');
+      } else if (result.permissionStatus === 'unavailable') {
+        setGpsStatusMsg('UNAVAILABLE');
+      } else if (result.permissionStatus === 'timeout') {
+        setGpsStatusMsg('TIMEOUT');
       } else {
-        setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below or click the 🔒 lock icon in the address bar to allow location.');
+        setGpsStatusMsg('FAILED');
       }
     } catch {
-      setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below.');
+      setGpsStatusMsg('FAILED');
     }
   };
 
@@ -628,11 +634,10 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
             {gpsStatusMsg && !gpsConfirmedLoc && (
               <div
                 style={{
-                  padding: '14px 16px',
+                  padding: '16px 18px',
                   borderRadius: '14px',
-                  backgroundColor: gpsStatusMsg.includes('⚠️') ? '#FFFBEB' : '#ECFDF5',
-                  border: gpsStatusMsg.includes('⚠️') ? '1px solid #FDE68A' : '1px solid #A7F3D0',
-                  color: gpsStatusMsg.includes('⚠️') ? '#92400E' : '#047857',
+                  backgroundColor: gpsStatusMsg === 'DENIED' ? '#FEF2F2' : ['UNAVAILABLE', 'TIMEOUT', 'FAILED'].includes(gpsStatusMsg) ? '#FFFBEB' : '#ECFDF5',
+                  border: gpsStatusMsg === 'DENIED' ? '1px solid #FECACA' : ['UNAVAILABLE', 'TIMEOUT', 'FAILED'].includes(gpsStatusMsg) ? '1px solid #FDE68A' : '1px solid #A7F3D0',
                   fontSize: '0.82rem',
                   fontWeight: 600,
                   display: 'flex',
@@ -640,49 +645,96 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
                   gap: '10px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
-                  {gpsStatusMsg}
-                </div>
-                {gpsStatusMsg.includes('⚠️') && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectLocation({
-                        id: 'loc-svn-guntur',
-                        displayName: 'SVN Colony, Guntur, Andhra Pradesh 522006',
-                        city: 'Guntur',
-                        district: 'Guntur',
-                        area: 'SVN Colony',
-                        locality: 'SVN Colony',
-                        suburb: 'SVN Colony',
-                        state: 'Andhra Pradesh',
-                        country: 'India',
-                        postalCode: '522006',
-                        pincode: '522006',
-                        lat: 16.3100,
-                        lng: 80.4300,
-                        accuracy: 15,
-                      });
-                    }}
-                    style={{
-                      padding: '8px 14px',
-                      backgroundColor: '#059669',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontWeight: 800,
-                      fontSize: '0.82rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      boxShadow: '0 2px 6px rgba(5,150,105,0.2)',
-                    }}
-                  >
-                    <FaMapMarkerAlt />
-                    <span>📍 Quick Select: SVN Colony, Guntur, AP</span>
-                  </button>
+                {/* ── DENIED: Browser has blocked location permanently ── */}
+                {gpsStatusMsg === 'DENIED' && (
+                  <>
+                    <div style={{ color: '#991B1B', fontWeight: 800, fontSize: '0.88rem' }}>
+                      🚫 Location Permission is Blocked
+                    </div>
+                    <div style={{ color: '#7F1D1D', fontWeight: 500, lineHeight: 1.5 }}>
+                      Your browser previously blocked location access for this site. Chrome will <strong>not</strong> show the popup again automatically.
+                    </div>
+                    <div style={{ color: '#0F172A', fontWeight: 600, lineHeight: 1.6, backgroundColor: '#FFFFFF', padding: '12px 14px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                      <strong>How to fix (10 seconds):</strong>
+                      <ol style={{ margin: '6px 0 0 0', paddingLeft: '18px' }}>
+                        <li>Click the <strong>🔒 lock icon</strong> (or <strong>ⓘ</strong> icon) at the <strong>left side of the address bar</strong></li>
+                        <li>Find <strong>"Location"</strong> → Change it from <strong>"Block"</strong> to <strong>"Allow"</strong></li>
+                        <li>The page will <strong>reload automatically</strong></li>
+                        <li>Click <strong>"Use Current Location"</strong> again</li>
+                      </ol>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Try again — in case user just reset the permission
+                          setGpsStatusMsg(null);
+                          handleGPSDetect();
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '10px 14px',
+                          backgroundColor: '#059669',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: 800,
+                          fontSize: '0.82rem',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        🔄 I've Reset Permission — Try Again
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* ── UNAVAILABLE / TIMEOUT / FAILED ── */}
+                {['UNAVAILABLE', 'TIMEOUT', 'FAILED'].includes(gpsStatusMsg) && (
+                  <>
+                    <div style={{ color: '#92400E', fontWeight: 800, fontSize: '0.88rem' }}>
+                      {gpsStatusMsg === 'TIMEOUT' ? '⏱️ Location detection timed out' : '⚠️ Could not detect your location'}
+                    </div>
+                    <div style={{ color: '#78350F', fontWeight: 500, lineHeight: 1.5 }}>
+                      {gpsStatusMsg === 'TIMEOUT'
+                        ? 'GPS took too long to respond. This can happen on desktop computers without GPS hardware. Try clicking the button again or search for your location manually.'
+                        : 'Your device could not determine your position. Please search for your city or area in the search box above.'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGpsStatusMsg(null);
+                        handleGPSDetect();
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        backgroundColor: '#D97706',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: 800,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      🔄 Try Again
+                    </button>
+                  </>
+                )}
+
+                {/* ── DETECTING (spinner) ── */}
+                {!['DENIED', 'UNAVAILABLE', 'TIMEOUT', 'FAILED'].includes(gpsStatusMsg) && !gpsStatusMsg.startsWith('📍') && (
+                  <div style={{ color: '#047857', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaSpinner style={{ animation: 'spin 1s linear infinite' }} />
+                    {gpsStatusMsg}
+                  </div>
+                )}
+
+                {/* ── Success preview (before confirm card shows) ── */}
+                {gpsStatusMsg.startsWith('📍') && (
+                  <div style={{ color: '#047857', fontWeight: 700 }}>
+                    {gpsStatusMsg}
+                  </div>
                 )}
               </div>
             )}
