@@ -546,8 +546,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 alignItems: 'center',
                 gap: '6px',
                 backgroundColor: '#FFFFFF',
-                color: '#002B66',
-                border: '1.5px solid #002B66',
+                color: '#059669',
+                border: '1.5px solid #059669',
                 height: '42px',
                 padding: '0 16px',
                 borderRadius: '24px',
@@ -558,12 +558,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#002B66';
+                e.currentTarget.style.backgroundColor = '#059669';
                 e.currentTarget.style.color = '#FFFFFF';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#002B66';
+                e.currentTarget.style.color = '#059669';
               }}
             >
               <FaPlus style={{ fontSize: '11px', color: '#D97706' }} />
@@ -579,7 +579,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    backgroundColor: '#002B66',
+                    backgroundColor: '#059669',
+                    backgroundImage: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                     color: '#FFFFFF',
                     border: 'none',
                     height: '42px',
@@ -587,15 +588,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     borderRadius: '24px',
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 8px rgba(0, 43, 102, 0.2)',
+                    boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)',
                   }}
                 >
                   <div style={{
                     width: '30px',
                     height: '30px',
                     borderRadius: '50%',
-                    backgroundColor: '#059669',
-                    color: '#FFFFFF',
+                    backgroundColor: '#064E3B',
+                    color: '#FDE047',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -743,7 +744,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  backgroundColor: '#002B66',
+                  backgroundColor: '#059669',
+                  backgroundImage: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#FFFFFF',
                   border: 'none',
                   height: '42px',
@@ -753,22 +755,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                   fontSize: '13.5px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 43, 102, 0.25)',
+                  boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)',
                   fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
                   whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#001E47';
+                  e.currentTarget.style.backgroundImage = 'linear-gradient(135deg, #047857 0%, #065F46 100%)';
                   e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 43, 102, 0.35)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.35)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#002B66';
+                  e.currentTarget.style.backgroundImage = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
                   e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 43, 102, 0.25)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(5, 150, 105, 0.25)';
                 }}
               >
-                <FaUser style={{ fontSize: '12px', color: '#10B981' }} />
+                <FaUser style={{ fontSize: '12px', color: '#FDE047' }} />
                 <span>Sign In</span>
               </button>
             )}
@@ -783,7 +785,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  backgroundColor: '#002B66',
+                  backgroundColor: '#059669',
+                  backgroundImage: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#FFFFFF',
                   border: 'none',
                   height: '38px',
@@ -792,15 +795,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   cursor: 'pointer',
                   fontSize: '12.5px',
                   fontWeight: 700,
-                  boxShadow: '0 2px 6px rgba(0,43,102,0.2)',
+                  boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
                 }}
               >
                 <div style={{
                   width: '28px',
                   height: '28px',
                   borderRadius: '50%',
-                  backgroundColor: '#059669',
-                  color: '#FFFFFF',
+                  backgroundColor: '#064E3B',
+                  color: '#FDE047',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -822,7 +825,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  backgroundColor: '#002B66',
+                  backgroundColor: '#059669',
+                  backgroundImage: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#FFFFFF',
                   border: 'none',
                   height: '38px',
@@ -831,10 +835,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   cursor: 'pointer',
                   fontSize: '12.5px',
                   fontWeight: 700,
-                  boxShadow: '0 2px 6px rgba(0,43,102,0.2)',
+                  boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
                 }}
               >
-                <FaUser style={{ fontSize: '11px', color: '#10B981' }} />
+                <FaUser style={{ fontSize: '11px', color: '#FDE047' }} />
                 <span>Sign In</span>
               </button>
             )}
@@ -873,14 +877,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               style={{
                 marginBottom: '16px',
                 padding: '14px 16px',
-                backgroundColor: '#002B66',
+                backgroundColor: '#064E3B',
+                backgroundImage: 'linear-gradient(135deg, #064E3B 0%, #059669 100%)',
                 borderRadius: '16px',
                 color: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(0, 43, 102, 0.2)',
+                boxShadow: '0 4px 14px rgba(6, 78, 59, 0.25)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
@@ -888,9 +894,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   width: '42px',
                   height: '42px',
                   borderRadius: '50%',
-                  backgroundColor: '#059669',
-                  border: '2px solid rgba(255,255,255,0.4)',
-                  color: '#FFFFFF',
+                  backgroundColor: '#064E3B',
+                  border: '2px solid rgba(253, 224, 71, 0.6)',
+                  color: '#FDE047',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -903,14 +909,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div style={{ overflow: 'hidden' }}>
                   <div style={{ fontSize: '14.5px', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>{user.name}</span>
-                    <span style={{ fontSize: '10px', backgroundColor: '#10B981', color: '#FFF', padding: '1px 6px', borderRadius: '6px' }}>Verified</span>
+                    <span style={{ fontSize: '10px', backgroundColor: '#F59E0B', color: '#FFF', padding: '1px 6px', borderRadius: '6px', fontWeight: 800 }}>Verified</span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#93C5FD', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: '12px', color: '#D1FAE5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.email}
                   </div>
                 </div>
               </div>
-              <span style={{ fontSize: '12px', color: '#34D399', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
+              <span style={{ fontSize: '12px', color: '#FDE047', fontWeight: 800, flexShrink: 0, marginLeft: '8px' }}>
                 My Profile →
               </span>
             </div>
@@ -923,25 +929,45 @@ export const Navbar: React.FC<NavbarProps> = ({
               style={{
                 marginBottom: '16px',
                 padding: '14px 16px',
-                backgroundColor: '#F8FAFC',
-                border: '1.5px dashed #CBD5E1',
+                backgroundColor: '#F0FDF4',
+                border: '1.5px solid #86EFAC',
                 borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(5, 150, 105, 0.08)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#002B66', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: '#FDE047',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                }}>
                   <FaUser />
                 </div>
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Sign In to Your Account</div>
-                  <div style={{ fontSize: '12px', color: '#64748B' }}>Access saved listings &amp; profile</div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#064E3B' }}>Sign In to Your Account</div>
+                  <div style={{ fontSize: '12px', color: '#059669' }}>Access saved listings &amp; profile</div>
                 </div>
               </div>
-              <span style={{ fontSize: '12px', color: '#059669', fontWeight: 800 }}>Sign In</span>
+              <span style={{
+                fontSize: '12px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                fontWeight: 800,
+                padding: '6px 14px',
+                borderRadius: '20px',
+              }}>
+                Sign In
+              </span>
             </div>
           )}
 
@@ -1136,7 +1162,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 style={{
                   width: '100%',
                   padding: '13px',
-                  backgroundColor: '#002B66',
+                  backgroundColor: '#059669',
+                  backgroundImage: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                   color: '#FFFFFF',
                   border: 'none',
                   borderRadius: '12px',
@@ -1147,10 +1174,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(0, 43, 102, 0.25)',
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)',
                 }}
               >
-                <FaUser style={{ color: '#10B981' }} /> Sign In / Register
+                <FaUser style={{ color: '#FDE047' }} /> Sign In / Register
               </button>
             )}
           </div>

@@ -96,8 +96,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       >
         {/* Profile Header Card */}
         <div style={{
-          backgroundColor: '#002B66',
-          backgroundImage: 'linear-gradient(135deg, #002B66 0%, #004098 100%)',
+          backgroundColor: '#064E3B',
+          backgroundImage: 'linear-gradient(135deg, #064E3B 0%, #059669 100%)',
           padding: '24px',
           color: '#FFFFFF',
           position: 'relative',
@@ -132,9 +132,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              backgroundColor: '#059669',
-              border: '3px solid rgba(255, 255, 255, 0.4)',
-              color: '#FFFFFF',
+              backgroundColor: '#064E3B',
+              border: '3px solid rgba(253, 224, 71, 0.6)',
+              color: '#FDE047',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -155,7 +155,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '4px',
-                  backgroundColor: '#10B981',
+                  backgroundColor: '#F59E0B',
                   color: '#FFFFFF',
                   fontSize: '11px',
                   fontWeight: 800,
@@ -166,12 +166,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 </span>
               </div>
 
-              <div style={{ fontSize: '13px', color: '#93C5FD', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '13px', color: '#D1FAE5', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <FaEnvelope style={{ fontSize: '11px', opacity: 0.8 }} />
                 <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user.email}</span>
               </div>
 
-              <div style={{ display: 'inline-block', marginTop: '6px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', padding: '2px 10px', borderRadius: '8px' }}>
+              <div style={{ display: 'inline-block', marginTop: '6px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(255, 255, 255, 0.18)', color: '#FFFFFF', padding: '2px 10px', borderRadius: '8px' }}>
                 {user.role || 'Verified Member'}
               </div>
             </div>
@@ -187,7 +187,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 borderRadius: '10px',
                 border: 'none',
                 backgroundColor: activeTab === 'overview' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
-                color: activeTab === 'overview' ? '#002B66' : '#FFFFFF',
+                color: activeTab === 'overview' ? '#064E3B' : '#FFFFFF',
                 fontWeight: 700,
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -210,7 +210,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 borderRadius: '10px',
                 border: 'none',
                 backgroundColor: activeTab === 'edit' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
-                color: activeTab === 'edit' ? '#002B66' : '#FFFFFF',
+                color: activeTab === 'edit' ? '#064E3B' : '#FFFFFF',
                 fontWeight: 700,
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -517,7 +517,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     padding: '12px',
                     borderRadius: '12px',
                     border: 'none',
-                    backgroundColor: saveSuccess ? '#059669' : '#002B66',
+                    backgroundColor: '#059669',
+                    backgroundImage: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                     color: '#FFFFFF',
                     fontWeight: 800,
                     fontSize: '13.5px',
@@ -527,6 +528,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     justifyContent: 'center',
                     gap: '6px',
                     transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)',
                   }}
                 >
                   {saveSuccess ? (
@@ -560,7 +562,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             style={{
               background: 'none',
               border: 'none',
-              color: '#002B66',
+              color: '#059669',
               fontSize: '12.5px',
               fontWeight: 700,
               cursor: 'pointer',
