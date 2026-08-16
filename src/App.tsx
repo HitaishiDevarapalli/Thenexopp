@@ -11,6 +11,7 @@ import { siteSettingsDb, updateSiteSettings, isModuleActive, propertiesDb } from
 import { useAuth } from './context/AuthContext';
 import LoadingScreen from './components/common/LoadingScreen';
 import { updateSEO } from './utils/seo';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Route-level Code Splitting: Lazy-load subpages, heavy forms & admin panel
 const LoginModal = lazy(() => import('./components/forms/LoginModal').then(m => ({ default: m.LoginModal })));
@@ -43,9 +44,9 @@ const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?
         <button className="circle-back-btn" onClick={onBack} title="Go Back">
           <FaArrowLeft />
         </button>
-        {leftTitle && <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)' }}>{leftTitle}</h3>}
       </div>
-      <h2 className="subpage-title" style={{ margin: 0 }}>{title}</h2>
+      <h2>{title}</h2>
+      {leftTitle && <span className="subpage-header-left-title">{leftTitle}</span>}
     </div>
   </div>
 );
@@ -86,22 +87,27 @@ const parseUrl = (path: string) => {
   if (window.location.search.includes('admin=true') || window.location.search.includes('portal=true')) {
     return { page: 'adminPortal' as PageType };
   }
-  if (path.startsWith('/property/')) {
-    return { page: 'propertyDetails' as PageType, propertyId: path.split('/')[2] };
+  const cleanPath = (path || '').split('?')[0].split('#')[0];
+  if (cleanPath.startsWith('/property/')) {
+    const rawId = cleanPath.split('/')[2];
+    return { page: 'propertyDetails' as PageType, propertyId: rawId ? decodeURIComponent(rawId) : undefined };
   }
-  if (path.startsWith('/buy/')) {
-    return { page: 'closeDeal' as PageType, buyPropertyId: path.split('/')[2] };
+  if (cleanPath.startsWith('/buy/')) {
+    const rawId = cleanPath.split('/')[2];
+    return { page: 'closeDeal' as PageType, buyPropertyId: rawId ? decodeURIComponent(rawId) : undefined };
   }
-  if (path.startsWith('/franchise/details/')) {
-    return { page: 'franchiseDetails' as PageType, franchiseId: path.split('/')[3] };
+  if (cleanPath.startsWith('/franchise/details/')) {
+    const rawId = cleanPath.split('/')[3];
+    return { page: 'franchiseDetails' as PageType, franchiseId: rawId ? decodeURIComponent(rawId) : undefined };
   }
-  if (path.startsWith('/business/listings/')) {
-    return { page: 'businessListings' as PageType, industry: decodeURIComponent(path.split('/')[3]) as 'Food' | 'Healthcare' | 'Retail & Stores' };
+  if (cleanPath.startsWith('/business/listings/')) {
+    const rawInd = cleanPath.split('/')[3];
+    return { page: 'businessListings' as PageType, industry: rawInd ? decodeURIComponent(rawInd) as any : undefined };
   }
-  if (routeMap[path]) {
-    return { page: routeMap[path] };
+  if (routeMap[cleanPath]) {
+    return { page: routeMap[cleanPath] };
   }
-  if (path === '' || path === '/') {
+  if (cleanPath === '' || cleanPath === '/') {
     return { page: 'home' as PageType };
   }
   return { page: 'notFound' as PageType };
@@ -159,12 +165,17 @@ export const App: React.FC = () => {
   const routeData = parseUrl(currentPath);
   const currentPage = routeData.page;
   
-  const [selectedFranchiseId] = useState<string | null>(routeData.franchiseId || null);
+  const [selectedFranchiseId, setSelectedFranchiseId] = useState<string | null>(routeData.franchiseId || null);
   const [selectedBusinessIndustry, setSelectedBusinessIndustry] = useState<'Food' | 'Healthcare' | 'Retail & Stores' | null>(routeData.industry || null);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(routeData.propertyId || null);
   const [selectedBuyPropertyId, setSelectedBuyPropertyId] = useState<string | null>(routeData.buyPropertyId || null);
   const [enquiryTargetId, setEnquiryTargetId] = useState<string | null>(null);
   const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
+
+  const activePropertyId = routeData.propertyId || selectedPropertyId;
+  const activeBuyPropertyId = routeData.buyPropertyId || selectedBuyPropertyId;
+  const activeFranchiseId = routeData.franchiseId || selectedFranchiseId;
+  const activeBusinessIndustry = routeData.industry || selectedBusinessIndustry;
 
   const navigateToUrl = (url: string) => {
     window.history.pushState({}, '', url);
@@ -187,19 +198,19 @@ export const App: React.FC = () => {
       queryParams = params;
     } else {
       if (page === 'propertyDetails') {
-        const pid = params?.propertyId || selectedPropertyId;
+        const pid = params?.propertyId || activePropertyId;
         if (pid) url = `/property/${pid}`;
       }
       if (page === 'closeDeal') {
-        const bid = params?.propertyId || selectedBuyPropertyId;
+        const bid = params?.propertyId || activeBuyPropertyId;
         if (bid) url = `/buy/${bid}`;
       }
       if (page === 'franchiseDetails') {
-        const fid = params?.franchiseId || selectedFranchiseId;
+        const fid = params?.franchiseId || activeFranchiseId;
         if (fid) url = `/franchise/details/${fid}`;
       }
       if (page === 'businessListings') {
-        const ind = params?.industry || selectedBusinessIndustry;
+        const ind = params?.industry || activeBusinessIndustry;
         if (ind) url = `/business/listings/${encodeURIComponent(ind)}`;
       }
     }
@@ -290,189 +301,15 @@ export const App: React.FC = () => {
       )}
       
       {currentPage !== 'home' ? (
-        <Suspense fallback={<LoadingScreen message="Loading page..." />}>
-          {currentPage === 'adminPortal' ? (
-            <AdminPanel onDataChange={() => {}} />
-          ) : currentPage === 'franchiseResales' ? (
-            <FranchiseResalesPage 
-              onBack={navigateBack} 
-              searchQuery={globalSearchQuery}
-              onClearSearch={() => setGlobalSearchQuery('')}
-              onPropertyClick={(id) => {
-                setSelectedPropertyId(id);
-                navigateTo('propertyDetails', { propertyId: id });
-              }}
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-            />
-          ) : currentPage === 'franchiseDetails' && selectedFranchiseId ? (
-            <FranchiseDetailsPage 
-              franchiseId={selectedFranchiseId} 
-              onBack={navigateBack} 
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-            />
-          ) : currentPage === 'newFranchise' ? (
-            <NewFranchisePage 
-              onBack={navigateBack} 
-              searchQuery={globalSearchQuery}
-              onClearSearch={() => setGlobalSearchQuery('')}
-              onPropertyClick={(id) => {
-                setSelectedPropertyId(id);
-                navigateTo('propertyDetails', { propertyId: id });
-              }}
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-            />
-          ) : currentPage === 'wishlist' ? (
-            <WishlistPage 
-              onBack={navigateBack} 
-              onPropertyClick={(id) => {
-                setSelectedPropertyId(id);
-                navigateTo('propertyDetails', { propertyId: id });
-              }}
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-            />
-          ) : currentPage === 'propertyDetails' && selectedPropertyId ? (
-            <PropertyDetailsPage 
-              propertyId={selectedPropertyId} 
-              onBack={navigateBack}            
-              onPropertyClick={(id) => {
-                  setSelectedPropertyId(id);
-                  navigateTo('propertyDetails', { propertyId: id });
-                }}
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal');
-              }}
-              onContactBroker={(id) => {
-                setEnquiryTargetId(id);
-                navigateTo('enquiryPage');
-              }}
-              onBookSlot={(id) => {
-                setEnquiryTargetId(id);
-                navigateTo('bookSlotPage');
-              }}
-            />
-          ) : (currentPage === 'enquiryPage' || currentPage === 'bookSlotPage') ? (
-            <EnquiryPage
-              propertyId={enquiryTargetId || (propertiesDb[0]?.id || 'P1')}
-              mode={currentPage === 'bookSlotPage' ? 'book' : 'contact'}
-              onBack={navigateBack}
-            />
-          ) : currentPage === 'closeDeal' && selectedBuyPropertyId ? (
-            <CloseDealPage 
-              propertyId={selectedBuyPropertyId} 
-              onBack={navigateBack} 
-            />
-          ) : currentPage === 'businessListings' && selectedBusinessIndustry ? (
-            <BusinessListingsPage 
-              industry={selectedBusinessIndustry} 
-              onBack={navigateBack} 
-              searchQuery={globalSearchQuery}
-              onClearSearch={() => setGlobalSearchQuery('')}
-              onPropertyClick={(id) => {
-                setSelectedPropertyId(id);
-                navigateTo('propertyDetails', { propertyId: id });
-              }}
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-            />
-          ) : currentPage === 'propertiesPage' ? (
-            !isModuleActive('properties') ? (
-              <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
-                <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Property Section Temporarily Offline</h2>
-                <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently disabled by the site administrator. Please explore our active franchise and business listings.</p>
-                <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
-              </div>
-            ) : (
-              <PropertyCategories 
-                title="Verified Properties for Sale & Rent in India"
-                subtitle="Explore verified residential, commercial, plots and new projects across India."
-              onBack={navigateBack}
-              searchQuery={globalSearchQuery}
-              onClearSearch={() => setGlobalSearchQuery('')}
-              onPropertyClick={(id) => {
-                setSelectedPropertyId(id);
-                navigateTo('propertyDetails', { propertyId: id });
-              }} 
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-              onCategorySelect={(cat) => {
-                if (cat === 'BuyApartment') navigateTo('flatsPage');
-                else if (cat === 'BuyVilla') navigateTo('villasPage');
-                else if (cat === 'BuyHouse') navigateTo('housesPage');
-                else if (cat === 'BuyLand') navigateTo('landPage');
-              }}
-            />
-            )
-          ) : (currentPage === 'rentPage' || currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
-            <PropertyCategories 
-              title={
-                currentPage === 'rentPage' ? 'Rental Properties Marketplace' :
-                currentPage === 'flatsPage' ? 'Flats & Apartments' :
-                currentPage === 'villasPage' ? 'Villas' :
-                currentPage === 'housesPage' ? 'Individual Houses' : 'Lands & Plots'
-              }
-              subtitle={
-                currentPage === 'rentPage' ? 'Explore verified residential & commercial properties for rent' :
-                currentPage === 'flatsPage' ? 'Explore 1, 2, 3 & 4+ BHK luxury apartments and gated societies' :
-                currentPage === 'villasPage' ? 'Discover premium luxury villas and row houses' :
-                currentPage === 'housesPage' ? 'Discover independent houses, villas and bungalows for sale & rent' : 'Verified residential plots, commercial lands and agricultural layouts'
-              }
-              onBack={navigateBack}
-              initialCategory={
-                currentPage === 'rentPage' ? 'Rent' :
-                currentPage === 'flatsPage' ? 'BuyApartment' :
-                currentPage === 'villasPage' ? 'BuyVilla' :
-                currentPage === 'housesPage' ? 'BuyHouse' : 'BuyLand'
-              }
-              searchQuery={globalSearchQuery}
-              onClearSearch={() => setGlobalSearchQuery('')}
-              onPropertyClick={(id) => {
-                setSelectedPropertyId(id);
-                navigateTo('propertyDetails', { propertyId: id });
-              }} 
-              onBuyProperty={(id) => {
-                setSelectedBuyPropertyId(id);
-                navigateTo('closeDeal', { propertyId: id });
-              }}
-              onCategorySelect={(cat) => {
-                if (cat === 'BuyApartment') navigateTo('flatsPage');
-                else if (cat === 'BuyVilla') navigateTo('villasPage');
-                else if (cat === 'BuyHouse') navigateTo('housesPage');
-                else if (cat === 'BuyLand') navigateTo('landPage');
-              }}
-            />
-          ) : currentPage === 'sellPropertyPage' ? (
-            <SellPropertyPage onBack={navigateBack} />
-          ) : currentPage === 'franchisePage' ? (
-            !isModuleActive('franchises') || siteSettingsDb.showFranchiseSection === false ? (
-              <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
-                <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Franchise Section Temporarily Offline</h2>
-                <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently undergoing maintenance. Please explore our verified properties and business listings.</p>
-                <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
-              </div>
-            ) : (
-              <FranchiseMarketplace 
-                title="Franchise Marketplace"
-                subtitle="Explore top brand franchises, resales, and new commercial opportunities across India"
-                onBack={navigateBack}
-                onExploreResales={() => navigateTo('franchiseResales')} 
-                onExploreNew={() => navigateTo('newFranchise')}
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingScreen message="Loading page..." />}>
+            {currentPage === 'adminPortal' ? (
+              <AdminPanel onDataChange={() => {}} />
+            ) : currentPage === 'franchiseResales' ? (
+              <FranchiseResalesPage 
+                onBack={navigateBack} 
+                searchQuery={globalSearchQuery}
+                onClearSearch={() => setGlobalSearchQuery('')}
                 onPropertyClick={(id) => {
                   setSelectedPropertyId(id);
                   navigateTo('propertyDetails', { propertyId: id });
@@ -482,76 +319,252 @@ export const App: React.FC = () => {
                   navigateTo('closeDeal', { propertyId: id });
                 }}
               />
-            )
-          ) : currentPage === 'businessPage' ? (
-            !isModuleActive('business') ? (
-              <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
-                <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Business Section Temporarily Offline</h2>
-                <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This page is currently disabled by the site administrator. Please explore our active property and franchise listings.</p>
-                <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
-              </div>
-            ) : (
-              <BusinessMarketplace 
-                title="Business Marketplace"
-                subtitle="Discover verified businesses for sale, investment, and strategic acquisitions"
-                onBack={navigateBack}
-                onExploreCategory={(industry) => {
-                  setSelectedBusinessIndustry(industry);
-                  navigateTo('businessListings');
+            ) : currentPage === 'franchiseDetails' && activeFranchiseId ? (
+              <FranchiseDetailsPage 
+                franchiseId={activeFranchiseId} 
+                onBack={navigateBack} 
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
                 }}
+              />
+            ) : currentPage === 'newFranchise' ? (
+              <NewFranchisePage 
+                onBack={navigateBack} 
+                searchQuery={globalSearchQuery}
+                onClearSearch={() => setGlobalSearchQuery('')}
                 onPropertyClick={(id) => {
                   setSelectedPropertyId(id);
                   navigateTo('propertyDetails', { propertyId: id });
                 }}
-              />
-            )
-          ) : currentPage === 'sellBusinessPage' ? (
-            <SellBusinessPage onBack={navigateBack} />
-          ) : currentPage === 'aboutUsPage' ? (
-            <>
-              <SubpageHeader title="About Us & Leadership" onBack={navigateBack} />
-              <AboutUs />
-            </>
-          ) : currentPage === 'contactUsPage' ? (
-            <>
-              <SubpageHeader title="Contact Us & Inquiry Desk" onBack={navigateBack} />
-              <ContactUs />
-            </>
-          ) : currentPage === 'financePage' ? (
-            <>
-              <SubpageHeader title="Loans & Insurance Solutions" onBack={navigateBack} />
-              <FinanceSection 
-                onCategorySelect={(cat) => {
-                  if (cat === 'loans') navigateTo('loansPage');
-                  else if (cat === 'insurance') navigateTo('insurancePage');
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
                 }}
               />
-            </>
-          ) : (currentPage === 'loansPage' || currentPage === 'insurancePage') ? (
-            <>
-              <SubpageHeader 
-                title={
-                  currentPage === 'loansPage' ? 'Loans — Real Estate & Business Finance' : 'Insurance — Insurance Solutions'
-                } 
+            ) : currentPage === 'wishlist' ? (
+              <WishlistPage 
+                onBack={navigateBack} 
+                onPropertyClick={(id) => {
+                  setSelectedPropertyId(id);
+                  navigateTo('propertyDetails', { propertyId: id });
+                }}
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
+                }}
+              />
+            ) : currentPage === 'propertyDetails' && activePropertyId ? (
+              <PropertyDetailsPage 
+                propertyId={activePropertyId} 
+                onBack={navigateBack}            
+                onPropertyClick={(id) => {
+                    setSelectedPropertyId(id);
+                    navigateTo('propertyDetails', { propertyId: id });
+                  }}
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
+                }}
+                onContactBroker={(id) => {
+                  setEnquiryTargetId(id);
+                  navigateTo('enquiryPage');
+                }}
+                onBookSlot={(id) => {
+                  setEnquiryTargetId(id);
+                  navigateTo('bookSlotPage');
+                }}
+              />
+            ) : (currentPage === 'enquiryPage' || currentPage === 'bookSlotPage') ? (
+              <EnquiryPage
+                propertyId={enquiryTargetId || activePropertyId || (propertiesDb[0]?.id || 'P1')}
+                mode={currentPage === 'bookSlotPage' ? 'book' : 'contact'}
+                onBack={navigateBack}
+              />
+            ) : currentPage === 'closeDeal' && activeBuyPropertyId ? (
+              <CloseDealPage 
+                propertyId={activeBuyPropertyId} 
                 onBack={navigateBack} 
               />
-              <FinanceSection 
-                initialCategory={
-                  currentPage === 'loansPage' ? 'loans' : 'insurance'
-                }
-                onCategorySelect={(cat) => {
-                  if (cat === 'loans') navigateTo('loansPage');
-                  else if (cat === 'insurance') navigateTo('insurancePage');
+            ) : currentPage === 'businessListings' && activeBusinessIndustry ? (
+              <BusinessListingsPage 
+                industry={activeBusinessIndustry} 
+                onBack={navigateBack} 
+                searchQuery={globalSearchQuery}
+                onClearSearch={() => setGlobalSearchQuery('')}
+                onPropertyClick={(id) => {
+                  setSelectedPropertyId(id);
+                  navigateTo('propertyDetails', { propertyId: id });
+                }}
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
                 }}
               />
-            </>
-          ) : currentPage === 'notFound' ? (
-            <>
-              <SubpageHeader title="404 – Page Not Found" onBack={() => navigateTo('home')} />
-              <NotFoundPage onNavigate={(page) => navigateTo(page as PageType)} />
-            </>
-          ) : null}
-        </Suspense>
+            ) : currentPage === 'propertiesPage' ? (
+              !isModuleActive('properties') ? (
+                <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
+                  <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Property Section Temporarily Offline</h2>
+                  <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently disabled by the site administrator. Please explore our active franchise and business listings.</p>
+                  <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
+                </div>
+              ) : (
+                <PropertyCategories 
+                  title="Verified Properties for Sale & Rent in India"
+                  subtitle="Explore verified residential, commercial, plots and new projects across India."
+                onBack={navigateBack}
+                searchQuery={globalSearchQuery}
+                onClearSearch={() => setGlobalSearchQuery('')}
+                onPropertyClick={(id) => {
+                  setSelectedPropertyId(id);
+                  navigateTo('propertyDetails', { propertyId: id });
+                }} 
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
+                }}
+                onCategorySelect={(cat) => {
+                  if (cat === 'BuyApartment') navigateTo('flatsPage');
+                  else if (cat === 'BuyVilla') navigateTo('villasPage');
+                  else if (cat === 'BuyHouse') navigateTo('housesPage');
+                  else if (cat === 'BuyLand') navigateTo('landPage');
+                }}
+              />
+              )
+            ) : (currentPage === 'rentPage' || currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
+              <PropertyCategories 
+                title={
+                  currentPage === 'rentPage' ? 'Rental Properties Marketplace' :
+                  currentPage === 'flatsPage' ? 'Flats & Apartments' :
+                  currentPage === 'villasPage' ? 'Villas' :
+                  currentPage === 'housesPage' ? 'Individual Houses' : 'Lands & Plots'
+                }
+                subtitle={
+                  currentPage === 'rentPage' ? 'Explore verified residential & commercial properties for rent' :
+                  currentPage === 'flatsPage' ? 'Explore 1, 2, 3 & 4+ BHK luxury apartments and gated societies' :
+                  currentPage === 'villasPage' ? 'Discover premium luxury villas and row houses' :
+                  currentPage === 'housesPage' ? 'Discover independent houses, villas and bungalows for sale & rent' : 'Verified residential plots, commercial lands and agricultural layouts'
+                }
+                onBack={navigateBack}
+                initialCategory={
+                  currentPage === 'rentPage' ? 'Rent' :
+                  currentPage === 'flatsPage' ? 'BuyApartment' :
+                  currentPage === 'villasPage' ? 'BuyVilla' :
+                  currentPage === 'housesPage' ? 'BuyHouse' : 'BuyLand'
+                }
+                searchQuery={globalSearchQuery}
+                onClearSearch={() => setGlobalSearchQuery('')}
+                onPropertyClick={(id) => {
+                  setSelectedPropertyId(id);
+                  navigateTo('propertyDetails', { propertyId: id });
+                }} 
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
+                }}
+                onCategorySelect={(cat) => {
+                  if (cat === 'BuyApartment') navigateTo('flatsPage');
+                  else if (cat === 'BuyVilla') navigateTo('villasPage');
+                  else if (cat === 'BuyHouse') navigateTo('housesPage');
+                  else if (cat === 'BuyLand') navigateTo('landPage');
+                }}
+              />
+            ) : currentPage === 'sellPropertyPage' ? (
+              <SellPropertyPage onBack={navigateBack} />
+            ) : currentPage === 'franchisePage' ? (
+              !isModuleActive('franchises') || siteSettingsDb.showFranchiseSection === false ? (
+                <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
+                  <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Franchise Section Temporarily Offline</h2>
+                  <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This section is currently undergoing maintenance. Please explore our verified properties and business listings.</p>
+                  <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
+                </div>
+              ) : (
+                <FranchiseMarketplace 
+                  title="Franchise Marketplace"
+                  subtitle="Explore top brand franchises, resales, and new commercial opportunities across India"
+                  onBack={navigateBack}
+                  onExploreResales={() => navigateTo('franchiseResales')} 
+                  onExploreNew={() => navigateTo('newFranchise')}
+                  onPropertyClick={(id) => {
+                    setSelectedPropertyId(id);
+                    navigateTo('propertyDetails', { propertyId: id });
+                  }}
+                  onBuyProperty={(id) => {
+                    setSelectedBuyPropertyId(id);
+                    navigateTo('closeDeal', { propertyId: id });
+                  }}
+                />
+              )
+            ) : currentPage === 'businessPage' ? (
+              !isModuleActive('business') ? (
+                <div style={{ textAlign: 'center', padding: '100px 24px', fontFamily: "'Outfit', sans-serif" }}>
+                  <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Business Section Temporarily Offline</h2>
+                  <p style={{ fontSize: '1.05rem', color: '#64748B', maxWidth: '500px', margin: '0 auto 24px auto' }}>This page is currently disabled by the site administrator. Please explore our active property and franchise listings.</p>
+                  <button onClick={() => navigateTo('home')} className="btn btn-gold" style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' }}>Back to Homepage</button>
+                </div>
+              ) : (
+                <BusinessMarketplace 
+                  title="Business Marketplace"
+                  subtitle="Discover verified businesses for sale, investment, and strategic acquisitions"
+                  onBack={navigateBack}
+                  onExploreCategory={(industry) => {
+                    setSelectedBusinessIndustry(industry);
+                    navigateTo('businessListings');
+                  }}
+                  onPropertyClick={(id) => {
+                    setSelectedPropertyId(id);
+                    navigateTo('propertyDetails', { propertyId: id });
+                  }}
+                />
+              )
+            ) : currentPage === 'sellBusinessPage' ? (
+              <SellBusinessPage onBack={navigateBack} />
+            ) : currentPage === 'aboutUsPage' ? (
+              <>
+                <SubpageHeader title="About Us & Leadership" onBack={navigateBack} />
+                <AboutUs />
+              </>
+            ) : currentPage === 'contactUsPage' ? (
+              <>
+                <SubpageHeader title="Contact Us & Inquiry Desk" onBack={navigateBack} />
+                <ContactUs />
+              </>
+            ) : currentPage === 'financePage' ? (
+              <>
+                <SubpageHeader title="Loans & Insurance Solutions" onBack={navigateBack} />
+                <FinanceSection 
+                  onCategorySelect={(cat) => {
+                    if (cat === 'loans') navigateTo('loansPage');
+                    else if (cat === 'insurance') navigateTo('insurancePage');
+                  }}
+                />
+              </>
+            ) : (currentPage === 'loansPage' || currentPage === 'insurancePage') ? (
+              <>
+                <SubpageHeader 
+                  title={
+                    currentPage === 'loansPage' ? 'Loans — Real Estate & Business Finance' : 'Insurance — Insurance Solutions'
+                  } 
+                  onBack={navigateBack} 
+                />
+                <FinanceSection 
+                  initialCategory={
+                    currentPage === 'loansPage' ? 'loans' : 'insurance'
+                  }
+                  onCategorySelect={(cat) => {
+                    if (cat === 'loans') navigateTo('loansPage');
+                    else if (cat === 'insurance') navigateTo('insurancePage');
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <SubpageHeader title="Page Not Found" onBack={() => navigateTo('home')} />
+                <NotFoundPage onNavigate={(page) => navigateTo(page as PageType)} />
+              </>
+            )}
+          </Suspense>
+        </ErrorBoundary>
       ) : (
         <>
           <HomePage 

@@ -538,11 +538,69 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       .sort((a, b) => a.distanceKm - b.distanceKm);
   }, [property, nearbyRadiusFilter]);
 
+  // EMI Calculator State
+  const [loanAmountLakhs, setLoanAmountLakhs] = useState<number>(150);
+  const [interestRate, setInterestRate] = useState<number>(8.5);
+  const [loanTenureYears, setLoanTenureYears] = useState<number>(20);
+
+  useEffect(() => {
+    if (property?.price) {
+      setLoanAmountLakhs(Math.round(property.price * 100 * 0.8));
+    }
+  }, [property]);
+
+  const calculatedEmi = useMemo(() => {
+    const P = loanAmountLakhs * 100000;
+    const r = interestRate / (12 * 100);
+    const n = loanTenureYears * 12;
+    if (r === 0) return Math.round(P / n);
+    const emi = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    return Math.round(emi);
+  }, [loanAmountLakhs, interestRate, loanTenureYears]);
+
+  const demandBadge = useMemo(() => {
+    if (!property?.latitude || !property?.longitude) return null;
+    let closestRegion: any = null;
+    let minDistance = Infinity;
+
+    demandRegionsDb.forEach(r => {
+      const dist = getDistance(r.latitude, r.longitude, property.latitude, property.longitude);
+      if (dist <= r.radius && dist < minDistance) {
+        minDistance = dist;
+        closestRegion = r;
+      }
+    });
+
+    if (!closestRegion) return null;
+
+    const level = closestRegion.demandLevel;
+    const color = level === 'High' ? '#DCFCE7' : (level === 'Medium' ? '#FEF9C3' : '#FEE2E2');
+    const textColor = level === 'High' ? '#16A34A' : (level === 'Medium' ? '#CA8A04' : '#EF4444');
+    const icon = level === 'High' ? '🔥' : (level === 'Medium' ? '⭐' : '📍');
+    const label = level === 'High' ? 'High Demand Area' : (level === 'Medium' ? 'Moderate Demand Area' : 'Low Demand Area');
+    const desc = level === 'High' ? `Located in one of the most demanded regions within a ${closestRegion.radius} km radius.` : `Located in a ${level.toLowerCase()} demand zone within a ${closestRegion.radius} km radius.`;
+
+    return (
+      <div style={{ backgroundColor: color, color: textColor, padding: '12px 20px', borderRadius: '12px', border: `1px solid ${textColor}`, display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', fontWeight: 700, marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <span style={{ fontSize: '1.5rem' }}>{icon}</span>
+        <div>
+          <span style={{ display: 'block', fontWeight: 800 }}>{label}</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.85, fontWeight: 500 }}>{desc}</span>
+        </div>
+      </div>
+    );
+  }, [property]);
+
   if (!property) {
     return (
-      <div className="container" style={{ padding: '6rem 2rem', textAlign: 'center' }}>
-        <h2>Property Not Found</h2>
-        <button className="btn btn-gold mt-4" onClick={onBack}><FaArrowLeft /> Go Back</button>
+      <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center', minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>Property Listing Unavailable</h2>
+        <p style={{ color: '#64748B', maxWidth: '480px', margin: '0 auto 24px auto', fontSize: '1rem', lineHeight: 1.5 }}>
+          The requested property could not be found or has been unlisted. Please explore other available verified properties.
+        </p>
+        <button className="btn btn-gold" onClick={onBack} style={{ padding: '12px 28px', borderRadius: '10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+          <FaArrowLeft /> Back to Properties
+        </button>
       </div>
     );
   }
@@ -575,26 +633,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     setMessage('');
   };
 
-  // EMI Calculator State
-  const [loanAmountLakhs, setLoanAmountLakhs] = useState<number>(150);
-  const [interestRate, setInterestRate] = useState<number>(8.5);
-  const [loanTenureYears, setLoanTenureYears] = useState<number>(20);
-
-  useEffect(() => {
-    if (property.price) {
-      setLoanAmountLakhs(Math.round(property.price * 100 * 0.8));
-    }
-  }, [property]);
-
-  const calculatedEmi = useMemo(() => {
-    const P = loanAmountLakhs * 100000;
-    const r = interestRate / (12 * 100);
-    const n = loanTenureYears * 12;
-    if (r === 0) return Math.round(P / n);
-    const emi = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    return Math.round(emi);
-  }, [loanAmountLakhs, interestRate, loanTenureYears]);
-
   // Derive specs fields
   const superArea = property.areaSqFt || '1500';
   const catLower = (property.category || '').toLowerCase();
@@ -603,39 +641,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const isCommercial = catLower.includes('commercial') || catLower.includes('office') || catLower.includes('shop') || titleLower.includes('commercial') || titleLower.includes('office') || titleLower.includes('shop');
   const carpetArea = isPlot ? 'N/A' : `${Math.round(parseInt(superArea) * 0.85) || 1200} sqft`;
   const typeDisplay = isPlot ? 'Plots & Land' : isCommercial ? 'Commercial Property' : (catLower.includes('villa') || catLower.includes('house')) ? 'House & Villa' : 'Flats & Apartments';
-
-  const demandBadge = useMemo(() => {
-    if (!property.latitude || !property.longitude) return null;
-    let closestRegion: any = null;
-    let minDistance = Infinity;
-
-    demandRegionsDb.forEach(r => {
-      const dist = getDistance(r.latitude, r.longitude, property.latitude, property.longitude);
-      if (dist <= r.radius && dist < minDistance) {
-        minDistance = dist;
-        closestRegion = r;
-      }
-    });
-
-    if (!closestRegion) return null;
-
-    const level = closestRegion.demandLevel;
-    const color = level === 'High' ? '#DCFCE7' : (level === 'Medium' ? '#FEF9C3' : '#FEE2E2');
-    const textColor = level === 'High' ? '#16A34A' : (level === 'Medium' ? '#CA8A04' : '#EF4444');
-    const icon = level === 'High' ? '🔥' : (level === 'Medium' ? '⭐' : '📍');
-    const label = level === 'High' ? 'High Demand Area' : (level === 'Medium' ? 'Moderate Demand Area' : 'Low Demand Area');
-    const desc = level === 'High' ? `Located in one of the most demanded regions within a ${closestRegion.radius} km radius.` : `Located in a ${level.toLowerCase()} demand zone within a ${closestRegion.radius} km radius.`;
-
-    return (
-      <div style={{ backgroundColor: color, color: textColor, padding: '12px 20px', borderRadius: '12px', border: `1px solid ${textColor}`, display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', fontWeight: 700, marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-        <span style={{ fontSize: '1.5rem' }}>{icon}</span>
-        <div>
-          <span style={{ display: 'block', fontWeight: 800 }}>{label}</span>
-          <span style={{ fontSize: '0.8rem', opacity: 0.85, fontWeight: 500 }}>{desc}</span>
-        </div>
-      </div>
-    );
-  }, [property]);
 
   return (
     <div className="prop-details-page animation-fade-in" style={{ padding: '115px 0 3rem', background: 'var(--bg-main)', minHeight: '100vh' }}>
