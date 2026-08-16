@@ -5325,26 +5325,25 @@ body.modal-open {
 
 .responsive-property-grid {
   display: grid;
-  gap: 16px;
+  gap: 20px;
 }
 @media (min-width: 1200px) {
   .responsive-property-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
   }
 }
 @media (min-width: 768px) and (max-width: 1199px) {
   .responsive-property-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 @media (max-width: 767px) {
   .responsive-property-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    grid-template-columns: 1fr;
   }
 }
+
+
 
 /* Responsive Layout Utilities */
 .layout-sidebar-main {
@@ -5361,6 +5360,11 @@ body.modal-open {
   .layout-sidebar-main {
     grid-template-columns: 1fr;
   }
+}
+
+.responsive-property-grid {
+  display: grid;
+  gap: 20px;
 }
 
 /* Mobile Map & Responsive Filter Safety Rules */
@@ -5382,6 +5386,21 @@ body.modal-open {
     display: flex !important;
     flex-direction: column !important;
     gap: 20px !important;
+  }
+}
+@media (min-width: 1200px) {
+  .responsive-property-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .responsive-property-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .responsive-property-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -6319,14 +6338,13 @@ table {
   .wishlist-grid,
   .business-listings-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px !important;
+    gap: 12px !important;
   }
 
   /* Custom styling for compact cards in a 2-column grid */
   .responsive-property-grid > div,
   .franchise-directory-grid > div,
-  .wishlist-grid > div,
-  .business-listings-grid > div {
+  .wishlist-grid > div {
     display: flex !important;
     flex-direction: column !important;
     border-radius: 12px !important;
@@ -6334,25 +6352,20 @@ table {
   
   /* Shrink image banners on mobile cards */
   .responsive-property-grid img,
-  .wishlist-grid img,
-  .business-listings-grid img {
-    height: 115px !important;
+  .wishlist-grid img {
+    height: 130px !important;
   }
-  .responsive-property-grid div[style*="height:"],
-  .wishlist-grid div[style*="height:"],
-  .business-listings-grid div[style*="height:"] {
-    height: 115px !important;
+  .responsive-property-grid div[style*="height: '180px'"],
+  .wishlist-grid div[style*="height: '180px'"] {
+    height: 130px !important;
   }
 
   /* Card content adjustment */
-  .responsive-property-grid h3,
   .responsive-property-grid h4,
-  .wishlist-grid h4,
-  .business-listings-grid h3,
-  .business-listings-grid h4 {
-    font-size: 0.84rem !important;
+  .wishlist-grid h4 {
+    font-size: 0.92rem !important;
     line-height: 1.25 !important;
-    height: 2.2rem !important;
+    height: 2.5rem !important;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -6364,21 +6377,20 @@ table {
   /* Card specs and distance badges */
   .responsive-property-grid div[style*="gap: '10px'"],
   .wishlist-grid div[style*="gap: '10px'"] {
-    gap: 4px !important;
-    padding: 3px 6px !important;
-    margin-bottom: 6px !important;
+    gap: 6px !important;
+    padding: 4px 6px !important;
+    margin-bottom: 8px !important;
     border-radius: 6px !important;
   }
   .responsive-property-grid div[style*="gap: '10px'"] span,
   .wishlist-grid div[style*="gap: '10px'"] span {
-    font-size: 9.5px !important;
+    font-size: 10px !important;
   }
   
   /* Price & Distance */
   .responsive-property-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.2rem'"],
-  .responsive-property-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.15rem'"],
   .wishlist-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.2rem'"] {
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
   }
 
   /* Broker footer adjustments for narrow card width */
