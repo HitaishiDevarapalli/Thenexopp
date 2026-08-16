@@ -6586,5 +6586,15 @@ table {
   .customer-dashboard-page {
     padding-top: 90px !important;
   }
+  .about-section,
+  .contact-section {
+    padding-top: 90px !important;
+    padding-bottom: 40px !important;
+  }
+  .contact-form-card,
+  .hq-map-card {
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+  }
 }
 
