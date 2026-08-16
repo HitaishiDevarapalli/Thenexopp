@@ -1632,14 +1632,14 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             </div>
                           )}
 
-                          {/* Location Details (Auto-Geocoded) */}
-                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#059669', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded)</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                          {/* Location Details (Auto-Geocoded & Manual Entry) */}
+                          <h5 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#059669', margin: '24px 0 14px 0' }}>Location Details (Auto-Geocoded & Manual Entry)</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                               <FaGlobe style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
                               <div>
                                 <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Country</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.country || '-'}</div>
+                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.country || 'India'}</div>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -1664,10 +1664,37 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                              <FaCompass style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
-                              <div>
-                                <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Area / Locality</div>
-                                <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{editingFranchise.area || '-'}</div>
+                              <FaCompass style={{ fontSize: '1.1rem', color: '#059669', marginTop: '2px', flexShrink: 0 }} />
+                              <div style={{ width: '100%' }}>
+                                <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Area / Locality</label>
+                                <input 
+                                  type="text" 
+                                  value={editingFranchise.area || ''} 
+                                  onChange={e => setEditingFranchise({ ...editingFranchise, area: e.target.value })} 
+                                  placeholder="Enter Area / Locality" 
+                                  style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1px solid #CBD5E1', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, outline: 'none' }} 
+                                />
+                              </div>
+                            </div>
+                            <div style={{ backgroundColor: '#ECFDF5', border: '1.5px solid #A7F3D0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                              <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#059669', marginTop: '2px', flexShrink: 0 }} />
+                              <div style={{ width: '100%' }}>
+                                <label style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 800, display: 'block', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sub-Location / Landmark (Manual Entry)</label>
+                                <input 
+                                  type="text" 
+                                  value={editingFranchise.subLocation || editingFranchise.sub_location || ''} 
+                                  onChange={e => {
+                                    const subLoc = e.target.value;
+                                    setEditingFranchise({ 
+                                      ...editingFranchise, 
+                                      subLocation: subLoc,
+                                      sub_location: subLoc,
+                                      landmark: subLoc
+                                    });
+                                  }} 
+                                  placeholder="e.g. Phase 2, Near Tech Park, Sector 5" 
+                                  style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1.5px solid #059669', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#064E3B', fontWeight: 800, outline: 'none' }} 
+                                />
                               </div>
                             </div>
                             <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>

@@ -333,7 +333,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   const AddBusinessForm = () => {
     const [formData, setFormData] = useState<Partial<BusinessListing>>({
       title: '', description: '', category: categories[0]?.name || 'Retail', businessType: businessTypes[0]?.name || 'Private Limited',
-      city: 'Hyderabad', state: 'Andhra Pradesh', askingPrice: 50, priceDisplay: '', imageUrl: '', 
+      city: 'Hyderabad', state: 'Andhra Pradesh', district: 'Hyderabad', area: '', subLocation: '', pincode: '',
+      askingPrice: 50, priceDisplay: '', imageUrl: '', 
       establishedYear: new Date().getFullYear(), employeesCount: '1-10', revenueMonthly: '₹ 2 L / month', profitMonthly: '25% Net Profit',
       reasonForSale: 'Business Expansion', featured: false, published: true, status: 'Available'
     });
@@ -372,11 +373,19 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       const primaryImage = uploadedPhotos[0] || formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
+      const locSummary = [formData.subLocation, formData.area, formData.city, formData.state].filter(Boolean).join(', ') || formData.city || 'Hyderabad';
       const payload: any = {
         ...formData,
         id: `biz-${Date.now()}`,
         name: formData.title || 'Business Listing',
         title: formData.title || 'Business Listing',
+        location: locSummary,
+        subLocation: formData.subLocation || '',
+        sub_location: formData.subLocation || '',
+        landmark: formData.subLocation || '',
+        area: formData.area || '',
+        district: formData.district || '',
+        pincode: formData.pincode || '',
         price: Number(formData.askingPrice) || 0,
         askingPrice: Number(formData.askingPrice) || 0,
         priceDisplay: formData.priceDisplay || `₹ ${formData.askingPrice || 50} Lakhs`,
@@ -395,14 +404,14 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     return (
       <div style={{ padding: '24px', fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif" }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <FaPlus style={{ color: '#1E40AF' }} /> Add New Business
+          <FaPlus style={{ color: '#059669' }} /> Add New Business
         </h2>
         
         <form onSubmit={handleSubmit} style={{ backgroundColor: '#FFFFFF', padding: '28px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', maxWidth: '840px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Business Name</label>
-              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Premium Multi-Cuisine Restaurant" />
             </div>
 
             {/* Drag & Drop Photo Uploader */}
@@ -427,8 +436,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   padding: '28px 16px',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  backgroundColor: isDragging ? '#EFF6FF' : '#F8FAFC',
-                  borderColor: isDragging ? '#1E40AF' : '#CBD5E1',
+                  backgroundColor: isDragging ? '#ECFDF5' : '#F8FAFC',
+                  borderColor: isDragging ? '#059669' : '#CBD5E1',
                   transition: 'all 0.2s'
                 }}
               >
@@ -440,7 +449,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   style={{ display: 'none' }}
                   onChange={(e) => handleFileUpload(e.target.files)}
                 />
-                <FaCloudUploadAlt style={{ fontSize: '2.5rem', color: '#1E40AF', marginBottom: '8px' }} />
+                <FaCloudUploadAlt style={{ fontSize: '2.5rem', color: '#059669', marginBottom: '8px' }} />
                 <p style={{ margin: '0 0 4px 0', fontSize: '0.88rem', fontWeight: 700, color: '#334155' }}>Drag & Drop Photos Here or Click to Upload</p>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B' }}>Supports JPG, PNG, WEBP, GIF, SVG (Upload multiple photos at once)</p>
               </div>
@@ -451,7 +460,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   {uploadedPhotos.map((photo, idx) => (
                     <div key={idx} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0', width: '96px', height: '80px', backgroundColor: '#F1F5F9', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                       <img src={photo} alt={`Upload ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      {idx === 0 && <span style={{ position: 'absolute', top: '4px', left: '4px', backgroundColor: '#1E40AF', color: '#FFF', fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>Cover</span>}
+                      {idx === 0 && <span style={{ position: 'absolute', top: '4px', left: '4px', backgroundColor: '#059669', color: '#FFF', fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>Cover</span>}
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removePhoto(idx); }}
@@ -479,16 +488,27 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>City</label>
-              <select required style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', backgroundColor: '#FFF', boxSizing: 'border-box' }} value={formData.city || 'Hyderabad'} onChange={e => setFormData({...formData, city: e.target.value})}>
-                <option value="Hyderabad">Hyderabad</option>
-                <option value="Vijayawada">Vijayawada</option>
-                <option value="Guntur">Guntur</option>
-                <option value="Visakhapatnam">Visakhapatnam</option>
-              </select>
+              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.city || 'Hyderabad'} onChange={e => setFormData({...formData, city: e.target.value})} placeholder="e.g. Hyderabad" />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>State</label>
-              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} />
+              <input required type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.state || 'Telangana'} onChange={e => setFormData({...formData, state: e.target.value})} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>District</label>
+              <input type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.district || ''} onChange={e => setFormData({...formData, district: e.target.value})} placeholder="e.g. Hyderabad / Rangareddy" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Area / Locality</label>
+              <input type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.area || ''} onChange={e => setFormData({...formData, area: e.target.value, locality: e.target.value})} placeholder="e.g. HITEC City, Jubilee Hills" />
+            </div>
+            <div style={{ gridColumn: 'span 2', backgroundColor: '#ECFDF5', border: '1.5px solid #A7F3D0', borderRadius: '10px', padding: '14px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#047857', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.03em' }}>Sub-Location / Landmark (Manual Entry)</label>
+              <input type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1.5px solid #059669', outline: 'none', fontSize: '0.92rem', color: '#064E3B', fontWeight: 700, boxSizing: 'border-box', backgroundColor: '#FFFFFF' }} value={formData.subLocation || ''} onChange={e => setFormData({...formData, subLocation: e.target.value, landmark: e.target.value})} placeholder="e.g. Phase 2, Near Cyber Towers, Opp. Nexus Mall" />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Postal Code / Pincode</label>
+              <input type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.pincode || ''} onChange={e => setFormData({...formData, pincode: e.target.value, postal_code: e.target.value})} placeholder="e.g. 500081" />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Asking Price (Lakhs)</label>
@@ -505,7 +525,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
           </div>
           
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
-            <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#1D4ED8'} onMouseLeave={e => e.currentTarget.style.backgroundColor = '#1E40AF'}>Save Business</button>
+            <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#047857'} onMouseLeave={e => e.currentTarget.style.backgroundColor = '#059669'}>Save Business</button>
           </div>
         </form>
       </div>

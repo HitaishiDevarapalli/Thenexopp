@@ -174,6 +174,8 @@ export interface PropertyListing {
 
   // Detailed Location
   country?: string;
+  subLocation?: string;
+  sub_location?: string;
   locality?: string;
   landmark?: string;
   pincode?: string;
@@ -291,6 +293,10 @@ export interface FranchiseListing {
   country?: string;
   district?: string;
   area?: string;
+  subLocation?: string;
+  sub_location?: string;
+  locality?: string;
+  landmark?: string;
   pincode?: string;
   postal_code?: string;
   formatted_address?: string;
@@ -359,7 +365,17 @@ export interface BusinessListing {
   industry: string;
   location: string;
   state: string;
+  district?: string;
   city: string;
+  area?: string;
+  subLocation?: string;
+  sub_location?: string;
+  locality?: string;
+  landmark?: string;
+  pincode?: string;
+  postal_code?: string;
+  formatted_address?: string;
+  fullAddress?: string;
   latitude: number;
   longitude: number;
   price: number;

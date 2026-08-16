@@ -6265,6 +6265,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
               </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '8px', color: '#475569', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>AREA / LOCALITY</label>
+                  <input type="text" value={editingProperty.area || ''} onChange={e => setEditingProperty({ ...editingProperty, area: e.target.value })} placeholder="e.g. HITEC City" style={{ width: '100%', padding: '12px', border: '1px solid #E2E8F0' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '8px', color: '#059669', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>SUB-LOCATION / LANDMARK (MANUAL ENTRY)</label>
+                  <input type="text" value={editingProperty.subLocation || editingProperty.landmark || ''} onChange={e => setEditingProperty({ ...editingProperty, subLocation: e.target.value, landmark: e.target.value })} placeholder="e.g. Phase 2, Near Cyber Towers" style={{ width: '100%', padding: '12px', border: '1.5px solid #059669', backgroundColor: '#ECFDF5' }} />
+                </div>
+              </div>
+
               <div>
                 <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '8px', color: '#475569', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>UPLOAD / ADD MORE PHOTOS</label>
                 <label style={{ display: 'block', padding: '16px', textAlign: 'center', border: '1px dashed #1E40AF', cursor: 'pointer', backgroundColor: '#F8FAFC', fontWeight: 700, fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
