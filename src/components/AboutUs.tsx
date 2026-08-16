@@ -61,12 +61,18 @@ export const AboutUs: React.FC = () => {
                 }}
               >
                 {/* Photo */}
-                <div style={{ width: '100%', height: '320px', position: 'relative', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
-                  <img
-                    src={member.photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80'}
-                    alt={member.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-                  />
+                <div style={{ width: '100%', height: '320px', position: 'relative', overflow: 'hidden', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {member.photo ? (
+                    <img
+                      src={member.photo}
+                      alt={member.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                    />
+                  ) : (
+                    <div style={{ fontSize: '5rem', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', backgroundColor: '#E0F2FE' }}>
+                      <FaUserTie />
+                    </div>
+                  )}
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '80px', background: 'linear-gradient(to top, rgba(15,23,42,0.6), transparent)' }} />
                 </div>
 

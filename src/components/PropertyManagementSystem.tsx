@@ -448,7 +448,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       assignedBrokerIds: formData.assignedBrokerIds || [finalBrokerId],
       agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
       agentRating: assignedBroker?.rating || formData.agentRating || 4.8,
-      agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80',
+      agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || '',
       createdDate: formData.createdDate || new Date().toISOString().split('T')[0],
       urlSlug: formData.urlSlug || formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '',
       google_place_id: formData.google_place_id || `ChIJ_verified_${Date.now()}`,
@@ -541,7 +541,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       assignedBrokerIds: assignedIds,
       agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
       agentRating: assignedBroker?.rating || formData.agentRating || 4.8,
-      agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80',
+      agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || '',
       createdDate: formData.createdDate || new Date().toISOString().split('T')[0],
       urlSlug: formData.urlSlug || formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '',
       google_place_id: formData.google_place_id || `ChIJ_verified_${Date.now()}`,
@@ -2611,7 +2611,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               style={{ padding: '16px 20px', backgroundColor: isAssigned ? '#ECFDF5' : '#F8FAFC', border: isAssigned ? '2px solid #059669' : '1px solid #E2E8F0', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s', boxShadow: isAssigned ? '0 4px 12px rgba(37, 99, 235, 0.15)' : 'none' }}
                             >
                               <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                                <img src={broker.photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&q=80'} alt={broker.companyName} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
+                                {broker.photo || broker.logo || broker.image ? (
+                                  <img src={broker.photo || broker.logo || broker.image} alt={broker.companyName} style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                  <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', flexShrink: 0, border: '2px solid #BAE6FD' }}>
+                                    <FaUserTie />
+                                  </div>
+                                )}
                                 <div>
                                   <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.95rem' }}>{broker.companyName}</div>
                                   <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{broker.fullName || 'Advisor'} • ⭐ {broker.rating}</div>

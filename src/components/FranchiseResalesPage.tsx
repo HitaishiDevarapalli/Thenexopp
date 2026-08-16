@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { franchiseDb, dealersDb, propertiesDb, businessDb } from '../db/marketplaceDb';
-import { FaArrowLeft, FaMapMarkerAlt, FaStore, FaChartLine, FaShoppingCart, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaArrowLeft, FaMapMarkerAlt, FaStore, FaChartLine, FaShoppingCart, FaHeart, FaRegHeart, FaUserTie } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
 
 interface FranchiseResalesPageProps {
@@ -172,12 +172,18 @@ export const FranchiseResalesPage: React.FC<FranchiseResalesPageProps> = ({ onBa
                         <span className="feed-seller-rating">⭐ {franchise.rating}</span>
                       </div>
                       <div className="feed-seller-photo-wrap" onClick={() => setSelectedDealer(getDealer(franchise.id))}>
-                        <img 
-                          src={getDealer(franchise.id).photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150'} 
-                          alt="Seller Profile" 
-                          className="feed-seller-photo-btn" 
-                          title="View Seller Details" 
-                        />
+                        {getDealer(franchise.id).photo || getDealer(franchise.id).logo ? (
+                          <img 
+                            src={getDealer(franchise.id).photo || getDealer(franchise.id).logo} 
+                            alt="Seller Profile" 
+                            className="feed-seller-photo-btn" 
+                            title="View Seller Details" 
+                          />
+                        ) : (
+                          <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', border: '1.5px solid #BAE6FD', cursor: 'pointer' }} title="View Seller Details">
+                            <FaUserTie />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

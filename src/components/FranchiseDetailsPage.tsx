@@ -9,7 +9,8 @@ import {
   FaFileDownload,
   FaShareAlt,
   FaShieldAlt,
-  FaImages
+  FaImages,
+  FaUserTie
 } from 'react-icons/fa';
 
 interface FranchiseDetailsPageProps {
@@ -389,7 +390,13 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                  <img src={assignedBroker.image} alt={assignedBroker.name} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #1E40AF' }} />
+                  {assignedBroker.image || assignedBroker.photo || assignedBroker.logo ? (
+                    <img src={assignedBroker.image || assignedBroker.photo || assignedBroker.logo} alt={assignedBroker.name} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #1E40AF' }} />
+                  ) : (
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', border: '2px solid #BAE6FD', flexShrink: 0 }}>
+                      <FaUserTie />
+                    </div>
+                  )}
                   <div>
                     <h4 style={{ margin: '0 0 4px 0', fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{assignedBroker.name}</h4>
                     <div style={{ fontSize: '0.85rem', color: '#64748B' }}>{assignedBroker.company}</div>

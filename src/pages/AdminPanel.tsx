@@ -566,7 +566,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       id,
       name: newTeamMember.name,
       designation: newTeamMember.designation,
-      photo: newTeamMember.photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
+      photo: newTeamMember.photo || '',
       phone: newTeamMember.phone,
       linkedin: newTeamMember.linkedin,
       email: newTeamMember.email
@@ -5539,7 +5539,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                   {teamMembersDb.map((tm) => (
                     <div key={tm.id} style={{ border: '1px solid #E2E8F0', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <img src={tm.photo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80'} alt={tm.name} style={{ width: '64px', height: '64px', objectFit: 'cover', border: '1px solid #E2E8F0' }} />
+                      {tm.photo ? (
+                        <img src={tm.photo} alt={tm.name} style={{ width: '64px', height: '64px', objectFit: 'cover', border: '1px solid #E2E8F0', borderRadius: '8px' }} />
+                      ) : (
+                        <div style={{ width: '64px', height: '64px', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid #BAE6FD', borderRadius: '8px', flexShrink: 0 }}>
+                          <FaUserTie />
+                        </div>
+                      )}
                       <div style={{ flexGrow: 1, minWidth: 0 }}>
                         <h4 style={{ fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif", margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tm.name}</h4>
                         <p style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: '#1E40AF', fontWeight: 700, fontFamily: "'Playfair Display', 'Cinzel', 'Georgia', serif" }}>{tm.designation.toUpperCase()}</p>

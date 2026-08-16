@@ -260,7 +260,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const featuredListings = rawListings.slice(0, 4).map((p) => {
     const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
     const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
-    const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80';
+    const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || '';
     return {
       id: p.id,
       title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,

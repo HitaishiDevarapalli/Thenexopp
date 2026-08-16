@@ -36,7 +36,8 @@ import {
   FaList,
   FaCheckCircle,
   FaExternalLinkAlt,
-  FaLightbulb
+  FaLightbulb,
+  FaUserTie
 } from 'react-icons/fa';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
@@ -559,7 +560,13 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         <td style={{ padding: '16px' }}>
                           {assignedBroker ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <img src={assignedBroker.image} alt={assignedBroker.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                              {assignedBroker.image || assignedBroker.photo || assignedBroker.logo ? (
+                                <img src={assignedBroker.image || assignedBroker.photo || assignedBroker.logo} alt={assignedBroker.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                              ) : (
+                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', flexShrink: 0 }}>
+                                  <FaUserTie />
+                                </div>
+                              )}
                               <div>
                                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0F172A' }}>{assignedBroker.name}</div>
                                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{assignedBroker.company}</div>
@@ -2008,7 +2015,13 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                   }}
                                 >
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <img src={dealer.image} alt={dealer.name} style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    {dealer.image || dealer.photo || dealer.logo ? (
+                                      <img src={dealer.image || dealer.photo || dealer.logo} alt={dealer.name} style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' }} />
+                                    ) : (
+                                      <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                                        <FaUserTie />
+                                      </div>
+                                    )}
                                     <div>
                                       <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A' }}>{dealer.name}</div>
                                       <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • {dealer.rating}★</div>

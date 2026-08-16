@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, notifyDataChanged, API_BASE_URL } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
-import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaEnvelope, FaUser, FaCheckCircle, FaChevronLeft, FaChevronRight, FaHome, FaClock, FaBed, FaBath, FaRulerCombined, FaTag } from 'react-icons/fa';
+import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaEnvelope, FaUser, FaCheckCircle, FaChevronLeft, FaChevronRight, FaHome, FaClock, FaBed, FaBath, FaRulerCombined, FaTag, FaUserTie } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 interface EnquiryPageProps {
@@ -56,7 +56,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
         id: property.dealerId || 'temp-dealer',
         fullName: property.agentName || 'Verified Advisor',
         companyName: property.agentName || 'RealtyPlus Advisors',
-        photo: property.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80',
+        photo: property.agentImage || '',
         phone: '1234567890', email: 'agent@nexopp.com'
       } as Dealer;
     }
@@ -619,11 +619,17 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
                     backgroundColor: '#F8FAFC', padding: '12px', borderRadius: '12px',
                     border: '1px solid #E2E8F0'
                   }}>
-                    <img
-                      src={dealer.photo || dealer.logo || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=80&q=80'}
-                      alt={dealer.fullName || dealer.companyName}
-                      style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E2E8F0' }}
-                    />
+                    {dealer.photo || dealer.logo ? (
+                      <img
+                        src={dealer.photo || dealer.logo}
+                        alt={dealer.fullName || dealer.companyName}
+                        style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #E2E8F0' }}
+                      />
+                    ) : (
+                      <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.15rem', border: '2px solid #BAE6FD', flexShrink: 0 }}>
+                        <FaUserTie />
+                      </div>
+                    )}
                     <div>
                       <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A' }}>
                         {dealer.fullName || dealer.companyName}

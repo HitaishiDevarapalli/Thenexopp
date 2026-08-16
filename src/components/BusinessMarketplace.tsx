@@ -28,6 +28,7 @@ import {
   FaUsers,
   FaDollarSign,
   FaBalanceScale,
+  FaUserTie,
 } from 'react-icons/fa';
 import { LiveLocationMap } from './ui/LiveLocationMap';
 import { useLocationStore } from '../context/LocationContext';
@@ -186,7 +187,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       location: `${b.city || ''}${b.state ? ', ' + b.state : ''}`,
       brokerName: 'NexOpp Advisor',
       brokerRating: b.rating ? `${b.rating}${b.reviewCount ? ` (${b.reviewCount})` : ''}` : '',
-      brokerImg: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+      brokerImg: '',
       latitude: b.latitude,
       longitude: b.longitude,
       city: b.city,
@@ -745,7 +746,13 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                       {/* Broker Footer */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <img src={item.brokerImg} alt={item.brokerName} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                          {item.brokerImg ? (
+                            <img src={item.brokerImg} alt={item.brokerName} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', border: '1px solid #BAE6FD', flexShrink: 0 }}>
+                              <FaUserTie />
+                            </div>
+                          )}
                           <div>
                             <div style={{ fontSize: '11px', fontWeight: 700, color: '#334155' }}>{item.brokerName}</div>
                             <div style={{ fontSize: '10px', fontWeight: 700, color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '2px' }}><FaStar /> {item.brokerRating}</div>

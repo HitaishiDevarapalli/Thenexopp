@@ -30,6 +30,7 @@ import {
   FaLayerGroup,
   FaShieldAlt,
   FaBriefcase,
+  FaUserTie,
 } from 'react-icons/fa';
 import { LiveLocationMap } from './ui/LiveLocationMap';
 import { useLocationStore } from '../context/LocationContext';
@@ -603,7 +604,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
       const brokerName = assignedBroker?.companyName || assignedBroker?.fullName || p.agentName || 'RealtyPlus Advisors';
       const brokerRating = assignedBroker?.rating ? `${assignedBroker.rating}${assignedBroker.reviewCount ? ` (${assignedBroker.reviewCount})` : ''}` : (p.agentRating ? `${p.agentRating}${p.reviewCount ? ` (${p.reviewCount})` : ''}` : '');
-      const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=150&q=80';
+      const brokerImg = assignedBroker?.photo || assignedBroker?.logo || p.agentImage || '';
 
       // Resolve location IDs from text names if not already set
       let resolvedCityId = p.cityId || '';
@@ -1954,11 +1955,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       {/* Broker Footer */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <img
-                            src={prop.brokerImg}
-                            alt={prop.brokerName}
-                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'contain', border: '2px solid #1E40AF', backgroundColor: '#EFF6FF' }}
-                          />
+                          {prop.brokerImg ? (
+                            <img
+                              src={prop.brokerImg}
+                              alt={prop.brokerName}
+                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'contain', border: '2px solid #1E40AF', backgroundColor: '#EFF6FF' }}
+                            />
+                          ) : (
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', border: '2px solid #BAE6FD', flexShrink: 0 }}>
+                              <FaUserTie />
+                            </div>
+                          )}
                           <div>
                             <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748B' }}>Posted by:</div>
                             <div style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', wordBreak: 'break-word' }}>{prop.brokerName}</div>
