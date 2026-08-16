@@ -2683,7 +2683,14 @@ const defaultContactSettings = {
   contactSubtitle: 'Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you.'
 };
 
-app.get('/api/contact-settings', (req, res) => {
+// Ensure initial contact_settings_store.json file exists
+try {
+  if (!fs.existsSync(contactSettingsPath)) {
+    fs.writeFileSync(contactSettingsPath, JSON.stringify(defaultContactSettings, null, 2), 'utf8');
+  }
+} catch (_) {}
+
+app.get(['/api/contact-settings', '/api/contact-details', '/api/contact'], (req, res) => {
   try {
     if (fs.existsSync(contactSettingsPath)) {
       const raw = fs.readFileSync(contactSettingsPath, 'utf8');
@@ -2695,7 +2702,7 @@ app.get('/api/contact-settings', (req, res) => {
   }
 });
 
-app.post('/api/contact-settings', (req, res) => {
+app.post(['/api/contact-settings', '/api/contact-details', '/api/contact'], (req, res) => {
   try {
     let existing = defaultContactSettings;
     if (fs.existsSync(contactSettingsPath)) {
