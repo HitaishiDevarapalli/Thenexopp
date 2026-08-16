@@ -30,6 +30,7 @@ interface LocationContextType {
   setLocation: (loc: LocationData) => void;
   recentLocations: LocationData[];
   clearRecentLocations: () => void;
+  removeRecentLocation: (index: number) => void;
   isLocationPickerOpen: boolean;
   openLocationPicker: () => void;
   closeLocationPicker: () => void;
@@ -47,7 +48,14 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // Active purge of false "Anantapur" ISP fallback
+        if (parsed && (parsed.displayName?.includes('Anantapur') || parsed.city === 'Anantapur' || parsed.area === 'Anantapur')) {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem('nexopp_selected_city');
+          return null;
+        }
+        return parsed;
       }
     } catch {}
     return null;
@@ -56,7 +64,16 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [recentLocations, setRecentLocations] = useState<LocationData[]>(() => {
     try {
       const saved = localStorage.getItem(RECENT_LOCATIONS_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter(
+            (p: LocationData) => !p.displayName?.includes('Anantapur') && p.city !== 'Anantapur' && p.area !== 'Anantapur'
+          );
+          localStorage.setItem(RECENT_LOCATIONS_KEY, JSON.stringify(cleaned));
+          return cleaned;
+        }
+      }
     } catch {}
     return [];
   });
@@ -84,7 +101,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     setRecentLocations((prev) => {
       const filtered = prev.filter(
-        (p) => p.displayName.toLowerCase() !== normalized.displayName.toLowerCase()
+        (p) => p.displayName.toLowerCase() !== normalized.displayName.toLowerCase() && !p.displayName.includes('Anantapur') && p.city !== 'Anantapur'
       );
       const updated = [normalized, ...filtered].slice(0, 10);
       try {
@@ -112,96 +129,121 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   }, []);
 
-  // Geolocation detector using genuine hardware/browser GPS + Backend & Client Reverse Geocoding
+  const removeRecentLocation = useCallback((index: number) => {
+    setRecentLocations((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      try {
+        localStorage.setItem(RECENT_LOCATIONS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
+  // Helper to reverse geocode lat/lng
+  const resolveLocationFromCoords = async (latitude: number, longitude: number, accuracy: number): Promise<LocationData | null> => {
+    let loc: LocationData | null = null;
+    try {
+      const res = await fetch(`/api/location/reverse?lat=${latitude}&lng=${longitude}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.locality || data.city || data.displayName)) {
+          loc = {
+            id: data.id || `loc-gps-${Date.now()}`,
+            displayName: data.displayName,
+            city: data.city || 'Guntur',
+            district: data.district || data.city || '',
+            area: data.area || data.locality || '',
+            locality: data.locality || data.area || '',
+            suburb: data.suburb || data.area || '',
+            state: data.state || 'Andhra Pradesh',
+            country: data.country || 'India',
+            countryCode: data.countryCode || 'IN',
+            postalCode: data.postcode || data.postalCode || '',
+            pincode: data.postcode || data.postalCode || '',
+            lat: latitude,
+            lng: longitude,
+            latitude,
+            longitude,
+            accuracy: Math.round(accuracy) || 15,
+          };
+        }
+      }
+    } catch {}
+
+    if (!loc) {
+      try {
+        const onlineLoc = await reverseGeocodeOnline(latitude, longitude);
+        loc = {
+          id: `loc-client-${Date.now()}`,
+          displayName: onlineLoc.formatted_address || `${onlineLoc.area || onlineLoc.city}, ${onlineLoc.city}`,
+          city: onlineLoc.city || 'Guntur',
+          district: onlineLoc.district || onlineLoc.city || '',
+          area: onlineLoc.area || '',
+          locality: onlineLoc.area || '',
+          suburb: onlineLoc.area || '',
+          state: onlineLoc.state || 'Andhra Pradesh',
+          country: onlineLoc.country || 'India',
+          countryCode: 'IN',
+          postalCode: onlineLoc.postal_code || '',
+          pincode: onlineLoc.postal_code || '',
+          lat: latitude,
+          lng: longitude,
+          latitude,
+          longitude,
+          accuracy: Math.round(accuracy) || 15,
+        };
+      } catch {}
+    }
+    return loc;
+  };
+
+  // Two-Tier Geolocation detector: High-Accuracy GPS with fallback to standard Wi-Fi position
   const detectCurrentLocation = useCallback(async (): Promise<LocationData | null> => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
       return null;
     }
     setIsDetectingGPS(true);
 
-    const gpsResult = await new Promise<LocationData | null>((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { latitude, longitude, accuracy } = position.coords;
-            let loc: LocationData | null = null;
+    const getPositionPromise = (highAccuracy: boolean, timeout: number) => {
+      return new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: highAccuracy,
+          timeout,
+          maximumAge: highAccuracy ? 0 : 60000,
+        });
+      });
+    };
 
-            // 1. Try Backend Reverse Geocoding API
-            try {
-              const res = await fetch(`/api/location/reverse?lat=${latitude}&lng=${longitude}`);
-              if (res.ok) {
-                const data = await res.json();
-                if (data && (data.locality || data.city || data.displayName)) {
-                  loc = {
-                    id: data.id || `loc-gps-${Date.now()}`,
-                    displayName: data.displayName,
-                    city: data.city || 'Guntur',
-                    district: data.district || data.city || '',
-                    area: data.area || data.locality || '',
-                    locality: data.locality || data.area || '',
-                    suburb: data.suburb || data.area || '',
-                    state: data.state || 'Andhra Pradesh',
-                    country: data.country || 'India',
-                    countryCode: data.countryCode || 'IN',
-                    postalCode: data.postcode || data.postalCode || '',
-                    pincode: data.postcode || data.postalCode || '',
-                    lat: latitude,
-                    lng: longitude,
-                    latitude,
-                    longitude,
-                    accuracy: Math.round(accuracy) || 15,
-                  };
-                }
-              }
-            } catch {}
+    let pos: GeolocationPosition | null = null;
 
-            // 2. Client Reverse Geocoding Fallback if backend was unreachable
-            if (!loc) {
-              const onlineLoc = await reverseGeocodeOnline(latitude, longitude);
-              loc = {
-                id: `loc-client-${Date.now()}`,
-                displayName: onlineLoc.formatted_address || `${onlineLoc.area || onlineLoc.city}, ${onlineLoc.city}`,
-                city: onlineLoc.city || 'Guntur',
-                district: onlineLoc.district || onlineLoc.city || '',
-                area: onlineLoc.area || '',
-                locality: onlineLoc.area || '',
-                suburb: onlineLoc.area || '',
-                state: onlineLoc.state || 'Andhra Pradesh',
-                country: onlineLoc.country || 'India',
-                countryCode: 'IN',
-                postalCode: onlineLoc.postal_code || '',
-                pincode: onlineLoc.postal_code || '',
-                lat: latitude,
-                lng: longitude,
-                latitude,
-                longitude,
-                accuracy: Math.round(accuracy) || 15,
-              };
-            }
+    try {
+      // Step 1: Try High Accuracy GPS
+      pos = await getPositionPromise(true, 7000);
+    } catch (err: any) {
+      // If code is not PERMISSION_DENIED (e.g. timeout or unavailable), try standard network positioning
+      if (err?.code !== 1) {
+        try {
+          pos = await getPositionPromise(false, 10000);
+        } catch {}
+      }
+    }
 
-            if (loc) {
-              setLocation(loc);
-              setIsDetectingGPS(false);
-              resolve(loc);
-              return;
-            }
-          } catch (e) {
-            console.warn('GPS location reverse geocoding error:', e);
-          }
+    if (pos) {
+      try {
+        const { latitude, longitude, accuracy } = pos.coords;
+        const loc = await resolveLocationFromCoords(latitude, longitude, accuracy);
+        if (loc) {
+          setLocation(loc);
           setIsDetectingGPS(false);
-          resolve(null);
-        },
-        (error) => {
-          console.warn('Browser GPS permission/hardware error:', error.message);
-          setIsDetectingGPS(false);
-          resolve(null);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    });
+          return loc;
+        }
+      } catch (e) {
+        console.warn('GPS location resolution error:', e);
+      }
+    }
 
     setIsDetectingGPS(false);
-    return gpsResult;
+    return null;
   }, [setLocation]);
 
   // Request browser location permission immediately on website load
@@ -226,6 +268,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setLocation,
         recentLocations,
         clearRecentLocations,
+        removeRecentLocation,
         isLocationPickerOpen,
         openLocationPicker,
         closeLocationPicker,

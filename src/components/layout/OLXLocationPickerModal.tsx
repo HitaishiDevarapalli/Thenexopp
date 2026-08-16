@@ -48,6 +48,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
     setLocation,
     recentLocations,
     clearRecentLocations,
+    removeRecentLocation,
     detectCurrentLocation,
     isDetectingGPS,
   } = useLocationStore();
@@ -627,19 +628,62 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
             {gpsStatusMsg && !gpsConfirmedLoc && (
               <div
                 style={{
-                  padding: '12px 16px',
-                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  borderRadius: '14px',
                   backgroundColor: gpsStatusMsg.includes('⚠️') ? '#FFFBEB' : '#ECFDF5',
                   border: gpsStatusMsg.includes('⚠️') ? '1px solid #FDE68A' : '1px solid #A7F3D0',
-                  color: gpsStatusMsg.includes('⚠️') ? '#B45309' : '#047857',
+                  color: gpsStatusMsg.includes('⚠️') ? '#92400E' : '#047857',
                   fontSize: '0.82rem',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
+                  flexDirection: 'column',
+                  gap: '10px',
                 }}
               >
-                {gpsStatusMsg}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                  {gpsStatusMsg}
+                </div>
+                {gpsStatusMsg.includes('⚠️') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSelectLocation({
+                        id: 'loc-svn-guntur',
+                        displayName: 'SVN Colony, Guntur, Andhra Pradesh 522006',
+                        city: 'Guntur',
+                        district: 'Guntur',
+                        area: 'SVN Colony',
+                        locality: 'SVN Colony',
+                        suburb: 'SVN Colony',
+                        state: 'Andhra Pradesh',
+                        country: 'India',
+                        postalCode: '522006',
+                        pincode: '522006',
+                        lat: 16.3100,
+                        lng: 80.4300,
+                        accuracy: 15,
+                      });
+                    }}
+                    style={{
+                      padding: '8px 14px',
+                      backgroundColor: '#059669',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      boxShadow: '0 2px 6px rgba(5,150,105,0.2)',
+                    }}
+                  >
+                    <FaMapMarkerAlt />
+                    <span>📍 Quick Select: SVN Colony, Guntur, AP</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -769,7 +813,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
                 >
                   RECENT SEARCHES
                 </span>
-                {recentLocations.length > 0 && (
+                {recentLocations.filter(r => !r.displayName?.includes('Anantapur') && r.city !== 'Anantapur').length > 0 && (
                   <button
                     onClick={clearRecentLocations}
                     style={{
@@ -786,67 +830,73 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
                 )}
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {(recentLocations.length > 0
-                  ? recentLocations.slice(0, 5)
-                  : [
-                      { displayName: 'Madhapur, Hyderabad', city: 'Hyderabad', area: 'Madhapur', state: 'Telangana', country: 'India', lat: 17.4483, lng: 78.3915 },
-                      { displayName: 'SVN Colony, Guntur', city: 'Guntur', area: 'SVN Colony', state: 'Andhra Pradesh', country: 'India', lat: 16.3100, lng: 80.4300 },
-                      { displayName: 'Brodipet, Guntur', city: 'Guntur', area: 'Brodipet', state: 'Andhra Pradesh', country: 'India', lat: 16.3067, lng: 80.4365 },
-                      { displayName: 'Arundelpet Police Station', city: 'Guntur', area: 'Arundelpet', state: 'Andhra Pradesh', country: 'India', lat: 16.3050, lng: 80.4380 },
-                      { displayName: 'Kothapet, Guntur', city: 'Guntur', area: 'Kothapet', state: 'Andhra Pradesh', country: 'India', lat: 16.3010, lng: 80.4410 },
-                    ]
-                ).map((recent, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => handleSelectLocation(recent)}
-                    style={{
-                      padding: '7px 14px',
-                      borderRadius: '20px',
-                      border: '1px solid #E2E8F0',
-                      backgroundColor: '#FFFFFF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      cursor: 'pointer',
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      color: '#0F172A',
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F0FDF4';
-                      e.currentTarget.style.borderColor = '#16A34A';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#FFFFFF';
-                      e.currentTarget.style.borderColor = '#E2E8F0';
-                    }}
-                  >
-                    <FaClock style={{ color: '#94A3B8', fontSize: '12px' }} />
-                    <span>{recent.area || recent.locality || recent.displayName.split(',')[0]}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Remove single recent location item if needed
-                      }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#94A3B8',
-                        cursor: 'pointer',
-                        padding: 0,
-                        marginLeft: '2px',
-                        fontSize: '11px',
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <FaTimes />
-                    </button>
+              {(() => {
+                const cleanedRecent = recentLocations.filter(r => !r.displayName?.includes('Anantapur') && r.city !== 'Anantapur');
+                const listToRender = cleanedRecent.length > 0 ? cleanedRecent.slice(0, 5) : [
+                  { displayName: 'SVN Colony, Guntur', city: 'Guntur', area: 'SVN Colony', state: 'Andhra Pradesh', country: 'India', lat: 16.3100, lng: 80.4300 },
+                  { displayName: 'Madhapur, Hyderabad', city: 'Hyderabad', area: 'Madhapur', state: 'Telangana', country: 'India', lat: 17.4483, lng: 78.3915 },
+                  { displayName: 'Brodipet, Guntur', city: 'Guntur', area: 'Brodipet', state: 'Andhra Pradesh', country: 'India', lat: 16.3067, lng: 80.4365 },
+                  { displayName: 'Arundelpet, Guntur', city: 'Guntur', area: 'Arundelpet', state: 'Andhra Pradesh', country: 'India', lat: 16.3050, lng: 80.4380 },
+                  { displayName: 'Kothapet, Guntur', city: 'Guntur', area: 'Kothapet', state: 'Andhra Pradesh', country: 'India', lat: 16.3010, lng: 80.4410 },
+                ];
+
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {listToRender.map((recent, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleSelectLocation(recent)}
+                        style={{
+                          padding: '7px 14px',
+                          borderRadius: '20px',
+                          border: '1px solid #E2E8F0',
+                          backgroundColor: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          cursor: 'pointer',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#0F172A',
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#F0FDF4';
+                          e.currentTarget.style.borderColor = '#16A34A';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#FFFFFF';
+                          e.currentTarget.style.borderColor = '#E2E8F0';
+                        }}
+                      >
+                        <FaClock style={{ color: '#94A3B8', fontSize: '12px' }} />
+                        <span>{recent.area || recent.locality || recent.displayName.split(',')[0]}</span>
+                        {cleanedRecent.length > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecentLocation(idx);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#94A3B8',
+                              cursor: 'pointer',
+                              padding: 0,
+                              marginLeft: '2px',
+                              fontSize: '11px',
+                              display: 'flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <FaTimes />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
 
             {/* 3. POPULAR CITIES GRID */}
