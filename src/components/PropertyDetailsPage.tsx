@@ -596,10 +596,13 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   }, [loanAmountLakhs, interestRate, loanTenureYears]);
 
   // Derive specs fields
-  const superArea = property.areaSqFt;
-  const isPlot = property.category === 'Plot';
-  const carpetArea = isPlot ? 'N/A' : `${Math.round(parseInt(superArea) * 0.85)} sqft`;
-  const typeDisplay = isPlot ? 'Plots & Land' : (property.category === 'Villa' || property.category === 'House') ? 'House & Villa' : 'Flats & Apartments';
+  const superArea = property.areaSqFt || '1500';
+  const catLower = (property.category || '').toLowerCase();
+  const titleLower = (property.title || '').toLowerCase();
+  const isPlot = catLower.includes('plot') || catLower.includes('land') || titleLower.includes('plot') || titleLower.includes('land') || titleLower.includes('farm');
+  const isCommercial = catLower.includes('commercial') || catLower.includes('office') || catLower.includes('shop') || titleLower.includes('commercial') || titleLower.includes('office') || titleLower.includes('shop');
+  const carpetArea = isPlot ? 'N/A' : `${Math.round(parseInt(superArea) * 0.85) || 1200} sqft`;
+  const typeDisplay = isPlot ? 'Plots & Land' : isCommercial ? 'Commercial Property' : (catLower.includes('villa') || catLower.includes('house')) ? 'House & Villa' : 'Flats & Apartments';
 
   const demandBadge = useMemo(() => {
     if (!property.latitude || !property.longitude) return null;
@@ -752,28 +755,122 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                     }
                     return acc;
                   }, [])
-                ) : (
-                  // Default property specifications
+                ) : isPlot ? (
+                  // Category-Specific: Plot / Land Specifications
                   <>
                     <div className="prop-spec-row">
                       <div className="spec-col">
-                        <span className="spec-lbl">Type</span>
-                        <span className="spec-val">{property.propertySubtype || typeDisplay}</span>
+                        <span className="spec-lbl">Property Category</span>
+                        <span className="spec-val">Plot / Land</span>
                       </div>
                       <div className="spec-col">
-                        <span className="spec-lbl">Bedrooms</span>
-                        <span className="spec-val">{isPlot ? 'N/A' : (property.bedrooms ?? 3)}</span>
+                        <span className="spec-lbl">Plot Area</span>
+                        <span className="spec-val">{property.plotArea || property.areaSqFt || `${superArea} Sq. Yards`}</span>
                       </div>
                     </div>
 
                     <div className="prop-spec-row">
                       <div className="spec-col">
-                        <span className="spec-lbl">Super Built-up area</span>
-                        <span className="spec-val">{property.superBuiltUpArea || superArea}</span>
+                        <span className="spec-lbl">Approval Authority</span>
+                        <span className="spec-val">{property.reraNumber ? `RERA (${property.reraNumber})` : 'RERA & DTCP Approved'}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Facing Direction</span>
+                        <span className="spec-val">{property.facing || 'East Facing'}</span>
+                      </div>
+                    </div>
+
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Ownership Type</span>
+                        <span className="spec-val">{property.ownershipType || 'Freehold Clear Title'}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Possession Status</span>
+                        <span className="spec-val">{property.listingStatus || 'Immediate Registration'}</span>
+                      </div>
+                    </div>
+
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Road Width</span>
+                        <span className="spec-val">40 Ft Wide CC Road</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Boundary / Gated</span>
+                        <span className="spec-val">Gated Compound Wall</span>
+                      </div>
+                    </div>
+                  </>
+                ) : isCommercial ? (
+                  // Category-Specific: Commercial Property Specifications
+                  <>
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Commercial Type</span>
+                        <span className="spec-val">{property.propertySubtype || typeDisplay || 'Office Space'}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Super Built-up Area</span>
+                        <span className="spec-val">{property.superBuiltUpArea || `${superArea} sqft`}</span>
+                      </div>
+                    </div>
+
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Carpet Area</span>
+                        <span className="spec-val">{property.carpetArea || `${carpetArea} sqft`}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Washrooms</span>
+                        <span className="spec-val">{property.bathrooms ? `${property.bathrooms} Washrooms` : 'Private Executive Washroom'}</span>
+                      </div>
+                    </div>
+
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Parking Slots</span>
+                        <span className="spec-val">{property.parkingSlots ? `${property.parkingSlots} Reserved` : 'Reserved Parking'}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Power Backup</span>
+                        <span className="spec-val">100% DG Backup</span>
+                      </div>
+                    </div>
+
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Ownership Type</span>
+                        <span className="spec-val">{property.ownershipType || 'Freehold Commercial'}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Suitable For</span>
+                        <span className="spec-val">IT Office / Corporate / Retail / Clinic</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // Category-Specific: Residential Property Specifications
+                  <>
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Property Type</span>
+                        <span className="spec-val">{property.propertySubtype || typeDisplay}</span>
+                      </div>
+                      <div className="spec-col">
+                        <span className="spec-lbl">Bedrooms / BHK</span>
+                        <span className="spec-val">{property.bedrooms ? `${property.bedrooms} BHK` : '3 BHK'}</span>
+                      </div>
+                    </div>
+
+                    <div className="prop-spec-row">
+                      <div className="spec-col">
+                        <span className="spec-lbl">Super Built-up Area</span>
+                        <span className="spec-val">{property.superBuiltUpArea || `${superArea} sqft`}</span>
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Bathrooms</span>
-                        <span className="spec-val">{isPlot ? 'N/A' : (property.bathrooms ?? 2)}</span>
+                        <span className="spec-val">{property.bathrooms ? `${property.bathrooms} Bathrooms` : '2 Bathrooms'}</span>
                       </div>
                     </div>
 
@@ -791,18 +888,18 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                     <div className="prop-spec-row">
                       <div className="spec-col">
                         <span className="spec-lbl">Facing Direction</span>
-                        <span className="spec-val">{property.facing || 'North-East'}</span>
+                        <span className="spec-val">{property.facing || 'East Facing'}</span>
                       </div>
                       <div className="spec-col">
-                        <span className="spec-lbl">Carpet area</span>
-                        <span className="spec-val">{property.carpetArea || carpetArea}</span>
+                        <span className="spec-lbl">Carpet Area</span>
+                        <span className="spec-val">{property.carpetArea || `${carpetArea} sqft`}</span>
                       </div>
                     </div>
 
                     <div className="prop-spec-row">
                       <div className="spec-col">
                         <span className="spec-lbl">Parking Slots</span>
-                        <span className="spec-val">{isPlot ? 'None' : (property.parkingSlots ?? 2)}</span>
+                        <span className="spec-val">{property.parkingSlots ? `${property.parkingSlots} Covered` : '1 Covered'}</span>
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Furnishing</span>
@@ -912,7 +1009,13 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 </div>
               </div>
               <h4 className="price-specs-subtitle">
-                {property.specs ? property.specs.Type || property.areaSqFt : `${isPlot ? 'Plot / Land' : '3 BHK - 2 Bathroom'} - ${superArea} sqft`}
+                {property.specs
+                  ? property.specs.Type || property.areaSqFt
+                  : isPlot
+                  ? `${property.plotArea || property.areaSqFt || `${superArea} Sq. Yds`} • Clear Title Plot`
+                  : isCommercial
+                  ? `${property.superBuiltUpArea || `${superArea} sqft`} • Commercial Property`
+                  : `${property.bedrooms ? `${property.bedrooms} BHK` : '3 BHK'} - ${property.bathrooms ? `${property.bathrooms} Bathroom` : '2 Bathroom'} • ${superArea} sqft`}
               </h4>
               <p className="price-title-sub" style={{ marginBottom: (property.sold || property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') ? '6px' : undefined }}>{property.title}</p>
               

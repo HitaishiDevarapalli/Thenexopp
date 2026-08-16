@@ -636,46 +636,47 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               >
                 {activeSearchTab === 'Property' && (
                   <>
-                    <option value="BHK">BHK</option>
-                    <option value="1 BHK">1 BHK</option>
-                    <option value="2 BHK">2 BHK</option>
-                    <option value="3 BHK">3 BHK</option>
-                    <option value="4 BHK">4 BHK / Villa</option>
+                    <option value="All Types">All Configurations</option>
+                    <option value="1 BHK">1 BHK Apartment / Flat</option>
+                    <option value="2 BHK">2 BHK Apartment / Flat</option>
+                    <option value="3 BHK">3 BHK Luxury Apartment</option>
+                    <option value="4+ BHK">4+ BHK / Luxury Villa</option>
                   </>
                 )}
                 {activeSearchTab === 'Franchise' && (
                   <>
-                    <option value="Any">Any</option>
-                    <option value="Food & Beverage">Food & Beverage</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Education">Education</option>
-                    <option value="Healthcare">Healthcare</option>
+                    <option value="Any">All Franchise Industries</option>
+                    <option value="Food & Beverage">Food & Beverage (QSR / Cafe)</option>
+                    <option value="Retail">Retail & Supermarket</option>
+                    <option value="Education">Education & Training</option>
+                    <option value="Healthcare">Healthcare & Pharmacy</option>
                   </>
                 )}
                 {activeSearchTab === 'Business' && (
                   <>
-                    <option value="Any">Any</option>
-                    <option value="Tech">Tech</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Services">Services</option>
+                    <option value="Any">All Business Sectors</option>
+                    <option value="Tech">Tech & SaaS Businesses</option>
+                    <option value="Manufacturing">Manufacturing & Production</option>
+                    <option value="Retail">Retail & Convenience</option>
+                    <option value="Services">Professional Services</option>
                   </>
                 )}
                 {activeSearchTab === 'Plots/Land' && (
                   <>
-                    <option value="Any">Any</option>
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Agricultural">Agricultural</option>
-                    <option value="Industrial">Industrial</option>
+                    <option value="Any">All Land & Plot Types</option>
+                    <option value="Residential">Residential Plots (RERA / DTCP)</option>
+                    <option value="Commercial">Commercial Lands / Highway Facing</option>
+                    <option value="Agricultural">Agricultural Lands / Farm Lands</option>
+                    <option value="Industrial">Industrial Plots & Logistics</option>
                   </>
                 )}
                 {activeSearchTab === 'Commercial' && (
                   <>
-                    <option value="Any">Any</option>
-                    <option value="Office Space">Office Space</option>
-                    <option value="Retail Shop">Retail Shop</option>
-                    <option value="Warehouse">Warehouse</option>
+                    <option value="Any">All Commercial Spaces</option>
+                    <option value="Office Space">Corporate Office Spaces</option>
+                    <option value="Retail Shop">Retail Shops & Showrooms</option>
+                    <option value="Warehouse">Warehouses & Logistics Hubs</option>
+                    <option value="Commercial Land">Commercial Plot / Land</option>
                   </>
                 )}
               </select>

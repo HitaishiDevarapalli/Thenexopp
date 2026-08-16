@@ -27,6 +27,9 @@ import {
   FaExpand,
   FaFilter,
   FaEye,
+  FaLayerGroup,
+  FaShieldAlt,
+  FaBriefcase,
 } from 'react-icons/fa';
 import { LiveLocationMap } from './ui/LiveLocationMap';
 import { useLocationStore } from '../context/LocationContext';
@@ -289,7 +292,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   const handleBhkSelectChange = (val: string) => {
     setBhkFilter(val);
-    if (val === 'Any BHK') {
+    if (val.startsWith('Any ') || val === 'All') {
       setSelectedBhks([]);
     } else {
       setSelectedBhks([val]);
@@ -298,54 +301,98 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   const handleTypeSelectChange = (val: string) => {
     setPropertyType(val);
-    if (val === 'All Types') {
+    if (val === 'All Types' || val === 'All Plots' || val === 'All Commercial' || val === 'All Projects') {
       setSelectedTypes([]);
+      setBhkFilter('Any Configuration');
+      setSelectedBhks([]);
     } else {
       setSelectedTypes([val]);
+      const lower = val.toLowerCase();
+      if (lower.includes('plot') || lower.includes('land')) {
+        setBhkFilter('Any Size');
+        setSelectedBhks([]);
+      } else if (lower.includes('commercial') || lower.includes('office') || lower.includes('shop') || lower.includes('showroom') || lower.includes('warehouse')) {
+        setBhkFilter('Any Usage');
+        setSelectedBhks([]);
+      } else if (lower.includes('villa') || lower.includes('house')) {
+        setBhkFilter('Any Configuration');
+        setSelectedBhks([]);
+      } else {
+        setBhkFilter('Any BHK');
+        setSelectedBhks([]);
+      }
     }
   };
 
-  // Dynamic Tab Configurations for Context-Aware Filters
+  // Dynamic Tab & Property Type Configurations for Context-Aware Filters
   const tabConfigs = useMemo(() => {
-    switch (activeTab) {
-      case 'Commercial':
-        return {
-          typeLabel: 'Commercial Type',
-          types: ['All Commercial', 'Office Space', 'Retail Shop', 'Commercial Showroom', 'Warehouse / Godown', 'Industrial Building', 'Commercial Land'],
-          specLabel: 'Suitable For',
-          specs: ['Any Usage', 'Corporate Office', 'Retail & Shopping', 'Showroom & Auto', 'Logistics & Warehouse', 'Restaurant & Cafe', 'Bank & Healthcare', 'Industrial Facility'],
-        };
-      case 'Plots':
-        return {
-          typeLabel: 'Plot Type',
-          types: ['All Plots', 'Residential Plot', 'Commercial Plot', 'Agricultural Land / Farm Land', 'Industrial Plot'],
-          specLabel: 'Plot Zone',
-          specs: ['Any Zone', 'Residential Zone', 'Commercial Zone', 'Agricultural Zone', 'Industrial Zone', 'Corner Plot'],
-        };
-      case 'New Projects':
-        return {
-          typeLabel: 'Project Type',
-          types: ['All Projects', 'Residential Apartment Project', 'Luxury Villa Project', 'Commercial Complex', 'Plotting Township'],
-          specLabel: 'Project Stage',
-          specs: ['Any Stage', 'New Launch', 'Under Construction', 'Ready to Move', 'Upcoming Launch'],
-        };
-      case 'Rent':
-        return {
-          typeLabel: 'Property Type',
-          types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'PG / Co-Living', 'Furnished Flat'],
-          specLabel: 'BHK',
-          specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK'],
-        };
-      case 'Buy':
-      default:
-        return {
-          typeLabel: 'Property Type',
-          types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
-          specLabel: 'BHK',
-          specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK'],
-        };
+    const isPlot = activeTab === 'Plots' || propertyType === 'Plot / Land' || propertyType.toLowerCase().includes('plot') || propertyType.toLowerCase().includes('land');
+    if (isPlot) {
+      return {
+        typeLabel: 'Plot / Land Type',
+        types: activeTab === 'Plots' 
+          ? ['All Plots', 'Residential Plot', 'Commercial Plot', 'Agricultural Land / Farm Land', 'Industrial Plot']
+          : ['Plot / Land', 'All Types', 'Apartment', 'Villa', 'Independent House', 'Commercial Property'],
+        specLabel: 'Plot Area / Land Size',
+        specs: ['Any Size', 'Up to 150 Sq.Yd', '150 - 300 Sq.Yd', '300 - 500 Sq.Yd', '500+ Sq.Yd', '1 - 5 Acres', '5+ Acres', 'RERA / DTCP Approved', 'Corner Plot'],
+      };
     }
-  }, [activeTab]);
+
+    const isCommercial = activeTab === 'Commercial' || propertyType === 'Commercial Property' || propertyType.toLowerCase().includes('commercial') || propertyType.toLowerCase().includes('office') || propertyType.toLowerCase().includes('shop');
+    if (isCommercial) {
+      return {
+        typeLabel: 'Commercial Type',
+        types: activeTab === 'Commercial'
+          ? ['All Commercial', 'Office Space', 'Retail Shop', 'Commercial Showroom', 'Warehouse / Godown', 'Industrial Building', 'Commercial Land']
+          : ['Commercial Property', 'All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land'],
+        specLabel: 'Commercial Usage / Type',
+        specs: ['Any Usage', 'Corporate Office Space', 'Retail Shop / Showroom', 'Commercial Building', 'Warehouse / Godown', 'Commercial Plot', 'Industrial Facility'],
+      };
+    }
+
+    if (activeTab === 'New Projects') {
+      return {
+        typeLabel: 'Project Type',
+        types: ['All Projects', 'Residential Apartment Project', 'Luxury Villa Project', 'Commercial Complex', 'Plotting Township'],
+        specLabel: 'Project Stage',
+        specs: ['Any Stage', 'New Launch', 'Under Construction', 'Ready to Move', 'Upcoming Launch'],
+      };
+    }
+
+    if (propertyType === 'Villa' || propertyType === 'Independent House') {
+      return {
+        typeLabel: 'Property Type',
+        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
+        specLabel: 'Villa / House Configuration',
+        specs: ['Any Configuration', '2 BHK House', '3 BHK Villa / Duplex', '4 BHK Luxury Villa', '5+ BHK Mansion / Duplex'],
+      };
+    }
+
+    if (propertyType === 'Apartment' || propertyType === 'Flats') {
+      return {
+        typeLabel: 'Property Type',
+        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
+        specLabel: 'Apartment BHK',
+        specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK / Penthouse'],
+      };
+    }
+
+    if (activeTab === 'Rent') {
+      return {
+        typeLabel: 'Property Type',
+        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'PG / Co-Living', 'Furnished Flat', 'Commercial Space'],
+        specLabel: 'BHK / Category',
+        specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'Commercial Space'],
+      };
+    }
+
+    return {
+      typeLabel: 'Property Type',
+      types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
+      specLabel: 'BHK / Configuration',
+      specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK'],
+    };
+  }, [activeTab, propertyType]);
 
   // Synchronize budget bounds and context dropdowns when activeTab changes
   useEffect(() => {
@@ -361,7 +408,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       setSelectedBhks([]);
     } else if (activeTab === 'Plots') {
       setPropertyType('All Plots');
-      setBhkFilter('Any Zone');
+      setBhkFilter('Any Size');
       setSelectedTypes([]);
       setSelectedBhks([]);
     } else if (activeTab === 'New Projects') {
@@ -593,6 +640,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         brokerImg,
         dealerId: assignedBroker?.id || p.dealerId,
         type: p.category || 'Apartment',
+        facing: p.facing || 'East',
         latitude: p.latitude,
         longitude: p.longitude,
         city: p.city,
@@ -744,15 +792,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (!item.trending && item.badgeType !== 'new') return false;
       }
 
-      // 4. BHK / Spec Filter
-      if (selectedBhks.length > 0 && !selectedBhks.includes('Any BHK') && !selectedBhks.includes('Any Usage') && !selectedBhks.includes('Any Zone') && !selectedBhks.includes('Any Stage')) {
+      // 4. BHK / Spec / Plot Area / Commercial Usage Filter
+      if (selectedBhks.length > 0 && !selectedBhks.includes('Any BHK') && !selectedBhks.includes('Any Usage') && !selectedBhks.includes('Any Zone') && !selectedBhks.includes('Any Stage') && !selectedBhks.includes('Any Size') && !selectedBhks.includes('Any Configuration')) {
         const matchBhk = selectedBhks.some((val) => {
           if (val === '4+ BHK' && parseInt(item.bhk) >= 4) return true;
-          if (val.includes('BHK')) return `${item.bhk} BHK` === val;
+          if (val.includes('BHK')) return `${item.bhk} BHK` === val || (item.title || '').toLowerCase().includes(val.toLowerCase());
           const normVal = val.toLowerCase();
           const normTitle = (item.title || '').toLowerCase();
           const normType = (item.type || '').toLowerCase();
-          return normTitle.includes(normVal) || normType.includes(normVal);
+          const normArea = (item.area || '').toLowerCase();
+          return normTitle.includes(normVal) || normType.includes(normVal) || normArea.includes(normVal);
         });
         if (!matchBhk) return false;
       }
@@ -1828,23 +1877,62 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                           </span>
                         </div>
 
-                        {/* Specs Row */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', fontWeight: 600, color: '#475569', backgroundColor: '#F8FAFC', padding: '8px 10px', borderRadius: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FaRulerCombined style={{ color: '#3B82F6' }} /> {prop.area}
-                          </span>
-                          {prop.bhk !== '0' && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <FaBed style={{ color: '#3B82F6' }} /> {prop.bhk}
-                            </span>
-                          )}
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FaBath style={{ color: '#3B82F6' }} /> {prop.bath}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <FaCar style={{ color: '#3B82F6' }} /> {prop.parking}
-                          </span>
-                        </div>
+                        {/* Category-Relevant Specs Row */}
+                        {(() => {
+                          const isPlot = (prop.type || '').toLowerCase().includes('plot') || (prop.type || '').toLowerCase().includes('land') || (prop.title || '').toLowerCase().includes('plot') || (prop.title || '').toLowerCase().includes('land') || (prop.title || '').toLowerCase().includes('farm');
+                          const isComm = (prop.type || '').toLowerCase().includes('commercial') || (prop.type || '').toLowerCase().includes('office') || (prop.type || '').toLowerCase().includes('shop') || (prop.type || '').toLowerCase().includes('showroom') || (prop.type || '').toLowerCase().includes('warehouse') || (prop.title || '').toLowerCase().includes('commercial') || (prop.title || '').toLowerCase().includes('office') || (prop.title || '').toLowerCase().includes('shop');
+
+                          if (isPlot) {
+                            return (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', fontWeight: 600, color: '#065F46', backgroundColor: '#ECFDF5', padding: '8px 10px', borderRadius: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaRulerCombined style={{ color: '#059669' }} /> {prop.area || 'Plot Area'}
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaLayerGroup style={{ color: '#059669' }} /> {prop.facing ? `${prop.facing} Facing` : 'Clear Title Plot'}
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaShieldAlt style={{ color: '#059669' }} /> RERA / DTCP Approved
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          if (isComm) {
+                            return (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', fontWeight: 600, color: '#1E40AF', backgroundColor: '#EFF6FF', padding: '8px 10px', borderRadius: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaRulerCombined style={{ color: '#2563EB' }} /> {prop.area}
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaBriefcase style={{ color: '#2563EB' }} /> {prop.type || 'Commercial Space'}
+                                </span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaCar style={{ color: '#2563EB' }} /> {prop.parking ? `${prop.parking} Parking` : 'Ample Parking'}
+                                </span>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', fontWeight: 600, color: '#475569', backgroundColor: '#F8FAFC', padding: '8px 10px', borderRadius: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FaRulerCombined style={{ color: '#3B82F6' }} /> {prop.area}
+                              </span>
+                              {prop.bhk && prop.bhk !== '0' && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <FaBed style={{ color: '#3B82F6' }} /> {prop.bhk.includes('BHK') ? prop.bhk : `${prop.bhk} BHK`}
+                                </span>
+                              )}
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FaBath style={{ color: '#3B82F6' }} /> {prop.bath}
+                              </span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <FaCar style={{ color: '#3B82F6' }} /> {prop.parking}
+                              </span>
+                            </div>
+                          );
+                        })()}
 
                         {/* Price & Distance Row */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
