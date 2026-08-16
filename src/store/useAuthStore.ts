@@ -29,6 +29,7 @@ interface AuthState {
     customGender?: string,
     customDistrict?: string
   ) => void;
+  updateUserProfile: (data: Partial<User>) => void;
   logout: () => void;
 }
 
@@ -143,6 +144,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (err) {
       console.error('Customer DB sync failed:', err);
     }
+  },
+
+  updateUserProfile: (data: Partial<User>) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updated = { ...state.user, ...data };
+      if (data.name) {
+        updated.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=007A55&color=fff&size=128&bold=true`;
+      }
+      return { user: updated };
+    });
+    window.dispatchEvent(new Event('nexopp_data_changed'));
   },
 
   logout: () => {

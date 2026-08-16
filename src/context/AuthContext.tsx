@@ -16,6 +16,7 @@ interface AuthContextType {
     customGender?: string,
     customDistrict?: string
   ) => void;
+  updateUserProfile: (data: Partial<User>) => void;
   logout: () => void;
 }
 
@@ -36,6 +37,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         openLoginModal: store.openLoginModal,
         closeLoginModal: store.closeLoginModal,
         loginWithGmail: store.loginWithGmail,
+        updateUserProfile: store.updateUserProfile,
         logout: store.logout,
       }}
     >
