@@ -530,71 +530,63 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setLocalitySearchText('');
   };
 
-  // Dynamic Areas for Selected City (Master areas + any custom areas added to properties in this city)
+  // Dynamic Areas for Selected City (ONLY areas that actually have active properties in this city)
   const availableAreas = useMemo(() => {
     if (!selectedCityId) return [];
     const selectedCityObj = availableCities.find(c => c.id === selectedCityId);
     const cityName = selectedCityObj ? selectedCityObj.name.toLowerCase().trim() : '';
 
-    const masterAreas = masterAreasDb.filter(a => a.is_active && (a.cityId === selectedCityId || (selectedCityObj && a.cityId === selectedCityObj.id)));
-    const areaMap = new Map<string, { id: string; name: string; cityId: string; is_active: boolean }>();
+    const activeListings = propertiesDb.filter(
+      (p) => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'
+    );
 
-    masterAreas.forEach(a => {
-      areaMap.set(a.name.toLowerCase().trim(), a);
-    });
+    const areaSet = new Set<string>();
 
-    propertiesDb.forEach(p => {
+    activeListings.forEach(p => {
       const pCity = (p.city || '').toLowerCase().trim();
-      if ((cityName && pCity.includes(cityName)) || !cityName) {
+      if ((cityName && (pCity.includes(cityName) || cityName.includes(pCity))) || !cityName) {
         if (p.area && p.area.trim()) {
-          const areaKey = p.area.toLowerCase().trim();
-          if (!areaMap.has(areaKey)) {
-            areaMap.set(areaKey, {
-              id: `area_custom_${areaKey.replace(/[^a-z0-9]+/g, '_')}`,
-              name: p.area.trim(),
-              cityId: selectedCityId,
-              is_active: true
-            });
-          }
+          areaSet.add(p.area.trim());
         }
       }
     });
 
-    return Array.from(areaMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [selectedCityId, availableCities, masterAreasDb, propertiesDb]);
+    return Array.from(areaSet).sort((a, b) => a.localeCompare(b)).map(name => ({
+      id: `area_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+      name,
+      cityId: selectedCityId,
+      is_active: true
+    }));
+  }, [selectedCityId, availableCities, propertiesDb]);
 
-  // Dynamic Localities for Selected Area (Master localities + any custom localities in properties)
+  // Dynamic Localities for Selected Area (ONLY localities that actually have properties in this area)
   const availableLocalities = useMemo(() => {
     if (!selectedAreaId) return [];
     const selectedAreaObj = availableAreas.find(a => a.id === selectedAreaId);
     const areaName = selectedAreaObj ? selectedAreaObj.name.toLowerCase().trim() : '';
 
-    const masterLocs = masterLocalitiesDb.filter(l => l.is_active && (l.areaId === selectedAreaId || (selectedAreaObj && l.areaId === selectedAreaObj.id)));
-    const locMap = new Map<string, { id: string; name: string; areaId: string; is_active: boolean }>();
+    const activeListings = propertiesDb.filter(
+      (p) => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'
+    );
 
-    masterLocs.forEach(l => {
-      locMap.set(l.name.toLowerCase().trim(), l);
-    });
+    const locSet = new Set<string>();
 
-    propertiesDb.forEach(p => {
+    activeListings.forEach(p => {
       const pArea = (p.area || '').toLowerCase().trim();
-      if ((areaName && pArea.includes(areaName)) || !areaName) {
+      if ((areaName && (pArea.includes(areaName) || areaName.includes(pArea))) || !areaName) {
         if (p.locality && p.locality.trim()) {
-          const locKey = p.locality.toLowerCase().trim();
-          if (!locMap.has(locKey)) {
-            locMap.set(locKey, {
-              id: `loc_custom_${locKey.replace(/[^a-z0-9]+/g, '_')}`,
-              name: p.locality.trim(),
-              areaId: selectedAreaId,
-              is_active: true
-            });
-          }
+          locSet.add(p.locality.trim());
         }
       }
     });
 
-    return Array.from(locMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [selectedAreaId, availableAreas, masterLocalitiesDb, propertiesDb]);
+    return Array.from(locSet).sort((a, b) => a.localeCompare(b)).map(name => ({
+      id: `loc_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+      name,
+      areaId: selectedAreaId,
+      is_active: true
+    }));
+  }, [selectedAreaId, availableAreas, propertiesDb]);
 
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 

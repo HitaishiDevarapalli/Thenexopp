@@ -84,39 +84,31 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     return list;
   }, [masterLocationsDb, businessDb]);
 
-  // Dynamic Areas for Selected City (Master areas + any custom areas in businessDb)
+  // Dynamic Areas for Selected City (ONLY areas that actually have active businesses in this city)
   const availableAreas = useMemo(() => {
     if (!selectedCityId) return [];
     const selectedCityObj = availableCities.find(c => c.id === selectedCityId);
     const cityName = selectedCityObj ? selectedCityObj.name.toLowerCase().trim() : '';
 
-    const masterAreas = masterAreasDb.filter(a => a.is_active && (a.cityId === selectedCityId || (selectedCityObj && a.cityId === selectedCityObj.id)));
-    const areaMap = new Map<string, { id: string; name: string; cityId: string; is_active: boolean }>();
-
-    masterAreas.forEach(a => {
-      areaMap.set(a.name.toLowerCase().trim(), a);
-    });
+    const areaSet = new Set<string>();
 
     businessDb.forEach((b: any) => {
       const bCity = (b.city || '').toLowerCase().trim();
-      if ((cityName && bCity.includes(cityName)) || !cityName) {
+      if ((cityName && (bCity.includes(cityName) || cityName.includes(bCity))) || !cityName) {
         const areaVal = b.area || b.location;
         if (areaVal && areaVal.trim()) {
-          const areaKey = areaVal.toLowerCase().trim();
-          if (!areaMap.has(areaKey)) {
-            areaMap.set(areaKey, {
-              id: `area_biz_${areaKey.replace(/[^a-z0-9]+/g, '_')}`,
-              name: areaVal.trim(),
-              cityId: selectedCityId,
-              is_active: true
-            });
-          }
+          areaSet.add(areaVal.trim());
         }
       }
     });
 
-    return Array.from(areaMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [selectedCityId, availableCities, masterAreasDb, businessDb]);
+    return Array.from(areaSet).sort((a, b) => a.localeCompare(b)).map(name => ({
+      id: `area_biz_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+      name,
+      cityId: selectedCityId,
+      is_active: true
+    }));
+  }, [selectedCityId, availableCities, businessDb]);
 
   useEffect(() => {
     const currentGlobalCity = location?.city || location?.displayName || '';
