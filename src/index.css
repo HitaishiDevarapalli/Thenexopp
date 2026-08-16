@@ -5924,10 +5924,7 @@ body.modal-open {
 
 /* Mobile Grid Overrides (320px - 640px) */
 @media (max-width: 640px) {
-  .responsive-property-grid,
   .responsive-category-grid,
-  .franchise-directory-grid,
-  .wishlist-grid,
   .home-categories-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
@@ -6015,7 +6012,6 @@ table {
   }
 
   /* Card grids adapt to 1 column on mobile screens */
-  .responsive-property-grid,
   .responsive-category-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
@@ -6099,6 +6095,479 @@ table {
   img, video, iframe, svg {
     max-width: 100% !important;
     height: auto;
+  }
+}
+
+/* ==========================================================================
+   VENTURO RESPONSIVE OVERHAUL (NAVBAR + 2-COLUMN PROPERTY GRID + CARD FIXES)
+   ========================================================================== */
+
+/* Navbar Base & Desktop Rules */
+.navbar-location-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  box-sizing: border-box;
+}
+.navbar-location-btn.active {
+  background-color: #ECFDF5;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+}
+.navbar-location-btn:hover:not(.active) {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+}
+.navbar-location-icon {
+  color: #059669;
+  font-size: 13px;
+}
+.navbar-location-text {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 13px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.navbar-location-arrow {
+  color: #94A3B8;
+  font-size: 10px;
+}
+
+.navbar-wishlist-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+  font-size: 15px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.navbar-wishlist-btn:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
+}
+.navbar-wishlist-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background-color: #059669;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(5,150,105,0.4);
+}
+
+.navbar-post-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #FFFFFF;
+  color: #002B66;
+  border: 1.5px solid #002B66;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  box-sizing: border-box;
+}
+.navbar-post-btn:hover {
+  background-color: #002B66;
+  color: #FFFFFF;
+}
+.navbar-post-icon {
+  font-size: 11px;
+  color: #D97706;
+}
+
+.navbar-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #002B66;
+  color: #FFFFFF;
+  border: none;
+  height: 42px;
+  padding: 0 14px 0 6px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 43, 102, 0.2);
+}
+.navbar-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #059669;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+.navbar-user-name {
+  font-weight: 700;
+  font-size: 13px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.navbar-user-chevron {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.navbar-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #002B66;
+  color: #FFFFFF;
+  border: none;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 43, 102, 0.25);
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  white-space: nowrap;
+}
+.navbar-signin-btn:hover {
+  background-color: #001E47;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 43, 102, 0.35);
+}
+
+/* Responsive Overrides (Breakpoints) */
+
+/* Large Tablet & Laptop (768px - 1024px) */
+@media (max-width: 1024px) {
+  .navbar-post-btn {
+    padding: 0 12px;
+  }
+  .navbar-post-text {
+    font-size: 12px;
+  }
+}
+
+/* Tablet & Mobile Breakpoint (<768px) */
+@media (max-width: 767px) {
+  .navbar {
+    height: 70px !important;
+  }
+  .navbar > div {
+    padding: 0 16px !important;
+  }
+  
+  /* Make location button and profile fit nicely in top row */
+  .navbar-location-btn {
+    padding: 0 10px !important;
+    height: 38px !important;
+  }
+  .navbar-location-text {
+    max-width: 90px !important;
+    font-size: 12px !important;
+  }
+  
+  .navbar-post-btn {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+  }
+  .navbar-post-text {
+    display: none !important;
+  }
+  .navbar-post-icon {
+    font-size: 14px !important;
+  }
+
+  .navbar-wishlist-btn {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .navbar-signin-btn {
+    height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 12.5px !important;
+  }
+
+  /* Property grid: exactly 2 columns side-by-side on mobile */
+  .responsive-property-grid,
+  .franchise-directory-grid,
+  .wishlist-grid,
+  .business-listings-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  /* Custom styling for compact cards in a 2-column grid */
+  .responsive-property-grid > div,
+  .franchise-directory-grid > div,
+  .wishlist-grid > div {
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 12px !important;
+  }
+  
+  /* Shrink image banners on mobile cards */
+  .responsive-property-grid img,
+  .wishlist-grid img {
+    height: 130px !important;
+  }
+  .responsive-property-grid div[style*="height: '180px'"],
+  .wishlist-grid div[style*="height: '180px'"] {
+    height: 130px !important;
+  }
+
+  /* Card content adjustment */
+  .responsive-property-grid h4,
+  .wishlist-grid h4 {
+    font-size: 0.92rem !important;
+    line-height: 1.25 !important;
+    height: 2.5rem !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 4px !important;
+  }
+
+  /* Card specs and distance badges */
+  .responsive-property-grid div[style*="gap: '10px'"],
+  .wishlist-grid div[style*="gap: '10px'"] {
+    gap: 6px !important;
+    padding: 4px 6px !important;
+    margin-bottom: 8px !important;
+    border-radius: 6px !important;
+  }
+  .responsive-property-grid div[style*="gap: '10px'"] span,
+  .wishlist-grid div[style*="gap: '10px'"] span {
+    font-size: 10px !important;
+  }
+  
+  /* Price & Distance */
+  .responsive-property-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.2rem'"],
+  .wishlist-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.2rem'"] {
+    font-size: 1rem !important;
+  }
+
+  /* Broker footer adjustments for narrow card width */
+  .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"],
+  .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding-top: 8px !important;
+  }
+  .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"] button,
+  .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] button {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 6px 0 !important;
+    font-size: 10.5px !important;
+  }
+}
+
+/* Small Screen Mobile Breakpoint (<480px) */
+@media (max-width: 480px) {
+  .navbar-location-text {
+    max-width: 60px !important;
+    font-size: 11px !important;
+  }
+  .navbar-location-btn {
+    padding: 0 6px !important;
+    height: 34px !important;
+    gap: 4px !important;
+  }
+
+  .navbar-wishlist-btn,
+  .navbar-post-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .navbar-signin-btn {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+  }
+  .navbar-signin-text {
+    display: none !important;
+  }
+
+  .navbar-user-btn {
+    padding: 0 !important;
+    height: 34px !important;
+    width: 34px !important;
+    border-radius: 50% !important;
+    justify-content: center !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+  .navbar-user-name,
+  .navbar-user-chevron {
+    display: none !important;
+  }
+  
+  .responsive-property-grid,
+  .franchise-directory-grid,
+  .wishlist-grid,
+  .business-listings-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .responsive-property-grid img,
+  .wishlist-grid img {
+    height: 105px !important;
+  }
+}
+
+/* Mobile Menu Drawer Styles */
+.navbar-mobile-drawer {
+  position: fixed;
+  top: 78px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #FFFFFF;
+  z-index: 999999;
+  overflow-y: auto;
+  padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  animation: fadeIn 0.2s ease;
+}
+@media (max-width: 767px) {
+  .navbar-mobile-drawer {
+    top: 70px !important;
+    padding: 16px 20px !important;
+  }
+}
+
+/* Wishlist Item Card Responsiveness */
+.wishlist-item-card {
+  display: flex;
+  gap: 1.25rem;
+}
+.wishlist-item-thumb {
+  width: 160px;
+  height: 110px;
+}
+.wishlist-item-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+@media (max-width: 767px) {
+  .wishlist-item-card {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    padding: 12px !important;
+  }
+  .wishlist-item-thumb {
+    width: 100% !important;
+    height: 160px !important;
+  }
+  .wishlist-item-details {
+    gap: 12px !important;
+  }
+  
+  /* Footer rows inside wishlist cards */
+  .wishlist-item-details div[style*="justify-content: 'space-between'"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .wishlist-item-details div[style*="justify-content: 'space-between'"] div[style*="align-items: 'center'"] {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  /* Grid Landscape Cards Overrides */
+  .responsive-property-grid .landscape-card,
+  .wishlist-grid .landscape-card,
+  .franchise-directory-grid .landscape-card,
+  .business-listings-grid .landscape-card {
+    flex-direction: column !important;
+    height: auto !important;
+    background-color: #FFFFFF !important;
+    border-radius: 12px !important;
+  }
+  
+  .responsive-property-grid .landscape-card .feed-card-image-wrap,
+  .responsive-property-grid .landscape-card .property-image-container,
+  .wishlist-grid .landscape-card .feed-card-image-wrap,
+  .wishlist-grid .landscape-card .property-image-container,
+  .franchise-directory-grid .landscape-card .feed-card-image-wrap,
+  .franchise-directory-grid .landscape-card .property-image-container,
+  .business-listings-grid .landscape-card .feed-card-image-wrap,
+  .business-listings-grid .landscape-card .property-image-container {
+    width: 100% !important;
+    height: 120px !important;
+  }
+
+  .responsive-property-grid .landscape-card .feed-card-body,
+  .responsive-property-grid .landscape-card .property-details,
+  .wishlist-grid .landscape-card .feed-card-body,
+  .wishlist-grid .landscape-card .property-details,
+  .franchise-directory-grid .landscape-card .feed-card-body,
+  .franchise-directory-grid .landscape-card .property-details,
+  .business-listings-grid .landscape-card .feed-card-body,
+  .business-listings-grid .landscape-card .property-details {
+    width: 100% !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-property-grid .landscape-card .feed-card-image-wrap,
+  .responsive-property-grid .landscape-card .property-image-container,
+  .wishlist-grid .landscape-card .feed-card-image-wrap,
+  .wishlist-grid .landscape-card .property-image-container,
+  .franchise-directory-grid .landscape-card .feed-card-image-wrap,
+  .franchise-directory-grid .landscape-card .property-image-container,
+  .business-listings-grid .landscape-card .feed-card-image-wrap,
+  .business-listings-grid .landscape-card .property-image-container {
+    height: 100px !important;
   }
 }
 

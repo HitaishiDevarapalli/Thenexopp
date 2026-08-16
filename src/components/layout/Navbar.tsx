@@ -417,52 +417,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={openLocationPicker}
               title={`Selected Location: ${displayLocation}`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '7px',
-                backgroundColor: isLocationPickerOpen ? '#ECFDF5' : '#F8FAFC',
-                border: '1px solid',
-                borderColor: isLocationPickerOpen ? '#059669' : '#E2E8F0',
-                height: '42px',
-                padding: '0 14px',
-                borderRadius: '24px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
-                boxShadow: isLocationPickerOpen ? '0 0 0 3px rgba(5,150,105,0.12)' : 'none',
-              }}
-              onMouseEnter={(e) => {
-                if (!isLocationPickerOpen) {
-                  e.currentTarget.style.backgroundColor = '#F1F5F9';
-                  e.currentTarget.style.borderColor = '#CBD5E1';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLocationPickerOpen) {
-                  e.currentTarget.style.backgroundColor = '#F8FAFC';
-                  e.currentTarget.style.borderColor = '#E2E8F0';
-                }
-              }}
+              className={`navbar-location-btn ${isLocationPickerOpen ? 'active' : ''}`}
             >
-              <FaMapMarkerAlt style={{ color: '#059669', fontSize: '13px' }} />
-              <span style={{
-                color: '#0F172A',
-                fontWeight: 700,
-                fontSize: '13px',
-                maxWidth: '120px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}>
+              <FaMapMarkerAlt className="navbar-location-icon" />
+              <span className="navbar-location-text">
                 {displayLocation}
               </span>
-              <FaChevronDown style={{
-                color: '#94A3B8',
-                fontSize: '10px',
-                transition: 'transform 0.2s ease',
-                transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              }} />
+              <FaChevronDown 
+                className="navbar-location-arrow" 
+                style={{
+                  transition: 'transform 0.2s ease',
+                  transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                }} 
+              />
             </button>
             <LocationSelectorPanel onClose={closeLocationPicker} />
           </div>
@@ -470,50 +437,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Saved / Wishlist Button */}
           <button
             onClick={onOpenWishlist}
-            className="desktop-only"
+            className="navbar-wishlist-btn"
             title="Saved Properties & Wishlist"
-            style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              backgroundColor: '#F8FAFC',
-              border: '1px solid #E2E8F0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: wishlistItems.length > 0 ? '#EF4444' : '#64748B',
-              fontSize: '15px',
-              cursor: 'pointer',
-              position: 'relative',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F1F5F9';
-              e.currentTarget.style.borderColor = '#CBD5E1';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#F8FAFC';
-              e.currentTarget.style.borderColor = '#E2E8F0';
-            }}
           >
             {wishlistItems.length > 0 ? <FaHeart style={{ color: '#EF4444' }} /> : <FaRegHeart />}
             {wishlistItems.length > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-3px',
-                right: '-3px',
-                backgroundColor: '#059669',
-                color: '#FFFFFF',
-                fontSize: '10px',
-                fontWeight: 800,
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 5px rgba(5,150,105,0.4)',
-              }}>
+              <span className="navbar-wishlist-badge">
                 {wishlistItems.length}
               </span>
             )}
@@ -522,35 +451,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Post Property Quick Action */}
           <button
             onClick={() => onNavigateToPage?.('sellPropertyPage')}
-            className="desktop-only"
+            className="navbar-post-btn"
             title="List your property or business"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#FFFFFF',
-              color: '#002B66',
-              border: '1.5px solid #002B66',
-              height: '42px',
-              padding: '0 16px',
-              borderRadius: '24px',
-              fontWeight: 700,
-              fontSize: '13px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#002B66';
-              e.currentTarget.style.color = '#FFFFFF';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#FFFFFF';
-              e.currentTarget.style.color = '#002B66';
-            }}
           >
-            <FaPlus style={{ fontSize: '11px', color: '#D97706' }} />
-            <span>Post Property</span>
+            <FaPlus className="navbar-post-icon" />
+            <span className="navbar-post-text">Post Property</span>
           </button>
 
           {/* User Sign In / Account Dropdown */}
@@ -558,46 +463,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div style={{ position: 'relative' }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === 'user' ? null : 'user')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#002B66',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  height: '42px',
-                  padding: '0 14px 0 6px',
-                  borderRadius: '24px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 8px rgba(0, 43, 102, 0.2)',
-                }}
+                className="navbar-user-btn"
               >
-                <div style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  backgroundColor: '#059669',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                }}>
+                <div className="navbar-user-avatar">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span style={{
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  maxWidth: '90px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
+                <span className="navbar-user-name">
                   {user.name}
                 </span>
-                <FaChevronDown style={{ fontSize: '10px', opacity: 0.8 }} />
+                <FaChevronDown className="navbar-user-chevron" />
               </button>
 
               {openDropdown === 'user' && (
@@ -696,37 +570,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={openLoginModal}
               title="Sign in to your account"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: '#002B66',
-                color: '#FFFFFF',
-                border: 'none',
-                height: '42px',
-                padding: '0 20px',
-                borderRadius: '24px',
-                fontWeight: 700,
-                fontSize: '13.5px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 8px rgba(0, 43, 102, 0.25)',
-                fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
-                whiteSpace: 'nowrap',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#001E47';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 43, 102, 0.35)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#002B66';
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 43, 102, 0.25)';
-              }}
+              className="navbar-signin-btn"
             >
               <FaUser style={{ fontSize: '12px', color: '#10B981' }} />
-              <span>Sign In</span>
+              <span className="navbar-signin-text">Sign In</span>
             </button>
           )}
         </div>
@@ -734,19 +581,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* 4. Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div style={{
-          position: 'fixed',
-          top: '74px',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: '#FFFFFF',
-          zIndex: 999999,
-          overflowY: 'auto',
-          padding: '20px 24px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          animation: 'fadeIn 0.2s ease',
-        }}>
+        <div className="navbar-mobile-drawer">
           {/* Mobile Search / Location Header */}
           <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
             <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>
