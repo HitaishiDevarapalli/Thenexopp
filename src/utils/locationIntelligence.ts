@@ -1199,38 +1199,49 @@ export const searchLivePlaces = async (query: string): Promise<LocationIntellige
   return offlineMatches.length > 0 ? offlineMatches : [parseIndiaLocation(query)];
 };
 
-// 4. Instant Online Geocode for Custom Addresses (When clicking 'Use "..."')
+// 4. Instant Online Geocode for Custom Addresses
 export const geocodeLocationOnline = async (query: string): Promise<LocationIntelligenceResult> => {
+  if (!query || !query.trim()) {
+    return parseIndiaLocation('Hyderabad');
+  }
+
+  // Check if query is GPS coordinates (e.g. "17.4483, 78.3741")
+  const coordsMatch = query.match(/^([-+]?\d{1,2}(?:\.\d+)?),\s*([-+]?\d{1,3}(?:\.\d+)?)$/);
+  if (coordsMatch) {
+    const lat = parseFloat(coordsMatch[1]);
+    const lng = parseFloat(coordsMatch[2]);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return reverseGeocodeOnline(lat, lng);
+    }
+  }
+
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&countrycodes=in&limit=1`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&countrycodes=in&limit=1`, {
+      headers: { 'Accept-Language': 'en' }
+    });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         const item = data[0];
         const addr = item.address || {};
-        const state = addr.state || 'Andhra Pradesh';
-        const district = addr.state_district || addr.county || addr.district || addr.city || 'Guntur';
-        const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || district || 'Guntur';
+        const state = addr.state || addr.region || 'Telangana';
+        const district = addr.state_district || addr.county || addr.district || addr.city || '';
+        const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || district || '';
         const area = addr.suburb || addr.neighbourhood || addr.road || addr.residential || addr.village || addr.amenity || query.split(',')[0] || city;
-        let postal_code = addr.postcode || '522002';
-        if (item.display_name.toLowerCase().includes('guntur') || query.toLowerCase().includes('guntur')) {
-          if (item.display_name.toLowerCase().includes('svn colony') || item.display_name.toLowerCase().includes('brindavan') || item.display_name.toLowerCase().includes('syamala') || item.display_name.toLowerCase().includes('pattabhipuram') || item.display_name.toLowerCase().includes('nalanda') || item.display_name.toLowerCase().includes('nethaji') || query.toLowerCase().includes('nalanda') || query.toLowerCase().includes('nethaji') || query.toLowerCase().includes('svn colony') || query.toLowerCase().includes('pattabhipuram')) {
-            postal_code = '522006';
-          }
-        }
-        const lat = parseFloat(item.lat) || 16.3067;
-        const lng = parseFloat(item.lon) || 80.4365;
+        const postal_code = addr.postcode || '';
+        const lat = parseFloat(item.lat) || 17.3850;
+        const lng = parseFloat(item.lon) || 78.4867;
 
         return {
           formatted_address: item.display_name,
           google_place_id: `osm_custom_${item.place_id || Date.now()}`,
           latitude: lat,
           longitude: lng,
-          country: 'India',
+          country: addr.country || 'India',
           state,
-          district,
-          city,
-          area,
+          district: district || city,
+          city: city || 'Hyderabad',
+          area: area || city || 'Locality',
           postal_code,
           fullAddress: item.display_name
         };
@@ -1243,29 +1254,70 @@ export const geocodeLocationOnline = async (query: string): Promise<LocationInte
   return parseIndiaLocation(query);
 };
 
-// 5. High-Precision Reverse Geocoding Engine for Dragged Markers
+// 5. High-Precision Reverse Geocoding Engine for Dragged Markers & Live GPS
 export const reverseGeocodeOnline = async (lat: number, lng: number): Promise<LocationIntelligenceResult> => {
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+
+  // 1. First attempt: BigDataCloud ultra-fast high-accuracy client reverse geocoder (100% free, no rate limit)
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
+    const bdcRes = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+    );
+    if (bdcRes.ok) {
+      const bdcData = await bdcRes.json();
+      if (bdcData && (bdcData.city || bdcData.locality || bdcData.principalSubdivision)) {
+        const city = bdcData.city || bdcData.locality || (bdcData.localityInfo?.administrative?.[2]?.name) || 'City';
+        const area = bdcData.locality || bdcData.localityInfo?.administrative?.[3]?.name || city;
+        const state = bdcData.principalSubdivision || 'Andhra Pradesh';
+        const district = bdcData.localityInfo?.administrative?.[2]?.name || city;
+        const postal_code = bdcData.postcode || '';
+        const formatted_address = [area, city, district !== city ? district : '', state, postal_code, 'India'].filter(Boolean).join(', ');
+
+        return {
+          formatted_address,
+          google_place_id: `bdc_rev_${Date.now()}`,
+          latitude,
+          longitude,
+          country: bdcData.countryName || 'India',
+          state,
+          district,
+          city,
+          area,
+          postal_code,
+          fullAddress: formatted_address
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('BigDataCloud reverse geocode error, trying Nominatim:', err);
+  }
+
+  // 2. Second attempt: OpenStreetMap Nominatim reverse geocode
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
     if (res.ok) {
       const data = await res.json();
       if (data && data.address) {
         const addr = data.address;
-        const state = addr.state || 'Andhra Pradesh';
-        const district = addr.state_district || addr.county || addr.district || addr.city || 'Guntur';
-        const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || district || 'Guntur';
-        const area = addr.suburb || addr.neighbourhood || addr.road || addr.residential || addr.village || addr.amenity || city;
-        const postal_code = addr.postcode || '522002';
+        const state = addr.state || addr.region || 'Andhra Pradesh';
+        const district = addr.state_district || addr.county || addr.district || addr.city || '';
+        const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || district || 'City';
+        const area = addr.suburb || addr.neighbourhood || addr.road || addr.residential || addr.quarter || addr.village || addr.amenity || city;
+        const postal_code = addr.postcode || '';
         const displayName = data.display_name || `${area}, ${city}, ${state} ${postal_code}, India`;
 
         return {
           formatted_address: displayName,
           google_place_id: `osm_rev_${data.place_id || Date.now()}`,
-          latitude: Number(lat),
-          longitude: Number(lng),
-          country: 'India',
+          latitude,
+          longitude,
+          country: addr.country || 'India',
           state,
-          district,
+          district: district || city,
           city,
           area,
           postal_code,
@@ -1274,21 +1326,21 @@ export const reverseGeocodeOnline = async (lat: number, lng: number): Promise<Lo
       }
     }
   } catch (err) {
-    console.warn('Reverse geocode error, falling back:', err);
+    console.warn('Nominatim reverse geocode error, using coordinate label:', err);
   }
 
   return {
-    formatted_address: `Locality near (${lat.toFixed(6)}, ${lng.toFixed(6)})`,
+    formatted_address: `Pinned Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`,
     google_place_id: `custom_rev_${Date.now()}`,
-    latitude: Number(lat),
-    longitude: Number(lng),
+    latitude,
+    longitude,
     country: 'India',
-    state: 'Andhra Pradesh',
-    district: 'Guntur',
-    city: 'Guntur',
-    area: 'Verified Locality',
-    postal_code: '522002',
-    fullAddress: `Locality near (${lat.toFixed(6)}, ${lng.toFixed(6)})`
+    state: '',
+    district: '',
+    city: '',
+    area: 'Current Location',
+    postal_code: '',
+    fullAddress: `Pinned Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`
   };
 };
 

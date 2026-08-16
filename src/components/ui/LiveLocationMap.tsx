@@ -21,7 +21,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   height = '380px',
   localSearchLocation,
 }) => {
-  const { location: navbarLocation } = useLocationStore();
+  const { location: navbarLocation, detectCurrentLocation } = useLocationStore();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
@@ -202,24 +202,27 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     });
   }, [items, mapCenter, type, onSelectItem, demandFilter]);
 
-  const handleDetectLiveGps = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
-      return;
-    }
+  const handleDetectLiveGps = async () => {
     setDetectingGps(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserGps({ lat: latitude, lng: longitude, label: 'Live GPS Location' });
-        setDetectingGps(false);
-      },
-      () => {
-        setDetectingGps(false);
-        alert('Could not retrieve live GPS location. Make sure location permissions are allowed.');
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
+    try {
+      const loc = await detectCurrentLocation();
+      if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+        const areaLabel = loc.area || loc.locality || loc.city || 'Live GPS Location';
+        setUserGps({
+          lat: loc.lat,
+          lng: loc.lng,
+          label: areaLabel
+        });
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([loc.lat, loc.lng], 15, { duration: 1.2 });
+        }
+      } else {
+        alert('Could not retrieve GPS location. Please check your browser location permissions.');
+      }
+    } catch (err) {
+      console.warn('Map GPS error:', err);
+    }
+    setDetectingGps(false);
   };
 
   const handleResetView = () => {

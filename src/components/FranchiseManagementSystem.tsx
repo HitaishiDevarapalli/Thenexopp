@@ -142,15 +142,20 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
     setIsAdminDetectingGPS(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const place = await geocodeLocationOnline(`${latitude}, ${longitude}`);
-        handleSelectGooglePlace(place);
+        try {
+          const { latitude, longitude } = pos.coords;
+          const place = await reverseGeocodeOnline(latitude, longitude);
+          handleSelectGooglePlace(place);
+        } catch (e) {
+          console.warn("GPS reverse geocoding failed:", e);
+        }
         setIsAdminDetectingGPS(false);
       },
-      () => {
+      (err) => {
         setIsAdminDetectingGPS(false);
-        alert("Unable to retrieve your location. Please check browser permissions.");
-      }
+        alert(`Could not retrieve GPS location: ${err.message}. Please allow location permission in your browser or search your address above.`);
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 }
     );
   };
 
