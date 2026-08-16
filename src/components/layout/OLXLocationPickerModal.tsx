@@ -11,6 +11,7 @@ import {
   FaShieldAlt,
 } from 'react-icons/fa';
 import { useLocationStore, type LocationData } from '../../context/LocationContext';
+import { searchLivePlaces } from '../../utils/locationIntelligence';
 
 interface OLXLocationPickerModalProps {
   isOpen: boolean;
@@ -97,53 +98,81 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
     setLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/locations/search?q=${encodeURIComponent(cleanQuery)}&limit=10`).catch(() => null);
-        let data: any[] = [];
+        // 1. Fetch live places from local comprehensive India database
+        const rawPlaces = await searchLivePlaces(cleanQuery);
+        const localMatches = rawPlaces.map((p: any) => ({
+          id: p.google_place_id || `place_${Math.random()}`,
+          displayName: p.formatted_address || `${p.area || p.city}, ${p.city}, ${p.state}`,
+          city: p.city,
+          district: p.district || p.city,
+          area: p.area || p.city,
+          locality: p.area || p.city,
+          suburb: p.area || '',
+          state: p.state,
+          country: p.country || 'India',
+          postalCode: p.postal_code || '',
+          pincode: p.postal_code || '',
+          lat: p.latitude,
+          lng: p.longitude,
+        }));
+
+        // 2. Fetch from backend endpoint if available
+        const res = await fetch(`/api/locations/search?q=${encodeURIComponent(cleanQuery)}&limit=8`).catch(() => null);
+        let backendData: any[] = [];
         if (res && res.ok) {
-          data = await res.json().catch(() => []);
+          backendData = await res.json().catch(() => []);
         }
 
-        // If backend search returns empty, use Photon Geocoder API as instant client fallback
-        if (!Array.isArray(data) || data.length === 0) {
+        // 3. Merge results uniquely
+        const merged: any[] = [...localMatches];
+        (backendData || []).forEach(b => {
+          if (!merged.some(m => m.displayName.toLowerCase() === (b.displayName || '').toLowerCase())) {
+            merged.push(b);
+          }
+        });
+
+        // 4. If few results, fetch from Photon/OSM Geocoder
+        if (merged.length < 5) {
           const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(cleanQuery + ' India')}&limit=8&lang=en`).catch(() => null);
           if (photonRes && photonRes.ok) {
             const photonData = await photonRes.json().catch(() => null);
             if (photonData && Array.isArray(photonData.features)) {
-              data = photonData.features.map((f: any) => {
+              photonData.features.forEach((f: any) => {
                 const props = f.properties || {};
                 const coords = f.geometry?.coordinates || [80.4363, 16.3067];
                 const areaName = props.name || props.street || props.district || props.city || cleanQuery;
-                const cityName = props.city || props.county || props.district || 'Guntur';
-                const stateName = props.state || 'Andhra Pradesh';
-                return {
-                  id: `photon-${props.osm_id || Math.random()}`,
-                  displayName: [areaName, cityName, stateName].filter(Boolean).join(', '),
-                  city: cityName,
-                  district: props.district || cityName,
-                  suburb: areaName,
-                  area: areaName,
-                  locality: areaName,
-                  state: stateName,
-                  country: props.country || 'India',
-                  postalCode: props.postcode || '',
-                  pincode: props.postcode || '',
-                  latitude: coords[1],
-                  longitude: coords[0],
-                  lat: coords[1],
-                  lng: coords[0],
-                };
+                const cityName = props.city || props.county || props.district || 'City';
+                const stateName = props.state || 'State';
+                const dName = [areaName, cityName, stateName].filter(Boolean).join(', ');
+                if (!merged.some(m => m.displayName.toLowerCase() === dName.toLowerCase())) {
+                  merged.push({
+                    id: `photon-${props.osm_id || Math.random()}`,
+                    displayName: dName,
+                    city: cityName,
+                    district: props.district || cityName,
+                    suburb: areaName,
+                    area: areaName,
+                    locality: areaName,
+                    state: stateName,
+                    country: props.country || 'India',
+                    postalCode: props.postcode || '',
+                    pincode: props.postcode || '',
+                    lat: coords[1],
+                    lng: coords[0],
+                  });
+                }
               });
             }
           }
         }
 
-        setResults(data || []);
+        setResults(merged.slice(0, 15));
       } catch (err) {
         console.error('Location search failed:', err);
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [query]);
