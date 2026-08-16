@@ -6626,5 +6626,27 @@ table {
     padding: 6px 12px !important;
     font-size: 11px !important;
   }
+  .stats-container {
+    padding: 0 12px 24px 12px !important;
+  }
+  .stat-card {
+    padding: 10px 8px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+  }
+  .stat-card-icon-wrap {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .stat-card-icon {
+    font-size: 14px !important;
+  }
+  .stat-card-value {
+    font-size: 1.05rem !important;
+  }
+  .stat-card-label {
+    font-size: 10px !important;
+    margin-top: 2px !important;
+  }
 }
 

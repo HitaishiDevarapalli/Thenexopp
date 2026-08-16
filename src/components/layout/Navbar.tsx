@@ -214,7 +214,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const displayLocation = location?.area || location?.locality || location?.city || selectedCity || 'Hyderabad';
 
   return (
-    <header className="navbar" style={{
+    <>
+      <header className="navbar" style={{
       position: 'fixed',
       top: 0,
       left: 0,
@@ -602,8 +603,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
+    </header>
 
-      {/* 4. Mobile Menu Drawer */}
+    {/* 4. Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div className="navbar-mobile-drawer">
           {/* Mobile Search / Location Header */}
@@ -808,7 +810,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 };
 

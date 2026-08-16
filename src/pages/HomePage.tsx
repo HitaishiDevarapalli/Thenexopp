@@ -1255,13 +1255,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       )}
 
       {/* Stats Row (6 Cards in a spacious 3x2 Grid) */}
-      <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 44px 24px' }}>
+      <div className="stats-container" style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 44px 24px' }}>
         <div className="responsive-stats-grid">
           {stats.map((stat, idx) => {
             const Icon = stat.icon;
             return (
               <div
                 key={idx}
+                className="stat-card"
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '20px',
@@ -1283,6 +1284,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 }}
               >
                 <div
+                  className="stat-card-icon-wrap"
                   style={{
                     width: '46px',
                     height: '46px',
@@ -1294,13 +1296,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                     flexShrink: 0,
                   }}
                 >
-                  <Icon style={{ color: stat.color, fontSize: '20px' }} />
+                  <Icon className="stat-card-icon" style={{ color: stat.color, fontSize: '20px' }} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1 }}>
+                  <div className="stat-card-value" style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1 }}>
                     {stat.value}
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', margin: '4px 0 0 0' }}>
+                  <div className="stat-card-label" style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', margin: '4px 0 0 0' }}>
                     {stat.label}
                   </div>
                 </div>
