@@ -849,12 +849,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       {/* 1. SEPARATE PROPERTY LISTINGS SECTION */}
       {isModuleActive('properties') && propertyListingsShowcase.length > 0 && (
         <div style={{ maxWidth: '1360px', margin: '40px auto 48px auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <span style={{ fontSize: '11px', fontWeight: 800, color: '#059669', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#1E40AF', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
                 Exclusive Real Estate
               </span>
-              <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
                 Property Listings
               </h2>
             </div>
@@ -864,25 +864,25 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                backgroundColor: '#ECFDF5',
-                color: '#059669',
+                backgroundColor: '#EFF6FF',
+                color: '#1E40AF',
                 border: 'none',
-                padding: '8px 18px',
+                padding: '10px 20px',
                 borderRadius: '12px',
-                fontSize: '13.5px',
+                fontSize: '14px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#D1FAE5'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#ECFDF5'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DBEAFE'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EFF6FF'; }}
             >
               <span>Explore All Properties</span>
               <FaArrowRight style={{ fontSize: '12px' }} />
             </button>
           </div>
 
-          <div className="responsive-property-grid" style={{ gap: '20px' }}>
+          <div className="responsive-property-grid" style={{ gap: '24px' }}>
             {propertyListingsShowcase.map((item) => (
               <div
                 key={item.id}
@@ -892,59 +892,59 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 }}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
+                  borderRadius: '20px',
                   border: '1px solid #E2E8F0',
-                  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  transition: 'all 0.25s ease',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 24px -6px rgba(15, 23, 42, 0.1)';
-                  e.currentTarget.style.borderColor = '#059669';
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 30px -10px rgba(15, 23, 42, 0.12)';
+                  e.currentTarget.style.borderColor = '#1E40AF';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.04)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.03)';
                   e.currentTarget.style.borderColor = '#E2E8F0';
                 }}
               >
                 {/* Image Section */}
-                <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
                   <img 
                     src={item.image} 
                     alt={item.title} 
                     loading="lazy"
                     decoding="async"
                     width={400}
-                    height={220}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+                    height={400}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                   />
                   
                   {item.rating > 0 && (
                     <div style={{
                       position: 'absolute',
-                      top: '8px',
-                      left: '8px',
-                      backgroundColor: 'rgba(15, 23, 42, 0.78)',
+                      top: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.75)',
                       backdropFilter: 'blur(4px)',
                       color: '#FFFFFF',
-                      padding: '3px 8px',
-                      borderRadius: '20px',
+                      padding: '6px 12px',
+                      borderRadius: '30px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '10.5px',
+                      gap: '5px',
+                      fontSize: '11px',
                       fontWeight: 800,
                       zIndex: 2,
                     }}>
-                      <FaStar style={{ color: '#F59E0B', fontSize: '10px' }} />
+                      <FaStar style={{ color: '#F59E0B' }} />
                       <span>{item.rating.toFixed(1)}</span>
                       {item.reviewCount > 0 && <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>}
                     </div>
@@ -952,16 +952,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
                   <div style={{
                     position: 'absolute',
-                    bottom: '8px',
-                    left: '8px',
+                    bottom: '12px',
+                    left: '12px',
                     backgroundColor: item.badgeColor,
                     color: item.badgeText,
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    fontSize: '10.5px',
+                    padding: '6px 14px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
                     fontWeight: 800,
                     textTransform: 'uppercase',
-                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
                     zIndex: 2,
                   }}>
                     Property • {item.badge}
@@ -970,17 +970,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   {item.verified && (
                     <div style={{
                       position: 'absolute',
-                      top: '8px',
-                      right: '8px',
+                      top: '12px',
+                      right: '12px',
                       backgroundColor: '#DCFCE7',
                       color: '#16A34A',
-                      padding: '4px 6px',
+                      padding: '6px 10px',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '12px',
-                      boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)',
+                      fontSize: '14px',
+                      boxShadow: '0 4px 10px rgba(22, 163, 74, 0.2)',
                       zIndex: 2,
                     }}>
                       <FaCheckCircle />
@@ -989,47 +989,34 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 </div>
 
                 {/* Content Section */}
-                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
                   <div>
-                    <h3 style={{
-                      fontSize: '0.98rem',
-                      fontWeight: 800,
-                      color: '#0F172A',
-                      margin: '0 0 6px 0',
-                      lineHeight: 1.35,
-                      wordBreak: 'break-word',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      height: '2.7em',
-                    }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', lineBreak: 'anywhere', lineHeight: 1.4 }}>
                       {item.title}
                     </h3>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#64748B', fontSize: '12px', marginBottom: '10px' }}>
-                      <FaMapMarkerAlt style={{ color: '#EF4444', flexShrink: 0, fontSize: '11px' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '13px', marginBottom: '16px' }}>
+                      <FaMapMarkerAlt style={{ color: '#EF4444', flexShrink: 0 }} />
                       <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.location}</span>
                     </div>
                   </div>
 
-                  <div className="card-price-btn-row" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '10px', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="card-price-btn-row" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
                     <div>
-                      <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>
                         Asking Price
                       </span>
-                      <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#059669' }}>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669' }}>
                         {item.price}
                       </span>
                     </div>
                     
                     <button className="card-details-btn" style={{
-                      backgroundColor: '#059669',
+                      backgroundColor: '#1E40AF',
                       color: '#FFFFFF',
                       border: 'none',
-                      padding: '7px 14px',
-                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
                       fontSize: '12px',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1043,20 +1030,20 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <div style={{ textAlign: 'center', marginTop: '28px' }}>
             <button
               onClick={() => onNavigate('propertiesPage')}
               style={{
                 backgroundColor: '#FFFFFF',
-                color: '#059669',
-                border: '1.5px solid #059669',
-                padding: '10px 28px',
-                borderRadius: '12px',
-                fontSize: '13.5px',
+                color: '#1E40AF',
+                border: '1.5px solid #1E40AF',
+                padding: '12px 32px',
+                borderRadius: '14px',
+                fontSize: '14px',
                 fontWeight: 800,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                boxShadow: '0 2px 10px rgba(5, 150, 105, 0.08)'
+                boxShadow: '0 4px 14px rgba(30, 64, 175, 0.08)'
               }}
             >
               View More Property Listings →
@@ -1067,13 +1054,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
       {/* 2. SEPARATE BUSINESS LISTINGS SECTION */}
       {isModuleActive('business') && businessListingsShowcase.length > 0 && (
-        <div style={{ maxWidth: '1360px', margin: '0 auto 44px auto', padding: '0 24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ maxWidth: '1360px', margin: '0 auto 48px auto', padding: '0 24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
                 Verified Commercial Deals
               </span>
-              <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+              <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
                 Business Listings
               </h2>
             </div>
@@ -1086,9 +1073,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 backgroundColor: '#FEF3C7',
                 color: '#D97706',
                 border: 'none',
-                padding: '8px 18px',
+                padding: '10px 20px',
                 borderRadius: '12px',
-                fontSize: '13.5px',
+                fontSize: '14px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -1101,66 +1088,66 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             </button>
           </div>
 
-          <div className="responsive-property-grid" style={{ gap: '20px' }}>
+          <div className="responsive-property-grid" style={{ gap: '24px' }}>
             {businessListingsShowcase.map((item) => (
               <div
                 key={item.id}
                 onClick={() => onNavigate('businessPage')}
                 style={{
                   backgroundColor: '#FFFFFF',
-                  borderRadius: '16px',
+                  borderRadius: '20px',
                   border: '1px solid #E2E8F0',
-                  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
                   overflow: 'hidden',
                   cursor: 'pointer',
-                  transition: 'all 0.25s ease',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 12px 24px -6px rgba(15, 23, 42, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 30px -10px rgba(15, 23, 42, 0.12)';
                   e.currentTarget.style.borderColor = '#D97706';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.04)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.03)';
                   e.currentTarget.style.borderColor = '#E2E8F0';
                 }}
               >
                 {/* Image Section */}
-                <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
                   <img 
                     src={item.image} 
                     alt={item.title} 
                     loading="lazy"
                     decoding="async"
                     width={400}
-                    height={220}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+                    height={400}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                   />
                   
                   {item.rating > 0 && (
                     <div style={{
                       position: 'absolute',
-                      top: '8px',
-                      left: '8px',
-                      backgroundColor: 'rgba(15, 23, 42, 0.78)',
+                      top: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.75)',
                       backdropFilter: 'blur(4px)',
                       color: '#FFFFFF',
-                      padding: '3px 8px',
-                      borderRadius: '20px',
+                      padding: '6px 12px',
+                      borderRadius: '30px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '10.5px',
+                      gap: '5px',
+                      fontSize: '11px',
                       fontWeight: 800,
                       zIndex: 2,
                     }}>
-                      <FaStar style={{ color: '#F59E0B', fontSize: '10px' }} />
+                      <FaStar style={{ color: '#F59E0B' }} />
                       <span>{item.rating.toFixed(1)}</span>
                       {item.reviewCount > 0 && <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>}
                     </div>
@@ -1168,16 +1155,16 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
                   <div style={{
                     position: 'absolute',
-                    bottom: '8px',
-                    left: '8px',
+                    bottom: '12px',
+                    left: '12px',
                     backgroundColor: item.badgeColor,
                     color: item.badgeText,
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    fontSize: '10.5px',
+                    padding: '6px 14px',
+                    borderRadius: '12px',
+                    fontSize: '11px',
                     fontWeight: 800,
                     textTransform: 'uppercase',
-                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
                     zIndex: 2,
                   }}>
                     Business • {item.badge}
@@ -1186,17 +1173,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   {item.verified && (
                     <div style={{
                       position: 'absolute',
-                      top: '8px',
-                      right: '8px',
+                      top: '12px',
+                      right: '12px',
                       backgroundColor: '#DCFCE7',
                       color: '#16A34A',
-                      padding: '4px 6px',
+                      padding: '6px 10px',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '12px',
-                      boxShadow: '0 2px 6px rgba(22, 163, 74, 0.2)',
+                      fontSize: '14px',
+                      boxShadow: '0 4px 10px rgba(22, 163, 74, 0.2)',
                       zIndex: 2,
                     }}>
                       <FaCheckCircle />
@@ -1205,37 +1192,24 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 </div>
 
                 {/* Content Section */}
-                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', flexGrow: 1, justifyContent: 'space-between' }}>
                   <div>
-                    <h3 style={{
-                      fontSize: '0.98rem',
-                      fontWeight: 800,
-                      color: '#0F172A',
-                      margin: '0 0 6px 0',
-                      lineHeight: 1.35,
-                      wordBreak: 'break-word',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      height: '2.7em',
-                    }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', lineBreak: 'anywhere', lineHeight: 1.4 }}>
                       {item.title}
                     </h3>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#64748B', fontSize: '12px', marginBottom: '10px' }}>
-                      <FaMapMarkerAlt style={{ color: '#EF4444', flexShrink: 0, fontSize: '11px' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '13px', marginBottom: '16px' }}>
+                      <FaMapMarkerAlt style={{ color: '#EF4444', flexShrink: 0 }} />
                       <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.location}</span>
                     </div>
                   </div>
 
-                  <div className="card-price-btn-row" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '10px', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="card-price-btn-row" style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '12px' }}>
                     <div>
-                      <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>
                         Valuation / Price
                       </span>
-                      <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#D97706' }}>
+                      <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#D97706' }}>
                         {item.price}
                       </span>
                     </div>
@@ -1244,8 +1218,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                       backgroundColor: '#D97706',
                       color: '#FFFFFF',
                       border: 'none',
-                      padding: '7px 14px',
-                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      borderRadius: '10px',
                       fontSize: '12px',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1259,20 +1233,20 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             ))}
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <div style={{ textAlign: 'center', marginTop: '28px' }}>
             <button
               onClick={() => onNavigate('businessPage')}
               style={{
                 backgroundColor: '#FFFFFF',
                 color: '#D97706',
                 border: '1.5px solid #D97706',
-                padding: '10px 28px',
-                borderRadius: '12px',
-                fontSize: '13.5px',
+                padding: '12px 32px',
+                borderRadius: '14px',
+                fontSize: '14px',
                 fontWeight: 800,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                boxShadow: '0 2px 10px rgba(217, 119, 6, 0.08)'
+                boxShadow: '0 4px 14px rgba(217, 119, 6, 0.08)'
               }}
             >
               View More Business Listings →
