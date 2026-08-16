@@ -10,6 +10,7 @@ interface LiveLocationMapProps {
   items: Array<any>;
   type: 'property' | 'business' | 'franchise';
   onSelectItem?: (id: string) => void;
+  onBoundsSearch?: (items: Array<any>) => void;
   height?: string;
   localSearchLocation?: string;
 }
@@ -18,6 +19,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   items,
   type,
   onSelectItem,
+  onBoundsSearch,
   height = '380px',
   localSearchLocation,
 }) => {
@@ -29,6 +31,8 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   const [userGps, setUserGps] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [detectingGps, setDetectingGps] = useState(false);
   const [demandFilter, setDemandFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
+  const [showSearchThisArea, setShowSearchThisArea] = useState(false);
+  const [isSearchingArea, setIsSearchingArea] = useState(false);
 
   // Compute map center dynamically from Navbar LocationContext, localSearchLocation, or default
   const mapCenter = useMemo(() => {
@@ -64,10 +68,10 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       center: [mapCenter.lat, mapCenter.lng],
       zoom: 14,
       zoomControl: false,
-      dragging: false,
+      dragging: true,
       scrollWheelZoom: false,
-      touchZoom: false,
-      doubleClickZoom: false,
+      touchZoom: true,
+      doubleClickZoom: true,
       boxZoom: false,
       keyboard: false,
     });
@@ -80,6 +84,11 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     const layerGroup = L.layerGroup().addTo(map);
     markersLayerRef.current = layerGroup;
     mapInstanceRef.current = map;
+
+    // Show "Search this area" floating button on user pan / zoom
+    map.on('moveend', () => {
+      setShowSearchThisArea(true);
+    });
 
     // Trigger Leaflet invalidateSize so map tile recalculations fit container 100% on mobile
     const resizeTimer = setTimeout(() => {
@@ -228,7 +237,32 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   const handleResetView = () => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([mapCenter.lat, mapCenter.lng], 14, { duration: 1 });
+      setShowSearchThisArea(false);
     }
+  };
+
+  const handleSearchThisArea = async () => {
+    if (!mapInstanceRef.current) return;
+    setIsSearchingArea(true);
+    try {
+      const bounds = mapInstanceRef.current.getBounds();
+      const north = bounds.getNorth();
+      const south = bounds.getSouth();
+      const east = bounds.getEast();
+      const west = bounds.getWest();
+
+      const res = await fetch(`/api/properties/map-search?north=${north}&south=${south}&east=${east}&west=${west}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.properties)) {
+          onBoundsSearch?.(data.properties);
+        }
+      }
+    } catch (err) {
+      console.warn('Search this area error:', err);
+    }
+    setIsSearchingArea(false);
+    setShowSearchThisArea(false);
   };
 
   return (
@@ -329,6 +363,36 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Floating "Search this area" Button when Map is Panned */}
+      {showSearchThisArea && (
+        <div style={{ position: 'absolute', top: '76px', left: '50%', transform: 'translateX(-50%)', zIndex: 500 }}>
+          <button
+            type="button"
+            onClick={handleSearchThisArea}
+            disabled={isSearchingArea}
+            style={{
+              backgroundColor: '#0F172A',
+              color: '#FFFFFF',
+              border: '1.5px solid #334155',
+              padding: '8px 18px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: isSearchingArea ? 'wait' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#059669')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0F172A')}
+          >
+            <span>{isSearchingArea ? 'Searching...' : '🔍 Search this area'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Right Controls: Recenter, Zoom */}
       <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 500, display: 'flex', flexDirection: 'column', gap: '8px' }}>

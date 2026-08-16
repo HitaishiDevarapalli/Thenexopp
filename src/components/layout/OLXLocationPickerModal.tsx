@@ -219,22 +219,28 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
   };
 
   const [gpsStatusMsg, setGpsStatusMsg] = useState<string | null>(null);
+  const [gpsConfirmedLoc, setGpsConfirmedLoc] = useState<LocationData | null>(null);
 
   const handleGPSDetect = async () => {
-    setGpsStatusMsg('Requesting GPS location...');
+    setGpsStatusMsg('Requesting high-accuracy GPS location from device...');
+    setGpsConfirmedLoc(null);
     try {
       const loc = await detectCurrentLocation();
       if (loc) {
+        setGpsConfirmedLoc(loc);
         setGpsStatusMsg(`📍 Location detected: ${loc.displayName}`);
-        setTimeout(() => {
-          setGpsStatusMsg(null);
-          onClose();
-        }, 500);
       } else {
-        setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below or enable location in browser settings.');
+        setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below or click the 🔒 lock icon in the address bar to allow location.');
       }
     } catch {
       setGpsStatusMsg('⚠️ Location access was blocked or unavailable. Please choose your city below.');
+    }
+  };
+
+  const handleConfirmGpsLocation = () => {
+    if (gpsConfirmedLoc) {
+      setLocation(gpsConfirmedLoc);
+      onClose();
     }
   };
 
@@ -618,7 +624,7 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
 
           {/* RIGHT COLUMN: USE LOCATION, RECENT SEARCHES, POPULAR CITIES */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {gpsStatusMsg && (
+            {gpsStatusMsg && !gpsConfirmedLoc && (
               <div
                 style={{
                   padding: '12px 16px',
@@ -636,6 +642,60 @@ export const OLXLocationPickerModal: React.FC<OLXLocationPickerModalProps> = ({
                 {gpsStatusMsg}
               </div>
             )}
+
+            {gpsConfirmedLoc && (
+              <div
+                style={{
+                  padding: '16px 18px',
+                  borderRadius: '16px',
+                  backgroundColor: '#F0FDF4',
+                  border: '1.5px solid #86EFAC',
+                  boxShadow: '0 4px 14px rgba(22, 163, 74, 0.12)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    📍 Detected GPS Location
+                  </span>
+                  <span style={{ fontSize: '0.74rem', fontWeight: 700, backgroundColor: '#DCFCE7', color: '#15803D', padding: '3px 8px', borderRadius: '12px' }}>
+                    Accuracy: ~{gpsConfirmedLoc.accuracy || 15}m
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>
+                  {gpsConfirmedLoc.displayName}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleConfirmGpsLocation}
+                  style={{
+                    marginTop: '4px',
+                    width: '100%',
+                    padding: '11px 16px',
+                    backgroundColor: '#059669',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#047857')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#059669')}
+                >
+                  Confirm & Use This Location
+                </button>
+              </div>
+            )}
+
             {/* 1. USE CURRENT LOCATION CARD */}
             <button
               onClick={handleGPSDetect}

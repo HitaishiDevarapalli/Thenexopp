@@ -21,6 +21,8 @@ import {
   reverseGeocodeService,
   getPopularCitiesService,
   searchPropertiesByLocationService,
+  searchNearbyPropertiesService,
+  searchMapBoundsPropertiesService,
 } from './services/locationService.js';
 import {
   userRegisterSchema,
@@ -193,19 +195,35 @@ checkDatabaseConnection().then(async (connected) => {
 });
 
 // ── LOCATION & GEOLOCATION ENDPOINTS ──────────────────────────────────────────
+const handleLocationSearch = async (req, res, next) => {
+  try {
+    const { q = '', limit = 10, lat = null, lng = null } = req.query;
+    const locations = await searchLocationsService(prisma, q, limit, lat ? parseFloat(lat) : null, lng ? parseFloat(lng) : null);
+    return res.json({
+      success: true,
+      results: locations,
+      total: locations.length,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+app.get('/api/location/search', handleLocationSearch);
 app.get('/api/locations/search', async (req, res, next) => {
   try {
-    const { q = '', limit = 10 } = req.query;
-    const locations = await searchLocationsService(prisma, q, limit);
+    const { q = '', limit = 10, lat = null, lng = null } = req.query;
+    const locations = await searchLocationsService(prisma, q, limit, lat ? parseFloat(lat) : null, lng ? parseFloat(lng) : null);
     return res.json(locations);
   } catch (err) {
     next(err);
   }
 });
 
-app.post('/api/locations/reverse-geocode', async (req, res, next) => {
+const handleReverseGeocode = async (req, res, next) => {
   try {
-    const { lat, lng } = req.body;
+    const lat = req.query.lat ?? req.body?.lat;
+    const lng = req.query.lng ?? req.body?.lng;
     if (lat === undefined || lng === undefined) {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
     }
@@ -214,7 +232,10 @@ app.post('/api/locations/reverse-geocode', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-});
+};
+
+app.get('/api/location/reverse', handleReverseGeocode);
+app.post('/api/locations/reverse-geocode', handleReverseGeocode);
 
 app.get('/api/locations/popular', async (req, res, next) => {
   try {
@@ -235,6 +256,41 @@ app.post('/api/locations/select', async (req, res, next) => {
       }).catch(() => {});
     }
     return res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── NEARBY & BOUNDS PROPERTY SEARCH ───────────────────────────────────────────
+app.get('/api/properties/nearby', async (req, res, next) => {
+  try {
+    const { lat, lng, radius = 10000 } = req.query;
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'lat and lng query parameters are required' });
+    }
+    const nearby = await searchNearbyPropertiesService(prisma, lat, lng, radius);
+    return res.json({
+      success: true,
+      count: nearby.length,
+      properties: nearby,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/api/properties/map-search', async (req, res, next) => {
+  try {
+    const { north, south, east, west } = req.query;
+    if (!north || !south || !east || !west) {
+      return res.status(400).json({ error: 'north, south, east, and west bounds are required' });
+    }
+    const matched = await searchMapBoundsPropertiesService(prisma, { north, south, east, west });
+    return res.json({
+      success: true,
+      count: matched.length,
+      properties: matched,
+    });
   } catch (err) {
     next(err);
   }

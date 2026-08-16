@@ -4,6 +4,8 @@ import { reverseGeocodeOnline } from '../utils/locationIntelligence';
 
 export interface LocationData {
   id?: string;
+  name?: string;
+  type?: string;
   displayName: string;
   city: string;
   district?: string;
@@ -12,10 +14,14 @@ export interface LocationData {
   locality?: string;
   state: string;
   country: string;
+  countryCode?: string;
   postalCode?: string;
   pincode?: string;
   lat: number;
   lng: number;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
   radiusKm?: number;
 }
 
@@ -41,9 +47,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        // If cached location was a false ISP fallback, ignore
-        return parsed;
+        return JSON.parse(saved);
       }
     } catch {}
     return null;
@@ -64,17 +68,25 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const closeLocationPicker = useCallback(() => setIsLocationPickerOpen(false), []);
 
   const setLocation = useCallback((loc: LocationData) => {
-    setLocationState(loc);
+    const normalized: LocationData = {
+      ...loc,
+      lat: Number(loc.lat ?? loc.latitude),
+      lng: Number(loc.lng ?? loc.longitude),
+      latitude: Number(loc.lat ?? loc.latitude),
+      longitude: Number(loc.lng ?? loc.longitude),
+    };
+
+    setLocationState(normalized);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(loc));
-      localStorage.setItem('nexopp_selected_city', loc.city || '');
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      localStorage.setItem('nexopp_selected_city', normalized.city || '');
     } catch {}
 
     setRecentLocations((prev) => {
       const filtered = prev.filter(
-        (p) => p.displayName.toLowerCase() !== loc.displayName.toLowerCase()
+        (p) => p.displayName.toLowerCase() !== normalized.displayName.toLowerCase()
       );
-      const updated = [loc, ...filtered].slice(0, 10);
+      const updated = [normalized, ...filtered].slice(0, 10);
       try {
         localStorage.setItem(RECENT_LOCATIONS_KEY, JSON.stringify(updated));
       } catch {}
@@ -82,11 +94,11 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     // Notify backend of selection to increment popularity
-    if (loc.id) {
+    if (normalized.id) {
       fetch('/api/locations/select', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: loc.id }),
+        body: JSON.stringify({ id: normalized.id }),
       }).catch(() => {});
     }
 
@@ -100,7 +112,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   }, []);
 
-  // Geolocation detector using genuine hardware/browser GPS + High-Accuracy Reverse Geocoding
+  // Geolocation detector using genuine hardware/browser GPS + Backend & Client Reverse Geocoding
   const detectCurrentLocation = useCallback(async (): Promise<LocationData | null> => {
     if (typeof window === 'undefined' || !navigator.geolocation) {
       return null;
@@ -111,29 +123,68 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           try {
-            const { latitude, longitude } = position.coords;
+            const { latitude, longitude, accuracy } = position.coords;
+            let loc: LocationData | null = null;
 
-            // Use high-precision reverse geocoding engine (BigDataCloud + OpenStreetMap)
-            const onlineLoc = await reverseGeocodeOnline(latitude, longitude);
-            const loc: LocationData = {
-              displayName: onlineLoc.formatted_address || `${onlineLoc.area || onlineLoc.city}, ${onlineLoc.city}`,
-              city: onlineLoc.city || 'Guntur',
-              district: onlineLoc.district || onlineLoc.city || '',
-              area: onlineLoc.area || '',
-              locality: onlineLoc.area || '',
-              suburb: onlineLoc.area || '',
-              state: onlineLoc.state || 'Andhra Pradesh',
-              country: onlineLoc.country || 'India',
-              postalCode: onlineLoc.postal_code || '',
-              pincode: onlineLoc.postal_code || '',
-              lat: latitude,
-              lng: longitude,
-            };
+            // 1. Try Backend Reverse Geocoding API
+            try {
+              const res = await fetch(`/api/location/reverse?lat=${latitude}&lng=${longitude}`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && (data.locality || data.city || data.displayName)) {
+                  loc = {
+                    id: data.id || `loc-gps-${Date.now()}`,
+                    displayName: data.displayName,
+                    city: data.city || 'Guntur',
+                    district: data.district || data.city || '',
+                    area: data.area || data.locality || '',
+                    locality: data.locality || data.area || '',
+                    suburb: data.suburb || data.area || '',
+                    state: data.state || 'Andhra Pradesh',
+                    country: data.country || 'India',
+                    countryCode: data.countryCode || 'IN',
+                    postalCode: data.postcode || data.postalCode || '',
+                    pincode: data.postcode || data.postalCode || '',
+                    lat: latitude,
+                    lng: longitude,
+                    latitude,
+                    longitude,
+                    accuracy: Math.round(accuracy) || 15,
+                  };
+                }
+              }
+            } catch {}
 
-            setLocation(loc);
-            setIsDetectingGPS(false);
-            resolve(loc);
-            return;
+            // 2. Client Reverse Geocoding Fallback if backend was unreachable
+            if (!loc) {
+              const onlineLoc = await reverseGeocodeOnline(latitude, longitude);
+              loc = {
+                id: `loc-client-${Date.now()}`,
+                displayName: onlineLoc.formatted_address || `${onlineLoc.area || onlineLoc.city}, ${onlineLoc.city}`,
+                city: onlineLoc.city || 'Guntur',
+                district: onlineLoc.district || onlineLoc.city || '',
+                area: onlineLoc.area || '',
+                locality: onlineLoc.area || '',
+                suburb: onlineLoc.area || '',
+                state: onlineLoc.state || 'Andhra Pradesh',
+                country: onlineLoc.country || 'India',
+                countryCode: 'IN',
+                postalCode: onlineLoc.postal_code || '',
+                pincode: onlineLoc.postal_code || '',
+                lat: latitude,
+                lng: longitude,
+                latitude,
+                longitude,
+                accuracy: Math.round(accuracy) || 15,
+              };
+            }
+
+            if (loc) {
+              setLocation(loc);
+              setIsDetectingGPS(false);
+              resolve(loc);
+              return;
+            }
           } catch (e) {
             console.warn('GPS location reverse geocoding error:', e);
           }
