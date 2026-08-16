@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
+import { reverseGeocodeOnline } from '../utils/locationIntelligence';
+
 export interface LocationData {
   id?: string;
   displayName: string;
@@ -93,9 +95,9 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch {}
   }, []);
 
-  // Geolocation detector calling backend OpenStreetMap Nominatim reverse geocoder
+  // Geolocation detector with backend + online reverse geocoding fallback
   const detectCurrentLocation = useCallback(async (): Promise<LocationData | null> => {
-    if (!navigator.geolocation) return null;
+    if (typeof window === 'undefined' || !navigator.geolocation) return null;
     setIsDetectingGPS(true);
 
     return new Promise((resolve) => {
@@ -103,54 +105,97 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            const res = await fetch('/api/locations/reverse-geocode', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ lat: latitude, lng: longitude }),
-            });
-            
-            if (res.ok) {
-              const data = await res.json();
-              const loc: LocationData = {
-                id: data.id,
-                displayName: data.displayName || `${data.locality || data.area || data.city}, ${data.city}`,
-                city: data.city,
-                area: data.area || data.locality || '',
-                locality: data.locality || data.area || '',
-                state: data.state,
-                country: data.country || 'India',
-                postalCode: data.postalCode || '',
-                pincode: data.postalCode || '',
+            let loc: LocationData | null = null;
+
+            // 1. Try backend reverse geocoder
+            try {
+              const res = await fetch('/api/locations/reverse-geocode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lat: latitude, lng: longitude }),
+              });
+              
+              if (res.ok) {
+                const data = await res.json();
+                if (data && (data.city || data.displayName)) {
+                  loc = {
+                    id: data.id,
+                    displayName: data.displayName || `${data.locality || data.area || data.city}, ${data.city}`,
+                    city: data.city || 'Hyderabad',
+                    district: data.district || '',
+                    area: data.area || data.locality || '',
+                    locality: data.locality || data.area || '',
+                    state: data.state || 'Telangana',
+                    country: data.country || 'India',
+                    postalCode: data.postalCode || '',
+                    pincode: data.postalCode || '',
+                    lat: latitude,
+                    lng: longitude,
+                  };
+                }
+              }
+            } catch (err) {
+              console.warn('Backend reverse-geocode failed, using online reverse-geocode fallback:', err);
+            }
+
+            // 2. Fallback to client reverse geocode if backend didn't respond
+            if (!loc) {
+              const onlineLoc = await reverseGeocodeOnline(latitude, longitude);
+              loc = {
+                displayName: onlineLoc.formatted_address || `${onlineLoc.area || onlineLoc.city}, ${onlineLoc.city}`,
+                city: onlineLoc.city || 'Hyderabad',
+                district: onlineLoc.district || '',
+                area: onlineLoc.area || '',
+                locality: onlineLoc.area || '',
+                state: onlineLoc.state || 'Telangana',
+                country: onlineLoc.country || 'India',
+                postalCode: onlineLoc.postal_code || '',
+                pincode: onlineLoc.postal_code || '',
                 lat: latitude,
                 lng: longitude,
               };
+            }
+
+            if (loc) {
               setLocation(loc);
               setIsDetectingGPS(false);
               resolve(loc);
               return;
             }
-          } catch {}
+          } catch (e) {
+            console.warn('GPS location parsing error:', e);
+          }
           setIsDetectingGPS(false);
           resolve(null);
         },
-        (_error) => {
-          // If permission denied: gracefully fallback without disrupting the page view
+        (error) => {
+          console.warn('GPS Geolocation prompt status:', error.message);
           setIsDetectingGPS(false);
+          // If user denies or ignores GPS permission and no location is set, open the location picker modal
+          if (!localStorage.getItem(STORAGE_KEY)) {
+            openLocationPicker();
+          }
           resolve(null);
         },
-        { timeout: 5000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
     });
   }, [setLocation, openLocationPicker]);
 
-  // Request browser location permission immediately on website load if no explicit saved location or on initial load
+  // Request browser location permission immediately on website load
   useEffect(() => {
-    const hasInitialPermissionPrompted = sessionStorage.getItem('nexopp_gps_prompted');
-    if (!hasInitialPermissionPrompted && navigator.geolocation) {
-      sessionStorage.setItem('nexopp_gps_prompted', 'true');
-      detectCurrentLocation();
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      detectCurrentLocation().then((loc) => {
+        if (!loc && !localStorage.getItem(STORAGE_KEY)) {
+          openLocationPicker();
+        }
+      });
+    } else {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        openLocationPicker();
+      }
     }
-  }, [detectCurrentLocation]);
+  }, [detectCurrentLocation, openLocationPicker]);
 
   return (
     <LocationContext.Provider
