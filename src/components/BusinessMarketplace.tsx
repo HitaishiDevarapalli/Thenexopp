@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
@@ -141,15 +141,145 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     }
   }, [availableCities]);
 
-  // Left Sidebar Filters State
-  const [valOpen, setValOpen] = useState(true);
-  const [indOpen, setIndOpen] = useState(true);
-  const [profOpen, setProfOpen] = useState(true);
-  const [locOpen, setLocOpen] = useState(true);
-  const [ageOpen, setAgeOpen] = useState(true);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [showSidebarFilters, setShowSidebarFilters] = useState(false);
+  // Centralized numeric budget limits (in Lakhs: 0.01 = 1K, 100 = 1Cr, 1000 = 10Cr)
+  const [minBudget, setMinBudget] = useState(0.01);
+  const [maxBudget, setMaxBudget] = useState(1000);
+  const [dragging, setDragging] = useState<'min' | 'max' | null>(null);
 
+  const sliderMin = 0.01;
+  const sliderMax = 1000;
+
+  const formatPriceVal = useCallback((valLakhs: number) => {
+    if (valLakhs < 1) {
+      const thousand = Math.round(valLakhs * 100);
+      return thousand > 0 ? `${thousand} K` : '1 K';
+    }
+    if (valLakhs >= 100) {
+      const cr = valLakhs / 100;
+      return `${cr % 1 === 0 ? cr : cr.toFixed(1)} Cr`;
+    }
+    return `${valLakhs % 1 === 0 ? valLakhs : valLakhs.toFixed(1)} Lac`;
+  }, []);
+
+  const [minInputText, setMinInputText] = useState(formatPriceVal(minBudget));
+  const [maxInputText, setMaxInputText] = useState(formatPriceVal(maxBudget));
+
+  useEffect(() => {
+    setMinInputText(formatPriceVal(minBudget));
+  }, [minBudget, formatPriceVal]);
+
+  useEffect(() => {
+    setMaxInputText(formatPriceVal(maxBudget));
+  }, [maxBudget, formatPriceVal]);
+
+  const parseAndSetMin = (str: string) => {
+    setMinInputText(str);
+    const clean = str.toLowerCase().replace(/,/g, '').trim();
+    if (!clean) return;
+    let lakhs: number | null = null;
+    if (clean.endsWith('cr') || clean.endsWith('crore') || clean.endsWith('crores')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num * 100;
+    } else if (clean.endsWith('k') || clean.endsWith('thousand')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num / 100;
+    } else if (clean.endsWith('l') || clean.endsWith('lac') || clean.endsWith('lakh') || clean.endsWith('lakhs')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num;
+    } else {
+      const rawNum = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(rawNum)) {
+        if (rawNum >= 1000) lakhs = rawNum / 100000;
+        else lakhs = rawNum;
+      }
+    }
+    if (lakhs !== null && lakhs >= sliderMin) {
+      setMinBudget(Math.min(lakhs, maxBudget - 0.01));
+    }
+  };
+
+  const parseAndSetMax = (str: string) => {
+    setMaxInputText(str);
+    const clean = str.toLowerCase().replace(/,/g, '').trim();
+    if (!clean) return;
+    let lakhs: number | null = null;
+    if (clean.endsWith('cr') || clean.endsWith('crore') || clean.endsWith('crores')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num * 100;
+    } else if (clean.endsWith('k') || clean.endsWith('thousand')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num / 100;
+    } else if (clean.endsWith('l') || clean.endsWith('lac') || clean.endsWith('lakh') || clean.endsWith('lakhs')) {
+      const num = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(num)) lakhs = num;
+    } else {
+      const rawNum = parseFloat(clean.replace(/[^\d.]/g, ''));
+      if (!isNaN(rawNum)) {
+        if (rawNum >= 1000) lakhs = rawNum / 100000;
+        else lakhs = rawNum;
+      }
+    }
+    if (lakhs !== null) {
+      setMaxBudget(Math.max(lakhs, minBudget + 0.01));
+    }
+  };
+
+  // Draggable & touch logic for double budget range slider
+  useEffect(() => {
+    if (!dragging) return;
+
+    const handlePointerMove = (clientX: number) => {
+      const slider = document.getElementById('biz-budget-slider-track');
+      if (!slider) return;
+      const rect = slider.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const rawVal = sliderMin + pct * (sliderMax - sliderMin);
+      const val = parseFloat(rawVal.toFixed(2));
+      if (dragging === 'min') {
+        setMinBudget(Math.min(val, maxBudget - 0.01));
+      } else {
+        setMaxBudget(Math.max(val, minBudget + 0.01));
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => handlePointerMove(e.clientX);
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
+    };
+
+    const handleMouseUp = () => setDragging(null);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [dragging, minBudget, maxBudget, sliderMin, sliderMax]);
+
+  const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const slider = document.getElementById('biz-budget-slider-track');
+    if (!slider) return;
+    const rect = slider.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const rawVal = sliderMin + pct * (sliderMax - sliderMin);
+    const val = parseFloat(rawVal.toFixed(2));
+    
+    const distToMin = Math.abs(val - minBudget);
+    const distToMax = Math.abs(val - maxBudget);
+    if (distToMin < distToMax) {
+      setMinBudget(Math.min(val, maxBudget - 0.01));
+    } else {
+      setMaxBudget(Math.max(val, minBudget + 0.01));
+    }
+  };
+
+  // Left Sidebar Filters State
   const [selectedInds, setSelectedInds] = useState<string[]>([]);
   const [selectedProfs, setSelectedProfs] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -199,14 +329,16 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     setSelectedInds([]);
     setSelectedProfs([]);
     setSelectedLocations([]);
-    setMinPrice('');
-    setMaxPrice('');
-    setSelectedLocality('');
+    setMinBudget(0.01);
+    setMaxBudget(1000);
+    setSelectedCityId('');
+    setSelectedAreaId('');
+    setLocationText('All Cities');
     setActiveQuickFilter(null);
     setIndustry('All Categories');
-    setValuation('Any Price');
+    setValuation('Any Budget');
     setActiveTab('All');
-    setSortBy('Newest First');
+    setSortBy('Relevance');
   };
 
   const businessesList = useMemo(() => {
@@ -268,19 +400,14 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         if (!match) return false;
       }
 
-      // Business type filter
+      // Business structure / deal type filter
       if (selectedProfs.length > 0 && !selectedProfs.includes(item.businessType)) return false;
       
-      // Investment range filter
-      if (valuation && valuation !== 'Any Budget' && valuation !== 'Any Price') {
-        if (valuation === 'Under ₹ 20 Lac' && item.price >= 20) return false;
-        if (valuation === '₹ 20 Lac - ₹ 50 Lac' && (item.price < 20 || item.price > 50)) return false;
-        if (valuation === '₹ 50 Lac - ₹ 2 Cr' && (item.price < 50 || item.price > 200)) return false;
-        if (valuation === '₹ 2 Cr - ₹ 5 Cr' && (item.price < 200 || item.price > 500)) return false;
-        if (valuation === '₹ 5 Cr+' && item.price < 500) return false;
+      // Budget Range Filter (slider)
+      if (item.price > 0) {
+        if (item.price < minBudget) return false;
+        if (maxBudget < sliderMax && item.price > maxBudget) return false;
       }
-      if (minPrice && item.price < parseFloat(minPrice)) return false;
-      if (maxPrice && item.price > parseFloat(maxPrice)) return false;
 
       // Quick filters
       if (activeQuickFilter) {
@@ -292,17 +419,16 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     });
 
     // Sort
-    if (sortBy === 'Price: Low to High') {
+    if (sortBy === 'Valuation: Low to High' || sortBy === 'Price: Low to High') {
       filtered.sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'Price: High to Low') {
+    } else if (sortBy === 'Valuation: High to Low' || sortBy === 'Price: High to Low') {
       filtered.sort((a, b) => b.price - a.price);
     } else if (sortBy === 'Featured') {
       filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
     }
-    // 'Newest First' is default order from API
 
     return filtered;
-  }, [businessDb, activeTab, selectedInds, selectedLocations, selectedLocality, locationText, selectedProfs, minPrice, maxPrice, activeQuickFilter, sortBy]);
+  }, [businessDb, activeTab, selectedInds, selectedCityId, selectedAreaId, availableCities, availableAreas, locationText, selectedProfs, minBudget, maxBudget, sliderMax, activeQuickFilter, sortBy]);
 
   const totalPages = Math.ceil(businessesList.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -496,7 +622,8 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '22px' }}>
               <button
                 onClick={() => {
-                  setShowSidebarFilters(true);
+                  const el = document.getElementById('biz-results-header');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
                 }}
                 style={{
                   backgroundColor: '#16A34A',
@@ -526,144 +653,291 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         </div>
 
         {/* MAIN GRID AREA */}
-        <div className="layout-sidebar-main" style={{ gridTemplateColumns: showSidebarFilters ? undefined : '1fr' }}>
+        <div className="layout-sidebar-main">
           
-          {/* LEFT SIDEBAR: "Filter By" Card (Only appears when user clicks Search) */}
-          {showSidebarFilters && (
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '22px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '14px' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>Filter By</h3>
-              <button onClick={clearAllFilters} style={{ background: 'none', border: 'none', color: '#16A34A', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>Clear All</button>
+          {/* LEFT SIDEBAR: "Explore Businesses by Type" Filter Card */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '20px',
+              border: '1px solid #E2E8F0',
+              padding: '22px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+              alignSelf: 'start',
+              position: 'sticky',
+              top: '100px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '20px',
+                borderBottom: '1px solid #F1F5F9',
+                paddingBottom: '14px',
+              }}
+            >
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                Explore Businesses by Type
+              </h2>
+              <button
+                onClick={clearAllFilters}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#16A34A',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Clear All
+              </button>
             </div>
 
-            {/* Location: City & Area Filter */}
-            <div style={{ marginBottom: '24px', borderBottom: '1px solid #F1F5F9', paddingBottom: '20px' }}>
-              <div onClick={() => setLocOpen(!locOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '14px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>■ Location</span>
-                {locOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
+            {/* Budget Range Section */}
+            <div style={{ paddingBottom: '16px', borderBottom: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Budget Range</span>
               </div>
 
-              {locOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {/* City Select */}
-                  <div>
-                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>City</label>
-                    <select
-                      value={selectedCityId}
-                      onChange={(e) => handleCityChange(e.target.value)}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: selectedCityId ? '#0F172A' : '#94A3B8', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s' }}
-                    >
-                      <option value="">All Cities</option>
-                      {availableCities.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
+              <div>
+                {/* Direct Min & Max Price Inputs */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Min Price</span>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', padding: '6px 10px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#16A34A', marginRight: '4px' }}>₹</span>
+                      <input
+                        type="text"
+                        value={minInputText}
+                        onChange={(e) => parseAndSetMin(e.target.value)}
+                        onBlur={() => setMinInputText(formatPriceVal(minBudget))}
+                        placeholder="Min ₹"
+                        style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '12.5px', fontWeight: 800, color: '#0F172A' }}
+                      />
+                    </div>
                   </div>
-
-                  {/* Area Select */}
-                  <div>
-                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Area</label>
-                    <select
-                      disabled={!selectedCityId}
-                      value={selectedAreaId}
-                      onChange={(e) => handleAreaChange(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        borderRadius: '10px',
-                        border: '1.5px solid #E2E8F0',
-                        fontSize: '13.5px',
-                        fontWeight: 600,
-                        color: selectedAreaId ? '#0F172A' : '#64748B',
-                        backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC',
-                        cursor: selectedCityId ? 'pointer' : 'not-allowed',
-                        outline: 'none',
-                        opacity: selectedCityId ? 1 : 0.6,
-                        transition: 'border-color 0.2s',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      <option value="">{selectedCityId ? `All Areas (${availableCities.find(c => c.id === selectedCityId)?.name || 'All'})` : 'Select city first'}</option>
-                      {availableAreas.map(a => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                      ))}
-                    </select>
+                  <span style={{ color: '#94A3B8', fontWeight: 700, marginTop: '16px' }}>—</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px' }}>Max Price</span>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', padding: '6px 10px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#16A34A', marginRight: '4px' }}>₹</span>
+                      <input
+                        type="text"
+                        value={maxInputText}
+                        onChange={(e) => parseAndSetMax(e.target.value)}
+                        onBlur={() => setMaxInputText(formatPriceVal(maxBudget))}
+                        placeholder="Max ₹"
+                        style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '12.5px', fontWeight: 800, color: '#0F172A' }}
+                      />
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Industry Checkboxes */}
-            <div style={{ marginBottom: '24px', borderBottom: '1px solid #F1F5F9', paddingBottom: '20px' }}>
-              <div onClick={() => setIndOpen(!indOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '14px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Industry</span>
-                {indOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
-              </div>
-
-              {indOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {masterCategoriesDb.filter(c => c.is_active !== false).map((catItem) => {
-                    const checked = selectedInds.includes(catItem.name);
-                    return (
-                      <label key={catItem.id} onClick={() => toggleInd(catItem.name)} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? '#0F172A' : '#475569', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleInd(catItem.name)} style={{ accentColor: '#059669', width: '16px', height: '16px', cursor: 'pointer' }} />
-                        <FaBriefcase style={{ color: checked ? '#059669' : '#94A3B8', fontSize: '14px' }} />
-                        <span>{catItem.name}</span>
-                      </label>
-                    );
-                  })}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, color: '#64748B', marginBottom: '6px' }}>
+                  <span>₹ 1K</span>
+                  <span>₹ 10 Cr+</span>
                 </div>
-              )}
-            </div>
 
-            {/* Business Structure & Profitability Checkboxes */}
-            <div style={{ marginBottom: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '20px' }}>
-              <div onClick={() => setProfOpen(!profOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: '14px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Business Structure</span>
-                {profOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
-              </div>
-
-              {profOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {masterBusinessTypesDb.filter(bt => bt.is_active !== false).map((btItem) => {
-                    const checked = selectedProfs.includes(btItem.name);
-                    return (
-                      <label key={btItem.id} onClick={() => toggleProf(btItem.name)} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: checked ? 700 : 500, color: checked ? '#0F172A' : '#475569', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={checked} onChange={() => toggleProf(btItem.name)} style={{ accentColor: '#059669', width: '16px', height: '16px', cursor: 'pointer' }} />
-                        <span>{btItem.name}</span>
-                      </label>
-                    );
-                  })}
+                {/* Range Bar Graphic with Dragging & Track Clicking */}
+                <div
+                  id="biz-budget-slider-track"
+                  onClick={handleTrackClick}
+                  style={{ position: 'relative', height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', margin: '14px 6px', cursor: 'pointer' }}
+                >
+                  {/* Active green range fill */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${((minBudget - sliderMin) / (sliderMax - sliderMin)) * 100}%`,
+                      right: `${100 - ((maxBudget - sliderMin) / (sliderMax - sliderMin)) * 100}%`,
+                      top: 0,
+                      bottom: 0,
+                      backgroundColor: '#16A34A',
+                      borderRadius: '4px',
+                    }}
+                  />
+                  {/* Min thumb */}
+                  <div
+                    onMouseDown={(e) => { e.stopPropagation(); setDragging('min'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); setDragging('min'); }}
+                    style={{
+                      position: 'absolute',
+                      left: `calc(${((minBudget - sliderMin) / (sliderMax - sliderMin)) * 100}% - 10px)`,
+                      top: '-6px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      border: '3.5px solid #16A34A',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      cursor: 'grab',
+                      zIndex: 2,
+                      transform: dragging === 'min' ? 'scale(1.25)' : 'scale(1)',
+                      transition: dragging === 'min' ? 'none' : 'transform 0.1s',
+                    }}
+                  />
+                  {/* Max thumb */}
+                  <div
+                    onMouseDown={(e) => { e.stopPropagation(); setDragging('max'); }}
+                    onTouchStart={(e) => { e.stopPropagation(); setDragging('max'); }}
+                    style={{
+                      position: 'absolute',
+                      left: `calc(${((maxBudget - sliderMin) / (sliderMax - sliderMin)) * 100}% - 10px)`,
+                      top: '-6px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FFFFFF',
+                      border: '3.5px solid #16A34A',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                      cursor: 'grab',
+                      zIndex: 2,
+                      transform: dragging === 'max' ? 'scale(1.25)' : 'scale(1)',
+                      transition: dragging === 'max' ? 'none' : 'transform 0.1s',
+                    }}
+                  />
                 </div>
-              )}
+
+                <div style={{ fontSize: '12px', color: '#16A34A', fontWeight: 800, marginTop: '12px', textAlign: 'center', backgroundColor: '#F0FDF4', padding: '6px 12px', borderRadius: '8px', border: '1px solid #DCFCE7' }}>
+                  Selected: {formatPriceVal(minBudget)} – {maxBudget >= sliderMax ? '₹ 10 Cr+' : formatPriceVal(maxBudget)}
+                </div>
+              </div>
             </div>
 
-            {/* Business Age Section */}
-            <div>
-              <div onClick={() => setAgeOpen(!ageOpen)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-                <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>Business Age</span>
-                {ageOpen ? <FaChevronUp style={{ fontSize: '11px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '11px', color: '#64748B' }} />}
+            {/* Hierarchical Location Filter: City → Area */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
+                ■ Location
               </div>
 
-              {ageOpen && (
-                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {['Under 1 Year', '1 - 3 Years', '3 - 5 Years', '5+ Years Established'].map((ag) => (
-                    <label key={ag} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#475569', cursor: 'pointer' }}>
-                      <input type="checkbox" style={{ accentColor: '#16A34A' }} />
-                      <span>{ag}</span>
-                    </label>
+              {/* City Select */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>City</label>
+                <select
+                  value={selectedCityId}
+                  onChange={(e) => handleCityChange(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #CBD5E1', fontSize: '13px', fontWeight: 700, color: selectedCityId ? '#0F172A' : '#64748B', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}
+                >
+                  <option value="">All Cities</option>
+                  {availableCities.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
-                </div>
-              )}
+                </select>
+              </div>
+
+              {/* Area Select */}
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Area</label>
+                <select
+                  disabled={!selectedCityId}
+                  value={selectedAreaId}
+                  onChange={(e) => handleAreaChange(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    border: '1.5px solid #CBD5E1',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: selectedAreaId ? '#0F172A' : '#64748B',
+                    backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC',
+                    cursor: selectedCityId ? 'pointer' : 'not-allowed',
+                    outline: 'none',
+                    opacity: selectedCityId ? 1 : 0.6,
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">{selectedCityId ? `All Areas (${availableCities.find(c => c.id === selectedCityId)?.name || 'All'})` : 'Select city first'}</option>
+                  {availableAreas.map(a => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            {/* Business Industry / Sector Checkboxes */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
+                ■ Industry / Sector
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto' }}>
+                {masterCategoriesDb.filter(c => c.is_active !== false).map((catItem) => {
+                  const isSelected = selectedInds.includes(catItem.name);
+                  return (
+                    <label key={catItem.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleInd(catItem.name)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{catItem.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Business Structure & Deal Type */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
+                ■ Business Structure & Deal
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {masterBusinessTypesDb.filter(bt => bt.is_active !== false).map((btItem) => {
+                  const isSelected = selectedProfs.includes(btItem.name);
+                  return (
+                    <label key={btItem.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleProf(btItem.name)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{btItem.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quality & Verification Flags */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
+                ■ Verified & Quality
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  { id: 'Verified Sellers', label: 'Verified Sellers Only' },
+                  { id: 'Profitable Now', label: 'Profitable Now (Cash Flow Positive)' },
+                  { id: 'Featured', label: 'Featured Listings' }
+                ].map((qf) => {
+                  const isSelected = activeQuickFilter === qf.id;
+                  return (
+                    <label key={qf.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => setActiveQuickFilter(prev => prev === qf.id ? null : qf.id)}
+                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <span>{qf.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
-          )}
 
           {/* RIGHT RESULTS AREA */}
           <div>
             
             {/* Top Bar: View toggles + Count + Sort */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+            <div id="biz-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
                 {[
                   { id: 'list' as const, label: 'List View', icon: FaList },
