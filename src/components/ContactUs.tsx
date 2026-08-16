@@ -107,7 +107,7 @@ export const ContactUs: React.FC = () => {
 
 
   return (
-    <section id="contact" className="section-padding contact-section" style={{ backgroundColor: '#F8FAFC', padding: '60px 20px', minHeight: '80vh', fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif" }}>
+    <section id="contact" className="section-padding contact-section" style={{ backgroundColor: '#F8FAFC', padding: '115px 20px 60px 20px', minHeight: '80vh', fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif" }}>
       <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* Header - Matching About Us exact styling */}
@@ -285,7 +285,7 @@ export const ContactUs: React.FC = () => {
         <div className="contact-two-col-grid">
           
           {/* Consultation Form Card */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '40px 36px', border: '1px solid #E2E8F0', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.04)' }}>
+          <div className="contact-card contact-form-card">
             <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '1.5px', backgroundColor: '#ECFDF5', padding: '4px 12px', borderRadius: '14px', display: 'inline-block', marginBottom: '12px' }}>
               EXECUTIVE FORM
             </span>
@@ -407,7 +407,7 @@ export const ContactUs: React.FC = () => {
 
           {/* Location Map & HQ Banner Card */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '32px', border: '1px solid #E2E8F0', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.04)' }}>
+            <div className="contact-card hq-map-card">
               <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
                 Visit Our Headquarters
               </h3>

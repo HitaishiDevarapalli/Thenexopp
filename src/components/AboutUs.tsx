@@ -13,7 +13,7 @@ export const AboutUs: React.FC = () => {
   }, []);
 
   return (
-    <section className="section-padding about-section" style={{ backgroundColor: '#F8FAFC', padding: '60px 20px', minHeight: '80vh' }}>
+    <section className="section-padding about-section" style={{ backgroundColor: '#F8FAFC', padding: '115px 20px 60px 20px', minHeight: '80vh' }}>
       <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* Header */}

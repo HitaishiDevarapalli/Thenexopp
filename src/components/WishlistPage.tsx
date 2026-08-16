@@ -159,9 +159,8 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     return (
       <div 
         key={fav.id} 
+        className="wishlist-item-card"
         style={{
-          display: 'flex',
-          gap: '1.25rem',
           border: '1px solid #E2E8F0',
           borderRadius: '12px',
           padding: '1rem',
@@ -172,7 +171,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
         }}
       >
         {/* Thumbnail */}
-        <div style={{ position: 'relative', width: '160px', height: '110px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+        <div className="wishlist-item-thumb" style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
           <img 
             src={image} 
             alt={title} 
@@ -196,7 +195,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
         </div>
 
         {/* Details */}
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 }}>
+        <div className="wishlist-item-details" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <h4 
@@ -263,7 +262,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
   };
 
   return (
-    <div className="customer-dashboard-page" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '4rem' }}>
+    <div className="customer-dashboard-page" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingTop: '115px', paddingBottom: '4rem' }}>
       
       {/* ── HEADER SECTION ── */}
       <div style={{

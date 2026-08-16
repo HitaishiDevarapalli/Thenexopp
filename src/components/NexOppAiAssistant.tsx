@@ -992,6 +992,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
 
       {/* ================= 2. FLOATING ACTION BUTTON (FAB) ================= */}
       <div
+        className="ai-chat-fab-wrap"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -1007,6 +1008,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
             setIsOpen(!isOpen);
             setShowBubble(false);
           }}
+          className="ai-chat-fab-btn"
           style={{
             width: '64px',
             height: '64px',
