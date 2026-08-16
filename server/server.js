@@ -3049,17 +3049,6 @@ app.put('/api/showcase-settings', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.put('/api/showcase-settings', async (req, res, next) => {
-  try {
-    const settings = await prisma.showcaseSettings.upsert({
-      where: { id: 'default' },
-      update: req.body,
-      create: { id: 'default', ...req.body },
-    });
-    return res.json(settings);
-  } catch (err) { next(err); }
-});
-
 // ── HEALTH CHECK ENDPOINT ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
