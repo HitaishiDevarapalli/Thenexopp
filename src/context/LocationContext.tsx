@@ -296,15 +296,42 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return { location: null, permissionStatus: finalStatus };
   }, [setLocation]);
 
-  // ─── On page load: just open the location picker if no saved location ───
-  // We do NOT auto-call detectCurrentLocation() here because Chrome silently
-  // blocks geolocation requests that happen without a direct user click/gesture.
-  // The user must click "Use Current Location" to trigger the browser popup.
+  // ─── On page load: auto-trigger the Chrome location permission popup ───
+  // On HTTPS sites, Chrome WILL show the "Allow location?" popup when
+  // getCurrentPosition is called, even without a user gesture, as long as
+  // the permission state is 'prompt' (not yet decided).
+  // If already 'granted', we detect location silently.
+  // If already 'denied', we open the picker with reset instructions.
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      openLocationPicker();
+    const autoDetectOnLoad = async () => {
+      // If user already has a saved location, don't bother
+      if (localStorage.getItem(STORAGE_KEY)) return;
+
+      // Check current permission state
+      const permState = await checkGeolocationPermission();
+
+      if (permState === 'granted' || permState === 'prompt') {
+        // 'prompt' → Chrome will show the Allow/Block popup
+        // 'granted' → Location will be detected silently
+        const result = await detectCurrentLocation();
+        if (!result.location) {
+          // GPS failed or user clicked Block → open the picker
+          openLocationPicker();
+        }
+      } else {
+        // 'denied' → Chrome won't show the popup. Open picker with instructions
+        openLocationPicker();
+      }
+    };
+
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      autoDetectOnLoad();
+    } else {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        openLocationPicker();
+      }
     }
-  }, [openLocationPicker]);
+  }, [detectCurrentLocation, openLocationPicker]);
 
   return (
     <LocationContext.Provider
