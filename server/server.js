@@ -1273,8 +1273,10 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
 // 3. Enquiries
 app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
-    // If authenticated standard customer, filter for customer's enquiries
-    if (req.user && !['SUPER_ADMIN', 'ADMIN'].includes(req.user.role)) {
+    const fetchAll = req.query.all === 'true' || !req.user || ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
+    
+    // If authenticated standard customer (and not asking for all in admin mode), filter for customer's enquiries
+    if (!fetchAll && req.user) {
       const enquiries = await prisma.enquiry.findMany({
         where: {
           OR: [

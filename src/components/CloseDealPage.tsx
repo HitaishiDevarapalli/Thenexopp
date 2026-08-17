@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
 import { 
   FaArrowLeft, FaMapMarkerAlt, FaShoppingCart, 
   FaPhone, FaEnvelope, FaCheckCircle, FaLock, FaBuilding 
@@ -82,13 +82,47 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
     );
   }
 
-  const handleSubmitOffer = (e: React.FormEvent) => {
+  const handleSubmitOffer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !email.trim()) {
       alert('Please fill out all required fields.');
       return;
     }
-    setSubmitted(true);
+
+    const newEnquiry = {
+      customerName: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      listingTitle: `Offer / Deal Close: ${property.title}`,
+      listingType: property.category || 'PROPERTY',
+      listingId: property.id,
+      enquiryType: visitDate ? 'SLOT_BOOKING' : 'OFFER',
+      message: inquiry.trim() ? `[Contact Mode: ${contactMode}] ${inquiry.trim()}` : `Offer submitted via Deal Close. Contact mode: ${contactMode}`,
+      source: 'Close Deal Page',
+      priority: 'High' as const,
+      brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'NEXOPP Advisor',
+      date: visitDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      preferredTime: visitDate ? '10:00 AM' : ''
+    };
+
+    try {
+      await fetch(`${API_BASE_URL}/api/enquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(newEnquiry)
+      });
+    } catch (err) {
+      console.warn('API sync warning:', err);
+    } finally {
+      enquiriesDb.unshift({
+        id: `ENQ-OFFER-${Date.now()}`,
+        ...newEnquiry,
+        status: 'New' as const
+      });
+      notifyDataChanged();
+      setSubmitted(true);
+    }
   };
 
   const handleReturnHome = () => {

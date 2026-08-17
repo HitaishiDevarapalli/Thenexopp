@@ -46,11 +46,6 @@ export const ContactUs: React.FC = () => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!user) {
-      openLoginModal();
-      return;
-    }
-
     if (!formData.name.trim() || !formData.phone.trim() || !formData.email.trim()) {
       setErrorMsg('Please provide your name, phone number, and email.');
       return;
@@ -83,7 +78,7 @@ export const ContactUs: React.FC = () => {
       if (res.ok) {
         const savedData = await res.json().catch(() => null);
         enquiriesDb.unshift({
-          id: savedData?.id || `ENQ-CU-${Date.now()}`,
+          id: savedData?.id || savedData?.enquiry?.id || `ENQ-CU-${Date.now()}`,
           customerName: formData.name.trim(),
           phone: formData.phone.trim(),
           email: formData.email.trim(),
@@ -97,9 +92,7 @@ export const ContactUs: React.FC = () => {
           interest: `Category: ${formData.category}`,
           message: formData.message.trim()
         });
-        notifyDataChanged();
       } else {
-        // Fallback store locally
         enquiriesDb.unshift({
           id: `ENQ-CU-${Date.now()}`,
           customerName: formData.name.trim(),
@@ -115,7 +108,6 @@ export const ContactUs: React.FC = () => {
           interest: `Category: ${formData.category}`,
           message: formData.message.trim()
         });
-        notifyDataChanged();
       }
     } catch (err) {
       console.warn('Backend enquiry save notice:', err);
@@ -134,8 +126,8 @@ export const ContactUs: React.FC = () => {
         interest: `Category: ${formData.category}`,
         message: formData.message.trim()
       });
-      notifyDataChanged();
     } finally {
+      notifyDataChanged();
       setSubmitting(false);
       setSubmitted(true);
       setTimeout(() => {

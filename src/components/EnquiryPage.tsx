@@ -85,10 +85,6 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      openLoginModal();
-      return;
-    }
     if (!contactName.trim() || !contactPhone.trim()) {
       alert('Please fill in your Name and Phone Number.');
       return;

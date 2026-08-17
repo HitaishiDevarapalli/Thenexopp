@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
 import { 
   FaHandHoldingUsd, 
   FaShieldAlt, 
@@ -41,14 +42,51 @@ export const FinanceSection: React.FC<FinanceSectionProps> = ({ onCategorySelect
     return () => window.removeEventListener('select-finance-category', handleSelect);
   }, [onCategorySelect]);
 
-  const handleApply = (e: React.FormEvent) => {
+  const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormSubmitted(true);
-    setTimeout(() => {
-      setShowForm(null);
-      setFormSubmitted(false);
-      setFormData({ name: '', phone: '', email: '', requirements: '' });
-    }, 3000);
+    if (!formData.name.trim() || !formData.phone.trim() || !formData.email.trim()) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+
+    const newEnquiry = {
+      customerName: formData.name.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      listingTitle: `Financial Service: ${showForm || 'Loans & Insurance'}`,
+      listingType: 'FINANCE',
+      listingId: 'finance-service',
+      enquiryType: 'FINANCE_ENQUIRY',
+      message: formData.requirements.trim() ? `[Service: ${showForm}] ${formData.requirements.trim()}` : `Financial consultation requested for ${showForm}`,
+      source: 'Finance Page',
+      priority: 'High' as const,
+      brokerName: 'Senior Financial Advisor',
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    };
+
+    try {
+      await fetch(`${API_BASE_URL}/api/enquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(newEnquiry)
+      });
+    } catch (err) {
+      console.warn('API sync warning:', err);
+    } finally {
+      enquiriesDb.unshift({
+        id: `ENQ-FIN-${Date.now()}`,
+        ...newEnquiry,
+        status: 'New' as const
+      });
+      notifyDataChanged();
+      setFormSubmitted(true);
+      setTimeout(() => {
+        setShowForm(null);
+        setFormSubmitted(false);
+        setFormData({ name: '', phone: '', email: '', requirements: '' });
+      }, 3000);
+    }
   };
 
   const handleToggleCategory = (cat: 'loans' | 'insurance') => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { franchiseDb, dealersDb, propertiesDb, businessDb } from '../db/marketplaceDb';
+import { franchiseDb, dealersDb, propertiesDb, businessDb, API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
 import { FaArrowLeft, FaMapMarkerAlt, FaStore, FaChartLine, FaShoppingCart, FaHeart, FaRegHeart, FaUserTie } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
 
@@ -16,6 +16,8 @@ export const FranchiseResalesPage: React.FC<FranchiseResalesPageProps> = ({ onBa
   const [selectedDealer, setSelectedDealer] = useState<any | null>(null);
   const [showSellerPortfolio, setShowSellerPortfolio] = useState<any | null>(null);
   const [portfolioTab, setPortfolioTab] = useState<'active' | 'sold'>('active');
+  const [portfolioMsg, setPortfolioMsg] = useState('');
+  const [portfolioSending, setPortfolioSending] = useState(false);
 
   // Scroll to top when page mounts
   useEffect(() => {
@@ -423,14 +425,57 @@ export const FranchiseResalesPage: React.FC<FranchiseResalesPageProps> = ({ onBa
                     <textarea 
                       className="inquiry-textarea" 
                       placeholder={`Write your inquiry message for ${showSellerPortfolio.companyName} here...`}
+                      value={portfolioMsg}
+                      onChange={(e) => setPortfolioMsg(e.target.value)}
                       style={{ width: '100%', height: '100px', padding: '1rem', borderRadius: '6px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontFamily: 'inherit', resize: 'none' }}
                     />
                     <button 
                       className="btn btn-gold" 
                       style={{ marginTop: '1rem', width: '100%' }}
-                      onClick={() => alert(`Your inquiry has been successfully sent to ${showSellerPortfolio.companyName}! They will get back to you shortly.`)}
+                      disabled={portfolioSending}
+                      onClick={async () => {
+                        if (!portfolioMsg.trim()) {
+                          alert('Please enter your inquiry message.');
+                          return;
+                        }
+                        setPortfolioSending(true);
+                        const payload = {
+                          customerName: 'Verified Franchisee',
+                          phone: 'Direct Inquiry',
+                          email: '',
+                          listingTitle: `Franchise Resale Direct Inquiry: ${showSellerPortfolio.companyName}`,
+                          listingType: 'FRANCHISE',
+                          listingId: showSellerPortfolio.id || 'franchise-direct',
+                          enquiryType: 'FRANCHISE_ENQUIRY',
+                          message: portfolioMsg.trim(),
+                          source: 'Franchise Resales Page',
+                          brokerName: showSellerPortfolio.companyName || showSellerPortfolio.fullName || 'NEXOPP Advisor',
+                          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        };
+                        try {
+                          await fetch(`${API_BASE_URL}/api/enquiries`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(payload)
+                          });
+                        } catch (e) {
+                          console.warn('API sync warning:', e);
+                        } finally {
+                          enquiriesDb.unshift({
+                            id: `ENQ-FRAN-${Date.now()}`,
+                            ...payload,
+                            status: 'New' as const,
+                            priority: 'High' as const
+                          });
+                          notifyDataChanged();
+                          setPortfolioSending(false);
+                          setPortfolioMsg('');
+                          alert(`Your inquiry has been successfully sent to ${showSellerPortfolio.companyName}!`);
+                        }
+                      }}
                     >
-                      Submit Inquiry
+                      {portfolioSending ? 'Sending Inquiry...' : 'Submit Inquiry'}
                     </button>
                   </div>
                 </div>

@@ -780,8 +780,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (!isLocMatch) return false;
       }
 
-      // Availability Filter
-      if (availabilityFilter === 'Available' && item.sold) return false;
+      // Availability Filter: By default, sold properties disappear from main feed and display in Recently Sold section down below
+      if (availabilityFilter !== 'Sold' && item.sold) return false;
       if (availabilityFilter === 'Sold' && !item.sold) return false;
 
       // 0.5 Demand Region Filter
@@ -1052,7 +1052,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   }, [displayProperties, validPage, itemsPerPage]);
 
   const recentlySoldList = useMemo(() => {
-    return propertiesDb.filter((p: any) => p.recentlySold || p.badge === 'RECENTLY SOLD');
+    return propertiesDb.filter((p: any) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold' || p.recentlySold || p.badge === 'RECENTLY SOLD');
   }, [propertiesDb]);
 
   const tabs = [

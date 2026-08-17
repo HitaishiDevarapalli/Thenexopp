@@ -343,7 +343,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
 
   const businessesList = useMemo(() => {
     const list = businessDb
-      .filter((b: any) => b.published !== false)
+      .filter((b: any) => b.published !== false && !b.sold && b.status !== 'Sold' && b.listingStatus !== 'Sold')
       .map((b: any) => ({
       id: b.id,
       title: b.name || b.title || 'Business For Sale',

@@ -369,15 +369,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchAllEnquiriesAndBookings = async () => {
     try {
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries`);
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?all=true`, { credentials: 'include' });
       if (enqRes.ok) {
         const data = await enqRes.json();
-        setAllEnquiries(data || []);
+        if (Array.isArray(data)) {
+          setAllEnquiries(data);
+        }
       }
-      const bookRes = await fetch(`${API_BASE_URL}/api/bookings`);
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings`, { credentials: 'include' });
       if (bookRes.ok) {
         const data = await bookRes.json();
-        setAllBookings(data || []);
+        if (Array.isArray(data)) {
+          setAllBookings(data);
+        }
       }
     } catch (e) {
       console.error('Failed to fetch enquiries/bookings:', e);
@@ -4332,15 +4336,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
             
             {(() => {
-              const baseList = allEnquiries.length > 0 ? allEnquiries : enquiriesDb;
+              const combinedMap = new Map();
+              (allEnquiries || []).forEach(e => combinedMap.set(e.id, e));
+              (enquiriesDb || []).forEach(e => { if (!combinedMap.has(e.id)) combinedMap.set(e.id, e); });
+              const baseList = Array.from(combinedMap.values());
               
+              const isContactUs = (e: any) => e.source === 'Contact Us Page' || e.source === 'Contact Us' || (e.source && e.source.includes('Contact')) || (e.listingTitle && e.listingTitle.includes('Contact Us')) || e.listingId === 'contact-page-inquiry';
+              const isSlotBooking = (e: any) => e.enquiryType === 'SLOT_BOOKING' || !!e.preferredTime || !!e.preferredMoveInDate || e.mode === 'book' || (e.message && e.message.toLowerCase().includes('visit')) || (e.interest && e.interest.includes('Requested Visit'));
+              const isProperty = (e: any) => e.listingType === 'PROPERTY' || (e.source && (e.source.includes('Property') || e.source.includes('Enquiry')));
+              const isBusiness = (e: any) => e.listingType === 'BUSINESS' || (e.source && e.source.includes('Business'));
+
               // Filter inquiries based on search, category, and status
               const filteredEnquiries = baseList.filter(enq => {
                 // Category Filter
-                if (inquiryCategoryFilter === 'CONTACT_US' && enq.source !== 'Contact Us Page') return false;
-                if (inquiryCategoryFilter === 'PROPERTY' && enq.listingType !== 'PROPERTY' && !(enq.source && enq.source.includes('Property'))) return false;
-                if (inquiryCategoryFilter === 'BUSINESS' && enq.listingType !== 'BUSINESS' && !(enq.source && enq.source.includes('Business'))) return false;
-                if (inquiryCategoryFilter === 'SLOT_BOOKING' && enq.enquiryType !== 'SLOT_BOOKING') return false;
+                if (inquiryCategoryFilter === 'CONTACT_US' && !isContactUs(enq)) return false;
+                if (inquiryCategoryFilter === 'PROPERTY' && !isProperty(enq)) return false;
+                if (inquiryCategoryFilter === 'BUSINESS' && !isBusiness(enq)) return false;
+                if (inquiryCategoryFilter === 'SLOT_BOOKING' && !isSlotBooking(enq)) return false;
 
                 // Status Filter
                 if (inquiryStatusFilter !== 'ALL' && enq.status !== inquiryStatusFilter) return false;
@@ -4396,10 +4408,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
                       {[
                         { id: 'ALL', label: `All Inquiries (${totalCount})` },
-                        { id: 'CONTACT_US', label: `📩 Contact Us Page (${baseList.filter(e => e.source === 'Contact Us Page').length})` },
-                        { id: 'PROPERTY', label: `🏢 Property Leads (${baseList.filter(e => e.listingType === 'PROPERTY' || (e.source && (e.source.includes('Property') || e.source.includes('Enquiry')))).length})` },
-                        { id: 'BUSINESS', label: `💼 Business Leads (${baseList.filter(e => e.listingType === 'BUSINESS' || (e.source && e.source.includes('Business'))).length})` },
-                        { id: 'SLOT_BOOKING', label: `📅 Slot Bookings (${baseList.filter(e => e.enquiryType === 'SLOT_BOOKING').length})` },
+                        { id: 'CONTACT_US', label: `📩 Contact Us Page (${baseList.filter(isContactUs).length})` },
+                        { id: 'PROPERTY', label: `🏢 Property Leads (${baseList.filter(isProperty).length})` },
+                        { id: 'BUSINESS', label: `💼 Business Leads (${baseList.filter(isBusiness).length})` },
+                        { id: 'SLOT_BOOKING', label: `📅 Slot Bookings (${baseList.filter(isSlotBooking).length})` },
                       ].map(pill => (
                         <button
                           key={pill.id}

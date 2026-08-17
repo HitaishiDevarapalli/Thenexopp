@@ -25,6 +25,9 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
   tick;
 
   const filteredProperties = propertiesDb.filter(prop => {
+    if (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' || prop.status === 'Sold') {
+      return false;
+    }
     if (location && location.lat && location.lng) {
       if (prop.latitude && prop.longitude) {
         const dist = getDistance(location.lat, location.lng, prop.latitude, prop.longitude);
