@@ -5501,6 +5501,38 @@ body.modal-open {
 }
 
 @media (max-width: 767px) {
+  /* Mobile Top Navbar Responsiveness & Overflow Prevention */
+  .navbar-inner-container {
+    padding: 0 10px !important;
+    gap: 4px !important;
+  }
+  .navbar-left-group {
+    margin-right: 4px !important;
+    gap: 8px !important;
+  }
+  .navbar-right-group {
+    margin-left: auto !important;
+    gap: 6px !important;
+  }
+  .header-brand-logo svg {
+    height: 34px !important;
+  }
+  .location-pill-btn {
+    padding: 0 8px !important;
+    height: 36px !important;
+    gap: 4px !important;
+  }
+  .location-pill-text {
+    max-width: 80px !important;
+    font-size: 12px !important;
+  }
+  .mobile-signin-btn {
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
   /* Location Selector fixed overlay on mobile to prevent right overflow */
   .location-selector-dropdown {
     position: fixed !important;

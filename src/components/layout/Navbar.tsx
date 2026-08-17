@@ -50,15 +50,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [, setCurrentCityState] = useState(selectedCity);
 
-  // Lock body scroll when mobile menu is open
+  // Lock body & html document scroll when mobile menu is open to prevent background scrolling
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [mobileMenuOpen]);
 
@@ -279,19 +285,25 @@ export const Navbar: React.FC<NavbarProps> = ({
         display: 'flex',
         alignItems: 'center',
       }}>
-        <div style={{
-          maxWidth: '1440px',
-          width: '100%',
-          margin: '0 auto',
-          padding: '0 32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxSizing: 'border-box',
-        }}>
+        <div
+          className="navbar-inner-container"
+          style={{
+            maxWidth: '1440px',
+            width: '100%',
+            margin: '0 auto',
+            padding: '0 32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxSizing: 'border-box',
+          }}
+        >
 
           {/* 1. Left: Mobile Toggle + Brand Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginRight: '16px' }}>
+          <div
+            className="navbar-left-group"
+            style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, marginRight: '16px' }}
+          >
             <button
               className="mobile-only"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -317,12 +329,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <a
               href="/"
               onClick={(e) => { e.preventDefault(); if (onGoHome) onGoHome(); }}
-              onDoubleClick={(e) => {
-                e.stopPropagation();
-                if (onNavigateToPage) onNavigateToPage('adminPortal');
-                else window.location.href = '/admin';
-              }}
               title="TheNexopp – India's Trusted Marketplace"
+              className="navbar-brand-logo-link"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -331,7 +339,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 flexShrink: 0,
               }}
             >
-              <Logo size="md" />
+              <Logo size="md" className="header-brand-logo" />
             </a>
           </div>
 
@@ -469,13 +477,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* 3. Right: Location Pill, Saved Wishlist, Sell CTA, Sign In / Profile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: '16px' }}>
+          <div className="navbar-right-group" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, marginLeft: '16px' }}>
             
             {/* Location Selector Pill */}
             <div style={{ position: 'relative' }}>
               <button
                 onClick={openLocationPicker}
                 title={`Selected Location: ${displayLocation}`}
+                className="location-pill-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -504,16 +513,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }
                 }}
               >
-                <FaMapMarkerAlt style={{ color: '#059669', fontSize: '13px' }} />
-                <span style={{
-                  color: '#0F172A',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  maxWidth: '120px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}>
+                <FaMapMarkerAlt style={{ color: '#059669', fontSize: '13px', flexShrink: 0 }} />
+                <span
+                  className="location-pill-text"
+                  style={{
+                    color: '#0F172A',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    maxWidth: '120px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {displayLocation}
                 </span>
                 <FaChevronDown style={{
@@ -521,6 +533,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   fontSize: '10px',
                   transition: 'transform 0.2s ease',
                   transform: isLocationPickerOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  flexShrink: 0,
                 }} />
               </button>
               <LocationSelectorPanel onClose={closeLocationPicker} />
@@ -821,7 +834,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {user && user.profileCompleted === true ? (
               <button
                 onClick={() => setIsProfileModalOpen(true)}
-                className="mobile-only"
+                className="mobile-only mobile-signin-btn"
                 title="Open My Profile"
                 style={{
                   display: 'flex',
@@ -838,6 +851,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   fontSize: '12.5px',
                   fontWeight: 700,
                   boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
+                  flexShrink: 0,
                 }}
               >
                 <div style={{
@@ -851,6 +865,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   justifyContent: 'center',
                   fontSize: '12px',
                   fontWeight: 800,
+                  flexShrink: 0,
                 }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
@@ -861,7 +876,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={openLoginModal}
-                className="mobile-only"
+                className="mobile-only mobile-signin-btn"
                 title="Sign In"
                 style={{
                   display: 'flex',
@@ -878,9 +893,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   fontSize: '12.5px',
                   fontWeight: 700,
                   boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <FaUser style={{ fontSize: '11px', color: '#FDE047' }} />
+                <FaUser style={{ fontSize: '11px', color: '#FDE047', flexShrink: 0 }} />
                 <span>Sign In</span>
               </button>
             )}
@@ -898,13 +915,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          width: '100vw',
-          height: 'calc(100vh - 78px)',
+          width: '100%',
+          height: 'calc(100dvh - 78px)',
           backgroundColor: '#FFFFFF',
           zIndex: 99999999,
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
           WebkitOverflowScrolling: 'touch',
-          padding: '20px 24px',
+          touchAction: 'pan-y',
+          padding: '20px 18px 40px 18px',
           boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
           animation: 'fadeIn 0.2s ease',
           boxSizing: 'border-box',
