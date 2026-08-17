@@ -4396,8 +4396,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               const isBusiness = (e: any) => 
                 e.listingType === 'BUSINESS' || 
                 e.listingType === 'business' || 
-                (e.source && e.source.toLowerCase().includes('business')) || 
-                (e.listingTitle && e.listingTitle.toLowerCase().includes('business'));
+                e.listingType === 'FRANCHISE' || 
+                e.listingType === 'franchise' || 
+                (e.source && (e.source.toLowerCase().includes('business') || e.source.toLowerCase().includes('franchise'))) || 
+                (e.listingTitle && (e.listingTitle.toLowerCase().includes('business') || e.listingTitle.toLowerCase().includes('franchise')));
 
               const isProperty = (e: any) => 
                 e.listingType === 'PROPERTY' || 

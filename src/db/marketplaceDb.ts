@@ -877,7 +877,15 @@ const loadData = async () => {
       if (rolesRes.status === 'fulfilled' && Array.isArray(rolesRes.value)) rolesDb = rolesRes.value;
       if (teamRes.status === 'fulfilled' && Array.isArray(teamRes.value)) teamMembersDb = teamRes.value;
       if (demandRes.status === 'fulfilled' && Array.isArray(demandRes.value)) demandRegionsDb = demandRes.value;
-      if (enqRes.status === 'fulfilled' && Array.isArray(enqRes.value)) enquiriesDb = enqRes.value;
+      if (enqRes.status === 'fulfilled' && Array.isArray(enqRes.value)) {
+        enquiriesDb = enqRes.value;
+        businessEnquiriesDb = enqRes.value.filter((e: any) => 
+          e.listingType === 'BUSINESS' || 
+          e.listingType === 'business' || 
+          (e.source && e.source.toLowerCase().includes('business')) || 
+          (e.listingTitle && e.listingTitle.toLowerCase().includes('business'))
+        );
+      }
       if (franEnqRes.status === 'fulfilled' && Array.isArray(franEnqRes.value)) franchiseEnquiriesDb = franEnqRes.value;
       if (settingsRes.status === 'fulfilled' && settingsRes.value && typeof settingsRes.value === 'object') {
         siteSettingsDb = { ...siteSettingsDb, ...settingsRes.value };
