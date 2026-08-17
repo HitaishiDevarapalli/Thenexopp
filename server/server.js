@@ -1174,31 +1174,41 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     const passedCustomerId = req.query.customerId || (req.user ? req.user.id : null);
     const searchPhone = userPhone ? String(userPhone).replace(/\D/g, '') : null;
 
-    let customerId = passedCustomerId;
+    // Collect ALL customer IDs that could belong to this user
+    const customerIds = new Set();
+    if (passedCustomerId) customerIds.add(passedCustomerId);
+
+    // Also look up by phone to catch favorites saved under any matching customer record
     if (searchPhone) {
-      const cust = await prisma.customer.findFirst({
+      const matchingCustomers = await prisma.customer.findMany({
         where: {
           OR: [
             { mobile: searchPhone },
             { phone: searchPhone },
+            { mobile: `+91${searchPhone}` },
+            { phone: `+91${searchPhone}` },
             { mobile: { contains: searchPhone } },
             { phone: { contains: searchPhone } }
           ]
-        }
-      }).catch(() => null);
-      if (cust) customerId = cust.id;
+        },
+        select: { id: true }
+      }).catch(() => []);
+      matchingCustomers.forEach(c => customerIds.add(c.id));
     }
 
-    if (!customerId && !searchPhone) {
+    // Also add the JWT user ID if present
+    if (req.user && req.user.id) customerIds.add(req.user.id);
+
+    if (customerIds.size === 0 && !searchPhone) {
       return res.json([]);
     }
 
+    const customerIdArray = Array.from(customerIds).filter(Boolean);
+
     const favorites = await prisma.customerFavorite.findMany({
       where: {
-        OR: [
-          ...(customerId ? [{ customerId: customerId, status: 'ACTIVE' }] : []),
-          ...(searchPhone ? [{ customer: { OR: [{ mobile: { contains: searchPhone } }, { phone: { contains: searchPhone } }] }, status: 'ACTIVE' }] : [])
-        ]
+        customerId: { in: customerIdArray.length > 0 ? customerIdArray : undefined },
+        status: 'ACTIVE'
       },
       include: { property: true, business: true },
       orderBy: { createdAt: 'desc' }
