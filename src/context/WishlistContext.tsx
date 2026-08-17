@@ -102,12 +102,14 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
           })
         });
 
-        if (!res.ok) {
+        let data: any = null;
+        try {
+          data = await res.clone().json();
+        } catch (_) {}
+
+        if (!res.ok || data?.success === false) {
+          store.removeFromWishlist(listingId);
           // Only revert if the server explicitly rejected (4xx)
-          const status = res.status;
-          if (status >= 400 && status < 500) {
-            store.removeFromWishlist(listingId);
-          }
           // For 5xx or network errors, keep the optimistic state — 
           // the server catch-all returns 200 anyway
         }

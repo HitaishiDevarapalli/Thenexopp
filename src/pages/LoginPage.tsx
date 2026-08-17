@@ -374,7 +374,7 @@ const DecorativeDots = () => (
 /* ─────────────── Main Component ─────────────── */
 export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }) => {
   useInjectStyles(STYLES);
-  const { loginWithGmail, logout, user } = useAuth();
+  const { setUser, user } = useAuth();
 
   type Step = 'phone' | 'otp' | 'profile' | 'success';
   const [step, setStep] = useState<Step>('phone');
@@ -459,6 +459,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   /* ── API helpers ── */
   const apiBase = () => (import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : '/api');
 
+  const adoptAuthenticatedUser = useCallback((serverUser: any, fallbackPhone: string, fallbackName = 'User') => {
+    const userName = serverUser?.fullName || serverUser?.name || fallbackName || 'User';
+    const cleanEmail = (serverUser?.email && !serverUser.email.includes('@nexopp.in') && !serverUser.email.includes('@thenexopp')) ? serverUser.email : '';
+    setUser({
+      id: serverUser?.id,
+      name: userName,
+      email: cleanEmail,
+      phone: serverUser?.mobile || serverUser?.phone || fallbackPhone,
+      gender: serverUser?.gender,
+      district: serverUser?.district || serverUser?.area,
+      role: serverUser?.role || 'User',
+      avatar: serverUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff&size=128&bold=true`,
+      profileCompleted: serverUser?.profileCompleted !== false,
+      propertyInterest: serverUser?.propertyInterest,
+      businessInterest: serverUser?.businessInterest,
+    });
+  }, [setUser]);
+
   const sendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -527,22 +545,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
       setStep('success');
       setTimeout(() => {
-        const userEmail = (data.user?.email && !data.user.email.includes('@nexopp.in') && !data.user.email.includes('@thenexopp')) ? data.user.email : '';
-        loginWithGmail(
-          userEmail,
-          'User',
-          data.user?.fullName || data.user?.name || '',
-          clean,
-          data.user?.gender,
-          data.user?.district || data.user?.area
-        );
+        adoptAuthenticatedUser(data.user, clean);
         onClose?.();
       }, 1600);
     } catch (err: any) {
       setLoading(false);
       setError(err.message || 'OTP verification failed.');
     }
-  }, [mobile, loginWithGmail, onClose]);
+  }, [mobile, adoptAuthenticatedUser, onClose]);
 
   const verifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
@@ -586,15 +596,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       setStep('success');
       setTimeout(() => {
         const clean = mobile.replace(/\D/g, '');
-        const userEmail = (data.user?.email && !data.user.email.includes('@nexopp.in') && !data.user.email.includes('@thenexopp')) ? data.user.email : '';
-        loginWithGmail(
-          userEmail,
-          'User',
-          profileName.trim(),
-          clean,
-          profileGender,
-          profileArea.trim()
-        );
+        adoptAuthenticatedUser(data.user, clean, profileName.trim());
         onClose?.();
       }, 1600);
     } catch (err: any) {

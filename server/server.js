@@ -194,14 +194,85 @@ checkDatabaseConnection().then(async (connected) => {
   }
 });
 // ── CENTRALIZED CUSTOMER RESOLUTION ──────────────────────────────────────────
+const normalizeIndianPhone = (phone) => {
+  const rawPhone = String(phone || '').replace(/\D/g, '');
+  if (!rawPhone) return '';
+  return rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+};
+
+const cleanCustomerEmail = (email) => {
+  const value = String(email || '').trim().toLowerCase();
+  if (!value || value.includes('@nexopp.in') || value.includes('@thenexopp')) return null;
+  return value;
+};
+
+async function mergeDuplicateCustomerData(primaryCustomer, duplicateCustomers) {
+  if (!primaryCustomer || duplicateCustomers.length === 0) return;
+
+  const extraIds = duplicateCustomers.map(c => c.id);
+
+  const duplicateFavorites = await prisma.customerFavorite.findMany({
+    where: { customerId: { in: extraIds } }
+  }).catch(() => []);
+
+  for (const fav of duplicateFavorites) {
+    const existing = await prisma.customerFavorite.findFirst({
+      where: {
+        customerId: primaryCustomer.id,
+        listingType: fav.listingType,
+        listingId: fav.listingId
+      }
+    }).catch(() => null);
+
+    if (existing) {
+      const shouldReactivate = fav.status === 'ACTIVE' && existing.status !== 'ACTIVE';
+      await prisma.customerFavorite.update({
+        where: { id: existing.id },
+        data: {
+          status: shouldReactivate ? 'ACTIVE' : existing.status,
+          removedAt: shouldReactivate ? null : existing.removedAt,
+          removalReason: shouldReactivate ? null : existing.removalReason,
+          propertyId: existing.propertyId || fav.propertyId,
+          businessId: existing.businessId || fav.businessId
+        }
+      }).catch(() => {});
+      await prisma.customerFavorite.deleteMany({ where: { id: fav.id } }).catch(() => {});
+    } else {
+      await prisma.customerFavorite.update({
+        where: { id: fav.id },
+        data: { customerId: primaryCustomer.id }
+      }).catch(() => {});
+    }
+  }
+
+  await prisma.enquiry.updateMany({
+    where: { customerId: { in: extraIds } },
+    data: { customerId: primaryCustomer.id }
+  }).catch(() => {});
+
+  await prisma.booking.updateMany({
+    where: { customerId: { in: extraIds } },
+    data: { customerId: primaryCustomer.id }
+  }).catch(() => {});
+
+  await prisma.userActivity.updateMany({
+    where: { customerId: { in: extraIds } },
+    data: { customerId: primaryCustomer.id }
+  }).catch(() => {});
+
+  await prisma.customer.deleteMany({
+    where: { id: { in: extraIds } }
+  }).catch(() => {});
+}
+
 // ONE phone number = ONE customer. No duplicates allowed.
 // Every endpoint MUST use this function to resolve or create a customer.
 async function resolveCustomer({ phone, email, name, id, gender, district, role, avatar } = {}) {
   try {
-    const rawPhone = String(phone || '').replace(/\D/g, '');
-    const normalizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+    const normalizedPhone = normalizeIndianPhone(phone);
+    const normalizedEmail = cleanCustomerEmail(email);
 
-    if (!normalizedPhone && !id && !email) return null;
+    if (!normalizedPhone && !id && !normalizedEmail) return null;
 
     // Find ALL customer rows in PostgreSQL matching phone, id, or email
     const matchingCustomers = await prisma.customer.findMany({
@@ -216,7 +287,7 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
             { mobile: { contains: normalizedPhone } },
             { phone: { contains: normalizedPhone } }
           ] : []),
-          ...(email && !email.includes('@nexopp.in') && !email.includes('@thenexopp') ? [{ email }] : [])
+          ...(normalizedEmail ? [{ email: normalizedEmail }] : [])
         ]
       },
       orderBy: { createdAt: 'asc' } // Oldest primary customer first
@@ -227,27 +298,7 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
 
       // Auto-consolidate duplicates if more than 1 customer record exists for this phone
       if (matchingCustomers.length > 1) {
-        const extraIds = matchingCustomers.slice(1).map(c => c.id);
-
-        await prisma.customerFavorite.updateMany({
-          where: { customerId: { in: extraIds } },
-          data: { customerId: primaryCustomer.id }
-        }).catch(() => {});
-
-        await prisma.enquiry.updateMany({
-          where: { customerId: { in: extraIds } },
-          data: { customerId: primaryCustomer.id }
-        }).catch(() => {});
-
-        await prisma.booking.updateMany({
-          where: { customerId: { in: extraIds } },
-          data: { customerId: primaryCustomer.id }
-        }).catch(() => {});
-
-        await prisma.userActivity.updateMany({
-          where: { customerId: { in: extraIds } },
-          data: { customerId: primaryCustomer.id }
-        }).catch(() => {});
+        await mergeDuplicateCustomerData(primaryCustomer, matchingCustomers.slice(1));
       }
 
       // Ensure normalized mobile phone saved on primary record
@@ -268,7 +319,7 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
         name: name || 'User',
         phone: normalizedPhone,
         mobile: normalizedPhone,
-        email: (email && !email.includes('@nexopp.in') && !email.includes('@thenexopp')) ? email : null,
+        email: normalizedEmail,
         gender: gender || 'Male',
         district: district || '',
         role: role || 'User',
@@ -876,41 +927,39 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     let isNewCustomer = false;
     try {
       const existing = await prisma.customer.findFirst({
-        where: { OR: [{ mobile: verifiedMobile }, { phone: verifiedMobile }] },
+        where: {
+          OR: [
+            { mobile: verifiedMobile },
+            { phone: verifiedMobile },
+            { mobile: { contains: verifiedMobile } },
+            { phone: { contains: verifiedMobile } }
+          ]
+        },
+      }).catch(() => null);
+
+      isNewCustomer = !existing;
+
+      const resolved = await resolveCustomer({
+        phone: verifiedMobile,
+        name: targetName,
+        gender,
+        district,
+        role: 'User'
       });
 
-      if (existing) {
-        // Sanitize legacy mock email if present in existing record
-        const cleanExistingEmail = (existing.email && !existing.email.includes('@nexopp.in') && !existing.email.includes('@thenexopp')) ? existing.email : null;
+      if (resolved) {
         customer = await prisma.customer.update({
-          where: { id: existing.id },
+          where: { id: resolved.id },
           data: {
-            mobile: verifiedMobile,
-            phone: existing.phone || verifiedMobile,
-            email: cleanExistingEmail,
-            name: (fullName && fullName.trim()) ? fullName.trim() : (existing.name || 'User'),
-            gender: existing.gender || gender,
-            district: existing.district || district,
-            lastLoginAt: timestamp,
-            loginCount: existing.loginCount + 1,
-          },
-        });
-      } else {
-        isNewCustomer = true;
-        customer = await prisma.customer.create({
-          data: {
-            name: targetName,
-            email: null,
             mobile: verifiedMobile,
             phone: verifiedMobile,
-            gender: gender || 'Male',
-            district: district || 'Hyderabad',
-            role: 'User',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
+            email: cleanCustomerEmail(resolved.email),
+            name: (fullName && fullName.trim()) ? fullName.trim() : (resolved.name || 'User'),
+            gender: gender || resolved.gender,
+            district: district || resolved.district,
             lastLoginAt: timestamp,
-            loginCount: 1,
-            status: 'Active',
-            registeredDate: new Date().toLocaleDateString()
+            loginCount: isNewCustomer ? Math.max(resolved.loginCount || 1, 1) : (resolved.loginCount || 0) + 1,
+            status: 'Active'
           },
         });
       }
@@ -1271,8 +1320,7 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     const passedCustomerId = req.query.customerId || (req.user ? req.user.id : null);
     const userEmail = req.user ? req.user.email : null;
 
-    const rawPhone = String(userPhone || '').replace(/\D/g, '');
-    const normalizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+    const normalizedPhone = normalizeIndianPhone(userPhone);
 
     const customer = await resolveCustomer({
       phone: userPhone,
@@ -1321,7 +1369,7 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'listingId is required.' });
     }
 
-    const resolvedType = listingType || 'PROPERTY';
+    const resolvedType = String(listingType || 'PROPERTY').toUpperCase();
 
     const customer = await resolveCustomer({
       phone: effectivePhone,
@@ -1331,7 +1379,7 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     });
 
     if (!customer || !customer.id) {
-      return res.status(200).json({ success: false, message: 'Could not resolve customer record.' });
+      return res.status(400).json({ success: false, message: 'Could not resolve customer record.' });
     }
 
     const effectiveCustomerId = customer.id;
@@ -1353,28 +1401,52 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res) => {
       }
     }
 
-    // Clean up any existing record to avoid unique constraint collision
-    await prisma.customerFavorite.deleteMany({
+    const favoriteData = {
+      customerId: effectiveCustomerId,
+      listingType: resolvedType,
+      listingId: String(listingId),
+      propertyId: validPropertyId,
+      businessId: validBusinessId,
+      status: 'ACTIVE',
+      removedAt: null,
+      removalReason: null
+    };
+
+    const existingFavorite = await prisma.customerFavorite.findFirst({
       where: {
         customerId: effectiveCustomerId,
+        listingType: resolvedType,
         listingId: String(listingId)
       }
-    }).catch(() => {});
+    }).catch(() => null);
 
-    // Create fresh active favorite
-    const savedFav = await prisma.customerFavorite.create({
-      data: {
-        customerId: effectiveCustomerId,
-        listingType: resolvedType,
-        listingId: String(listingId),
-        propertyId: validPropertyId,
-        businessId: validBusinessId,
-        status: 'ACTIVE'
-      }
-    }).catch(async (dbErr) => {
-      logger.error({ error: dbErr.message }, 'Failed to insert CustomerFavorite');
-      return null;
-    });
+    let savedFav = null;
+    if (existingFavorite) {
+      savedFav = await prisma.customerFavorite.update({
+        where: { id: existingFavorite.id },
+        data: favoriteData
+      }).catch(async (dbErr) => {
+        logger.error({ error: dbErr.message }, 'Failed to reactivate CustomerFavorite');
+        return null;
+      });
+    } else {
+      savedFav = await prisma.customerFavorite.create({
+        data: favoriteData
+      }).catch(async (dbErr) => {
+        logger.error({ error: dbErr.message }, 'Failed to insert CustomerFavorite');
+        return await prisma.customerFavorite.findFirst({
+          where: {
+            customerId: effectiveCustomerId,
+            listingType: resolvedType,
+            listingId: String(listingId)
+          }
+        }).catch(() => null);
+      });
+    }
+
+    if (!savedFav) {
+      return res.status(500).json({ success: false, message: 'Favorite could not be saved.' });
+    }
 
     // Log Activity safely
     if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
@@ -1394,7 +1466,7 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     return res.status(200).json({ success: true, message: 'Added to favorites successfully.', favorite: savedFav });
   } catch (err) {
     logger.error({ error: err.message }, 'Error in POST /api/favorites');
-    return res.status(200).json({ success: true, message: 'Handled safely.' });
+    return res.status(500).json({ success: false, message: 'Favorite could not be saved.' });
   }
 });
 
@@ -2192,53 +2264,38 @@ app.post('/api/customers', async (req, res, next) => {
   try {
     const { email, phone, name, gender, district, role, avatar } = req.body;
     const now = new Date().toLocaleString();
-
-    const cleanEmail = (email && !email.includes('@nexopp.in') && !email.includes('@thenexopp')) ? email : null;
-    const existing = await prisma.customer.findFirst({
-      where: {
-        OR: [
-          phone ? { mobile: phone } : undefined,
-          phone ? { phone } : undefined,
-          cleanEmail ? { email: cleanEmail } : undefined,
-        ].filter(Boolean),
-      },
+    const normalizedPhone = normalizeIndianPhone(phone);
+    const normalizedEmail = cleanCustomerEmail(email);
+    const resolved = await resolveCustomer({
+      phone: normalizedPhone,
+      email: normalizedEmail,
+      name,
+      gender,
+      district,
+      role,
+      avatar
     });
 
-    let custRecord;
-    if (existing) {
-      custRecord = await prisma.customer.update({
-        where: { id: existing.id },
-        data: {
-          name: name || existing.name,
-          email: cleanEmail || existing.email,
-          mobile: phone || existing.mobile,
-          phone: phone || existing.phone,
-          gender: gender || existing.gender,
-          district: district || existing.district,
-          role: role || existing.role || 'User',
-          avatar: avatar || existing.avatar,
-          lastLoginAt: now,
-          loginCount: existing.loginCount + 1,
-        },
-      });
-    } else {
-      custRecord = await prisma.customer.create({
-        data: {
-          name: name || 'User',
-          email: cleanEmail,
-          phone: phone || '',
-          mobile: phone || '',
-          gender: gender || 'Male',
-          district: district || 'Guntur',
-          role: role || 'User',
-          avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=007A55&color=fff`,
-          lastLoginAt: now,
-          loginCount: 1,
-          status: 'Active',
-          registeredDate: new Date().toLocaleDateString(),
-        },
-      });
+    if (!resolved) {
+      return res.status(400).json({ error: 'A valid mobile number is required.' });
     }
+
+    const custRecord = await prisma.customer.update({
+      where: { id: resolved.id },
+      data: {
+        name: name || resolved.name,
+        email: normalizedEmail || resolved.email,
+        mobile: normalizedPhone || resolved.mobile,
+        phone: normalizedPhone || resolved.phone,
+        gender: gender || resolved.gender,
+        district: district || resolved.district,
+        role: role || resolved.role || 'User',
+        avatar: avatar || resolved.avatar,
+        lastLoginAt: now,
+        loginCount: (resolved.loginCount || 0) + 1,
+        status: 'Active',
+      },
+    });
 
     const userPayload = {
       id: custRecord.id,
