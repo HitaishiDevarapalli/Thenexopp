@@ -50,39 +50,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [, setCurrentCityState] = useState(selectedCity);
 
-  // 100% Bulletproof body scroll lock for mobile menu drawer
+  // Lock background body scroll cleanly when mobile menu drawer is open
   useEffect(() => {
     if (mobileMenuOpen) {
-      const scrollY = window.scrollY || window.pageYOffset;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('mobile-drawer-open');
     } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
+      document.body.classList.remove('mobile-drawer-open');
     }
     return () => {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
-      }
+      document.body.classList.remove('mobile-drawer-open');
     };
   }, [mobileMenuOpen]);
 
@@ -924,9 +900,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 4. Mobile Menu Drawer (Portalled to document.body) */}
       {mobileMenuOpen && createPortal(
         <div
-          onTouchMove={(e) => {
-            e.stopPropagation();
-          }}
+          className="navbar-mobile-drawer-container"
           style={{
             position: 'fixed',
             top: '78px',
@@ -934,14 +908,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             right: 0,
             bottom: 0,
             width: '100%',
-            height: 'calc(100dvh - 78px)',
+            height: 'calc(100vh - 78px)',
             backgroundColor: '#FFFFFF',
             zIndex: 99999999,
-            overflowY: 'scroll',
-            overscrollBehavior: 'contain',
+            overflowY: 'auto',
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y',
-            padding: '20px 18px 60px 18px',
+            padding: '20px 18px 80px 18px',
             boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
             animation: 'fadeIn 0.2s ease',
             boxSizing: 'border-box',
