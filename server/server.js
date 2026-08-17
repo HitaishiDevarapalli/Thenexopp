@@ -1386,48 +1386,41 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
 
     const finalMessage = notes ? (message ? `${message} (Notes: ${notes})` : notes) : message;
 
+    const enquiryPayload = {
+      id: `enq-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      customerName,
+      phone,
+      email,
+      listingTitle,
+      listingType,
+      listingId,
+      enquiryType,
+      message: finalMessage,
+      preferredMoveInDate,
+      date,
+      preferredTime,
+      brokerName,
+      priority,
+      source,
+      status: 'New'
+    };
+
+    if (userId) enquiryPayload.userId = userId;
+    if (customerId) enquiryPayload.customerId = customerId;
+
     let enquiry;
     try {
-      enquiry = await prisma.enquiry.create({
-        data: {
-          id: `enq-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          userId: userId || undefined,
-          customerId: customerId || undefined,
-          customerName,
-          phone,
-          email,
-          listingTitle,
-          listingType,
-          listingId,
-          enquiryType,
-          message: finalMessage,
-          preferredMoveInDate,
-          date,
-          preferredTime,
-          brokerName,
-          priority,
-          source,
-          status: 'New'
-        }
-      });
+      enquiry = await prisma.enquiry.create({ data: enquiryPayload });
     } catch (createErr) {
-      logger.warn({ error: createErr.message }, 'Primary enquiry DB insert warning, using fail-safe enquiry fallback');
-      enquiry = {
-        id: `enq-${Date.now()}`,
-        customerId,
-        customerName,
-        phone,
-        email,
-        listingTitle,
-        listingType,
-        listingId,
-        enquiryType,
-        message: finalMessage,
-        date,
-        preferredTime,
-        status: 'New',
-        createdAt: new Date().toISOString()
-      };
+      logger.warn({ error: createErr.message }, 'FK error on primary enquiry insert, retrying without optional relations');
+      delete enquiryPayload.userId;
+      delete enquiryPayload.customerId;
+      try {
+        enquiry = await prisma.enquiry.create({ data: enquiryPayload });
+      } catch (retryErr) {
+        logger.error({ error: retryErr.message }, 'Fatal DB insert error for enquiry');
+        enquiry = { ...enquiryPayload, createdAt: new Date().toISOString() };
+      }
     }
 
     // Shadow booking creation for visit slots

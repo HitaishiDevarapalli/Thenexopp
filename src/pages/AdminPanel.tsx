@@ -471,13 +471,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     if (activeTab === 'overview') {
       fetchAdminDashboardStats();
     }
+    if (activeTab === 'inquiries') {
+      fetchAllEnquiriesAndBookings();
+    }
     if ((activeTab as string) === 'users_data') {
       fetchRegisteredCustomers();
     }
   }, [activeTab, isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
     fetchAllEnquiriesAndBookings();
   }, [tick, isAuthenticated]);
 
@@ -486,6 +488,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     fetchRegisteredCustomers();
     const handler = () => {
       setTick(t => t + 1);
+      fetchAllEnquiriesAndBookings();
       fetchRegisteredCustomers();
     };
     window.addEventListener('nexopp_data_changed', handler);
