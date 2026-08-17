@@ -1881,6 +1881,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       <img
                         src={prop.image}
                         alt={prop.title}
+                        loading="lazy"
+                        decoding="async"
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
 

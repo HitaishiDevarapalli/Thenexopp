@@ -852,92 +852,40 @@ const loadData = async () => {
       }
     };
 
-    safeFetchJson(`${API_BASE_URL}/api/properties`).then(data => {
-      if (Array.isArray(data)) {
-        propertiesDb = data;
-        recalculateAllDemandRegions();
-        notifyDataChanged();
+    Promise.allSettled([
+      safeFetchJson(`${API_BASE_URL}/api/properties`),
+      safeFetchJson(`${API_BASE_URL}/api/franchises`),
+      safeFetchJson(`${API_BASE_URL}/api/businesses`),
+      safeFetchJson(`${API_BASE_URL}/api/dealers`),
+      safeFetchJson(`${API_BASE_URL}/api/employees`),
+      safeFetchJson(`${API_BASE_URL}/api/roles`),
+      safeFetchJson(`${API_BASE_URL}/api/team-members`),
+      safeFetchJson(`${API_BASE_URL}/api/demand-regions`),
+      safeFetchJson(`${API_BASE_URL}/api/enquiries`),
+      safeFetchJson(`${API_BASE_URL}/api/franchise-enquiries`),
+      safeFetchJson(`${API_BASE_URL}/api/settings`),
+      safeFetchJson(`${API_BASE_URL}/api/contact-settings`),
+    ]).then(([propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes]) => {
+      if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) propertiesDb = propsRes.value;
+      if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) franchiseDb = franRes.value;
+      if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) businessDb = bizRes.value;
+      if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value)) dealersDb = dealersRes.value;
+      if (empRes.status === 'fulfilled' && Array.isArray(empRes.value)) employeeUsersDb = empRes.value;
+      if (rolesRes.status === 'fulfilled' && Array.isArray(rolesRes.value)) rolesDb = rolesRes.value;
+      if (teamRes.status === 'fulfilled' && Array.isArray(teamRes.value)) teamMembersDb = teamRes.value;
+      if (demandRes.status === 'fulfilled' && Array.isArray(demandRes.value)) demandRegionsDb = demandRes.value;
+      if (enqRes.status === 'fulfilled' && Array.isArray(enqRes.value)) enquiriesDb = enqRes.value;
+      if (franEnqRes.status === 'fulfilled' && Array.isArray(franEnqRes.value)) franchiseEnquiriesDb = franEnqRes.value;
+      if (settingsRes.status === 'fulfilled' && settingsRes.value && typeof settingsRes.value === 'object') {
+        siteSettingsDb = { ...siteSettingsDb, ...settingsRes.value };
       }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/franchises`).then(data => {
-      if (Array.isArray(data)) {
-        franchiseDb = data;
-        recalculateAllDemandRegions();
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/businesses`).then(data => {
-      if (Array.isArray(data)) {
-        businessDb = data;
-        recalculateAllDemandRegions();
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/dealers`).then(data => {
-      if (Array.isArray(data)) {
-        dealersDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/employees`).then(data => {
-      if (Array.isArray(data)) {
-        employeeUsersDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/roles`).then(data => {
-      if (Array.isArray(data)) {
-        rolesDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/team-members`).then(data => {
-      if (Array.isArray(data)) {
-        teamMembersDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/demand-regions`).then(data => {
-      if (Array.isArray(data)) {
-        demandRegionsDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/enquiries`).then(data => {
-      if (Array.isArray(data)) {
-        enquiriesDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/franchise-enquiries`).then(data => {
-      if (Array.isArray(data)) {
-        franchiseEnquiriesDb = data;
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/settings`).then(data => {
-      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-        siteSettingsDb = { ...siteSettingsDb, ...data };
-        notifyDataChanged();
-      }
-    });
-
-    safeFetchJson(`${API_BASE_URL}/api/contact-settings`).then(data => {
-      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-        contactDetailsDb = { ...contactDetailsDb, ...data };
+      if (contactRes.status === 'fulfilled' && contactRes.value && typeof contactRes.value === 'object') {
+        contactDetailsDb = { ...contactDetailsDb, ...contactRes.value };
         saveToStorage('nexopp_contact_details', contactDetailsDb);
-        notifyDataChanged();
       }
+
+      recalculateAllDemandRegions();
+      notifyDataChanged();
     });
 
     fetch(`${API_BASE_URL}/api/admin-modules`)

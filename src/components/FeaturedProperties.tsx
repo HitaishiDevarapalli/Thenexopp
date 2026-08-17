@@ -56,6 +56,8 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
                 <img 
                   src={prop.image || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80'} 
                   alt={prop.title} 
+                  loading="lazy"
+                  decoding="async"
                   className="property-img" 
                   style={{ cursor: 'pointer' }}
                   onClick={() => onPropertyClick?.(prop.id)}

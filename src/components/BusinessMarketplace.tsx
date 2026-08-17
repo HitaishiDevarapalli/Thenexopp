@@ -1041,7 +1041,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                   <div key={item.id} onClick={() => onPropertyClick?.(item.id)} style={{ backgroundColor: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column' }}>
                     {/* Image Banner */}
                     <div style={{ position: 'relative', height: '180px', backgroundColor: '#0F172A' }}>
-                      <img src={item.image} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={item.image} alt={item.title} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <div style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: badgeBg, color: badgeColor, padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <BadgeIcon />
                         <span>{item.badge}</span>
