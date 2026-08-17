@@ -1958,13 +1958,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     {/* Content */}
                     <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
-                        <h4 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                        <h3 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', textTransform: 'capitalize', lineHeight: 1.3 }}>
                           {prop.title}
-                        </h4>
-                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 500, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span>{prop.location}</span>
-                          <span style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700 }}>
-                            <FaEye style={{ fontSize: '0.78rem' }} /> {prop.viewsCount || 0}
+                        </h3>
+                        <div style={{ fontSize: '12.5px', color: '#64748B', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>{prop.location}</span>
+                          <span style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: 700, fontSize: '11.5px', backgroundColor: '#ECFDF5', padding: '2px 8px', borderRadius: '6px' }}>
+                            <FaEye style={{ fontSize: '0.78rem' }} /> {prop.viewsCount || 0} views
                           </span>
                         </div>
 
@@ -2026,36 +2026,38 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         })()}
 
                         {/* Price & Distance Row */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                          <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'nowrap', gap: '8px' }}>
+                          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>
                             {prop.price}
                           </span>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#16A34A', backgroundColor: '#DCFCE7', padding: '2px 8px', borderRadius: '6px' }}>
+                          <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#16A34A', backgroundColor: '#DCFCE7', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
                             {prop.dist}
                           </span>
                         </div>
                       </div>
 
                       {/* Broker Footer */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '12px', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                           {prop.brokerImg ? (
                             <img
                               src={prop.brokerImg}
                               alt={prop.brokerName}
-                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'contain', border: '2px solid #1E40AF', backgroundColor: '#EFF6FF' }}
+                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #1E40AF', backgroundColor: '#EFF6FF', flexShrink: 0 }}
                             />
                           ) : (
                             <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', border: '2px solid #BAE6FD', flexShrink: 0 }}>
                               <FaUserTie />
                             </div>
                           )}
-                          <div>
-                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748B' }}>Posted by:</div>
-                            <div style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', wordBreak: 'break-word' }}>{prop.brokerName}</div>
-                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
-                              <FaStar /> {prop.brokerRating}
-                            </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', lineHeight: '1.2' }}>Posted by:</div>
+                            <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.brokerName}</div>
+                            {prop.brokerRating && (
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
+                                <FaStar /> {prop.brokerRating}
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -2066,14 +2068,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                           }}
                           style={{
                             backgroundColor: '#FFFFFF',
-                            border: '1px solid #CBD5E1',
-                            padding: '6px 12px',
+                            border: '1.5px solid #CBD5E1',
+                            padding: '8px 14px',
                             borderRadius: '10px',
-                            fontSize: '11px',
+                            fontSize: '12px',
                             fontWeight: 700,
                             color: '#0F172A',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#0F172A';

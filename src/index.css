@@ -6364,81 +6364,62 @@ table {
     font-size: 12.5px !important;
   }
 
-  /* Property grid: exactly 2 columns side-by-side on mobile */
+  /* Property grid: spacious single column on mobile for perfect alignment */
   .responsive-property-grid,
   .franchise-directory-grid,
   .wishlist-grid,
   .business-listings-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 12px !important;
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
   }
 
-  /* Custom styling for compact cards in a 2-column grid */
-  .responsive-property-grid > div,
-  .franchise-directory-grid > div,
-  .wishlist-grid > div {
-    display: flex !important;
-    flex-direction: column !important;
-    border-radius: 12px !important;
-  }
-  
-  /* Shrink image banners on mobile cards */
+  /* Card image banner height on mobile */
   .responsive-property-grid img,
   .wishlist-grid img {
-    height: 130px !important;
+    height: 180px !important;
   }
   .responsive-property-grid div[style*="height: '180px'"],
   .wishlist-grid div[style*="height: '180px'"] {
-    height: 130px !important;
+    height: 180px !important;
   }
 
-  /* Card content adjustment */
+  /* Card content alignment & line height */
+  .responsive-property-grid h3,
   .responsive-property-grid h4,
+  .wishlist-grid h3,
   .wishlist-grid h4 {
-    font-size: 0.92rem !important;
-    line-height: 1.25 !important;
-    height: 2.5rem !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    margin-bottom: 4px !important;
+    font-size: 1.05rem !important;
+    line-height: 1.3 !important;
+    height: auto !important;
+    text-transform: capitalize !important;
+    margin-bottom: 6px !important;
   }
 
-  /* Card specs and distance badges */
+  /* Specs row styling */
   .responsive-property-grid div[style*="gap: '10px'"],
   .wishlist-grid div[style*="gap: '10px'"] {
-    gap: 6px !important;
-    padding: 4px 6px !important;
-    margin-bottom: 8px !important;
-    border-radius: 6px !important;
-  }
-  .responsive-property-grid div[style*="gap: '10px'"] span,
-  .wishlist-grid div[style*="gap: '10px'"] span {
-    font-size: 10px !important;
-  }
-  
-  /* Price & Distance */
-  .responsive-property-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.2rem'"],
-  .wishlist-grid div[style*="justify-content: 'space-between'"] span[style*="font-size: '1.2rem'"] {
-    font-size: 1rem !important;
+    gap: 8px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 12px !important;
+    border-radius: 10px !important;
   }
 
-  /* Broker footer adjustments for narrow card width */
+  /* Broker footer clean horizontal alignment */
   .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"],
   .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 8px !important;
-    padding-top: 8px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding-top: 12px !important;
   }
   .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"] button,
   .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] button {
-    width: 100% !important;
-    text-align: center !important;
-    padding: 6px 0 !important;
-    font-size: 10.5px !important;
+    width: auto !important;
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 }
 
