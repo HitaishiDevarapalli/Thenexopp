@@ -1023,7 +1023,8 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
       role: customer.role || 'User',
       gender: customer.gender,
       district: customer.district || '',
-      profileCompleted: customer.status === 'Active',
+      profileCompleted: customer.profileCompleted === true,
+      isNewCustomer,
     };
 
     const tokens = generateTokens(userPayload);

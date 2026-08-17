@@ -390,8 +390,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   const [profileName, setProfileName] = useState('');
   const [profileGender, setProfileGender] = useState<'Male' | 'Female' | 'Other'>('Male');
   const [profileArea, setProfileArea] = useState('');
-  const [profilePropInterest, setProfilePropInterest] = useState(false);
-  const [profileBizInterest, setProfileBizInterest] = useState(false);
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -526,6 +524,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
       if (!res.ok || !data.success) throw new Error(data.error || 'Incorrect OTP. Please try again.');
 
+      if (data.user?.isNewCustomer || data.user?.profileCompleted === false) {
+        setStep('profile');
+        setSuccess('Mobile verified! Please add your basic details.');
+        return;
+      }
+
       setStep('success');
       setTimeout(() => {
         adoptAuthenticatedUser(data.user, clean);
@@ -552,11 +556,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       return;
     }
 
-    if (!profilePropInterest && !profileBizInterest) {
-      setError('Please select at least one area of interest.');
-      return;
-    }
-
     setLoading(true);
     try {
       const res = await fetch(`${apiBase()}/auth/complete-profile`, {
@@ -567,8 +566,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           name: profileName.trim(),
           gender: profileGender,
           area: profileArea.trim(),
-          propertyInterest: profilePropInterest,
-          businessInterest: profileBizInterest,
+          propertyInterest: true,
+          businessInterest: false,
         }),
       });
       const data = await res.json();
@@ -991,33 +990,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
                   onChange={e => { setProfileArea(e.target.value); setError(''); }}
                   disabled={loading}
                 />
-              </div>
-            </div>
-
-            {/* Area of Interest */}
-            <div>
-              <label style={{ display: 'block', marginBottom: 6, fontSize: '.8rem', fontWeight: 750, color: '#475569', textTransform: 'uppercase' }}>
-                I'm interested in *
-              </label>
-              <div className="nx-interest-row">
-                <div
-                  className={`nx-interest-card${profilePropInterest ? ' active' : ''}`}
-                  onClick={() => { setProfilePropInterest(prev => !prev); setError(''); }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={profilePropInterest ? '#059669' : '#64748b'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
-                  <h3 className="nx-interest-title">Properties</h3>
-                </div>
-                <div
-                  className={`nx-interest-card${profileBizInterest ? ' active' : ''}`}
-                  onClick={() => { setProfileBizInterest(prev => !prev); setError(''); }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={profileBizInterest ? '#059669' : '#64748b'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                  </svg>
-                  <h3 className="nx-interest-title">Businesses</h3>
-                </div>
               </div>
             </div>
 
