@@ -1492,7 +1492,7 @@ app.get('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
-app.post('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
+app.post('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
     const { listingType = 'PROPERTY', listingId, bookingDate, bookingTime, notes, customerName, phone, email } = req.body;
     if (!listingId || !bookingDate || !bookingTime) {
@@ -1518,43 +1518,65 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
     }
 
     let customerId = req.user ? req.user.id : null;
-    let custName = customerName || (req.user ? req.user.fullName : 'Guest Investor');
-    let custPhone = phone || (req.user ? req.user.phone : '');
+    let custName = customerName || (req.user ? (req.user.fullName || req.user.name) : 'Guest Investor');
+    let custPhone = phone || (req.user ? (req.user.phone || req.user.mobile) : '');
     let custEmail = email || (req.user ? req.user.email : '');
 
-    if (!customerId && (custPhone || custEmail)) {
-      try {
-        const existing = await prisma.customer.findFirst({
+    try {
+      let existing = null;
+      if (customerId) {
+        existing = await prisma.customer.findUnique({ where: { id: customerId } }).catch(() => null);
+      }
+      if (!existing && (custPhone || custEmail)) {
+        existing = await prisma.customer.findFirst({
           where: { OR: [custPhone ? { phone: custPhone } : undefined, custEmail ? { email: custEmail } : undefined].filter(Boolean) }
-        });
-        if (existing) {
-          customerId = existing.id;
-          custName = existing.name;
-        } else {
-          const newCust = await prisma.customer.create({
-            data: {
-              name: custName,
-              email: custEmail || `${custPhone || Date.now()}@nexopp.in`,
-              phone: custPhone || '',
-              gender: 'Male',
-              district: 'Hyderabad',
-              role: 'Verified Investor',
-              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(custName)}&background=007A55&color=fff`,
-              lastLoginAt: new Date().toLocaleString(),
-              loginCount: 1,
-              status: 'Active',
-              registeredDate: new Date().toLocaleDateString(),
-            }
-          });
-          customerId = newCust.id;
+        }).catch(() => null);
+      }
+
+      if (existing) {
+        customerId = existing.id;
+        custName = existing.name || custName;
+      } else {
+        const newCust = await prisma.customer.create({
+          data: {
+            id: `cust-${Date.now()}`,
+            name: custName || 'Guest User',
+            email: custEmail || `${custPhone || Date.now()}@nexopp.in`,
+            phone: custPhone || '',
+            gender: 'Male',
+            district: 'Hyderabad',
+            role: 'Verified Investor',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(custName)}&background=007A55&color=fff`,
+            lastLoginAt: new Date().toLocaleString(),
+            loginCount: 1,
+            status: 'Active',
+            registeredDate: new Date().toLocaleDateString(),
+          }
+        }).catch(() => null);
+        if (newCust) customerId = newCust.id;
+      }
+    } catch (_) {}
+
+    if (!customerId) {
+      const fallbackCust = await prisma.customer.create({
+        data: {
+          id: `cust-guest-${Date.now()}`,
+          name: custName || 'Guest Visitor',
+          email: `${Date.now()}@nexopp.in`,
+          phone: custPhone || '9999999999',
+          district: 'Hyderabad',
+          role: 'Verified Investor',
+          status: 'Active',
+          registeredDate: new Date().toLocaleDateString(),
         }
-      } catch (_) {}
+      }).catch(() => null);
+      if (fallbackCust) customerId = fallbackCust.id;
     }
 
     const booking = await prisma.booking.create({
       data: {
-        id: req.body.id || `book-${Date.now()}`,
-        customerId,
+        id: `book-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        customerId: customerId || `cust-temp-${Date.now()}`,
         listingType,
         listingId,
         bookingDate,
@@ -1569,7 +1591,7 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
     // Create shadow Enquiry for compatibility & CRM
     await prisma.enquiry.create({
       data: {
-        id: `enq-bk-${Date.now()}`,
+        id: `enq-bk-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         customerId,
         customerName: custName,
         phone: custPhone,
@@ -1578,32 +1600,18 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res, next) => {
         listingType,
         listingId,
         enquiryType: 'SLOT_BOOKING',
-        message: `Slot requested: ${bookingDate} at ${bookingTime}. Notes: ${notes || ''}`,
+        message: notes || `Visit slot requested for ${bookingDate} at ${bookingTime}`,
         preferredMoveInDate: bookingDate,
         date: bookingDate,
         preferredTime: bookingTime,
         status: 'New'
       }
-    });
-
-    // Log Activity
-    if (customerId && prisma.userActivity && typeof prisma.userActivity.create === 'function') {
-      try {
-        await prisma.userActivity.create({
-          data: {
-            customerId,
-            activityType: 'BOOKING_REQUEST',
-            listingType,
-            listingId,
-            description: `Requested slot booking for "${listingTitle}" on ${bookingDate} at ${bookingTime}`
-          }
-        });
-      } catch (_) {}
-    }
+    }).catch(e => console.warn('Shadow enquiry warning:', e));
 
     return res.status(201).json({ success: true, booking });
   } catch (err) {
-    next(err);
+    logger.error({ error: err.message }, 'Error in POST /api/bookings');
+    return res.status(500).json({ error: 'Failed to create booking', message: err.message });
   }
 });
 
