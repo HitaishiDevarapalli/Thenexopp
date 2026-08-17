@@ -50,21 +50,39 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [, setCurrentCityState] = useState(selectedCity);
 
-  // Lock body & html document scroll when mobile menu is open to prevent background scrolling
+  // 100% Bulletproof body scroll lock for mobile menu drawer
   useEffect(() => {
     if (mobileMenuOpen) {
+      const scrollY = window.scrollY || window.pageYOffset;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.touchAction = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     }
     return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.touchAction = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     };
   }, [mobileMenuOpen]);
 
@@ -905,25 +923,30 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* 4. Mobile Menu Drawer (Portalled to document.body) */}
       {mobileMenuOpen && createPortal(
-        <div style={{
-          position: 'fixed',
-          top: '78px',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100%',
-          height: 'calc(100dvh - 78px)',
-          backgroundColor: '#FFFFFF',
-          zIndex: 99999999,
-          overflowY: 'auto',
-          overscrollBehavior: 'contain',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-y',
-          padding: '20px 18px 40px 18px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          animation: 'fadeIn 0.2s ease',
-          boxSizing: 'border-box',
-        }}>
+        <div
+          onTouchMove={(e) => {
+            e.stopPropagation();
+          }}
+          style={{
+            position: 'fixed',
+            top: '78px',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            height: 'calc(100dvh - 78px)',
+            backgroundColor: '#FFFFFF',
+            zIndex: 99999999,
+            overflowY: 'scroll',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+            padding: '20px 18px 60px 18px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+            animation: 'fadeIn 0.2s ease',
+            boxSizing: 'border-box',
+          }}
+        >
           {/* Mobile User Profile Card */}
           {user && user.profileCompleted === true ? (
             <div
