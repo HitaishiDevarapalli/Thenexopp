@@ -31,7 +31,8 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     if (!user) return;
     setLoading(true);
     try {
-      const userPhone = user.phone || (user as any).mobile || '';
+      const rawPhone = user.phone || (user as any).mobile || '';
+      const userPhone = rawPhone.replace(/\D/g, '');
       const userId = user.id || '';
       const params = new URLSearchParams();
       if (userPhone) params.set('phone', userPhone);
@@ -47,7 +48,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
       }
 
       // 2. Enquiries from PostgreSQL
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?mine=true`, { credentials: 'include' });
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' });
       if (enqRes.ok) {
         const enqs = await enqRes.json();
         if (Array.isArray(enqs)) {
@@ -56,7 +57,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
       }
 
       // 3. Bookings from PostgreSQL
-      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?mine=true`, { credentials: 'include' });
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?${params.toString()}&mine=true`, { credentials: 'include' });
       if (bookRes.ok) {
         const books = await bookRes.json();
         if (Array.isArray(books)) {

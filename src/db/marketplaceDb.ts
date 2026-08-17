@@ -1302,6 +1302,7 @@ export const addEnquiry = (enquiry: any) => {
   fetch(`${API_BASE_URL}/api/enquiries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(normalized)
   }).catch(err => console.error('API Sync Error:', err));
 
@@ -2175,6 +2176,7 @@ export const addBusinessEnquiry = (item: BusinessEnquiry) => {
   fetch(`${API_BASE_URL}/api/enquiries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       id: item.id,
       customerName: item.name,
