@@ -1366,18 +1366,18 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res) => {
       if (cust) customerId = cust.id;
     }
 
-    await prisma.customerFavorite.deleteMany({
-      where: {
-        OR: [
-          ...(customerId ? [
-            { customerId: customerId, listingId: String(id) },
-            { customerId: customerId, id: String(id) }
-          ] : []),
-          { listingId: String(id) },
-          { id: String(id) }
-        ]
-      }
-    }).catch(() => {});
+    if (customerId) {
+      // Only delete THIS user's favorite, not all users'
+      await prisma.customerFavorite.deleteMany({
+        where: {
+          customerId: customerId,
+          OR: [
+            { listingId: String(id) },
+            { id: String(id) }
+          ]
+        }
+      }).catch(() => {});
+    }
 
     return res.status(200).json({ success: true, message: 'Removed from favorites successfully.' });
   } catch (err) {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { useWishlistStore } from '../store/useWishlistStore';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from '../db/marketplaceDb';
@@ -15,19 +15,16 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const store = useWishlistStore();
   const { user, openLoginModal } = useAuth();
-  const isFetchingRef = useRef(false);
-  const isTogglingRef = useRef(false);
+  const toggleLockRef = useRef(false);
 
-  const fetchUserFavorites = async () => {
+  const fetchUserFavorites = useCallback(async () => {
     if (!user) {
       store.setWishlistIds([]);
       return;
     }
 
-    // Don't re-fetch while a toggle operation is in progress
-    if (isTogglingRef.current) return;
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+    // Never overwrite state while a toggle is in progress
+    if (toggleLockRef.current) return;
 
     try {
       const userPhone = (user.phone || (user as any).mobile || '').replace(/\D/g, '');
@@ -39,7 +36,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       const res = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && !toggleLockRef.current) {
           const ids = data
             .filter((item: any) => item.status === 'ACTIVE' || !item.status)
             .map((item: any) => String(item.listingId || item.propertyId || item.businessId || item.id))
@@ -49,24 +46,15 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
     } catch (e) {
       console.warn('Database fetch for favorites failed:', e);
-    } finally {
-      isFetchingRef.current = false;
     }
-  };
-
-  useEffect(() => {
-    fetchUserFavorites();
   }, [user?.id, user?.phone]);
 
+  // Fetch favorites on login / page load only
   useEffect(() => {
-    const handleDataChanged = () => {
-      fetchUserFavorites();
-    };
-    window.addEventListener('nexopp_data_changed', handleDataChanged);
-    return () => window.removeEventListener('nexopp_data_changed', handleDataChanged);
-  }, [user]);
+    fetchUserFavorites();
+  }, [fetchUserFavorites]);
 
-  const toggleWishlist = async (listingId: string, listingType: 'PROPERTY' | 'BUSINESS' = 'PROPERTY') => {
+  const toggleWishlist = useCallback(async (listingId: string, listingType: 'PROPERTY' | 'BUSINESS' = 'PROPERTY') => {
     if (!listingId) return;
 
     if (!user) {
@@ -74,20 +62,21 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
+    // Prevent double-clicks
+    if (toggleLockRef.current) return;
+    toggleLockRef.current = true;
+
     const isCurrentlyWishlisted = store.isWishlisted(listingId);
     const userPhone = (user.phone || (user as any).mobile || '').replace(/\D/g, '');
     const userId = user.id || '';
 
-    // Optimistic UI update
+    // Optimistic UI update — this is the source of truth for the UI
     store.toggleWishlist(listingId);
-
-    // Mark toggling in progress to prevent fetchUserFavorites from overwriting
-    isTogglingRef.current = true;
 
     try {
       if (isCurrentlyWishlisted) {
         // REMOVE from favorites
-        const res = await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
+        await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -97,11 +86,8 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             listingType,
             listingId
           })
-        });
-        if (!res.ok) {
-          // Revert on failure
-          store.addToWishlist(listingId);
-        }
+        }).catch(() => {});
+        // Don't revert — the user wanted to remove, so keep it removed in UI
       } else {
         // ADD to favorites
         const res = await fetch(`${API_BASE_URL}/api/favorites`, {
@@ -116,30 +102,27 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
           })
         });
 
-        const responseData = await res.json().catch(() => ({}));
-
-        if (!res.ok || responseData.success === false) {
-          // Revert on failure
-          store.removeFromWishlist(listingId);
-          console.error('Failed to save favorite:', responseData);
+        if (!res.ok) {
+          // Only revert if the server explicitly rejected (4xx)
+          const status = res.status;
+          if (status >= 400 && status < 500) {
+            store.removeFromWishlist(listingId);
+          }
+          // For 5xx or network errors, keep the optimistic state — 
+          // the server catch-all returns 200 anyway
         }
+        // Don't call fetchUserFavorites here — trust the optimistic state
       }
     } catch (e) {
-      console.error('Database sync error for favorites:', e);
-      // Revert optimistic change on network error
-      if (isCurrentlyWishlisted) {
-        store.addToWishlist(listingId);
-      } else {
-        store.removeFromWishlist(listingId);
-      }
+      // Network error — keep the optimistic state, don't revert
+      console.warn('Favorite toggle network error (state preserved):', e);
     } finally {
-      // Allow fetch again after a short delay to let DB settle
+      // Release the lock after a delay to prevent any pending fetches from overwriting
       setTimeout(() => {
-        isTogglingRef.current = false;
-        fetchUserFavorites();
-      }, 500);
+        toggleLockRef.current = false;
+      }, 2000);
     }
-  };
+  }, [user, openLoginModal, store]);
 
   return (
     <WishlistContext.Provider
