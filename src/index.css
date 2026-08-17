@@ -6364,62 +6364,101 @@ table {
     font-size: 12.5px !important;
   }
 
-  /* Property grid: spacious single column on mobile for perfect alignment */
+  /* Property & Marketplace grid: exactly 2 columns side-by-side on mobile */
   .responsive-property-grid,
   .franchise-directory-grid,
   .wishlist-grid,
   .business-listings-grid {
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 
-  /* Card image banner height on mobile */
+  /* Compact card image banner height on mobile 2-column cards */
   .responsive-property-grid img,
-  .wishlist-grid img {
-    height: 180px !important;
+  .franchise-directory-grid img,
+  .wishlist-grid img,
+  .business-listings-grid img {
+    height: 130px !important;
+    object-fit: cover !important;
   }
   .responsive-property-grid div[style*="height: '180px'"],
-  .wishlist-grid div[style*="height: '180px'"] {
-    height: 180px !important;
+  .wishlist-grid div[style*="height: '180px'"],
+  .business-listings-grid div[style*="height: '180px'"] {
+    height: 130px !important;
   }
 
-  /* Card content alignment & line height */
+  /* Card content padding & title adjustment for 2 columns */
+  .responsive-property-grid div[style*="padding: '16px'"],
+  .franchise-directory-grid div[style*="padding: '16px'"],
+  .wishlist-grid div[style*="padding: '16px'"],
+  .business-listings-grid div[style*="padding: '16px'"] {
+    padding: 10px 8px !important;
+  }
+
   .responsive-property-grid h3,
   .responsive-property-grid h4,
+  .franchise-directory-grid h3,
+  .franchise-directory-grid h4,
   .wishlist-grid h3,
-  .wishlist-grid h4 {
-    font-size: 1.05rem !important;
-    line-height: 1.3 !important;
-    height: auto !important;
+  .wishlist-grid h4,
+  .business-listings-grid h3,
+  .business-listings-grid h4 {
+    font-size: 0.88rem !important;
+    line-height: 1.25 !important;
+    max-height: 2.3rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
     text-transform: capitalize !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 4px !important;
   }
 
-  /* Specs row styling */
+  /* Specs row styling for compact 2-column width */
   .responsive-property-grid div[style*="gap: '10px'"],
-  .wishlist-grid div[style*="gap: '10px'"] {
-    gap: 8px !important;
-    padding: 8px 10px !important;
-    margin-bottom: 12px !important;
-    border-radius: 10px !important;
+  .wishlist-grid div[style*="gap: '10px'"],
+  .business-listings-grid div[style*="gap: '10px'"] {
+    gap: 4px !important;
+    padding: 4px 6px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    font-size: 10px !important;
+  }
+  .responsive-property-grid div[style*="gap: '10px'"] span,
+  .wishlist-grid div[style*="gap: '10px'"] span {
+    font-size: 9.5px !important;
+    white-space: nowrap !important;
   }
 
-  /* Broker footer clean horizontal alignment */
-  .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"],
-  .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] {
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    padding-top: 12px !important;
-  }
-  .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"] button,
-  .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] button {
-    width: auto !important;
-    padding: 8px 14px !important;
-    font-size: 12px !important;
+  /* Price & Distance font scaling */
+  .responsive-property-grid span[style*="font-size: '1.25rem'"],
+  .wishlist-grid span[style*="font-size: '1.25rem'"],
+  .business-listings-grid span[style*="font-size: '1.25rem'"] {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
     white-space: nowrap !important;
-    flex-shrink: 0 !important;
+  }
+
+  /* Broker footer & full-width View Details button for 2-column cards */
+  .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"],
+  .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"],
+  .business-listings-grid div[style*="border-top: '1px solid #F1F5F9'"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    padding-top: 8px !important;
+  }
+
+  .responsive-property-grid div[style*="border-top: '1px solid #F1F5F9'"] button,
+  .wishlist-grid div[style*="border-top: '1px solid #F1F5F9'"] button,
+  .business-listings-grid div[style*="border-top: '1px solid #F1F5F9'"] button {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 6px 0 !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
   }
 }
 
@@ -6481,12 +6520,12 @@ table {
   .franchise-directory-grid,
   .wishlist-grid,
   .business-listings-grid {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
   .responsive-property-grid img,
   .wishlist-grid img {
-    height: 180px !important;
+    height: 120px !important;
   }
 }
 
