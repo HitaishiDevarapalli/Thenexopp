@@ -161,22 +161,41 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
     }
   ]);
 
-  // Timers for floating speech bubble
-  useEffect(() => {
-    const hideTimer = setTimeout(() => setShowBubble(false), 5000);
-    return () => clearTimeout(hideTimer);
+  // Persistent dismissal logic so bubble doesn't keep coming continuously once dismissed
+  const dismissBubblePermanently = useCallback(() => {
+    setShowBubble(false);
+    try {
+      sessionStorage.setItem('nexopp_ai_bubble_dismissed', 'true');
+    } catch (_) {}
   }, []);
 
+  // Show floating speech bubble only ONCE per session unless dismissed
   useEffect(() => {
-    if (isOpen) {
+    try {
+      const isDismissed = sessionStorage.getItem('nexopp_ai_bubble_dismissed') === 'true';
+      if (isDismissed) {
+        setShowBubble(false);
+        return;
+      }
+    } catch (_) {}
+
+    const showTimer = setTimeout(() => {
+      try {
+        if (sessionStorage.getItem('nexopp_ai_bubble_dismissed') !== 'true') {
+          setShowBubble(true);
+        }
+      } catch (_) {}
+    }, 2000);
+
+    const hideTimer = setTimeout(() => {
       setShowBubble(false);
-      return;
-    }
-    const returnTimer = setTimeout(() => {
-      if (!isOpen) setShowBubble(true);
-    }, 30000);
-    return () => clearTimeout(returnTimer);
-  }, [isOpen]);
+    }, 14000);
+
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
+  }, []);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -941,28 +960,31 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       {showBubble && !isOpen && (
         <div 
           className="ai-speech-bubble-wrap"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setIsOpen(true);
+            dismissBubblePermanently();
+          }}
           style={{
             position: 'fixed',
             bottom: '96px',
             right: '24px',
             zIndex: 99998,
             backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
+            border: '1.5px solid #10B981',
             borderRadius: '20px',
-            padding: '14px 18px',
-            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.12)',
+            padding: '12px 14px',
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
             cursor: 'pointer',
             animation: 'fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
-            maxWidth: '280px',
+            gap: '10px',
+            maxWidth: '290px',
             fontFamily: "'Outfit', 'Plus Jakarta Sans', sans-serif"
           }}
         >
-          <FemaleAiAvatar size={38} />
-          <div>
+          <FemaleAiAvatar size={36} />
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#111827', lineHeight: 1.25 }}>
               Need help finding your perfect property?
             </div>
@@ -973,17 +995,35 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              setShowBubble(false);
+              dismissBubblePermanently();
             }}
+            aria-label="Dismiss message"
             style={{
-              background: 'none',
-              border: 'none',
-              color: '#9CA3AF',
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              backgroundColor: '#F3F4F6',
+              border: '1px solid #D1D5DB',
+              color: '#374151',
               cursor: 'pointer',
-              fontSize: '0.85rem',
-              padding: '2px'
+              fontSize: '12px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              marginLeft: '2px',
+              transition: 'all 0.2s',
             }}
-            title="Dismiss"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#EF4444';
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#F3F4F6';
+              e.currentTarget.style.color = '#374151';
+            }}
+            title="Close message"
           >
             ✕
           </button>

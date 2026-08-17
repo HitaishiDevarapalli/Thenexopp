@@ -6423,6 +6423,17 @@ table {
   }
 }
 
+/* AI Speech Bubble Mobile Optimization */
+@media (max-width: 768px) {
+  .ai-speech-bubble-wrap {
+    bottom: 90px !important;
+    right: 16px !important;
+    max-width: calc(100vw - 32px) !important;
+    padding: 10px 12px !important;
+    border-radius: 16px !important;
+  }
+}
+
 /* Small Screen Mobile Breakpoint (<480px) */
 @media (max-width: 480px) {
   .navbar-location-text {
