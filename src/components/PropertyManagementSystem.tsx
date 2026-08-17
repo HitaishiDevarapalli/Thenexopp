@@ -1501,11 +1501,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
       {/* ================= MODULE: SOLD OUT PROPERTIES ================= */}
       {activeModuleTab === 'soldOut' && (
-        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0', borderRadius: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 8px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>Reserved Properties</h2>
-              <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>Manage properties that have been marked as sold out and push them to the main page.</p>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 6px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>
+                🏷️ Sold Out & Reserved Properties
+              </h2>
+              <p style={{ color: '#64748B', margin: 0, fontSize: '0.88rem' }}>
+                Manage properties that have been marked as sold. You can restore them back to active listings or publish them to the Recently Sold showcase section on the main website.
+              </p>
+            </div>
+            <div style={{ padding: '6px 14px', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '20px', color: '#DC2626', fontWeight: 800, fontSize: '0.85rem' }}>
+              {propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold').length} Sold Properties
             </div>
           </div>
 
@@ -1515,69 +1522,114 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   <th style={{ padding: '12px 16px' }}>Property Details</th>
                   <th style={{ padding: '12px 16px' }}>Price & Area</th>
-                  <th style={{ padding: '12px 16px' }}>Status</th>
+                  <th style={{ padding: '12px 16px' }}>Sold Status</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {propertiesDb.filter(p => p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').map(prop => (
+                {propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold').map(prop => (
                   <tr key={prop.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
                     <td style={{ padding: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '60px', height: '45px', backgroundColor: '#E2E8F0', overflow: 'hidden' }}>
-                          <img src={prop.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='45' viewBox='0 0 60 45'%3E%3Crect fill='%23F1F5F9' width='60' height='45'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='9'%3EProperty%3C/text%3E%3C/svg%3E"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ width: '64px', height: '48px', backgroundColor: '#E2E8F0', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                          <img src={prop.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=200&q=80"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div>
                           <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.95rem' }}>{prop.title}</div>
                           <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                            <FaMapMarkerAlt style={{ color: '#CBD5E1' }} /> {prop.area}, {prop.city}
+                            <FaMapMarkerAlt style={{ color: '#94A3B8' }} /> {prop.area || prop.locality || 'Balaji Nagar'}, {prop.city || 'Hyderabad'}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: '16px' }}>
-                      <div style={{ fontWeight: 700, color: '#0F172A' }}>{prop.priceDisplay}</div>
-                      <div style={{ color: '#64748B', fontSize: '0.85rem' }}>{prop.areaSqFt}</div>
+                      <div style={{ fontWeight: 800, color: '#0F172A' }}>{prop.priceDisplay || `₹${prop.price || 100} Lakh`}</div>
+                      <div style={{ color: '#64748B', fontSize: '0.85rem' }}>{prop.areaSqFt || '2500 Sq.ft'}</div>
                     </td>
                     <td style={{ padding: '16px' }}>
-                      <span style={{ padding: '4px 8px', backgroundColor: '#FEE2E2', color: '#EF4444', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
-                        Reserved
+                      <span style={{ padding: '5px 12px', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #FECACA', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        🏷️ Sold Out
                       </span>
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }}>
-                      <button
-                        onClick={() => {
-                          updateProperty(prop.id, { showSoldOnHomepage: !prop.showSoldOnHomepage });
-                          showNotification && showNotification(
-                            prop.showSoldOnHomepage 
-                              ? 'Removed from Main Page' 
-                              : 'Pushed to Main Page',
-                            'success'
-                          );
-                        }}
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: prop.showSoldOnHomepage ? '#F1F5F9' : '#059669',
-                          color: prop.showSoldOnHomepage ? '#475569' : '#FFFFFF',
-                          border: prop.showSoldOnHomepage ? '1px solid #CBD5E1' : 'none',
-                          borderRadius: '6px',
-                          fontWeight: 700,
-                          fontSize: '0.8rem',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        {prop.showSoldOnHomepage ? 'Remove from Main Page' : 'Push to Main Page'}
-                      </button>
+                      <div style={{ display: 'inline-flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {/* Option 1: Restore to Active Listings (Main Page) */}
+                        <button
+                          onClick={() => {
+                            updateProperty(prop.id, {
+                              sold: false,
+                              approvalStatus: 'Published',
+                              listingStatus: 'Published',
+                              status: 'Buy',
+                              recentlySold: false,
+                              badge: prop.verified ? 'Verified' : undefined
+                            });
+                            showNotification?.(`Property "${prop.title}" restored back to Active Marketplace Listings!`, 'success');
+                          }}
+                          title="Restore property back to active listings on main page"
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#FFFFFF',
+                            color: '#2563EB',
+                            border: '1.5px solid #2563EB',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          🔄 Restore to Active
+                        </button>
+
+                        {/* Option 2: Push to Recently Sold Showcase (Below Business Listings) */}
+                        <button
+                          onClick={() => {
+                            const nextState = !prop.recentlySold;
+                            updateProperty(prop.id, {
+                              recentlySold: nextState,
+                              sold: true,
+                              approvalStatus: 'Sold',
+                              listingStatus: 'Sold',
+                              badge: nextState ? 'RECENTLY SOLD' : undefined
+                            });
+                            showNotification?.(
+                              nextState
+                                ? `Property pushed to Recently Sold Showcase below business listings on main page!`
+                                : `Property removed from Recently Sold Showcase on main page.`,
+                              'success'
+                            );
+                          }}
+                          title={prop.recentlySold ? "Currently displayed under Recently Sold on Main Website. Click to remove." : "Push to Recently Sold Showcase below business listings on Main Website"}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: prop.recentlySold ? '#ECFDF5' : '#059669',
+                            color: prop.recentlySold ? '#059669' : '#FFFFFF',
+                            border: prop.recentlySold ? '1.5px solid #6EE7B7' : 'none',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s',
+                            boxShadow: prop.recentlySold ? 'none' : '0 2px 8px rgba(5, 150, 105, 0.25)'
+                          }}
+                        >
+                          {prop.recentlySold ? '✓ Pushed to Recently Sold' : '🚀 Push to Recently Sold'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
-                {propertiesDb.filter(p => p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length === 0 && (
+                {propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold').length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: '32px', textAlign: 'center', color: '#64748B' }}>
-                      No sold out properties found.
+                    <td colSpan={4} style={{ padding: '36px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>
+                      No sold out properties currently. When you mark any property as Sold in "All Properties" or "Edit Property", it will appear here.
                     </td>
                   </tr>
                 )}
