@@ -362,7 +362,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
                       <input
                         type="text" required value={contactName}
                         onChange={e => setContactName(e.target.value)}
-                        placeholder="e.g. Rahul Sharma"
+                        placeholder="Enter your full name"
                         style={inputStyle}
                       />
                     </div>
@@ -379,7 +379,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
                       <input
                         type="tel" required value={contactPhone}
                         onChange={e => setContactPhone(e.target.value)}
-                        placeholder="9876543210" maxLength={10}
+                        placeholder="Enter 10-digit mobile number" maxLength={10}
                         style={{ ...inputStyle, paddingLeft: '70px' }}
                       />
                     </div>

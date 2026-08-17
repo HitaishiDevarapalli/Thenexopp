@@ -442,15 +442,15 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
             <form onSubmit={handleSendEnquiry} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>YOUR FULL NAME *</label>
-                <input type="text" required placeholder="John Doe" value={custName} onChange={e => setCustName(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
+                <input type="text" required placeholder="Enter your full name" value={custName} onChange={e => setCustName(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
               </div>
               <div>
                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>MOBILE NUMBER *</label>
-                <input type="tel" required placeholder="+91 98765 43210" value={mobile} onChange={e => setMobile(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
+                <input type="tel" required placeholder="Enter 10-digit mobile number" value={mobile} onChange={e => setMobile(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
               </div>
               <div>
                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>EMAIL ADDRESS</label>
-                <input type="email" placeholder="john@example.com" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
+                <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
               </div>
               <div>
                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>INVESTMENT BUDGET</label>

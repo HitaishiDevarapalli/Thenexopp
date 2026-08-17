@@ -368,7 +368,7 @@ export const ContactUs: React.FC = () => {
                       type="text" 
                       id="name" 
                       required 
-                      placeholder="e.g. Rahul Sharma"
+                      placeholder="Enter your full name"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.98rem', outline: 'none', boxSizing: 'border-box' }}
@@ -380,7 +380,7 @@ export const ContactUs: React.FC = () => {
                       type="tel" 
                       id="phone" 
                       required 
-                      placeholder="+91 98765 43210"
+                      placeholder="Enter 10-digit mobile number"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.98rem', outline: 'none', boxSizing: 'border-box' }}
@@ -395,7 +395,7 @@ export const ContactUs: React.FC = () => {
                       type="email" 
                       id="email" 
                       required 
-                      placeholder="rahul@example.com"
+                      placeholder="Enter your email address"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.98rem', outline: 'none', boxSizing: 'border-box' }}

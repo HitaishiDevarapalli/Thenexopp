@@ -182,7 +182,7 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
                     <input 
                       type="tel" 
                       className="form-input" 
-                      placeholder="e.g. +91 98765 43210" 
+                      placeholder="Enter 10-digit mobile number" 
                       required 
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
