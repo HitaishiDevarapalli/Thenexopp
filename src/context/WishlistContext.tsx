@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
 import { useWishlistStore } from '../store/useWishlistStore';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from '../db/marketplaceDb';
@@ -15,6 +15,8 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const store = useWishlistStore();
   const { user, openLoginModal } = useAuth();
+  const isFetchingRef = useRef(false);
+  const isTogglingRef = useRef(false);
 
   const fetchUserFavorites = async () => {
     if (!user) {
@@ -22,8 +24,13 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
+    // Don't re-fetch while a toggle operation is in progress
+    if (isTogglingRef.current) return;
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
-      const userPhone = user.phone || (user as any).mobile || '';
+      const userPhone = (user.phone || (user as any).mobile || '').replace(/\D/g, '');
       const userId = user.id || '';
       const params = new URLSearchParams();
       if (userPhone) params.set('phone', userPhone);
@@ -34,13 +41,16 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
         const data = await res.json();
         if (Array.isArray(data)) {
           const ids = data
-            .map((item: any) => item.listingId || item.propertyId || item.businessId || item.id)
+            .filter((item: any) => item.status === 'ACTIVE' || !item.status)
+            .map((item: any) => String(item.listingId || item.propertyId || item.businessId || item.id))
             .filter(Boolean);
           store.setWishlistIds(ids);
         }
       }
     } catch (e) {
       console.warn('Database fetch for favorites failed:', e);
+    } finally {
+      isFetchingRef.current = false;
     }
   };
 
@@ -65,14 +75,18 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     const isCurrentlyWishlisted = store.isWishlisted(listingId);
-    const userPhone = user.phone || (user as any).mobile || '';
+    const userPhone = (user.phone || (user as any).mobile || '').replace(/\D/g, '');
     const userId = user.id || '';
 
-    // Optimistic in-memory update for fast UI response
+    // Optimistic UI update
     store.toggleWishlist(listingId);
+
+    // Mark toggling in progress to prevent fetchUserFavorites from overwriting
+    isTogglingRef.current = true;
 
     try {
       if (isCurrentlyWishlisted) {
+        // REMOVE from favorites
         const res = await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -87,10 +101,9 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
         if (!res.ok) {
           // Revert on failure
           store.addToWishlist(listingId);
-        } else {
-          await fetchUserFavorites();
         }
       } else {
+        // ADD to favorites
         const res = await fetch(`${API_BASE_URL}/api/favorites`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -102,17 +115,29 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             listingId
           })
         });
-        if (!res.ok) {
+
+        const responseData = await res.json().catch(() => ({}));
+
+        if (!res.ok || responseData.success === false) {
           // Revert on failure
           store.removeFromWishlist(listingId);
-        } else {
-          await fetchUserFavorites();
+          console.error('Failed to save favorite:', responseData);
         }
       }
     } catch (e) {
       console.error('Database sync error for favorites:', e);
-      // Re-fetch true database state
-      await fetchUserFavorites();
+      // Revert optimistic change on network error
+      if (isCurrentlyWishlisted) {
+        store.addToWishlist(listingId);
+      } else {
+        store.removeFromWishlist(listingId);
+      }
+    } finally {
+      // Allow fetch again after a short delay to let DB settle
+      setTimeout(() => {
+        isTogglingRef.current = false;
+        fetchUserFavorites();
+      }, 500);
     }
   };
 
