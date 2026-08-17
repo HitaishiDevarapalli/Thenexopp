@@ -4339,6 +4339,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               const combinedMap = new Map();
               (allEnquiries || []).forEach(e => combinedMap.set(e.id, e));
               (enquiriesDb || []).forEach(e => { if (!combinedMap.has(e.id)) combinedMap.set(e.id, e); });
+              (allBookings || []).forEach(b => {
+                const bkId = b.id || `bk-${b.createdAt}`;
+                if (!combinedMap.has(bkId)) {
+                  combinedMap.set(bkId, {
+                    id: bkId,
+                    customerId: b.customerId,
+                    customerName: b.customerName || b.name || 'Guest User',
+                    phone: b.phone || '',
+                    email: b.email || '',
+                    listingTitle: b.listingTitle || b.notes || 'Property Visit Booking',
+                    listingType: b.listingType || 'PROPERTY',
+                    listingId: b.listingId,
+                    enquiryType: 'SLOT_BOOKING',
+                    message: b.notes || `Requested visit slot on ${b.bookingDate} at ${b.bookingTime}`,
+                    date: b.bookingDate,
+                    preferredTime: b.bookingTime,
+                    preferredMoveInDate: b.bookingDate,
+                    status: b.status || 'New',
+                    createdAt: b.createdAt
+                  });
+                }
+              });
               const baseList = Array.from(combinedMap.values());
               
               const isContactUs = (e: any) => e.source === 'Contact Us Page' || e.source === 'Contact Us' || (e.source && e.source.includes('Contact')) || (e.listingTitle && e.listingTitle.includes('Contact Us')) || e.listingId === 'contact-page-inquiry';

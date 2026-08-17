@@ -1277,14 +1277,14 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
 // 3. Enquiries
 app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
-    const fetchAll = req.query.all === 'true' || !req.user || ['SUPER_ADMIN', 'ADMIN'].includes(req.user.role);
+    const onlyMine = req.query.mine === 'true';
     
-    // If authenticated standard customer (and not asking for all in admin mode), filter for customer's enquiries
-    if (!fetchAll && req.user) {
+    if (onlyMine && req.user) {
       const enquiries = await prisma.enquiry.findMany({
         where: {
           OR: [
             { customerId: req.user.id },
+            { userId: req.user.id },
             req.user.email ? { email: req.user.email } : undefined,
             req.user.mobile ? { phone: req.user.mobile } : undefined,
             req.user.phone ? { phone: req.user.phone } : undefined,
@@ -1298,7 +1298,7 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
       return res.json(enquiries || []);
     }
 
-    // Admin, CRM, or public sync fetching all enquiries
+    // Default (Admin Panel, CRM, & Global Sync): Return all enquiries from database
     const enquiries = await prisma.enquiry.findMany({
       orderBy: { createdAt: 'desc' }
     }).catch(err => {
@@ -1502,7 +1502,8 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
 // 4. Slot Bookings
 app.get('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
-    if (req.user && !['SUPER_ADMIN', 'ADMIN'].includes(req.user.role)) {
+    const onlyMine = req.query.mine === 'true';
+    if (onlyMine && req.user) {
       const bookings = await prisma.booking.findMany({
         where: { customerId: req.user.id },
         orderBy: { createdAt: 'desc' }
