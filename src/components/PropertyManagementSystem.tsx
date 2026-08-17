@@ -269,6 +269,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   // Computed Filtered Properties
   const filteredProperties = useMemo(() => {
     return propertiesDb.filter(prop => {
+      const isSold = prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' || prop.status === 'Sold';
+      
+      // In "All Properties" (listings) and "Edit Property" (editProperty), hide sold properties
+      if (activeModuleTab === 'listings' || activeModuleTab === 'editProperty') {
+        if (isSold) return false;
+      }
+      
+      // In "Sold Out Properties" (soldOut), ONLY show sold properties
+      if (activeModuleTab === 'soldOut') {
+        if (!isSold) return false;
+      }
+
       const matchesSearch = 
         prop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         prop.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -284,21 +296,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
       return matchesSearch && matchesStatus && matchesCategory && matchesCity;
     });
-  }, [propertiesDb, searchQuery, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter]);
+  }, [propertiesDb, activeModuleTab, searchQuery, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter]);
 
   // Analytics KPIs
   const stats = useMemo(() => {
     const total = propertiesDb.length;
-    const published = propertiesDb.filter(p => p.approvalStatus === 'Published' || p.listingStatus === 'Published').length;
-    const pending = propertiesDb.filter(p => p.approvalStatus === 'Pending Approval').length;
-    const sold = propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length;
-    const reserved = propertiesDb.filter(p => p.approvalStatus === 'Reserved' || p.listingStatus === 'Reserved').length;
-    const featuredCount = propertiesDb.filter(p => p.featured || p.highlightPropertyCard).length;
-    const totalValueInRupees = propertiesDb.reduce((acc, curr) => {
+    const sold = propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold').length;
+    const active = Math.max(0, total - sold);
+    const published = propertiesDb.filter(p => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus === 'Published' || p.listingStatus === 'Published')).length;
+    const pending = propertiesDb.filter(p => !p.sold && p.approvalStatus === 'Pending Approval').length;
+    const reserved = propertiesDb.filter(p => !p.sold && (p.approvalStatus === 'Reserved' || p.listingStatus === 'Reserved')).length;
+    const featuredCount = propertiesDb.filter(p => !p.sold && (p.featured || p.highlightPropertyCard)).length;
+    const totalValueInRupees = propertiesDb.filter(p => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold').reduce((acc, curr) => {
       let absolutePrice = curr.price || 0;
       const display = (curr.priceDisplay || '').toLowerCase();
-      // If the user typed "75" and selected Lakhs, absolutePrice is 75, so we need to multiply.
-      // If the absolutePrice is already very large (e.g. > 10000), it's likely they typed the full amount manually.
       if (absolutePrice > 0 && absolutePrice < 100000) {
         if (display.includes('cr') || display.includes('crore')) {
           absolutePrice *= 10000000;
@@ -311,8 +322,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       return acc + absolutePrice;
     }, 0);
     const totalValueInCr = totalValueInRupees / 10000000;
-    const avgPriceInCr = total > 0 ? (totalValueInCr / total).toFixed(2) : '0.00';
-    const sponsoredCount = propertiesDb.filter(p => p.premium || p.luxury).length;
+    const avgPriceInCr = active > 0 ? (totalValueInCr / active).toFixed(2) : '0.00';
+    const sponsoredCount = propertiesDb.filter(p => !p.sold && (p.premium || p.luxury)).length;
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const recentlySold30Days = propertiesDb.filter(p => {
@@ -323,7 +334,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     }).length;
 
     return { 
-      total, totalProperties: total, published, activeListings: published, 
+      total: active, totalProperties: active, published, activeListings: published, 
       pending, pendingCount: pending, sold, totalSold: sold, 
       recentlySold30Days, reserved, featuredCount, sponsoredCount, 
       totalValue: totalValueInCr.toFixed(2), avgPrice: avgPriceInCr
@@ -990,9 +1001,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 listingStatus: val as any,
                                 sold: isSold,
                                 soldDate: isSold ? new Date().toISOString().slice(0, 10) : undefined,
-                                recentlySold: false
+                                recentlySold: isSold,
+                                badge: isSold ? 'RECENTLY SOLD' : undefined
                               });
-                              showNotification?.(`Property status changed to ${val}`, "success");
+                              showNotification?.(isSold ? `Property marked as Sold, moved to Sold list, and pushed to Recently Sold section on main page.` : `Property status changed to ${val}`, "success");
                             }}
                             style={{
                               padding: '4px 8px',

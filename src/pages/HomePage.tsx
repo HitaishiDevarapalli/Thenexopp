@@ -180,31 +180,32 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   ];
   const popularCategories = rawPopularCategories.filter(c => !c.mod || isModuleActive(c.mod));
 
-  const activeProperties = React.useMemo(() => propertiesDb.filter(p => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'), [propertiesDb]);
+  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb]);
   const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb]);
-  const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false), [businessDb]);
+  const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb]);
 
-  // Recently Sold properties (Latest 8 ordered by soldDate descending)
-  const recentlySoldListings = activeProperties
-    .filter((p) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold')
-    .sort((a, b) => {
-      const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
-      const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
-      return dateB - dateA;
-    })
-    .slice(0, 8)
-    .map((p) => {
-      return {
-        id: p.id,
-        title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
-        price: p.priceDisplay || (`₹${p.price || 1} L`),
-        image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
-        location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
-        bhk: `${p.bedrooms || 3} BHK`,
-        area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
-        soldDate: p.soldDate
-      };
-    });
+  // Recently Sold properties (ordered by soldDate descending)
+  const recentlySoldListings = React.useMemo(() => {
+    return propertiesDb
+      .filter((p: any) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold' || p.recentlySold || p.badge === 'RECENTLY SOLD')
+      .sort((a, b) => {
+        const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
+        const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
+        return dateB - dateA;
+      })
+      .map((p) => {
+        return {
+          id: p.id,
+          title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
+          price: p.priceDisplay || (`₹${p.price || 1} L`),
+          image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
+          location: `${p.area ? p.area + ', ' : ''}${p.city || 'Hyderabad'}`,
+          bhk: `${p.bedrooms || 3} BHK`,
+          area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
+          soldDate: p.soldDate
+        };
+      });
+  }, [propertiesDb]);
 
   // Featured Listings from marketplaceDb
   // Get the target region for distance calculations
@@ -1283,6 +1284,109 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             >
               View More Business Listings →
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ================= RECENTLY SOLD PROPERTIES SECTION (BELOW ALL BUSINESSES) ================= */}
+      {recentlySoldListings.length > 0 && (
+        <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px 48px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'inline-block', marginBottom: '4px' }}>
+                🏷️ SUCCESSFULLY CLOSED DEALS
+              </span>
+              <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
+                Recently Sold Properties
+              </h2>
+            </div>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEF2F2', padding: '6px 16px', borderRadius: '20px', border: '1px solid #FECACA' }}>
+              {recentlySoldListings.length} Deals Closed
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            {recentlySoldListings.map(prop => (
+              <div 
+                key={prop.id}
+                onClick={() => onPropertyClick ? onPropertyClick(prop.id) : onNavigate('propertyDetails', prop.id)}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '16px',
+                  border: '1.5px solid #FECACA',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  position: 'relative',
+                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.06)',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(220, 38, 38, 0.12)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(220, 38, 38, 0.06)';
+                }}
+              >
+                {/* Image Container with Sold Badge */}
+                <div style={{ position: 'relative', height: '180px', width: '100%', overflow: 'hidden' }}>
+                  <img 
+                    src={prop.image || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80'} 
+                    alt={prop.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.95)' }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    backgroundColor: '#DC2626',
+                    color: '#FFFFFF',
+                    padding: '4px 12px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 900,
+                    letterSpacing: '0.8px',
+                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.4)'
+                  }}>
+                    RECENTLY SOLD
+                  </div>
+                  {prop.price && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      right: '12px',
+                      backgroundColor: 'rgba(15, 23, 42, 0.85)',
+                      color: '#FFFFFF',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: 800
+                    }}>
+                      {prop.price}
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Content */}
+                <div style={{ padding: '16px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {prop.title}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#64748B', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    📍 {prop.location || 'Hyderabad'}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '10px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#16A34A' }}>
+                      ✓ Deal Closed
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#DC2626' }}>
+                      View Details →
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -543,7 +543,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const cityName = selectedCityObj ? selectedCityObj.name.toLowerCase().trim() : '';
 
     const activeListings = propertiesDb.filter(
-      (p) => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'
+      (p) => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'
     );
 
     const areaSet = new Set<string>();
@@ -572,7 +572,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const areaName = selectedAreaObj ? selectedAreaObj.name.toLowerCase().trim() : '';
 
     const activeListings = propertiesDb.filter(
-      (p) => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'
+      (p) => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'
     );
 
     const locSet = new Set<string>();
@@ -670,7 +670,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   // Rich screenshot-matching properties list
   const displayProperties = useMemo(() => {
     const activeListings = propertiesDb.filter(
-      (p) => (p.approvalStatus || 'Published') === 'Published' || p.approvalStatus === 'Sold'
+      (p) => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'
     );
     const baseList = activeListings.map((p) => {
       const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));

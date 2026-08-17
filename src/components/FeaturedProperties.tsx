@@ -25,7 +25,7 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
   tick;
 
   const filteredProperties = propertiesDb.filter(prop => {
-    if (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' || prop.status === 'Sold') {
+    if (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' || prop.status === 'Sold' || prop.recentlySold || prop.badge === 'RECENTLY SOLD') {
       return false;
     }
     if (location && location.lat && location.lng) {
