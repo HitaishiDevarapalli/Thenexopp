@@ -5503,34 +5503,46 @@ body.modal-open {
 @media (max-width: 767px) {
   /* Mobile Top Navbar Responsiveness & Overflow Prevention */
   .navbar-inner-container {
-    padding: 0 10px !important;
+    padding: 0 8px !important;
     gap: 4px !important;
   }
   .navbar-left-group {
-    margin-right: 4px !important;
-    gap: 8px !important;
+    margin-right: 2px !important;
+    gap: 6px !important;
   }
   .navbar-right-group {
     margin-left: auto !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
   .header-brand-logo svg {
-    height: 34px !important;
+    height: 30px !important;
   }
   .location-pill-btn {
-    padding: 0 8px !important;
-    height: 36px !important;
+    padding: 0 6px !important;
+    height: 34px !important;
     gap: 4px !important;
   }
   .location-pill-text {
-    max-width: 80px !important;
-    font-size: 12px !important;
+    max-width: 65px !important;
+    font-size: 11px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
   .mobile-signin-btn {
-    height: 36px !important;
-    padding: 0 10px !important;
-    font-size: 12px !important;
+    height: 34px !important;
+    padding: 0 6px 0 3px !important;
+    font-size: 11.5px !important;
     flex-shrink: 0 !important;
+    max-width: 85px !important;
+    overflow: hidden !important;
+  }
+  .mobile-profile-name {
+    max-width: 42px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
   }
 
   /* Location Selector fixed overlay on mobile to prevent right overflow */
@@ -5569,6 +5581,15 @@ body.modal-open {
   .showcase-video-box {
     height: 240px !important;
     min-height: 220px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .location-pill-text {
+    max-width: 48px !important;
+  }
+  .mobile-profile-name {
+    max-width: 32px !important;
   }
 }
 

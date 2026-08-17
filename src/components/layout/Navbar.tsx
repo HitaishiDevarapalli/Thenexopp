@@ -859,7 +859,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ maxWidth: '75px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span className="mobile-profile-name" style={{ maxWidth: '45px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {user.name.split(' ')[0]}
                 </span>
               </button>
