@@ -369,18 +369,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchAllEnquiriesAndBookings = async () => {
     try {
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?all=true`, { credentials: 'include' });
-      if (enqRes.ok) {
-        const data = await enqRes.json();
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?all=true`, { credentials: 'include' }).catch(() => null);
+      if (enqRes && enqRes.ok) {
+        const data = await enqRes.json().catch(() => null);
         if (Array.isArray(data)) {
           setAllEnquiries(data);
         }
+      } else {
+        const fallbackEnqRes = await fetch('/api/enquiries?all=true').catch(() => null);
+        if (fallbackEnqRes && fallbackEnqRes.ok) {
+          const data = await fallbackEnqRes.json().catch(() => null);
+          if (Array.isArray(data)) setAllEnquiries(data);
+        }
       }
-      const bookRes = await fetch(`${API_BASE_URL}/api/bookings`, { credentials: 'include' });
-      if (bookRes.ok) {
-        const data = await bookRes.json();
+
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?all=true`, { credentials: 'include' }).catch(() => null);
+      if (bookRes && bookRes.ok) {
+        const data = await bookRes.json().catch(() => null);
         if (Array.isArray(data)) {
           setAllBookings(data);
+        }
+      } else {
+        const fallbackBookRes = await fetch('/api/bookings?all=true').catch(() => null);
+        if (fallbackBookRes && fallbackBookRes.ok) {
+          const data = await fallbackBookRes.json().catch(() => null);
+          if (Array.isArray(data)) setAllBookings(data);
         }
       }
     } catch (e) {
@@ -4363,10 +4376,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               });
               const baseList = Array.from(combinedMap.values());
               
-              const isContactUs = (e: any) => e.source === 'Contact Us Page' || e.source === 'Contact Us' || (e.source && e.source.includes('Contact')) || (e.listingTitle && e.listingTitle.includes('Contact Us')) || e.listingId === 'contact-page-inquiry';
-              const isSlotBooking = (e: any) => e.enquiryType === 'SLOT_BOOKING' || !!e.preferredTime || !!e.preferredMoveInDate || e.mode === 'book' || (e.message && e.message.toLowerCase().includes('visit')) || (e.interest && e.interest.includes('Requested Visit'));
-              const isProperty = (e: any) => e.listingType === 'PROPERTY' || (e.source && (e.source.includes('Property') || e.source.includes('Enquiry')));
-              const isBusiness = (e: any) => e.listingType === 'BUSINESS' || (e.source && e.source.includes('Business'));
+              const isContactUs = (e: any) => 
+                e.source === 'Contact Us Page' || 
+                e.source === 'Contact Us' || 
+                (e.source && e.source.toLowerCase().includes('contact')) || 
+                (e.listingTitle && e.listingTitle.toLowerCase().includes('contact')) || 
+                e.listingId === 'contact-page-inquiry' ||
+                e.enquiryType === 'CONTACT_US' ||
+                e.enquiryType === 'GENERAL_ENQUIRY';
+
+              const isSlotBooking = (e: any) => 
+                e.enquiryType === 'SLOT_BOOKING' || 
+                !!e.preferredTime || 
+                !!e.preferredMoveInDate || 
+                e.mode === 'book' || 
+                (e.message && (e.message.toLowerCase().includes('visit') || e.message.toLowerCase().includes('slot'))) || 
+                (e.interest && e.interest.toLowerCase().includes('visit'));
+
+              const isBusiness = (e: any) => 
+                e.listingType === 'BUSINESS' || 
+                e.listingType === 'business' || 
+                (e.source && e.source.toLowerCase().includes('business')) || 
+                (e.listingTitle && e.listingTitle.toLowerCase().includes('business'));
+
+              const isProperty = (e: any) => 
+                e.listingType === 'PROPERTY' || 
+                e.listingType === 'property' || 
+                (e.source && (e.source.toLowerCase().includes('property') || e.source.toLowerCase().includes('enquiry'))) || 
+                (!isContactUs(e) && !isBusiness(e));
 
               // Filter inquiries based on search, category, and status
               const filteredEnquiries = baseList.filter(enq => {
