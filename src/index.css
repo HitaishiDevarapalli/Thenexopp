@@ -6462,7 +6462,18 @@ table {
   }
 }
 
-/* AI Speech Bubble Mobile Optimization */
+/* Sell Form Card Mobile Padding */
+.sell-form-card {
+  padding: 40px !important;
+}
+@media (max-width: 768px) {
+  .sell-form-card {
+    padding: 20px 14px !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* Mobile Header & Profile Button Responsiveness (<768px) */
 @media (max-width: 768px) {
   .ai-speech-bubble-wrap {
     bottom: 90px !important;
@@ -6471,50 +6482,37 @@ table {
     padding: 10px 12px !important;
     border-radius: 16px !important;
   }
-}
 
-/* Small Screen Mobile Breakpoint (<480px) */
-@media (max-width: 480px) {
   .navbar-location-text {
-    max-width: 60px !important;
-    font-size: 11px !important;
+    max-width: 65px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   .navbar-location-btn {
     padding: 0 6px !important;
-    height: 34px !important;
+    height: 36px !important;
     gap: 4px !important;
   }
 
-  .navbar-wishlist-btn,
-  .navbar-post-btn {
-    width: 34px !important;
-    height: 34px !important;
-  }
-
-  .navbar-signin-btn {
-    width: 34px !important;
-    height: 34px !important;
-    padding: 0 !important;
-    border-radius: 50% !important;
-    justify-content: center !important;
-  }
-  .navbar-signin-text {
-    display: none !important;
-  }
-
+  .navbar-signin-btn,
   .navbar-user-btn {
     padding: 0 !important;
-    height: 34px !important;
-    width: 34px !important;
+    height: 36px !important;
+    width: 36px !important;
+    min-width: 36px !important;
     border-radius: 50% !important;
     justify-content: center !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
+    flex-shrink: 0 !important;
   }
+
+  .navbar-signin-text,
   .navbar-user-name,
   .navbar-user-chevron {
     display: none !important;
   }
+}
   
   .responsive-property-grid,
   .franchise-directory-grid,

@@ -216,10 +216,10 @@ export const SellBusinessPage: React.FC<SellBusinessPageProps> = ({ onBack }) =>
 
         {/* Contact Form */}
         <div
+          className="sell-form-card"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '24px',
-            padding: '36px',
             boxShadow: '0 12px 40px rgba(0,0,0,0.06)',
             border: '1px solid #E2E8F0',
           }}
@@ -453,7 +453,7 @@ export const SellBusinessPage: React.FC<SellBusinessPageProps> = ({ onBack }) =>
                 >
                   <FaCommentDots style={{ color: '#1E40AF' }} /> Preferred Contact Method
                 </label>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {contactMethods.map((method) => {
                     const isSelected = formData.preferredContactMethod === method;
                     return (
@@ -464,15 +464,19 @@ export const SellBusinessPage: React.FC<SellBusinessPageProps> = ({ onBack }) =>
                           handleChange('preferredContactMethod', method);
                         }}
                         style={{
-                          padding: '10px 20px',
+                          flex: '1 1 85px',
+                          minWidth: '85px',
+                          padding: '10px 8px',
                           borderRadius: '10px',
                           border: isSelected ? '2px solid #1E40AF' : '1px solid #CBD5E1',
                           backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
                           color: isSelected ? '#1E40AF' : '#475569',
-                          fontSize: '13px',
+                          fontSize: '12.5px',
                           fontWeight: 700,
                           cursor: 'pointer',
                           transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         {method}

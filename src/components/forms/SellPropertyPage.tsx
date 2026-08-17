@@ -156,10 +156,10 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
 
         {/* Contact Information Form Card (POSITIONED AT TOP) */}
         <div
+          className="sell-form-card"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '24px',
-            padding: '40px',
             boxShadow: '0 12px 36px rgba(0, 0, 0, 0.05)',
             border: '1px solid #E2E8F0',
           }}
@@ -318,7 +318,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   </label>
                   <input
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder="Enter your email address"
                     value={formData.email}
                     onChange={(e) => handleChange('email', e.target.value)}
                     style={{
@@ -335,7 +335,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   />
                 </div>
 
-                {/* City */}
+                {/* City Selection */}
                 <div>
                   <label
                     style={{
@@ -361,16 +361,15 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                       fontSize: '14px',
                       fontWeight: 500,
                       outline: 'none',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
                       backgroundColor: '#FFFFFF',
+                      boxSizing: 'border-box',
                       transition: 'border 0.2s',
                     }}
                   >
                     <option value="">Select City</option>
-                    {activeCities.map((city) => (
-                      <option key={city.id} value={city.name}>
-                        {city.name}
+                    {activeCities.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
                       </option>
                     ))}
                   </select>
@@ -381,7 +380,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   )}
                 </div>
 
-                {/* Property Type */}
+                {/* Property Type Selection */}
                 <div>
                   <label
                     style={{
@@ -407,16 +406,15 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                       fontSize: '14px',
                       fontWeight: 500,
                       outline: 'none',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
                       backgroundColor: '#FFFFFF',
+                      boxSizing: 'border-box',
                       transition: 'border 0.2s',
                     }}
                   >
                     <option value="">Select Property Type</option>
-                    {activePropertyTypes.map((type) => (
-                      <option key={type.id} value={type.name}>
-                        {type.name}
+                    {activePropertyTypes.map((pt) => (
+                      <option key={pt.id} value={pt.title}>
+                        {pt.title}
                       </option>
                     ))}
                   </select>
@@ -440,7 +438,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   >
                     Preferred Contact Method
                   </label>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {contactMethods.map((method) => {
                       const isSelected = formData.preferredContactMethod === method;
                       return (
@@ -451,16 +449,19 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                             handleChange('preferredContactMethod', method);
                           }}
                           style={{
-                            flex: 1,
-                            padding: '12px 8px',
+                            flex: '1 1 85px',
+                            minWidth: '85px',
+                            padding: '10px 8px',
                             borderRadius: '12px',
                             border: isSelected ? '2px solid #1E40AF' : '1px solid #CBD5E1',
                             backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
                             color: isSelected ? '#1E40AF' : '#475569',
-                            fontSize: '13px',
+                            fontSize: '12.5px',
                             fontWeight: 700,
                             cursor: 'pointer',
                             transition: 'all 0.2s',
+                            boxSizing: 'border-box',
+                            whiteSpace: 'nowrap',
                           }}
                         >
                           {method}
