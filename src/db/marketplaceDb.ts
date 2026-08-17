@@ -446,10 +446,16 @@ export interface CustomerEnquiry {
   priority: 'High' | 'Medium' | 'Low';
   source: string;
   date: string;
+  listingType?: string;
+  listingId?: string;
+  enquiryType?: 'BUY' | 'RENT' | 'LEASE' | 'SLOT_BOOKING' | 'GENERAL_ENQUIRY' | string;
+  preferredTime?: string;
+  preferredMoveInDate?: string;
   name?: string;
   interest?: string;
   message?: string;
   notes?: string;
+  createdAt?: string;
 }
 
 export interface TeamMember {
@@ -1237,8 +1243,57 @@ export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
   }).catch(err => console.error('API Sync Error:', err));
 };
 
+export const addEnquiry = (enquiry: any) => {
+  const normalized: CustomerEnquiry = {
+    id: enquiry.id || `ENQ-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    customerName: enquiry.customerName || enquiry.name || 'Guest User',
+    phone: enquiry.phone || enquiry.mobile || '',
+    email: enquiry.email || '',
+    listingTitle: enquiry.listingTitle || enquiry.title || 'General Enquiry',
+    brokerName: enquiry.brokerName || 'NEXOPP Advisor',
+    status: (enquiry.status as any) || 'New',
+    priority: (enquiry.priority as any) || 'High',
+    source: enquiry.source || 'Website',
+    listingType: enquiry.listingType || 'PROPERTY',
+    enquiryType: (enquiry.enquiryType as any) || 'BUY',
+    date: enquiry.date || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+    name: enquiry.customerName || enquiry.name || 'Guest User',
+    interest: enquiry.interest || enquiry.message || '',
+    message: enquiry.message || ''
+  };
+
+  enquiriesDb = [normalized, ...enquiriesDb.filter(e => e.id !== normalized.id)];
+  saveToStorage('nexopp_enquiries_db', enquiriesDb);
+
+  if (normalized.listingType === 'BUSINESS' || normalized.source?.toLowerCase().includes('business')) {
+    businessEnquiriesDb = [{
+      id: normalized.id,
+      businessId: normalized.id,
+      businessName: normalized.listingTitle,
+      name: normalized.customerName,
+      mobile: normalized.phone,
+      email: normalized.email,
+      message: normalized.message || '',
+      status: 'New',
+      notes: normalized.interest || '',
+      createdAt: new Date().toISOString()
+    }, ...businessEnquiriesDb.filter(b => b.id !== normalized.id)];
+  }
+
+  notifyDataChanged();
+
+  fetch(`${API_BASE_URL}/api/enquiries`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(normalized)
+  }).catch(err => console.error('API Sync Error:', err));
+
+  return normalized;
+};
+
 export const deleteEnquiry = (id: string) => {
   enquiriesDb = enquiriesDb.filter(e => e.id !== id);
+  saveToStorage('nexopp_enquiries_db', enquiriesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
     method: 'DELETE'
@@ -1247,6 +1302,7 @@ export const deleteEnquiry = (id: string) => {
 
 export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'Follow-up' | 'Closed') => {
   enquiriesDb = enquiriesDb.map(e => e.id === id ? { ...e, status } : e);
+  saveToStorage('nexopp_enquiries_db', enquiriesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
     method: 'PUT',

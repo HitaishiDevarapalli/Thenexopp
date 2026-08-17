@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addEnquiry, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { 
   FaArrowLeft, FaHeart, FaRegHeart, FaShareAlt, 
@@ -197,7 +197,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         : `Offered Price: ${contactPrice}`
     };
 
-    enquiriesDb.push(newEnquiry);
+    addEnquiry(newEnquiry);
 
     if (isBiz) {
       addBusinessEnquiry({
@@ -213,8 +213,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         createdAt: new Date().toISOString()
       });
     }
-
-    notifyDataChanged();
 
     // Async backend sync
     try {

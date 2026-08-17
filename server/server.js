@@ -1274,6 +1274,28 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
   }
 });
 
+const ENQUIRIES_BACKUP_FILE = path.join(__dirname, 'data', 'enquiries.json');
+
+const getBackupEnquiries = () => {
+  try {
+    if (fs.existsSync(ENQUIRIES_BACKUP_FILE)) {
+      const content = fs.readFileSync(ENQUIRIES_BACKUP_FILE, 'utf-8');
+      return JSON.parse(content || '[]');
+    }
+  } catch (e) {}
+  return [];
+};
+
+const saveBackupEnquiry = (enquiry) => {
+  try {
+    const list = getBackupEnquiries();
+    const filtered = list.filter(e => e.id !== enquiry.id);
+    const updated = [enquiry, ...filtered];
+    fs.mkdirSync(path.dirname(ENQUIRIES_BACKUP_FILE), { recursive: true });
+    fs.writeFileSync(ENQUIRIES_BACKUP_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {}
+};
+
 // 3. Enquiries
 app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -1298,17 +1320,23 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
       return res.json(enquiries || []);
     }
 
-    // Default (Admin Panel, CRM, & Global Sync): Return all enquiries from database
-    const enquiries = await prisma.enquiry.findMany({
+    // Default (Admin Panel, CRM, & Global Sync): Return all enquiries from database and disk backup
+    const dbEnquiries = await prisma.enquiry.findMany({
       orderBy: { createdAt: 'desc' }
     }).catch(err => {
       logger.warn({ error: err.message }, 'Safe fallback for all enquiries');
       return [];
     });
-    return res.json(enquiries || []);
+
+    const backupEnquiries = getBackupEnquiries();
+    const mergedMap = new Map();
+    (dbEnquiries || []).forEach(e => mergedMap.set(e.id, e));
+    (backupEnquiries || []).forEach(e => { if (!mergedMap.has(e.id)) mergedMap.set(e.id, e); });
+    const enquiries = Array.from(mergedMap.values()).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    return res.json(enquiries);
   } catch (err) {
     logger.error({ error: err.message }, 'Error in /api/enquiries');
-    return res.json([]);
+    return res.json(getBackupEnquiries());
   }
 });
 
@@ -1352,7 +1380,7 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
         status: 'New'
       }
     }).catch(async (dbErr) => {
-      logger.warn({ error: dbErr.message }, 'Primary enquiry insert note, creating safe in-memory fallback');
+      logger.warn({ error: dbErr.message }, 'Primary enquiry insert note, creating safe fallback');
       return {
         id: `enq-${Date.now()}`,
         customerName,
@@ -1369,6 +1397,8 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
         createdAt: new Date().toISOString()
       };
     });
+
+    saveBackupEnquiry(enquiryRecord);
 
     return res.status(201).json({ success: true, enquiry: enquiryRecord });
   } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock, FaCheckCircle, FaBuilding, FaShieldAlt, FaBriefcase, FaCoins, FaWhatsapp } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL, enquiriesDb, contactDetailsDb, notifyDataChanged } from '../db/marketplaceDb';
+import { API_BASE_URL, enquiriesDb, addEnquiry, contactDetailsDb, notifyDataChanged } from '../db/marketplaceDb';
 
 export const ContactUs: React.FC = () => {
   const { user, openLoginModal } = useAuth();
@@ -52,66 +52,9 @@ export const ContactUs: React.FC = () => {
     }
 
     setSubmitting(true);
-    const newEnquiry = {
-      customerName: formData.name.trim(),
-      phone: formData.phone.trim(),
-      email: formData.email.trim(),
-      listingTitle: `Contact Us: ${formData.category}`,
-      listingType: 'GENERAL',
-      listingId: 'contact-page-inquiry',
-      enquiryType: 'GENERAL_ENQUIRY',
-      message: formData.message.trim() ? `[Category: ${formData.category}] ${formData.message.trim()}` : `General consultation requested for ${formData.category}`,
-      source: 'Contact Us Page',
-      priority: 'High',
-      brokerName: 'Senior Portfolio Director',
-      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    };
-
+    
     try {
-      const res = await fetch(`${API_BASE_URL}/api/enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(newEnquiry)
-      });
-
-      if (res.ok) {
-        const savedData = await res.json().catch(() => null);
-        enquiriesDb.unshift({
-          id: savedData?.id || savedData?.enquiry?.id || `ENQ-CU-${Date.now()}`,
-          customerName: formData.name.trim(),
-          phone: formData.phone.trim(),
-          email: formData.email.trim(),
-          listingTitle: `Contact Us: ${formData.category}`,
-          brokerName: 'Senior Portfolio Director',
-          status: 'New' as const,
-          priority: 'High' as const,
-          source: 'Contact Us Page',
-          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          name: formData.name.trim(),
-          interest: `Category: ${formData.category}`,
-          message: formData.message.trim()
-        });
-      } else {
-        enquiriesDb.unshift({
-          id: `ENQ-CU-${Date.now()}`,
-          customerName: formData.name.trim(),
-          phone: formData.phone.trim(),
-          email: formData.email.trim(),
-          listingTitle: `Contact Us: ${formData.category}`,
-          brokerName: 'Senior Portfolio Director',
-          status: 'New' as const,
-          priority: 'High' as const,
-          source: 'Contact Us Page',
-          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          name: formData.name.trim(),
-          interest: `Category: ${formData.category}`,
-          message: formData.message.trim()
-        });
-      }
-    } catch (err) {
-      console.warn('Backend enquiry save notice:', err);
-      enquiriesDb.unshift({
+      addEnquiry({
         id: `ENQ-CU-${Date.now()}`,
         customerName: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -121,13 +64,16 @@ export const ContactUs: React.FC = () => {
         status: 'New' as const,
         priority: 'High' as const,
         source: 'Contact Us Page',
+        listingType: 'PROPERTY',
+        enquiryType: 'GENERAL_ENQUIRY',
         date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         name: formData.name.trim(),
         interest: `Category: ${formData.category}`,
         message: formData.message.trim()
       });
+    } catch (err) {
+      console.warn('Backend enquiry save notice:', err);
     } finally {
-      notifyDataChanged();
       setSubmitting(false);
       setSubmitted(true);
       setTimeout(() => {

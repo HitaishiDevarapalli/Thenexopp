@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addBusinessEnquiry, notifyDataChanged, API_BASE_URL } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addEnquiry, addBusinessEnquiry, notifyDataChanged, API_BASE_URL } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaEnvelope, FaUser, FaCheckCircle, FaChevronLeft, FaChevronRight, FaHome, FaClock, FaBed, FaBath, FaRulerCombined, FaTag, FaUserTie } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -136,7 +136,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
       console.warn('Database save warning, updating local cache:', err);
     } finally {
       // Fallback & sync to local enquiriesDb
-      const newEnquiry = {
+      addEnquiry({
         id: `ENQ-${Date.now()}`,
         customerName: contactName,
         phone: contactPhone,
@@ -154,8 +154,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
           ? `Requested Visit: ${bookingDate} at ${bookingTime}`
           : `Offered Price: ${contactPrice}`,
         message: contactMessage
-      };
-      enquiriesDb.push(newEnquiry);
+      });
 
       if (isBusiness) {
         addBusinessEnquiry({
@@ -171,8 +170,6 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
           createdAt: new Date().toISOString()
         });
       }
-
-      notifyDataChanged();
 
       setSubmitting(false);
       setSubmitted(true);
