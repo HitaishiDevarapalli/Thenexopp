@@ -17,7 +17,11 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   const { user, openLoginModal } = useAuth();
 
   const fetchUserFavorites = async () => {
-    if (!user) return;
+    if (!user) {
+      store.setWishlistIds([]);
+      return;
+    }
+
     try {
       const userPhone = user.phone || (user as any).mobile || '';
       const userId = user.id || '';
@@ -28,15 +32,15 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       const res = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          const serverIds = data.map((item: any) => item.listingId || item.propertyId || item.businessId || item.id).filter(Boolean);
-          // Union server IDs with existing local IDs
-          const combined = Array.from(new Set([...store.wishlistIds, ...serverIds]));
-          store.setWishlistIds(combined);
+        if (Array.isArray(data)) {
+          const ids = data
+            .map((item: any) => item.listingId || item.propertyId || item.businessId || item.id)
+            .filter(Boolean);
+          store.setWishlistIds(ids);
         }
       }
     } catch (e) {
-      console.warn('Failed to fetch user favorites:', e);
+      console.warn('Database fetch for favorites failed:', e);
     }
   };
 
@@ -61,15 +65,15 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
 
     const isCurrentlyWishlisted = store.isWishlisted(listingId);
-    // Instant optimistic update saved to local storage
-    store.toggleWishlist(listingId);
-
     const userPhone = user.phone || (user as any).mobile || '';
     const userId = user.id || '';
 
+    // Optimistic in-memory update for fast UI response
+    store.toggleWishlist(listingId);
+
     try {
       if (isCurrentlyWishlisted) {
-        await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -80,8 +84,14 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             listingId
           })
         });
+        if (!res.ok) {
+          // Revert on failure
+          store.addToWishlist(listingId);
+        } else {
+          await fetchUserFavorites();
+        }
       } else {
-        await fetch(`${API_BASE_URL}/api/favorites`, {
+        const res = await fetch(`${API_BASE_URL}/api/favorites`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -92,9 +102,17 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             listingId
           })
         });
+        if (!res.ok) {
+          // Revert on failure
+          store.removeFromWishlist(listingId);
+        } else {
+          await fetchUserFavorites();
+        }
       }
     } catch (e) {
-      console.error('Failed to sync favorite with server:', e);
+      console.error('Database sync error for favorites:', e);
+      // Re-fetch true database state
+      await fetchUserFavorites();
     }
   };
 

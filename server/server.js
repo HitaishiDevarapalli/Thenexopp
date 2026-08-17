@@ -1268,24 +1268,41 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
     const existing = await prisma.customerFavorite.findFirst({
       where: {
         customerId: effectiveCustomerId,
-        listingId: listingId
+        listingId: String(listingId)
       }
-    });
+    }).catch(() => null);
 
     if (existing) {
       await prisma.customerFavorite.update({
         where: { id: existing.id },
-        data: { status: 'ACTIVE', removedAt: null, removalReason: null }
-      });
+        data: {
+          status: 'ACTIVE',
+          removedAt: null,
+          removalReason: null,
+          listingType: resolvedType,
+          propertyId: validPropertyId,
+          businessId: validBusinessId
+        }
+      }).catch(() => {});
     } else {
       await prisma.customerFavorite.create({
         data: {
           customerId: effectiveCustomerId,
           listingType: resolvedType,
-          listingId,
+          listingId: String(listingId),
           propertyId: validPropertyId,
           businessId: validBusinessId,
           status: 'ACTIVE'
+        }
+      }).catch(async () => {
+        const anyExisting = await prisma.customerFavorite.findFirst({
+          where: { customerId: effectiveCustomerId, listingId: String(listingId) }
+        }).catch(() => null);
+        if (anyExisting) {
+          await prisma.customerFavorite.update({
+            where: { id: anyExisting.id },
+            data: { status: 'ACTIVE', removedAt: null, removalReason: null }
+          }).catch(() => {});
         }
       });
     }
