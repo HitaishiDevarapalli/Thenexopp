@@ -6481,12 +6481,12 @@ table {
   .franchise-directory-grid,
   .wishlist-grid,
   .business-listings-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 8px !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
   }
   .responsive-property-grid img,
   .wishlist-grid img {
-    height: 105px !important;
+    height: 180px !important;
   }
 }
 
