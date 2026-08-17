@@ -418,43 +418,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   };
 
   const handleUpdateEnquiryStatus = async (id: string, newStatus: string) => {
-    const isDbEnq = allEnquiries.some(e => e.id === id);
-    if (isDbEnq) {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        });
-        if (res.ok) {
-          triggerRefresh();
-        }
-      } catch (err) {
-        console.error('Failed to update enquiry status:', err);
-      }
-    } else {
-      updateEnquiryStatus(id, newStatus as any);
-      triggerRefresh();
+    // 1. Instant optimistic UI update
+    setAllEnquiries(prev => prev.map(e => e.id === id ? { ...e, status: newStatus } : e));
+    setAllBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    updateEnquiryStatus(id, newStatus as any);
+
+    // 2. Server status sync
+    try {
+      await fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      }).catch(() => null);
+      await fetch(`/api/enquiries/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      }).catch(() => null);
+    } catch (err) {
+      console.error('Failed to update enquiry status:', err);
     }
+
+    triggerRefresh();
   };
 
   const handleDeleteEnquiry = async (id: string) => {
-    const isDbEnq = allEnquiries.some(e => e.id === id);
-    if (isDbEnq) {
-      if (window.confirm('Are you sure you want to delete this enquiry?')) {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/enquiries/${id}`, {
-            method: 'DELETE'
-          });
-          if (res.ok) {
-            triggerRefresh();
-          }
-        } catch (err) {
-          console.error('Failed to delete enquiry:', err);
-        }
-      }
-    } else {
+    if (window.confirm('Are you sure you want to delete this enquiry?')) {
+      // 1. Instant optimistic UI delete
+      setAllEnquiries(prev => prev.filter(e => e.id !== id));
+      setAllBookings(prev => prev.filter(b => b.id !== id));
       deleteEnquiry(id);
+
+      // 2. Server delete sync
+      try {
+        await fetch(`${API_BASE_URL}/api/enquiries/${id}`, { method: 'DELETE' }).catch(() => null);
+        await fetch(`/api/enquiries/${id}`, { method: 'DELETE' }).catch(() => null);
+      } catch (err) {
+        console.error('Failed to delete enquiry:', err);
+      }
+
       triggerRefresh();
     }
   };

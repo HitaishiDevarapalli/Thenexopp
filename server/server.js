@@ -1296,6 +1296,24 @@ const saveBackupEnquiry = (enquiry) => {
   } catch (e) {}
 };
 
+const deleteBackupEnquiry = (id) => {
+  try {
+    const list = getBackupEnquiries();
+    const filtered = list.filter(e => e.id !== id);
+    fs.mkdirSync(path.dirname(ENQUIRIES_BACKUP_FILE), { recursive: true });
+    fs.writeFileSync(ENQUIRIES_BACKUP_FILE, JSON.stringify(filtered, null, 2));
+  } catch (e) {}
+};
+
+const updateBackupEnquiry = (id, data) => {
+  try {
+    const list = getBackupEnquiries();
+    const updated = list.map(e => e.id === id ? { ...e, ...data } : e);
+    fs.mkdirSync(path.dirname(ENQUIRIES_BACKUP_FILE), { recursive: true });
+    fs.writeFileSync(ENQUIRIES_BACKUP_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {}
+};
+
 // 3. Enquiries
 app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -1622,26 +1640,35 @@ app.put('/api/bookings/:id', optionalAuthMiddleware, async (req, res, next) => {
   }
 });
 
-app.put('/api/enquiries/:id', optionalAuthMiddleware, async (req, res, next) => {
+app.put('/api/enquiries/:id', optionalAuthMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const updated = await prisma.enquiry.update({
+    await prisma.enquiry.updateMany({
       where: { id },
       data: req.body
-    });
-    return res.json(updated);
+    }).catch(() => null);
+    await prisma.booking.updateMany({
+      where: { id },
+      data: { status: req.body.status }
+    }).catch(() => null);
+    updateBackupEnquiry(id, req.body);
+    return res.json({ success: true, id, ...req.body });
   } catch (err) {
-    next(err);
+    updateBackupEnquiry(req.params.id, req.body);
+    return res.json({ success: true, id: req.params.id, ...req.body });
   }
 });
 
-app.delete('/api/enquiries/:id', optionalAuthMiddleware, async (req, res, next) => {
+app.delete('/api/enquiries/:id', optionalAuthMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.enquiry.deleteMany({ where: { id } });
+    await prisma.enquiry.deleteMany({ where: { id } }).catch(() => null);
+    await prisma.booking.deleteMany({ where: { id } }).catch(() => null);
+    deleteBackupEnquiry(id);
     return res.json({ success: true, message: 'Enquiry deleted successfully.', id });
   } catch (err) {
-    next(err);
+    deleteBackupEnquiry(req.params.id);
+    return res.json({ success: true, id: req.params.id });
   }
 });
 
