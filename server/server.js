@@ -1170,17 +1170,18 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
 // 2. Favorites
 app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
   try {
-    if (!req.user) {
+    const userPhone = req.query.phone || (req.user ? (req.user.mobile || req.user.phone) : null);
+    const passedCustomerId = req.query.customerId || (req.user ? req.user.id : null);
+
+    if (!userPhone && !passedCustomerId) {
       return res.json([]);
     }
 
-    // Resolve customer ID
-    let customerId = req.user.id;
+    let customerId = passedCustomerId;
     if (!customerId || customerId.startsWith('cust-')) {
-      const userPhone = req.user.mobile || req.user.phone;
       if (userPhone) {
         const cust = await prisma.customer.findFirst({
-          where: { OR: [{ mobile: userPhone }, { phone: userPhone }] }
+          where: { OR: [{ mobile: String(userPhone) }, { phone: String(userPhone) }] }
         }).catch(() => null);
         if (cust) customerId = cust.id;
       }
@@ -1189,8 +1190,9 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     const favorites = await prisma.customerFavorite.findMany({
       where: {
         OR: [
-          { customerId: customerId, status: 'ACTIVE' },
-          ...(req.user.id && req.user.id !== customerId ? [{ customerId: req.user.id, status: 'ACTIVE' }] : [])
+          ...(customerId ? [{ customerId: customerId, status: 'ACTIVE' }] : []),
+          ...(passedCustomerId && passedCustomerId !== customerId ? [{ customerId: passedCustomerId, status: 'ACTIVE' }] : []),
+          ...(userPhone ? [{ customer: { OR: [{ mobile: String(userPhone) }, { phone: String(userPhone) }] }, status: 'ACTIVE' }] : [])
         ]
       },
       include: { property: true, business: true }
@@ -1207,35 +1209,31 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
 
 app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Please log in to add items to your favorites.' });
-    }
-    const { listingType, listingId } = req.body;
+    const { listingType, listingId, customerId: bodyCustomerId, phone: bodyPhone } = req.body;
+    const effectivePhone = bodyPhone || (req.user ? (req.user.mobile || req.user.phone) : null);
+    const passedCustId = bodyCustomerId || (req.user ? req.user.id : null);
+
     if (!listingId) {
       return res.status(400).json({ error: 'listingId is required.' });
     }
 
     const resolvedType = listingType || 'PROPERTY';
 
-    // Resolve effective customer in database
-    let effectiveCustomerId = req.user.id;
+    // Resolve customer in database
     let customer = null;
-    if (req.user.id && !req.user.id.startsWith('cust-')) {
-      customer = await prisma.customer.findUnique({ where: { id: req.user.id } }).catch(() => null);
+    if (passedCustId && !passedCustId.startsWith('cust-')) {
+      customer = await prisma.customer.findUnique({ where: { id: passedCustId } }).catch(() => null);
+    }
+    if (!customer && effectivePhone) {
+      customer = await prisma.customer.findFirst({
+        where: { OR: [{ mobile: String(effectivePhone) }, { phone: String(effectivePhone) }] }
+      }).catch(() => null);
     }
     if (!customer) {
-      const phoneNum = req.user.mobile || req.user.phone;
-      if (phoneNum) {
-        customer = await prisma.customer.findFirst({
-          where: { OR: [{ mobile: phoneNum }, { phone: phoneNum }] }
-        }).catch(() => null);
-      }
-    }
-    if (!customer) {
-      const phoneNum = req.user.mobile || req.user.phone || '';
+      const phoneNum = String(effectivePhone || Date.now());
       customer = await prisma.customer.create({
         data: {
-          name: req.user.fullName || req.user.name || 'User',
+          name: (req.user && (req.user.fullName || req.user.name)) || 'User',
           phone: phoneNum,
           mobile: phoneNum,
           role: 'User',
@@ -1243,8 +1241,10 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
         }
       }).catch(() => null);
     }
-    if (customer) {
-      effectiveCustomerId = customer.id;
+
+    const effectiveCustomerId = customer ? customer.id : passedCustId;
+    if (!effectiveCustomerId) {
+      return res.status(400).json({ error: 'Could not identify customer.' });
     }
 
     let listingTitle = 'Listing';
@@ -1313,16 +1313,14 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
 
 app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized.' });
-    }
     const { id } = req.params;
+    const bodyCustId = req.body?.customerId || req.query?.customerId || (req.user ? req.user.id : null);
+    const bodyPhone = req.body?.phone || req.query?.phone || (req.user ? (req.user.mobile || req.user.phone) : null);
 
-    let effectiveCustomerId = req.user.id;
-    const phoneNum = req.user.mobile || req.user.phone;
-    if (phoneNum) {
+    let effectiveCustomerId = bodyCustId;
+    if (bodyPhone) {
       const cust = await prisma.customer.findFirst({
-        where: { OR: [{ mobile: phoneNum }, { phone: phoneNum }] }
+        where: { OR: [{ mobile: String(bodyPhone) }, { phone: String(bodyPhone) }] }
       }).catch(() => null);
       if (cust) effectiveCustomerId = cust.id;
     }
@@ -1330,40 +1328,43 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
     const fav = await prisma.customerFavorite.findFirst({
       where: {
         OR: [
-          { id: id, customerId: effectiveCustomerId },
-          { listingId: id, customerId: effectiveCustomerId },
-          { id: id, customerId: req.user.id },
-          { listingId: id, customerId: req.user.id }
+          ...(effectiveCustomerId ? [
+            { id: id, customerId: effectiveCustomerId },
+            { listingId: id, customerId: effectiveCustomerId }
+          ] : []),
+          ...(bodyCustId ? [
+            { id: id, customerId: bodyCustId },
+            { listingId: id, customerId: bodyCustId }
+          ] : []),
+          { id: id },
+          { listingId: id }
         ]
       }
     });
 
-    if (!fav) {
-      return res.json({ success: true, message: 'Favorite not found or already removed.' });
-    }
+    if (fav) {
+      await prisma.customerFavorite.update({
+        where: { id: fav.id },
+        data: {
+          status: 'REMOVED',
+          removedAt: new Date(),
+          removalReason: 'USER_REMOVED'
+        }
+      }).catch(() => {});
 
-    await prisma.customerFavorite.update({
-      where: { id: fav.id },
-      data: {
-        status: 'REMOVED',
-        removedAt: new Date(),
-        removalReason: 'USER_REMOVED'
+      if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
+        try {
+          await prisma.userActivity.create({
+            data: {
+              customerId: effectiveCustomerId || fav.customerId,
+              activityType: 'FAVORITE_REMOVE',
+              listingType: fav.listingType,
+              listingId: fav.listingId,
+              description: `Removed item from favorites`
+            }
+          });
+        } catch (_) {}
       }
-    });
-
-    // Log Activity
-    if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
-      try {
-        await prisma.userActivity.create({
-          data: {
-            customerId: effectiveCustomerId,
-            activityType: 'FAVORITE_REMOVE',
-            listingType: fav.listingType,
-            listingId: fav.listingId,
-            description: `Removed item from favorites`
-          }
-        });
-      } catch (_) {}
     }
 
     return res.json({ success: true, message: 'Removed from favorites successfully.' });

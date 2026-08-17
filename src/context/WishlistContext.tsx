@@ -17,16 +17,22 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   const { user, openLoginModal } = useAuth();
 
   const fetchUserFavorites = async () => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/favorites`, { credentials: 'include' });
+      const userPhone = user.phone || (user as any).mobile || '';
+      const userId = user.id || '';
+      const params = new URLSearchParams();
+      if (userPhone) params.set('phone', userPhone);
+      if (userId) params.set('customerId', userId);
+
+      const res = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) {
-          const ids = data.map((item: any) => item.listingId || item.propertyId || item.businessId || item.id);
-          store.setWishlistIds(ids);
+        if (Array.isArray(data) && data.length > 0) {
+          const serverIds = data.map((item: any) => item.listingId || item.propertyId || item.businessId || item.id).filter(Boolean);
+          // Union server IDs with existing local IDs
+          const combined = Array.from(new Set([...store.wishlistIds, ...serverIds]));
+          store.setWishlistIds(combined);
         }
       }
     } catch (e) {
@@ -47,30 +53,46 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [user]);
 
   const toggleWishlist = async (listingId: string, listingType: 'PROPERTY' | 'BUSINESS' = 'PROPERTY') => {
+    if (!listingId) return;
+
     if (!user) {
       openLoginModal();
       return;
     }
 
     const isCurrentlyWishlisted = store.isWishlisted(listingId);
-    // Optimistic in-memory update for instant UI feedback
+    // Instant optimistic update saved to local storage
     store.toggleWishlist(listingId);
+
+    const userPhone = user.phone || (user as any).mobile || '';
+    const userId = user.id || '';
 
     try {
       if (isCurrentlyWishlisted) {
         await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
           method: 'DELETE',
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            customerId: userId,
+            phone: userPhone,
+            listingType,
+            listingId
+          })
         });
       } else {
         await fetch(`${API_BASE_URL}/api/favorites`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ listingType, listingId })
+          body: JSON.stringify({
+            customerId: userId,
+            phone: userPhone,
+            listingType,
+            listingId
+          })
         });
       }
-      await fetchUserFavorites();
     } catch (e) {
       console.error('Failed to sync favorite with server:', e);
     }
