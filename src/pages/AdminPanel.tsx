@@ -4338,7 +4338,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               const filteredEnquiries = baseList.filter(enq => {
                 // Category Filter
                 if (inquiryCategoryFilter === 'CONTACT_US' && enq.source !== 'Contact Us Page') return false;
-                if (inquiryCategoryFilter === 'PROPERTY' && enq.listingType !== 'PROPERTY' && enq.source === 'Contact Us Page') return false;
+                if (inquiryCategoryFilter === 'PROPERTY' && enq.listingType !== 'PROPERTY' && !(enq.source && enq.source.includes('Property'))) return false;
+                if (inquiryCategoryFilter === 'BUSINESS' && enq.listingType !== 'BUSINESS' && !(enq.source && enq.source.includes('Business'))) return false;
                 if (inquiryCategoryFilter === 'SLOT_BOOKING' && enq.enquiryType !== 'SLOT_BOOKING') return false;
 
                 // Status Filter
@@ -4396,7 +4397,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       {[
                         { id: 'ALL', label: `All Inquiries (${totalCount})` },
                         { id: 'CONTACT_US', label: `📩 Contact Us Page (${baseList.filter(e => e.source === 'Contact Us Page').length})` },
-                        { id: 'PROPERTY', label: `🏢 Property Leads (${baseList.filter(e => e.listingType === 'PROPERTY' || (e.source && e.source.includes('Property'))).length})` },
+                        { id: 'PROPERTY', label: `🏢 Property Leads (${baseList.filter(e => e.listingType === 'PROPERTY' || (e.source && (e.source.includes('Property') || e.source.includes('Enquiry')))).length})` },
+                        { id: 'BUSINESS', label: `💼 Business Leads (${baseList.filter(e => e.listingType === 'BUSINESS' || (e.source && e.source.includes('Business'))).length})` },
                         { id: 'SLOT_BOOKING', label: `📅 Slot Bookings (${baseList.filter(e => e.enquiryType === 'SLOT_BOOKING').length})` },
                       ].map(pill => (
                         <button

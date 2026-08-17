@@ -1070,32 +1070,13 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                         </div>
 
                         {/* Valuation */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0px' }}>
                           <div>
                             <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Valuation</div>
                             <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>{item.valuation}</div>
                           </div>
                           <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB', backgroundColor: '#DBEAFE', padding: '4px 8px', borderRadius: '6px' }}>{item.employees}</span>
                         </div>
-                      </div>
-
-                      {/* Broker Footer */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {item.brokerImg ? (
-                            <img src={item.brokerImg} alt={item.brokerName} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
-                          ) : (
-                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', border: '1px solid #BAE6FD', flexShrink: 0 }}>
-                              <FaUserTie />
-                            </div>
-                          )}
-                          <div>
-                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#334155' }}>{item.brokerName}</div>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '2px' }}><FaStar /> {item.brokerRating}</div>
-                          </div>
-                        </div>
-
-                        <button onClick={(e) => { e.stopPropagation(); onPropertyClick?.(item.id); }} style={{ backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 700, color: '#0F172A', cursor: 'pointer' }}>View Details</button>
                       </div>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { 
   FaArrowLeft, FaHeart, FaRegHeart, FaShareAlt, 
@@ -7,6 +7,7 @@ import {
   FaChevronLeft, FaChevronRight, FaEye
 } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -143,7 +144,13 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const [bookingTime, setBookingTime] = useState('');
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
+  const { user, openLoginModal } = useAuth();
+
   const handleOpenContactModal = (mode: 'contact' | 'book' = 'contact') => {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
     if (mode === 'contact' && onContactBroker) {
       onContactBroker(propertyId);
     } else if (mode === 'book' && onBookSlot) {
@@ -163,6 +170,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       return;
     }
     
+    const isProp = !!propertiesDb.find(p => p.id === propertyId);
+    const isBiz = !!businessDb.find(b => b.id === propertyId);
+    const listingType = isProp ? 'PROPERTY' : isBiz ? 'BUSINESS' : 'FRANCHISE';
+
     const newEnquiry = {
       id: `ENQ-${Date.now()}`,
       customerName: contactName,
@@ -172,7 +183,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'Not Assigned',
       status: 'New' as const,
       priority: 'High' as const,
-      source: 'Property Details Page',
+      source: isBiz ? 'Business Details Page' : 'Property Details Page',
+      listingType: listingType as any,
+      enquiryType: modalMode === 'book' ? ('SLOT_BOOKING' as const) : ('BUY' as const),
       date: new Date().toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
@@ -185,6 +198,21 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     };
 
     enquiriesDb.push(newEnquiry);
+
+    if (isBiz) {
+      addBusinessEnquiry({
+        id: `BE-${Date.now()}`,
+        businessId: propertyId,
+        businessName: property ? property.title : 'Business Listing',
+        name: contactName,
+        mobile: contactPhone,
+        email: '',
+        status: 'New',
+        notes: modalMode === 'book' ? `Visit Slot: ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`,
+        createdAt: new Date().toISOString()
+      });
+    }
+
     notifyDataChanged();
 
     // Async backend sync

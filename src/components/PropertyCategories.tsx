@@ -2026,7 +2026,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         })()}
 
                         {/* Price & Distance Row */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'nowrap', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0px', flexWrap: 'nowrap', gap: '8px' }}>
                           <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>
                             {prop.price}
                           </span>
@@ -2034,64 +2034,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                             {prop.dist}
                           </span>
                         </div>
-                      </div>
-
-                      {/* Broker Footer */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '12px', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-                          {prop.brokerImg ? (
-                            <img
-                              src={prop.brokerImg}
-                              alt={prop.brokerName}
-                              style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #1E40AF', backgroundColor: '#EFF6FF', flexShrink: 0 }}
-                            />
-                          ) : (
-                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem', border: '2px solid #BAE6FD', flexShrink: 0 }}>
-                              <FaUserTie />
-                            </div>
-                          )}
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#64748B', lineHeight: '1.2' }}>Posted by:</div>
-                            <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.brokerName}</div>
-                            {prop.brokerRating && (
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
-                                <FaStar /> {prop.brokerRating}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPropertyClick?.(prop.id);
-                          }}
-                          style={{
-                            backgroundColor: '#FFFFFF',
-                            border: '1.5px solid #CBD5E1',
-                            padding: '8px 14px',
-                            borderRadius: '10px',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            color: '#0F172A',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#0F172A';
-                            e.currentTarget.style.color = '#FFFFFF';
-                            e.currentTarget.style.borderColor = '#0F172A';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#FFFFFF';
-                            e.currentTarget.style.color = '#0F172A';
-                            e.currentTarget.style.borderColor = '#CBD5E1';
-                          }}
-                        >
-                          View Details
-                        </button>
                       </div>
                     </div>
                   </div>

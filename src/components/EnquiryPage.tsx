@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, notifyDataChanged, API_BASE_URL } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addBusinessEnquiry, notifyDataChanged, API_BASE_URL } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { FaArrowLeft, FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaEnvelope, FaUser, FaCheckCircle, FaChevronLeft, FaChevronRight, FaHome, FaClock, FaBed, FaBath, FaRulerCombined, FaTag, FaUserTie } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +11,7 @@ interface EnquiryPageProps {
 }
 
 const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) => {
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
 
   // Resolve listing
   const property = useMemo(() => {
@@ -85,6 +85,10 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      openLoginModal();
+      return;
+    }
     if (!contactName.trim() || !contactPhone.trim()) {
       alert('Please fill in your Name and Phone Number.');
       return;
@@ -146,6 +150,8 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
         status: 'New' as const,
         priority: 'High' as const,
         source: 'Enquiry Page',
+        listingType: listingType || 'PROPERTY',
+        enquiryType: mode === 'book' ? ('SLOT_BOOKING' as const) : ('BUY' as const),
         date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         name: contactName,
         interest: mode === 'book'
@@ -154,6 +160,21 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
         message: contactMessage
       };
       enquiriesDb.push(newEnquiry);
+
+      if (isBusiness) {
+        addBusinessEnquiry({
+          id: `BE-${Date.now()}`,
+          businessId: propertyId,
+          businessName: property ? property.title : 'Business Listing',
+          name: contactName,
+          mobile: contactPhone,
+          email: contactEmail,
+          status: 'New',
+          notes: mode === 'book' ? `Visit Slot: ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`,
+          createdAt: new Date().toISOString()
+        });
+      }
+
       notifyDataChanged();
 
       setSubmitting(false);

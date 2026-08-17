@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL, enquiriesDb, contactDetailsDb, notifyDataChanged } from '../db/marketplaceDb';
 
 export const ContactUs: React.FC = () => {
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -45,6 +45,11 @@ export const ContactUs: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (!user) {
+      openLoginModal();
+      return;
+    }
 
     if (!formData.name.trim() || !formData.phone.trim() || !formData.email.trim()) {
       setErrorMsg('Please provide your name, phone number, and email.');

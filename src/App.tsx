@@ -73,6 +73,8 @@ const routeMap: Record<string, PageType> = {
   '/admin': 'adminPortal',
   '/about': 'aboutUsPage',
   '/contact': 'contactUsPage',
+  '/enquiry': 'enquiryPage',
+  '/book-slot': 'bookSlotPage',
   '/secret-admin': 'adminPortal',
   '/portal': 'adminPortal',
   '/nexopp-admin': 'adminPortal',
@@ -103,6 +105,14 @@ const parseUrl = (path: string) => {
   if (cleanPath.startsWith('/business/listings/')) {
     const rawInd = cleanPath.split('/')[3];
     return { page: 'businessListings' as PageType, industry: rawInd ? decodeURIComponent(rawInd) as any : undefined };
+  }
+  if (cleanPath.startsWith('/enquiry/')) {
+    const rawId = cleanPath.split('/')[2];
+    return { page: 'enquiryPage' as PageType, propertyId: rawId ? decodeURIComponent(rawId) : undefined };
+  }
+  if (cleanPath.startsWith('/book-slot/')) {
+    const rawId = cleanPath.split('/')[2];
+    return { page: 'bookSlotPage' as PageType, propertyId: rawId ? decodeURIComponent(rawId) : undefined };
   }
   if (routeMap[cleanPath]) {
     return { page: routeMap[cleanPath] };
@@ -177,6 +187,8 @@ export const App: React.FC = () => {
   const activeFranchiseId = routeData.franchiseId || selectedFranchiseId;
   const activeBusinessIndustry = routeData.industry || selectedBusinessIndustry;
 
+  const publicPages: PageType[] = ['home', 'aboutUsPage', 'adminPortal'];
+
   const navigateToUrl = (url: string) => {
     window.history.pushState({}, '', url);
     setCurrentPath(url);
@@ -191,6 +203,11 @@ export const App: React.FC = () => {
   };
 
   const navigateTo = (page: PageType, params?: { propertyId?: string, franchiseId?: string, industry?: string } | string) => {
+    if (!publicPages.includes(page) && !user) {
+      openLoginModal();
+      return;
+    }
+
     let url = getPathForPage(page);
     let queryParams = '';
 
@@ -212,6 +229,16 @@ export const App: React.FC = () => {
       if (page === 'businessListings') {
         const ind = params?.industry || activeBusinessIndustry;
         if (ind) url = `/business/listings/${encodeURIComponent(ind)}`;
+      }
+      if (page === 'enquiryPage') {
+        const pid = params?.propertyId || enquiryTargetId || activePropertyId;
+        if (pid) url = `/enquiry/${pid}`;
+        else url = '/enquiry';
+      }
+      if (page === 'bookSlotPage') {
+        const pid = params?.propertyId || enquiryTargetId || activePropertyId;
+        if (pid) url = `/book-slot/${pid}`;
+        else url = '/book-slot';
       }
     }
     
@@ -368,11 +395,11 @@ export const App: React.FC = () => {
                 }}
                 onContactBroker={(id) => {
                   setEnquiryTargetId(id);
-                  navigateTo('enquiryPage');
+                  navigateTo('enquiryPage', { propertyId: id });
                 }}
                 onBookSlot={(id) => {
                   setEnquiryTargetId(id);
-                  navigateTo('bookSlotPage');
+                  navigateTo('bookSlotPage', { propertyId: id });
                 }}
               />
             ) : (currentPage === 'enquiryPage' || currentPage === 'bookSlotPage') ? (
