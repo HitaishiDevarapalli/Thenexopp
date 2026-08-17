@@ -12,6 +12,33 @@ interface WishlistContextType {
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
+const normalizePhone = (phone?: string) => String(phone || '').replace(/\D/g, '').slice(-10);
+
+const getUserWishlistStorageKey = (user: any) => {
+  const phone = normalizePhone(user?.phone || user?.mobile);
+  return phone ? `nexopp_wishlist_${phone}` : user?.id ? `nexopp_wishlist_${user.id}` : '';
+};
+
+const loadLocalWishlistIds = (user: any): string[] => {
+  const key = getUserWishlistStorageKey(user);
+  if (!key || typeof window === 'undefined') return [];
+  try {
+    const saved = window.localStorage.getItem(key);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) ? parsed.map(String).filter(Boolean) : [];
+  } catch (_) {
+    return [];
+  }
+};
+
+const saveLocalWishlistIds = (user: any, ids: string[]) => {
+  const key = getUserWishlistStorageKey(user);
+  if (!key || typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(Array.from(new Set(ids.map(String).filter(Boolean)))));
+  } catch (_) {}
+};
+
 export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const store = useWishlistStore();
   const { user, openLoginModal } = useAuth();
@@ -21,6 +48,11 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (!user) {
       store.setWishlistIds([]);
       return;
+    }
+
+    const localIds = loadLocalWishlistIds(user);
+    if (localIds.length > 0 && store.wishlistIds.length === 0) {
+      store.setWishlistIds(localIds);
     }
 
     // Never overwrite state while a toggle is in progress
@@ -41,13 +73,16 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             .filter((item: any) => item.status === 'ACTIVE' || !item.status)
             .map((item: any) => String(item.listingId || item.propertyId || item.businessId || item.id))
             .filter(Boolean);
-          store.setWishlistIds(ids);
+          const mergedIds = Array.from(new Set([...ids, ...localIds]));
+          store.setWishlistIds(mergedIds);
+          saveLocalWishlistIds(user, mergedIds);
         }
       }
     } catch (e) {
       console.warn('Database fetch for favorites failed:', e);
+      store.setWishlistIds(localIds);
     }
-  }, [user?.id, user?.phone]);
+  }, [user?.id, user?.phone, store.wishlistIds.length]);
 
   // Fetch favorites on login / page load only
   useEffect(() => {
@@ -69,9 +104,15 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     const isCurrentlyWishlisted = store.isWishlisted(listingId);
     const userPhone = (user.phone || (user as any).mobile || '').replace(/\D/g, '');
     const userId = user.id || '';
+    const localIds = loadLocalWishlistIds(user);
 
     // Optimistic UI update — this is the source of truth for the UI
     store.toggleWishlist(listingId);
+    if (isCurrentlyWishlisted) {
+      saveLocalWishlistIds(user, localIds.filter(id => id !== listingId));
+    } else {
+      saveLocalWishlistIds(user, [...localIds, listingId]);
+    }
 
     try {
       if (isCurrentlyWishlisted) {
@@ -108,7 +149,9 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
         } catch (_) {}
 
         if (!res.ok || data?.success === false) {
-          store.removeFromWishlist(listingId);
+          store.addToWishlist(listingId);
+          saveLocalWishlistIds(user, [...loadLocalWishlistIds(user), listingId]);
+          console.warn('Favorite saved locally but database sync failed:', data?.message || res.statusText);
           // Only revert if the server explicitly rejected (4xx)
           // For 5xx or network errors, keep the optimistic state — 
           // the server catch-all returns 200 anyway

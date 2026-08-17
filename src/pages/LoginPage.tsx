@@ -374,7 +374,7 @@ const DecorativeDots = () => (
 /* ─────────────── Main Component ─────────────── */
 export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }) => {
   useInjectStyles(STYLES);
-  const { setUser, user } = useAuth();
+  const { setUser } = useAuth();
 
   type Step = 'phone' | 'otp' | 'profile' | 'success';
   const [step, setStep] = useState<Step>('phone');
@@ -409,16 +409,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       if (rem) setMobile(rem);
     } catch (_) {}
   }, []);
-
-  // Auto-jump to profile step if session has an incomplete profile
-  useEffect(() => {
-    if (user && user.profileCompleted !== true) {
-      setStep('profile');
-      if (user.phone) {
-        setMobile(user.phone);
-      }
-    }
-  }, [user]);
 
   // Countdown timer
   useEffect(() => {
@@ -535,13 +525,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       setLoading(false);
 
       if (!res.ok || !data.success) throw new Error(data.error || 'Incorrect OTP. Please try again.');
-
-      // Check if profile is complete
-      if (!data.user.profileCompleted) {
-        setStep('profile');
-        setSuccess('Mobile verified! Complete your profile details.');
-        return;
-      }
 
       setStep('success');
       setTimeout(() => {
