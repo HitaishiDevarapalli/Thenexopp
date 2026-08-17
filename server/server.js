@@ -193,6 +193,87 @@ checkDatabaseConnection().then(async (connected) => {
     logger.warn("Running without PostgreSQL connection.");
   }
 });
+// ── CENTRALIZED CUSTOMER RESOLUTION ──────────────────────────────────────────
+// ONE phone number = ONE customer. No duplicates allowed.
+// Every endpoint MUST use this function to resolve or create a customer.
+async function resolveCustomer({ phone, email, name, id, gender, district, role, avatar } = {}) {
+  try {
+    // 1. Normalize phone to last 10 digits only
+    const rawPhone = String(phone || '').replace(/\D/g, '');
+    const normalizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+
+    if (!normalizedPhone && !id && !email) return null;
+
+    // 2. Try by explicit UUID first (from JWT or frontend)
+    if (id && !id.startsWith('cust-') && !id.startsWith('guest_') && !id.startsWith('user_')) {
+      const byId = await prisma.customer.findUnique({ where: { id } }).catch(() => null);
+      if (byId) return byId;
+    }
+
+    // 3. Try by normalized phone (the primary dedup key)
+    if (normalizedPhone) {
+      const byPhone = await prisma.customer.findFirst({
+        where: {
+          OR: [
+            { mobile: normalizedPhone },
+            { phone: normalizedPhone },
+            { mobile: `+91${normalizedPhone}` },
+            { phone: `+91${normalizedPhone}` },
+            { mobile: { endsWith: normalizedPhone } },
+            { phone: { endsWith: normalizedPhone } }
+          ]
+        }
+      }).catch(() => null);
+
+      if (byPhone) {
+        // Normalize stored phone to consistent format
+        if (byPhone.mobile !== normalizedPhone || byPhone.phone !== normalizedPhone) {
+          await prisma.customer.update({
+            where: { id: byPhone.id },
+            data: { mobile: normalizedPhone, phone: normalizedPhone }
+          }).catch(() => {});
+        }
+        return byPhone;
+      }
+    }
+
+    // 4. Try by email
+    if (email && !email.includes('@nexopp.in') && !email.includes('@thenexopp')) {
+      const byEmail = await prisma.customer.findFirst({ where: { email } }).catch(() => null);
+      if (byEmail) return byEmail;
+    }
+
+    // 5. No existing customer — create ONE new record with normalized phone
+    if (!normalizedPhone) return null;
+
+    const newCustomer = await prisma.customer.create({
+      data: {
+        name: name || 'User',
+        phone: normalizedPhone,
+        mobile: normalizedPhone,
+        email: (email && !email.includes('@nexopp.in') && !email.includes('@thenexopp')) ? email : null,
+        gender: gender || 'Male',
+        district: district || '',
+        role: role || 'User',
+        avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=007A55&color=fff`,
+        status: 'Active',
+        loginCount: 1,
+        lastLoginAt: new Date().toLocaleString(),
+        registeredDate: new Date().toLocaleDateString()
+      }
+    }).catch(async () => {
+      // Unique constraint hit — the customer was just created by another request
+      return await prisma.customer.findFirst({
+        where: { OR: [{ mobile: normalizedPhone }, { phone: normalizedPhone }] }
+      }).catch(() => null);
+    });
+
+    return newCustomer;
+  } catch (err) {
+    logger.error({ error: err.message }, 'resolveCustomer error');
+    return null;
+  }
+}
 
 // ── LOCATION & GEOLOCATION ENDPOINTS ──────────────────────────────────────────
 const handleLocationSearch = async (req, res, next) => {
@@ -1172,42 +1253,21 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
   try {
     const userPhone = req.query.phone || (req.user ? (req.user.mobile || req.user.phone) : null);
     const passedCustomerId = req.query.customerId || (req.user ? req.user.id : null);
-    const searchPhone = userPhone ? String(userPhone).replace(/\D/g, '') : null;
+    const userEmail = req.user ? req.user.email : null;
 
-    // Collect ALL customer IDs that could belong to this user
-    const customerIds = new Set();
-    if (passedCustomerId) customerIds.add(passedCustomerId);
+    const customer = await resolveCustomer({
+      phone: userPhone,
+      id: passedCustomerId,
+      email: userEmail
+    });
 
-    // Also look up by phone to catch favorites saved under any matching customer record
-    if (searchPhone) {
-      const matchingCustomers = await prisma.customer.findMany({
-        where: {
-          OR: [
-            { mobile: searchPhone },
-            { phone: searchPhone },
-            { mobile: `+91${searchPhone}` },
-            { phone: `+91${searchPhone}` },
-            { mobile: { contains: searchPhone } },
-            { phone: { contains: searchPhone } }
-          ]
-        },
-        select: { id: true }
-      }).catch(() => []);
-      matchingCustomers.forEach(c => customerIds.add(c.id));
-    }
-
-    // Also add the JWT user ID if present
-    if (req.user && req.user.id) customerIds.add(req.user.id);
-
-    if (customerIds.size === 0 && !searchPhone) {
+    if (!customer) {
       return res.json([]);
     }
 
-    const customerIdArray = Array.from(customerIds).filter(Boolean);
-
     const favorites = await prisma.customerFavorite.findMany({
       where: {
-        customerId: { in: customerIdArray.length > 0 ? customerIdArray : undefined },
+        customerId: customer.id,
         status: 'ACTIVE'
       },
       include: { property: true, business: true },
@@ -1229,7 +1289,7 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     const { listingType, listingId, customerId: bodyCustomerId, phone: bodyPhone } = req.body;
     const effectivePhone = bodyPhone || (req.user ? (req.user.mobile || req.user.phone) : null);
     const passedCustId = bodyCustomerId || (req.user ? req.user.id : null);
-    const searchPhone = effectivePhone ? String(effectivePhone).replace(/\D/g, '') : null;
+    const userEmail = req.user ? req.user.email : null;
 
     if (!listingId) {
       return res.status(400).json({ error: 'listingId is required.' });
@@ -1237,54 +1297,12 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res) => {
 
     const resolvedType = listingType || 'PROPERTY';
 
-    // 1. Resolve Customer Record in PostgreSQL
-    let customer = null;
-    if (passedCustId && !passedCustId.startsWith('cust-')) {
-      customer = await prisma.customer.findUnique({ where: { id: passedCustId } }).catch(() => null);
-    }
-    if (!customer && searchPhone) {
-      customer = await prisma.customer.findFirst({
-        where: {
-          OR: [
-            { mobile: searchPhone },
-            { phone: searchPhone },
-            { mobile: `+91${searchPhone}` },
-            { phone: `+91${searchPhone}` },
-            { mobile: { contains: searchPhone } },
-            { phone: { contains: searchPhone } }
-          ]
-        }
-      }).catch(() => null);
-    }
-    if (!customer) {
-      const phoneNum = searchPhone || `user_${Date.now()}`;
-      customer = await prisma.customer.create({
-        data: {
-          name: (req.user && (req.user.fullName || req.user.name)) || 'User',
-          phone: phoneNum,
-          mobile: phoneNum,
-          role: 'User',
-          status: 'Active'
-        }
-      }).catch(async () => {
-        return await prisma.customer.findFirst({
-          where: searchPhone ? { OR: [{ mobile: { contains: searchPhone } }, { phone: { contains: searchPhone } }] } : undefined
-        }).catch(() => null);
-      });
-    }
-
-    if (!customer) {
-      const uniqueMobile = `guest_${Date.now()}`;
-      customer = await prisma.customer.create({
-        data: {
-          name: 'User',
-          phone: uniqueMobile,
-          mobile: uniqueMobile,
-          role: 'User',
-          status: 'Active'
-        }
-      }).catch(() => null);
-    }
+    const customer = await resolveCustomer({
+      phone: effectivePhone,
+      id: passedCustId,
+      email: userEmail,
+      name: (req.user && (req.user.fullName || req.user.name)) || 'User'
+    });
 
     if (!customer || !customer.id) {
       return res.status(200).json({ success: false, message: 'Could not resolve customer record.' });
@@ -1359,28 +1377,18 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res) => {
     const { id } = req.params;
     const bodyCustId = req.body?.customerId || req.query?.customerId || (req.user ? req.user.id : null);
     const bodyPhone = req.body?.phone || req.query?.phone || (req.user ? (req.user.mobile || req.user.phone) : null);
-    const searchPhone = bodyPhone ? String(bodyPhone).replace(/\D/g, '') : null;
+    const userEmail = req.user ? req.user.email : null;
 
-    let customerId = bodyCustId;
-    if (searchPhone) {
-      const cust = await prisma.customer.findFirst({
-        where: {
-          OR: [
-            { mobile: searchPhone },
-            { phone: searchPhone },
-            { mobile: { contains: searchPhone } },
-            { phone: { contains: searchPhone } }
-          ]
-        }
-      }).catch(() => null);
-      if (cust) customerId = cust.id;
-    }
+    const customer = await resolveCustomer({
+      phone: bodyPhone,
+      id: bodyCustId,
+      email: userEmail
+    });
 
-    if (customerId) {
-      // Only delete THIS user's favorite, not all users'
+    if (customer && customer.id) {
       await prisma.customerFavorite.deleteMany({
         where: {
-          customerId: customerId,
+          customerId: customer.id,
           OR: [
             { listingId: String(id) },
             { id: String(id) }
