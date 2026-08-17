@@ -413,8 +413,8 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   >
                     <option value="">Select Property Type</option>
                     {activePropertyTypes.map((pt) => (
-                      <option key={pt.id} value={pt.title}>
-                        {pt.title}
+                      <option key={pt.id} value={pt.name}>
+                        {pt.name}
                       </option>
                     ))}
                   </select>
