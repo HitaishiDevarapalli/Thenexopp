@@ -1265,6 +1265,18 @@ export const addEnquiry = (enquiry: any) => {
     message: enquiry.message || ''
   };
 
+  // Deduplicate recent identical submissions
+  const cleanPhone = String(normalized.phone || '').replace(/\D/g, '');
+  const isDuplicate = enquiriesDb.some(e => {
+    const ePhone = String(e.phone || '').replace(/\D/g, '');
+    return cleanPhone && ePhone === cleanPhone &&
+      e.listingTitle === normalized.listingTitle &&
+      (e.date === normalized.date || e.message === normalized.message);
+  });
+  if (isDuplicate) {
+    return;
+  }
+
   enquiriesDb = [normalized, ...enquiriesDb.filter(e => e.id !== normalized.id)];
   saveToStorage('nexopp_enquiries_db', enquiriesDb);
 

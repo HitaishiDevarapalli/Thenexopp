@@ -1348,8 +1348,20 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
 
     const backupEnquiries = getBackupEnquiries();
     const mergedMap = new Map();
-    (dbEnquiries || []).forEach(e => mergedMap.set(e.id, e));
-    (backupEnquiries || []).forEach(e => { if (!mergedMap.has(e.id)) mergedMap.set(e.id, e); });
+    const seenSignatures = new Set();
+
+    const addUnique = (e) => {
+      if (!e) return;
+      const cleanPhone = String(e.phone || '').replace(/\D/g, '');
+      const sig = `${cleanPhone}|${String(e.customerName || '').toLowerCase().trim()}|${String(e.listingTitle || '').toLowerCase().trim()}`;
+      if (e.id && mergedMap.has(e.id)) return;
+      if (sig.length > 5 && seenSignatures.has(sig)) return;
+      if (sig.length > 5) seenSignatures.add(sig);
+      mergedMap.set(e.id || sig, e);
+    };
+
+    (dbEnquiries || []).forEach(addUnique);
+    (backupEnquiries || []).forEach(addUnique);
     const enquiries = Array.from(mergedMap.values()).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
     return res.json(enquiries);
   } catch (err) {
@@ -1376,6 +1388,20 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
     const source = req.body.source || (listingType === 'BUSINESS' ? 'Business Marketplace' : listingType === 'FRANCHISE' ? 'Franchise Marketplace' : 'Website');
     const notes = req.body.notes || '';
     const finalMessage = notes ? (message ? `${message} (Notes: ${notes})` : notes) : message;
+
+    // Deduplicate recent submissions within 10 seconds
+    const tenSecondsAgo = new Date(Date.now() - 10000);
+    const existing = await prisma.enquiry.findFirst({
+      where: {
+        phone: String(phone || ''),
+        listingTitle: String(listingTitle || 'General Enquiry'),
+        createdAt: { gte: tenSecondsAgo }
+      }
+    }).catch(() => null);
+
+    if (existing) {
+      return res.status(200).json({ success: true, enquiry: existing });
+    }
 
     // Guaranteed Direct DB insert into PostgreSQL Enquiry table
     const enquiryRecord = await prisma.enquiry.create({

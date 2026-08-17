@@ -4355,31 +4355,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             
             {(() => {
               const combinedMap = new Map();
-              (allEnquiries || []).forEach(e => combinedMap.set(e.id, e));
-              (enquiriesDb || []).forEach(e => { if (!combinedMap.has(e.id)) combinedMap.set(e.id, e); });
+              const seenSignatures = new Set();
+              const rawCombined: any[] = [];
+
+              (allEnquiries || []).forEach(e => rawCombined.push(e));
+              (enquiriesDb || []).forEach(e => rawCombined.push(e));
               (allBookings || []).forEach(b => {
                 const bkId = b.id || `bk-${b.createdAt}`;
-                if (!combinedMap.has(bkId)) {
-                  combinedMap.set(bkId, {
-                    id: bkId,
-                    customerId: b.customerId,
-                    customerName: b.customerName || b.name || 'Guest User',
-                    phone: b.phone || '',
-                    email: b.email || '',
-                    listingTitle: b.listingTitle || b.notes || 'Property Visit Booking',
-                    listingType: b.listingType || 'PROPERTY',
-                    listingId: b.listingId,
-                    enquiryType: 'SLOT_BOOKING',
-                    message: b.notes || `Requested visit slot on ${b.bookingDate} at ${b.bookingTime}`,
-                    date: b.bookingDate,
-                    preferredTime: b.bookingTime,
-                    preferredMoveInDate: b.bookingDate,
-                    status: b.status || 'New',
-                    createdAt: b.createdAt
-                  });
-                }
+                rawCombined.push({
+                  id: bkId,
+                  customerId: b.customerId,
+                  customerName: b.customerName || b.name || 'Guest User',
+                  phone: b.phone || '',
+                  email: b.email || '',
+                  listingTitle: b.listingTitle || b.notes || 'Property Visit Booking',
+                  listingType: b.listingType || 'PROPERTY',
+                  listingId: b.listingId,
+                  enquiryType: 'SLOT_BOOKING',
+                  message: b.notes || `Requested visit slot on ${b.bookingDate} at ${b.bookingTime}`,
+                  date: b.bookingDate,
+                  preferredTime: b.bookingTime,
+                  preferredMoveInDate: b.bookingDate,
+                  status: b.status || 'New',
+                  createdAt: b.createdAt
+                });
               });
-              const baseList = Array.from(combinedMap.values());
+
+              const baseList: any[] = [];
+              for (const item of rawCombined) {
+                if (!item) continue;
+                const cleanPhone = String(item.phone || '').replace(/\D/g, '');
+                const sig = `${cleanPhone}|${String(item.customerName || '').toLowerCase().trim()}|${String(item.listingTitle || '').toLowerCase().trim()}`;
+                if (item.id && combinedMap.has(item.id)) continue;
+                if (sig.length > 5 && seenSignatures.has(sig)) continue;
+                if (item.id) combinedMap.set(item.id, item);
+                if (sig.length > 5) seenSignatures.add(sig);
+                baseList.push(item);
+              }
               
               const isContactUs = (e: any) => 
                 e.source === 'Contact Us Page' || 
@@ -7350,13 +7362,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             <td style={{ padding: '12px 16px', fontWeight: 800, color: '#9333EA' }}>{b.priceDisplay || `₹ ${b.askingPrice} L`}</td>
                           </tr>
                         ))}
-                        {statModalTopic === 'enquiries' && enquiriesDb.slice(0, 10).map((e: any) => (
-                          <tr key={e.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                            <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{e.customerName} ({e.phone})</td>
-                            <td style={{ padding: '12px 16px', color: '#475569' }}>{e.listingTitle}</td>
-                            <td style={{ padding: '12px 16px', fontWeight: 800, color: e.status === 'New' ? '#DC2626' : '#16A34A' }}>{e.status}</td>
-                          </tr>
-                        ))}
+                        {statModalTopic === 'enquiries' && (() => {
+                          const seenSigs = new Set();
+                          const uniqueEnqs = enquiriesDb.filter(e => {
+                            const cleanPhone = String(e.phone || '').replace(/\D/g, '');
+                            const sig = `${cleanPhone}|${String(e.customerName || '').toLowerCase().trim()}|${String(e.listingTitle || '').toLowerCase().trim()}`;
+                            if (sig.length > 5 && seenSigs.has(sig)) return false;
+                            if (sig.length > 5) seenSigs.add(sig);
+                            return true;
+                          });
+                          return uniqueEnqs.slice(0, 10).map((e: any) => (
+                            <tr key={e.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                              <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{e.customerName} ({e.phone})</td>
+                              <td style={{ padding: '12px 16px', color: '#475569' }}>{e.listingTitle}</td>
+                              <td style={{ padding: '12px 16px', fontWeight: 800, color: e.status === 'New' ? '#DC2626' : '#16A34A' }}>{e.status}</td>
+                            </tr>
+                          ));
+                        })()}
                         {statModalTopic === 'users' && registeredCustomers.slice(0, 10).map((c: any) => (
                           <tr key={c.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                             <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{c.name} ({c.email})</td>

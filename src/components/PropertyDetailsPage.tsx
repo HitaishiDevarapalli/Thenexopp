@@ -214,28 +214,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       });
     }
 
-    // Async backend sync
-    try {
-      fetch(`${API_BASE_URL}/api/enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          customerName: contactName.trim(),
-          phone: contactPhone.trim(),
-          listingTitle: property ? property.title : 'Unknown Property',
-          listingType: 'PROPERTY',
-          listingId: propertyId,
-          enquiryType: modalMode === 'book' ? 'SLOT_BOOKING' : 'BUY',
-          message: modalMode === 'book' ? `Visit requested for ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`,
-          preferredMoveInDate: modalMode === 'book' ? bookingDate : '',
-          date: modalMode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          preferredTime: modalMode === 'book' ? bookingTime : '',
-          mode: modalMode
-        })
-      }).catch(err => console.warn('Modal backend sync warning:', err));
-    } catch (_) {}
-    
     setContactSubmitted(true);
     setTimeout(() => {
       setShowContactModal(false);
