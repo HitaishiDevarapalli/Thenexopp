@@ -516,6 +516,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [selectedPropertyStatusesFilter, setSelectedPropertyStatusesFilter] = useState<string[]>([]);
   const [selectedPropertyOwnershipsFilter, setSelectedPropertyOwnershipsFilter] = useState<string[]>([]);
 
+  // Accordion Expand/Collapse States for Sidebar Filter Sections
+  const [isLocationOpen, setIsLocationOpen] = useState<boolean>(true);
+  const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState<boolean>(true);
+  const [isPropertyStatusOpen, setIsPropertyStatusOpen] = useState<boolean>(true);
+  const [isPropertyOwnershipOpen, setIsPropertyOwnershipOpen] = useState<boolean>(true);
+
   const handleCityChange = (cityId: string) => {
     setSelectedCityId(cityId);
     setSelectedAreaId('');
@@ -1491,158 +1497,187 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
             {/* 1. Hierarchical Location Filter: City → Area → Locality */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '12px' }}>
-                ■ Location
+              <div 
+                onClick={() => setIsLocationOpen(!isLocationOpen)}
+                style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isLocationOpen ? '12px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span>■ Location</span>
+                {isLocationOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
               </div>
 
-              {/* City Select */}
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>City</label>
-                <select
-                  value={selectedCityId}
-                  onChange={(e) => handleCityChange(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: selectedCityId ? '#0F172A' : '#94A3B8', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s' }}
-                >
-                  <option value="">All Cities</option>
-                  {availableCities.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
+              {isLocationOpen && (
+                <div>
+                  {/* City Select */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>City</label>
+                    <select
+                      value={selectedCityId}
+                      onChange={(e) => handleCityChange(e.target.value)}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', fontWeight: 600, color: selectedCityId ? '#0F172A' : '#94A3B8', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none', transition: 'border-color 0.2s' }}
+                    >
+                      <option value="">All Cities</option>
+                      {availableCities.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Area Select */}
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Area</label>
-                <select
-                  disabled={!selectedCityId}
-                  value={selectedAreaId}
-                  onChange={(e) => handleAreaChange(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '10px',
-                    border: '1.5px solid #E2E8F0',
-                    fontSize: '13.5px',
-                    fontWeight: 600,
-                    color: selectedAreaId ? '#0F172A' : '#64748B',
-                    backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC',
-                    cursor: selectedCityId ? 'pointer' : 'not-allowed',
-                    outline: 'none',
-                    opacity: selectedCityId ? 1 : 0.6,
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  <option value="">{selectedCityId ? `All Areas (${availableCities.find(c => c.id === selectedCityId)?.name || 'All'})` : 'Select city first'}</option>
-                  {availableAreas.map(a => (
-                    <option key={a.id} value={a.id}>{a.name}</option>
-                  ))}
-                </select>
-              </div>
+                  {/* Area Select */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Area</label>
+                    <select
+                      disabled={!selectedCityId}
+                      value={selectedAreaId}
+                      onChange={(e) => handleAreaChange(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '10px',
+                        border: '1.5px solid #E2E8F0',
+                        fontSize: '13.5px',
+                        fontWeight: 600,
+                        color: selectedAreaId ? '#0F172A' : '#64748B',
+                        backgroundColor: selectedCityId ? '#FFFFFF' : '#F8FAFC',
+                        cursor: selectedCityId ? 'pointer' : 'not-allowed',
+                        outline: 'none',
+                        opacity: selectedCityId ? 1 : 0.6,
+                        transition: 'border-color 0.2s',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="">{selectedCityId ? `All Areas (${availableCities.find(c => c.id === selectedCityId)?.name || 'All'})` : 'Select city first'}</option>
+                      {availableAreas.map(a => (
+                        <option key={a.id} value={a.id}>{a.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Locality Select */}
-              {availableLocalities.length > 0 && (
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locality</label>
-                  <select
-                    disabled={!selectedAreaId}
-                    value={selectedLocalityId}
-                    onChange={(e) => setSelectedLocalityId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '10px',
-                      border: '1.5px solid #E2E8F0',
-                      fontSize: '13.5px',
-                      fontWeight: 600,
-                      color: selectedLocalityId ? '#0F172A' : '#64748B',
-                      backgroundColor: selectedAreaId ? '#FFFFFF' : '#F8FAFC',
-                      cursor: selectedAreaId ? 'pointer' : 'not-allowed',
-                      outline: 'none',
-                      opacity: selectedAreaId ? 1 : 0.6,
-                      transition: 'border-color 0.2s',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="">All Localities</option>
-                    {availableLocalities.map(l => (
-                      <option key={l.id} value={l.id}>{l.name}</option>
-                    ))}
-                  </select>
+                  {/* Locality Select */}
+                  {availableLocalities.length > 0 && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Locality</label>
+                      <select
+                        disabled={!selectedAreaId}
+                        value={selectedLocalityId}
+                        onChange={(e) => setSelectedLocalityId(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          border: '1.5px solid #E2E8F0',
+                          fontSize: '13.5px',
+                          fontWeight: 600,
+                          color: selectedLocalityId ? '#0F172A' : '#64748B',
+                          backgroundColor: selectedAreaId ? '#FFFFFF' : '#F8FAFC',
+                          cursor: selectedAreaId ? 'pointer' : 'not-allowed',
+                          outline: 'none',
+                          opacity: selectedAreaId ? 1 : 0.6,
+                          transition: 'border-color 0.2s',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <option value="">All Localities</option>
+                        {availableLocalities.map(l => (
+                          <option key={l.id} value={l.id}>{l.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
             {/* 2. Property Type Filter Section */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                ■ Property Type
+              <div 
+                onClick={() => setIsPropertyTypeOpen(!isPropertyTypeOpen)}
+                style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isPropertyTypeOpen ? '10px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span>■ Property Type</span>
+                {isPropertyTypeOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {masterPropertyTypesDb.filter(pt => pt.is_active).map((pt) => {
-                  const isSelected = selectedPropertyTypesFilter.includes(pt.name);
-                  return (
-                    <label key={pt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => togglePropertyTypeFilter(pt.name)}
-                        style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                      />
-                      <span>{pt.name}</span>
-                    </label>
-                  );
-                })}
-              </div>
+
+              {isPropertyTypeOpen && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {masterPropertyTypesDb.filter(pt => pt.is_active).map((pt) => {
+                    const isSelected = selectedPropertyTypesFilter.includes(pt.name);
+                    return (
+                      <label key={pt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => togglePropertyTypeFilter(pt.name)}
+                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>{pt.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* 4. Property Status Filter Section (Hidden for Rental Property) */}
             {!isRent && (
               <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                  ■ Property Status
+                <div 
+                  onClick={() => setIsPropertyStatusOpen(!isPropertyStatusOpen)}
+                  style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isPropertyStatusOpen ? '10px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <span>■ Property Status</span>
+                  {isPropertyStatusOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {masterPropertyStatusesDb.filter(ps => ps.is_active).map((ps) => {
-                    const isSelected = selectedPropertyStatusesFilter.includes(ps.name);
-                    return (
-                      <label key={ps.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => togglePropertyStatusFilter(ps.name)}
-                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                        <span>{ps.name}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+
+                {isPropertyStatusOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {masterPropertyStatusesDb.filter(ps => ps.is_active).map((ps) => {
+                      const isSelected = selectedPropertyStatusesFilter.includes(ps.name);
+                      return (
+                        <label key={ps.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => togglePropertyStatusFilter(ps.name)}
+                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                          />
+                          <span>{ps.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
             {/* 5. Property Ownership Filter Section (Hidden for Rental Property) */}
             {!isRent && (
               <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-                <div style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: '10px' }}>
-                  ■ Property Ownership
+                <div 
+                  onClick={() => setIsPropertyOwnershipOpen(!isPropertyOwnershipOpen)}
+                  style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isPropertyOwnershipOpen ? '10px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <span>■ Property Ownership</span>
+                  {isPropertyOwnershipOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {masterPropertyOwnershipsDb.filter(po => po.is_active).map((po) => {
-                    const isSelected = selectedPropertyOwnershipsFilter.includes(po.name);
-                    return (
-                      <label key={po.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => togglePropertyOwnershipFilter(po.name)}
-                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                        <span>{po.name}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+
+                {isPropertyOwnershipOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {masterPropertyOwnershipsDb.filter(po => po.is_active).map((po) => {
+                      const isSelected = selectedPropertyOwnershipsFilter.includes(po.name);
+                      return (
+                        <label key={po.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => togglePropertyOwnershipFilter(po.name)}
+                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                          />
+                          <span>{po.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
