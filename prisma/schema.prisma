@@ -274,7 +274,7 @@ model Customer {
   gender           String?  @default("Male")
   district         String?  @default("Guntur")
   area             String?  @default("")
-  role             String?  @default("Verified Investor")
+  role             String?  @default("User")
   avatar           String?
   lastLoginAt      String?
   loginCount       Int      @default(1)

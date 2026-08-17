@@ -29,6 +29,8 @@ export const generateTokens = (userPayload) => {
       email: userPayload.email,
       role: userPayload.role,
       fullName: userPayload.fullName,
+      mobile: userPayload.mobile || userPayload.phone || '',
+      phone: userPayload.phone || userPayload.mobile || '',
     },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }

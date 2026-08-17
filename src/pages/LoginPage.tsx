@@ -527,11 +527,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
       setStep('success');
       setTimeout(() => {
-        const email = `${clean}@nexopp.in`;
+        const userEmail = (data.user?.email && !data.user.email.includes('@nexopp.in') && !data.user.email.includes('@thenexopp')) ? data.user.email : '';
         loginWithGmail(
-          email,
-          'Verified Investor',
-          data.user?.fullName || '',
+          userEmail,
+          'User',
+          data.user?.fullName || data.user?.name || '',
           clean,
           data.user?.gender,
           data.user?.district || data.user?.area
@@ -586,10 +586,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
       setStep('success');
       setTimeout(() => {
         const clean = mobile.replace(/\D/g, '');
-        const email = `${clean}@nexopp.in`;
+        const userEmail = (data.user?.email && !data.user.email.includes('@nexopp.in') && !data.user.email.includes('@thenexopp')) ? data.user.email : '';
         loginWithGmail(
-          email,
-          'Verified Investor',
+          userEmail,
+          'User',
           profileName.trim(),
           clean,
           profileGender,

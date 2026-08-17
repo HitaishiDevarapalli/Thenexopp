@@ -680,7 +680,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid #F1F5F9' }}>
                       <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Signed In As</div>
                       <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{user.name}</div>
-                      <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', wordBreak: 'break-all' }}>{user.email}</div>
+                      <div style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', wordBreak: 'break-all' }}>
+                        {user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp') ? user.email : (user.phone ? `+91 ${user.phone.replace('+91', '').trim()}` : '')}
+                      </div>
                     </div>
                     <button
                       onClick={() => {
@@ -730,31 +732,33 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <FaHeart style={{ color: '#EF4444' }} /> Saved Listings ({wishlistItems.length})
                     </button>
-                    <button
-                      onClick={() => {
-                        setOpenDropdown(null);
-                        if (onNavigateToPage) onNavigateToPage('adminPortal');
-                        else window.location.href = '/admin';
-                      }}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '10px 16px',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: '#0F172A',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <FaBuilding style={{ color: '#002B66' }} /> Admin Portal Desk
-                    </button>
+                    {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') && (
+                      <button
+                        onClick={() => {
+                          setOpenDropdown(null);
+                          if (onNavigateToPage) onNavigateToPage('adminPortal');
+                          else window.location.href = '/admin';
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: '#0F172A',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <FaBuilding style={{ color: '#002B66' }} /> Admin Portal Desk
+                      </button>
+                    )}
                     <button
                       onClick={() => { logout(); setOpenDropdown(null); }}
                       style={{
@@ -965,7 +969,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span style={{ fontSize: '10px', backgroundColor: '#F59E0B', color: '#FFF', padding: '1px 6px', borderRadius: '6px', fontWeight: 800 }}>Verified</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#D1FAE5', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {user.email}
+                    {user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp') ? user.email : (user.phone ? `+91 ${user.phone.replace('+91', '').trim()}` : '')}
                   </div>
                 </div>
               </div>

@@ -36,6 +36,14 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   useEffect(() => {
     fetchUserFavorites();
+  }, [user?.id, user?.phone]);
+
+  useEffect(() => {
+    const handleDataChanged = () => {
+      fetchUserFavorites();
+    };
+    window.addEventListener('nexopp_data_changed', handleDataChanged);
+    return () => window.removeEventListener('nexopp_data_changed', handleDataChanged);
   }, [user]);
 
   const toggleWishlist = async (listingId: string, listingType: 'PROPERTY' | 'BUSINESS' = 'PROPERTY') => {
@@ -50,17 +58,10 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     try {
       if (isCurrentlyWishlisted) {
-        const favRes = await fetch(`${API_BASE_URL}/api/favorites`, { credentials: 'include' });
-        if (favRes.ok) {
-          const favs = await favRes.json();
-          const target = favs.find((f: any) => f.listingId === listingId || f.id === listingId);
-          if (target) {
-            await fetch(`${API_BASE_URL}/api/favorites/${target.id}`, {
-              method: 'DELETE',
-              credentials: 'include'
-            });
-          }
-        }
+        await fetch(`${API_BASE_URL}/api/favorites/${listingId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
       } else {
         await fetch(`${API_BASE_URL}/api/favorites`, {
           method: 'POST',
@@ -69,6 +70,7 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
           body: JSON.stringify({ listingType, listingId })
         });
       }
+      await fetchUserFavorites();
     } catch (e) {
       console.error('Failed to sync favorite with server:', e);
     }

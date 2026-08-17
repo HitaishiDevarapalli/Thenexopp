@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { businessDb, dealersDb, propertiesDb, franchiseDb, API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
 import { FaArrowLeft, FaMapMarkerAlt, FaBriefcase, FaChartLine, FaShoppingCart, FaHeart, FaRegHeart, FaUserTie } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 
 interface BusinessListingsPageProps {
   industry: 'Food' | 'Healthcare' | 'Retail & Stores' | 'All';
@@ -14,6 +15,7 @@ interface BusinessListingsPageProps {
 
 export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ industry, onBack, onPropertyClick, onBuyProperty, searchQuery, onClearSearch }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { user } = useAuth();
   const [selectedDealer, setSelectedDealer] = useState<any | null>(null);
   const [showSellerPortfolio, setShowSellerPortfolio] = useState<any | null>(null);
   const [portfolioTab, setPortfolioTab] = useState<'active' | 'sold'>('active');
@@ -460,9 +462,9 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                         }
                         setPortfolioSending(true);
                         const payload = {
-                          customerName: 'Verified Investor',
-                          phone: 'Direct Inquiry',
-                          email: '',
+                          customerName: user?.name || 'User',
+                          phone: user?.phone || 'Direct Inquiry',
+                          email: user?.email || '',
                           listingTitle: `Business Direct Inquiry: ${showSellerPortfolio.companyName}`,
                           listingType: 'BUSINESS',
                           listingId: showSellerPortfolio.id || 'business-direct',

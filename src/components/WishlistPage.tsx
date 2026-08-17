@@ -47,7 +47,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
       }
 
       // 2. Enquiries
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries`, { credentials: 'include' });
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?mine=true`, { credentials: 'include' });
       if (enqRes.ok) {
         const enqs = await enqRes.json();
         if (Array.isArray(enqs)) {
@@ -56,7 +56,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
       }
 
       // 3. Bookings
-      const bookRes = await fetch(`${API_BASE_URL}/api/bookings`, { credentials: 'include' });
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?mine=true`, { credentials: 'include' });
       if (bookRes.ok) {
         const books = await bookRes.json();
         if (Array.isArray(books)) {
@@ -361,8 +361,12 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
                 {user.name}
               </h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', fontSize: '1rem', color: '#64748B', fontWeight: 600, marginTop: '12px' }}>
-                <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>📞 +91 {user.phone}</span>
-                {user.email && (
+                {user.phone && (
+                  <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>
+                    📞 {user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone.trim()}`}
+                  </span>
+                )}
+                {user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp') && (
                   <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>✉️ {user.email}</span>
                 )}
                 <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>📍 {user.district || 'India'}</span>

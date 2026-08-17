@@ -459,9 +459,10 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
             name: userName,
             email: cleanEmail,
             phone: mobile || '',
+            mobile: mobile || '',
             gender: 'Not Specified',
             district: 'General',
-            role: 'Verified Investor',
+            role: 'User',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
             lastLoginAt: now,
             loginCount: 1,
@@ -477,9 +478,10 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
         name: userName,
         email: cleanEmail,
         phone: mobile || '',
+        mobile: mobile || '',
         gender: 'Not Specified',
         district: 'General',
-        role: 'Verified Investor',
+        role: 'User',
       };
     }
 
@@ -487,8 +489,9 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
       id: customer.id,
       email: customer.email,
       fullName: customer.name,
-      mobile: customer.phone,
-      role: customer.role || 'Verified Investor',
+      mobile: customer.phone || customer.mobile || '',
+      phone: customer.phone || customer.mobile || '',
+      role: customer.role || 'User',
     };
 
     const tokens = generateTokens(userPayload);
@@ -770,22 +773,25 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
 
     const verifiedMobile = cleaned;
     const timestamp = new Date().toLocaleString();
-    const mockEmail = `${verifiedMobile}@nexopp.in`;
-    const targetName = fullName || 'Verified Investor';
+    const targetName = (fullName && fullName.trim()) ? fullName.trim() : 'User';
 
     let customer = null;
     let isNewCustomer = false;
     try {
       const existing = await prisma.customer.findFirst({
-        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
+        where: { OR: [{ mobile: verifiedMobile }, { phone: verifiedMobile }] },
       });
 
       if (existing) {
+        // Sanitize legacy mock email if present in existing record
+        const cleanExistingEmail = (existing.email && !existing.email.includes('@nexopp.in') && !existing.email.includes('@thenexopp')) ? existing.email : null;
         customer = await prisma.customer.update({
           where: { id: existing.id },
           data: {
+            mobile: verifiedMobile,
             phone: existing.phone || verifiedMobile,
-            name: existing.name || targetName,
+            email: cleanExistingEmail,
+            name: (fullName && fullName.trim()) ? fullName.trim() : (existing.name || 'User'),
             gender: existing.gender || gender,
             district: existing.district || district,
             lastLoginAt: timestamp,
@@ -797,15 +803,16 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
         customer = await prisma.customer.create({
           data: {
             name: targetName,
-            email: mockEmail,
+            email: null,
+            mobile: verifiedMobile,
             phone: verifiedMobile,
             gender: gender || 'Male',
             district: district || 'Hyderabad',
-            role: 'Verified Investor',
+            role: 'User',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
             lastLoginAt: timestamp,
             loginCount: 1,
-            status: 'Pending',
+            status: 'Active',
             registeredDate: new Date().toLocaleDateString()
           },
         });
@@ -815,13 +822,13 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
       customer = {
         id: `cust-${verifiedMobile}`,
         name: targetName,
-        email: mockEmail,
+        email: null,
         mobile: verifiedMobile,
         phone: verifiedMobile,
         gender: gender || 'Male',
         district: district || 'Hyderabad',
-        role: 'Verified Investor',
-        status: 'Pending'
+        role: 'User',
+        status: 'Active'
       };
     }
 
@@ -863,11 +870,11 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     // Generate JWT Token
     const userPayload = {
       id: customer.id,
-      email: customer.email,
+      email: (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null,
       fullName: customer.name,
-      mobile: customer.mobile || customer.phone || '',
-      phone: customer.mobile || customer.phone || '',
-      role: customer.role || 'Verified Investor',
+      mobile: customer.mobile || customer.phone || verifiedMobile,
+      phone: customer.mobile || customer.phone || verifiedMobile,
+      role: customer.role || 'User',
       gender: customer.gender,
       district: customer.district || '',
       profileCompleted: customer.status === 'Active',
@@ -910,19 +917,23 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
 
     const verifiedMobile = verifyResult.mobile;
     const now = new Date().toLocaleString();
-    const mockEmail = `${verifiedMobile}@nexopp.in`;
+    const targetName = (fullName && fullName.trim()) ? fullName.trim() : 'User';
 
     let customer = null;
     try {
       const existing = await prisma.customer.findFirst({
-        where: { OR: [{ phone: verifiedMobile }, { email: mockEmail }] },
+        where: { OR: [{ mobile: verifiedMobile }, { phone: verifiedMobile }] },
       });
 
       if (existing) {
+        const cleanExistingEmail = (existing.email && !existing.email.includes('@nexopp.in') && !existing.email.includes('@thenexopp')) ? existing.email : null;
         customer = await prisma.customer.update({
           where: { id: existing.id },
           data: {
-            name: fullName || existing.name,
+            mobile: verifiedMobile,
+            phone: existing.phone || verifiedMobile,
+            email: cleanExistingEmail,
+            name: (fullName && fullName.trim()) ? fullName.trim() : (existing.name || 'User'),
             gender: gender || existing.gender,
             district: district || existing.district,
             lastLoginAt: now,
@@ -932,13 +943,14 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
       } else {
         customer = await prisma.customer.create({
           data: {
-            name: fullName || 'Verified Investor',
-            email: mockEmail,
+            name: targetName,
+            email: null,
+            mobile: verifiedMobile,
             phone: verifiedMobile,
             gender: gender || 'Male',
             district: district || 'Hyderabad',
-            role: 'Verified Investor',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'User')}&background=007A55&color=fff`,
+            role: 'User',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(targetName)}&background=007A55&color=fff`,
             lastLoginAt: now,
             loginCount: 1,
             status: 'Active',
@@ -950,22 +962,24 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
       logger.warn({ dbErr }, 'Database offline or query error during Widget login, falling back to session payload');
       customer = {
         id: `cust-${verifiedMobile}`,
-        name: fullName || 'Verified Investor',
-        email: mockEmail,
+        name: targetName,
+        email: null,
+        mobile: verifiedMobile,
         phone: verifiedMobile,
         gender: gender || 'Male',
         district: district || 'Hyderabad',
-        role: 'Verified Investor',
+        role: 'User',
       };
     }
 
     // Generate JWT Token
     const userPayload = {
       id: customer.id,
-      email: customer.email,
+      email: (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null,
       fullName: customer.name,
-      mobile: customer.phone,
-      role: customer.role || 'Verified Investor',
+      mobile: customer.mobile || customer.phone || verifiedMobile,
+      phone: customer.mobile || customer.phone || verifiedMobile,
+      role: customer.role || 'User',
       gender: customer.gender,
       district: customer.district,
     };
@@ -996,30 +1010,50 @@ app.get('/api/auth/me', optionalAuthMiddleware, async (req, res) => {
     if (!req.user) {
       return res.json({ success: false, user: null });
     }
-    if (req.user.role === 'Verified Investor') {
-      const customer = await prisma.customer.findUnique({
-        where: { id: req.user.id }
-      }).catch(() => null);
-      if (customer) {
-        return res.json({
-          success: true,
-          user: {
-            id: customer.id,
-            email: customer.email,
-            fullName: customer.name,
-            mobile: customer.mobile || customer.phone || '',
-            phone: customer.mobile || customer.phone || '',
-            role: customer.role || 'Verified Investor',
-            gender: customer.gender,
-            district: customer.district || '',
-            profileCompleted: customer.status === 'Active',
-            status: customer.status,
-            avatar: customer.avatar
-          }
-        });
+
+    // Look up customer by ID or mobile/phone
+    const customer = await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { id: req.user.id },
+          ...(req.user.mobile ? [{ mobile: req.user.mobile }, { phone: req.user.mobile }] : []),
+          ...(req.user.phone ? [{ mobile: req.user.phone }, { phone: req.user.phone }] : []),
+          ...(req.user.email ? [{ email: req.user.email }] : [])
+        ]
       }
+    }).catch(() => null);
+
+    if (customer) {
+      const cleanEmail = (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null;
+      return res.json({
+        success: true,
+        user: {
+          id: customer.id,
+          email: cleanEmail,
+          fullName: customer.name,
+          name: customer.name,
+          mobile: customer.mobile || customer.phone || '',
+          phone: customer.mobile || customer.phone || '',
+          role: customer.role || 'User',
+          gender: customer.gender,
+          district: customer.district || '',
+          profileCompleted: customer.status === 'Active' || customer.profileCompleted,
+          status: customer.status,
+          avatar: customer.avatar
+        }
+      });
     }
-    return res.json({ success: true, user: req.user });
+
+    const cleanUserEmail = (req.user.email && !req.user.email.includes('@nexopp.in') && !req.user.email.includes('@thenexopp')) ? req.user.email : null;
+    return res.json({ 
+      success: true, 
+      user: {
+        ...req.user,
+        email: cleanUserEmail,
+        name: req.user.fullName || req.user.name || 'User',
+        role: req.user.role || 'User'
+      } 
+    });
   } catch (err) {
     return res.json({ success: false, user: null });
   }
@@ -1049,33 +1083,38 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
 
     if (!customer && userMobile) {
       customer = await prisma.customer.findFirst({
-        where: { OR: [{ phone: userMobile }, { email: `${userMobile}@nexopp.in` }] }
+        where: { OR: [{ mobile: userMobile }, { phone: userMobile }] }
       }).catch(() => null);
     }
 
     if (customer) {
+      const cleanExistingEmail = (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null;
       customer = await prisma.customer.update({
         where: { id: customer.id },
         data: {
           name: name.trim(),
           gender: gender || 'Male',
           district: area || '',
-          status: 'Active'
+          email: cleanExistingEmail,
+          status: 'Active',
+          profileCompleted: true
         }
       });
     } else {
       customer = await prisma.customer.create({
         data: {
           name: name.trim(),
-          email: `${userMobile || 'user'}@nexopp.in`,
+          email: null,
+          mobile: userMobile,
           phone: userMobile,
           gender: gender || 'Male',
           district: area || 'Hyderabad',
-          role: 'Verified Investor',
+          role: 'User',
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007A55&color=fff`,
           lastLoginAt: new Date().toLocaleString(),
           loginCount: 1,
           status: 'Active',
+          profileCompleted: true,
           registeredDate: new Date().toLocaleDateString()
         }
       });
@@ -1095,16 +1134,17 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
     }
 
     // Generate fresh tokens with updated profileCompleted state
+    const cleanCustomerEmail = (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null;
     const userPayload = {
       id: customer.id,
-      email: customer.email,
+      email: cleanCustomerEmail,
       fullName: customer.name,
-      mobile: customer.mobile || customer.phone || '',
-      phone: customer.mobile || customer.phone || '',
-      role: customer.role || 'Verified Investor',
+      mobile: customer.mobile || customer.phone || userMobile || '',
+      phone: customer.mobile || customer.phone || userMobile || '',
+      role: customer.role || 'User',
       gender: customer.gender,
       district: customer.district || '',
-      profileCompleted: customer.status === 'Active',
+      profileCompleted: true,
     };
 
     const tokens = generateTokens(userPayload);
@@ -1133,8 +1173,26 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     if (!req.user) {
       return res.json([]);
     }
+
+    // Resolve customer ID
+    let customerId = req.user.id;
+    if (!customerId || customerId.startsWith('cust-')) {
+      const userPhone = req.user.mobile || req.user.phone;
+      if (userPhone) {
+        const cust = await prisma.customer.findFirst({
+          where: { OR: [{ mobile: userPhone }, { phone: userPhone }] }
+        }).catch(() => null);
+        if (cust) customerId = cust.id;
+      }
+    }
+
     const favorites = await prisma.customerFavorite.findMany({
-      where: { customerId: req.user.id, status: 'ACTIVE' },
+      where: {
+        OR: [
+          { customerId: customerId, status: 'ACTIVE' },
+          ...(req.user.id && req.user.id !== customerId ? [{ customerId: req.user.id, status: 'ACTIVE' }] : [])
+        ]
+      },
       include: { property: true, business: true }
     }).catch(err => {
       logger.warn({ error: err.message }, 'Safe fallback for favorites');
@@ -1153,21 +1211,53 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
       return res.status(401).json({ error: 'Please log in to add items to your favorites.' });
     }
     const { listingType, listingId } = req.body;
-    if (!listingType || !listingId) {
-      return res.status(400).json({ error: 'listingType and listingId are required.' });
+    if (!listingId) {
+      return res.status(400).json({ error: 'listingId is required.' });
     }
 
-    let listingTitle = 'Unknown Listing';
+    const resolvedType = listingType || 'PROPERTY';
+
+    // Resolve effective customer in database
+    let effectiveCustomerId = req.user.id;
+    let customer = null;
+    if (req.user.id && !req.user.id.startsWith('cust-')) {
+      customer = await prisma.customer.findUnique({ where: { id: req.user.id } }).catch(() => null);
+    }
+    if (!customer) {
+      const phoneNum = req.user.mobile || req.user.phone;
+      if (phoneNum) {
+        customer = await prisma.customer.findFirst({
+          where: { OR: [{ mobile: phoneNum }, { phone: phoneNum }] }
+        }).catch(() => null);
+      }
+    }
+    if (!customer) {
+      const phoneNum = req.user.mobile || req.user.phone || '';
+      customer = await prisma.customer.create({
+        data: {
+          name: req.user.fullName || req.user.name || 'User',
+          phone: phoneNum,
+          mobile: phoneNum,
+          role: 'User',
+          status: 'Active'
+        }
+      }).catch(() => null);
+    }
+    if (customer) {
+      effectiveCustomerId = customer.id;
+    }
+
+    let listingTitle = 'Listing';
     let validPropertyId = null;
     let validBusinessId = null;
 
-    if (listingType === 'PROPERTY') {
+    if (resolvedType === 'PROPERTY') {
       const p = await prisma.property.findUnique({ where: { id: listingId } }).catch(() => null);
       if (p) {
         validPropertyId = p.id;
         listingTitle = p.title;
       }
-    } else if (listingType === 'BUSINESS') {
+    } else {
       const b = await prisma.business.findUnique({ where: { id: listingId } }).catch(() => null);
       if (b) {
         validBusinessId = b.id;
@@ -1175,13 +1265,10 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
       }
     }
 
-    const existing = await prisma.customerFavorite.findUnique({
+    const existing = await prisma.customerFavorite.findFirst({
       where: {
-        customerId_listingType_listingId: {
-          customerId: req.user.id,
-          listingType,
-          listingId
-        }
+        customerId: effectiveCustomerId,
+        listingId: listingId
       }
     });
 
@@ -1193,8 +1280,8 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
     } else {
       await prisma.customerFavorite.create({
         data: {
-          customerId: req.user.id,
-          listingType,
+          customerId: effectiveCustomerId,
+          listingType: resolvedType,
           listingId,
           propertyId: validPropertyId,
           businessId: validBusinessId,
@@ -1208,9 +1295,9 @@ app.post('/api/favorites', optionalAuthMiddleware, async (req, res, next) => {
       try {
         await prisma.userActivity.create({
           data: {
-            customerId: req.user.id,
+            customerId: effectiveCustomerId,
             activityType: 'FAVORITE_ADD',
-            listingType,
+            listingType: resolvedType,
             listingId,
             description: `Added "${listingTitle}" to favorites`
           }
@@ -1230,22 +1317,33 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
       return res.status(401).json({ error: 'Unauthorized.' });
     }
     const { id } = req.params;
-    const fav = await prisma.customerFavorite.findUnique({ where: { id } });
-    if (!fav || fav.customerId !== req.user.id) {
-      return res.status(404).json({ error: 'Favorite not found.' });
+
+    let effectiveCustomerId = req.user.id;
+    const phoneNum = req.user.mobile || req.user.phone;
+    if (phoneNum) {
+      const cust = await prisma.customer.findFirst({
+        where: { OR: [{ mobile: phoneNum }, { phone: phoneNum }] }
+      }).catch(() => null);
+      if (cust) effectiveCustomerId = cust.id;
     }
 
-    let listingTitle = 'Unknown Listing';
-    if (fav.listingType === 'PROPERTY') {
-      const p = await prisma.property.findUnique({ where: { id: fav.listingId } });
-      if (p) listingTitle = p.title;
-    } else if (fav.listingType === 'BUSINESS') {
-      const b = await prisma.business.findUnique({ where: { id: fav.listingId } });
-      if (b) listingTitle = b.name;
+    const fav = await prisma.customerFavorite.findFirst({
+      where: {
+        OR: [
+          { id: id, customerId: effectiveCustomerId },
+          { listingId: id, customerId: effectiveCustomerId },
+          { id: id, customerId: req.user.id },
+          { listingId: id, customerId: req.user.id }
+        ]
+      }
+    });
+
+    if (!fav) {
+      return res.json({ success: true, message: 'Favorite not found or already removed.' });
     }
 
     await prisma.customerFavorite.update({
-      where: { id },
+      where: { id: fav.id },
       data: {
         status: 'REMOVED',
         removedAt: new Date(),
@@ -1258,11 +1356,11 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res, next) 
       try {
         await prisma.userActivity.create({
           data: {
-            customerId: req.user.id,
+            customerId: effectiveCustomerId,
             activityType: 'FAVORITE_REMOVE',
             listingType: fav.listingType,
             listingId: fav.listingId,
-            description: `Removed "${listingTitle}" from favorites`
+            description: `Removed item from favorites`
           }
         });
       } catch (_) {}
@@ -1319,16 +1417,27 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
     const onlyMine = req.query.mine === 'true';
     
-    if (onlyMine && req.user) {
+    if ((onlyMine || (req.user && req.user.role === 'User')) && req.user) {
+      let customerId = req.user.id;
+      const userPhone = req.user.mobile || req.user.phone;
+      if (!customerId || customerId.startsWith('cust-')) {
+        if (userPhone) {
+          const cust = await prisma.customer.findFirst({
+            where: { OR: [{ mobile: userPhone }, { phone: userPhone }] }
+          }).catch(() => null);
+          if (cust) customerId = cust.id;
+        }
+      }
+
       const enquiries = await prisma.enquiry.findMany({
         where: {
           OR: [
-            { customerId: req.user.id },
-            { userId: req.user.id },
-            req.user.email ? { email: req.user.email } : undefined,
-            req.user.mobile ? { phone: req.user.mobile } : undefined,
-            req.user.phone ? { phone: req.user.phone } : undefined,
-          ].filter(Boolean)
+            ...(customerId ? [{ customerId: customerId }] : []),
+            ...(req.user.id && req.user.id !== customerId ? [{ customerId: req.user.id }] : []),
+            ...(req.user.id ? [{ userId: req.user.id }] : []),
+            ...(userPhone ? [{ phone: userPhone }] : []),
+            ...(req.user.email ? [{ email: req.user.email }] : []),
+          ]
         },
         orderBy: { createdAt: 'desc' }
       }).catch(err => {
@@ -1372,9 +1481,9 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
 
 app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
-    const customerName = req.body.customerName || req.body.name || (req.user ? (req.user.fullName || req.user.name) : 'Guest Investor');
+    const customerName = req.body.customerName || req.body.name || (req.user ? (req.user.fullName || req.user.name) : 'Guest User');
     const phone = req.body.phone || req.body.mobile || (req.user ? (req.user.phone || req.user.mobile) : '');
-    const email = req.body.email || (req.user ? req.user.email : '');
+    const email = req.body.email || (req.user ? (req.user.email && !req.user.email.includes('@nexopp.in') && !req.user.email.includes('@thenexopp') ? req.user.email : '') : '');
     const listingTitle = req.body.listingTitle || req.body.title || 'General Enquiry';
     const listingType = req.body.listingType || (req.body.enquiryType?.includes('BUSINESS') ? 'BUSINESS' : req.body.enquiryType?.includes('FRANCHISE') ? 'FRANCHISE' : 'PROPERTY');
     const listingId = req.body.listingId || req.body.propertyId || 'general';
@@ -1403,10 +1512,20 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
       return res.status(200).json({ success: true, enquiry: existing });
     }
 
+    // Resolve customer ID
+    let linkedCustomerId = (req.user && !req.user.id.startsWith('cust-')) ? req.user.id : null;
+    if (!linkedCustomerId && phone) {
+      const cust = await prisma.customer.findFirst({
+        where: { OR: [{ mobile: String(phone) }, { phone: String(phone) }] }
+      }).catch(() => null);
+      if (cust) linkedCustomerId = cust.id;
+    }
+
     // Guaranteed Direct DB insert into PostgreSQL Enquiry table
     const enquiryRecord = await prisma.enquiry.create({
       data: {
         id: `enq-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        customerId: linkedCustomerId,
         customerName: String(customerName || 'Guest User'),
         phone: String(phone || ''),
         email: String(email || ''),
@@ -1427,6 +1546,7 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
       logger.warn({ error: dbErr.message }, 'Primary enquiry insert note, creating safe fallback');
       return {
         id: `enq-${Date.now()}`,
+        customerId: linkedCustomerId,
         customerName,
         phone,
         email,
@@ -1469,9 +1589,26 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
 app.get('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
     const onlyMine = req.query.mine === 'true';
-    if (onlyMine && req.user) {
+    if ((onlyMine || (req.user && req.user.role === 'User')) && req.user) {
+      let customerId = req.user.id;
+      const userPhone = req.user.mobile || req.user.phone;
+      if (!customerId || customerId.startsWith('cust-')) {
+        if (userPhone) {
+          const cust = await prisma.customer.findFirst({
+            where: { OR: [{ mobile: userPhone }, { phone: userPhone }] }
+          }).catch(() => null);
+          if (cust) customerId = cust.id;
+        }
+      }
+
       const bookings = await prisma.booking.findMany({
-        where: { customerId: req.user.id },
+        where: {
+          OR: [
+            ...(customerId ? [{ customerId: customerId }] : []),
+            ...(req.user.id && req.user.id !== customerId ? [{ customerId: req.user.id }] : []),
+            ...(userPhone ? [{ customer: { OR: [{ mobile: userPhone }, { phone: userPhone }] } }] : [])
+          ]
+        },
         orderBy: { createdAt: 'desc' }
       }).catch(err => {
         logger.warn({ error: err.message }, 'Safe fallback for user bookings');
@@ -1538,16 +1675,18 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res) => {
         customerId = existing.id;
         custName = existing.name || custName;
       } else {
+        const cleanCustEmail = (custEmail && !custEmail.includes('@nexopp.in') && !custEmail.includes('@thenexopp')) ? custEmail : null;
         const newCust = await prisma.customer.create({
           data: {
             id: `cust-${Date.now()}`,
             name: custName || 'Guest User',
-            email: custEmail || `${custPhone || Date.now()}@nexopp.in`,
+            email: cleanCustEmail,
             phone: custPhone || '',
+            mobile: custPhone || '',
             gender: 'Male',
             district: 'Hyderabad',
-            role: 'Verified Investor',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(custName)}&background=007A55&color=fff`,
+            role: 'User',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(custName || 'User')}&background=007A55&color=fff`,
             lastLoginAt: new Date().toLocaleString(),
             loginCount: 1,
             status: 'Active',
@@ -1563,10 +1702,11 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res) => {
         data: {
           id: `cust-guest-${Date.now()}`,
           name: custName || 'Guest Visitor',
-          email: `${Date.now()}@nexopp.in`,
-          phone: custPhone || '9999999999',
+          email: null,
+          phone: custPhone || '',
+          mobile: custPhone || '',
           district: 'Hyderabad',
-          role: 'Verified Investor',
+          role: 'User',
           status: 'Active',
           registeredDate: new Date().toLocaleDateString(),
         }
@@ -1986,11 +2126,13 @@ app.post('/api/customers', async (req, res, next) => {
     const { email, phone, name, gender, district, role, avatar } = req.body;
     const now = new Date().toLocaleString();
 
+    const cleanEmail = (email && !email.includes('@nexopp.in') && !email.includes('@thenexopp')) ? email : null;
     const existing = await prisma.customer.findFirst({
       where: {
         OR: [
+          phone ? { mobile: phone } : undefined,
           phone ? { phone } : undefined,
-          email ? { email } : undefined,
+          cleanEmail ? { email: cleanEmail } : undefined,
         ].filter(Boolean),
       },
     });
@@ -2001,9 +2143,12 @@ app.post('/api/customers', async (req, res, next) => {
         where: { id: existing.id },
         data: {
           name: name || existing.name,
+          email: cleanEmail || existing.email,
+          mobile: phone || existing.mobile,
+          phone: phone || existing.phone,
           gender: gender || existing.gender,
           district: district || existing.district,
-          role: role || existing.role,
+          role: role || existing.role || 'User',
           avatar: avatar || existing.avatar,
           lastLoginAt: now,
           loginCount: existing.loginCount + 1,
@@ -2012,12 +2157,13 @@ app.post('/api/customers', async (req, res, next) => {
     } else {
       custRecord = await prisma.customer.create({
         data: {
-          name: name || 'Anonymous User',
-          email: email || `${phone || Date.now()}@nexopp.in`,
+          name: name || 'User',
+          email: cleanEmail,
           phone: phone || '',
+          mobile: phone || '',
           gender: gender || 'Male',
           district: district || 'Guntur',
-          role: role || 'Verified Investor',
+          role: role || 'User',
           avatar: avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=007A55&color=fff`,
           lastLoginAt: now,
           loginCount: 1,
@@ -2033,7 +2179,7 @@ app.post('/api/customers', async (req, res, next) => {
       fullName: custRecord.name,
       mobile: custRecord.mobile || custRecord.phone || '',
       phone: custRecord.mobile || custRecord.phone || '',
-      role: custRecord.role || 'Verified Investor',
+      role: custRecord.role || 'User',
       gender: custRecord.gender,
       district: custRecord.district || '',
       profileCompleted: true,

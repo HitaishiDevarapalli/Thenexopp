@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { 
   FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaShieldAlt, 
   FaHeart, FaPlus, FaSignOutAlt, FaTimes, FaEdit, FaCheck, 
-  FaBriefcase, FaStore, FaBuilding, FaCrown
+  FaBriefcase, FaStore, FaBuilding
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -28,10 +28,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [editName, setEditName] = useState(user?.name || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [editDistrict, setEditDistrict] = useState(user?.district || 'Guntur');
-  const [editRole, setEditRole] = useState(user?.role || 'Verified Investor');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   if (!isOpen || !user) return null;
+
+  const hasRealEmail = user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp');
+  const displayContact = hasRealEmail ? user.email : (user.phone ? (user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone.trim()}`) : '');
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       name: editName.trim() || user.name,
       phone: editPhone.trim() || user.phone,
       district: editDistrict.trim() || user.district,
-      role: editRole as any,
+      role: 'User',
     });
     setSaveSuccess(true);
     setTimeout(() => {
@@ -143,13 +145,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
               flexShrink: 0,
             }}>
-              {user.name.charAt(0).toUpperCase()}
+              {(user.name || 'U').charAt(0).toUpperCase()}
             </div>
 
             <div style={{ overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
-                  {user.name}
+                  {user.name || 'User'}
                 </h3>
                 <span style={{
                   display: 'inline-flex',
@@ -166,13 +168,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 </span>
               </div>
 
-              <div style={{ fontSize: '13px', color: '#D1FAE5', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FaEnvelope style={{ fontSize: '11px', opacity: 0.8 }} />
-                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{user.email}</span>
-              </div>
+              {displayContact && (
+                <div style={{ fontSize: '13px', color: '#D1FAE5', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {hasRealEmail ? <FaEnvelope style={{ fontSize: '11px', opacity: 0.8 }} /> : <FaPhone style={{ fontSize: '11px', opacity: 0.8 }} />}
+                  <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{displayContact}</span>
+                </div>
+              )}
 
               <div style={{ display: 'inline-block', marginTop: '6px', fontSize: '11.5px', fontWeight: 700, backgroundColor: 'rgba(255, 255, 255, 0.18)', color: '#FFFFFF', padding: '2px 10px', borderRadius: '8px' }}>
-                {user.role || 'Verified Member'}
+                User
               </div>
             </div>
           </div>
@@ -198,10 +202,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </button>
             <button
               onClick={() => {
-                setEditName(user.name);
+                setEditName(user.name || '');
                 setEditPhone(user.phone || '');
                 setEditDistrict(user.district || 'Guntur');
-                setEditRole(user.role || 'Verified Investor');
                 setActiveTab('edit');
               }}
               style={{
@@ -241,21 +244,23 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <FaUser style={{ color: '#94A3B8', fontSize: '12px' }} /> Full Name:
                     </span>
-                    <strong style={{ color: '#0F172A' }}>{user.name}</strong>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
-                    <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <FaEnvelope style={{ color: '#94A3B8', fontSize: '12px' }} /> Email Address:
-                    </span>
-                    <strong style={{ color: '#0F172A' }}>{user.email}</strong>
+                    <strong style={{ color: '#0F172A' }}>{user.name || 'User'}</strong>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
                     <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <FaPhone style={{ color: '#94A3B8', fontSize: '12px' }} /> Phone Number:
                     </span>
-                    <strong style={{ color: '#0F172A' }}>{user.phone || '+91 98765 43210'}</strong>
+                    <strong style={{ color: '#0F172A' }}>
+                      {user.phone ? (user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone.trim()}`) : 'Not Provided'}
+                    </strong>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
+                    <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FaEnvelope style={{ color: '#94A3B8', fontSize: '12px' }} /> Email Address:
+                    </span>
+                    <strong style={{ color: '#0F172A' }}>{hasRealEmail ? user.email : 'Not Provided'}</strong>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
@@ -300,7 +305,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     </div>
                     <div>
                       <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Saved Wishlist</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>{wishlistItems.length} Properties</div>
+                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>{wishlistItems.length} Saved</div>
                     </div>
                   </button>
 
@@ -464,34 +469,6 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
-                  Account Role / Primary Interest
-                </label>
-                <select
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value as any)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px',
-                    borderRadius: '12px',
-                    border: '1px solid #CBD5E1',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: '#0F172A',
-                    outline: 'none',
-                    backgroundColor: '#FFFFFF',
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  <option value="Verified Investor">Verified Investor (Properties &amp; Lands)</option>
-                  <option value="Business Buyer">Business Buyer (Acquisitions &amp; Operations)</option>
-                  <option value="Franchise Partner">Franchise Partner (Brand Expansion)</option>
-                  <option value="Capital Partner">Capital Partner &amp; Finance</option>
-                  <option value="Property Seller">Property Seller / Owner</option>
-                </select>
-              </div>
-
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button
                   type="button"
@@ -551,26 +528,28 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           backgroundColor: '#F8FAFC',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') ? 'space-between' : 'flex-end',
         }}>
-          <button
-            onClick={() => {
-              onClose();
-              if (onNavigateToPage) onNavigateToPage('adminPortal');
-              else window.location.href = '/admin';
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#059669',
-              fontSize: '12.5px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
-          >
-            Open Admin Desk
-          </button>
+          {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') && (
+            <button
+              onClick={() => {
+                onClose();
+                if (onNavigateToPage) onNavigateToPage('adminPortal');
+                else window.location.href = '/admin';
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#059669',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              Open Admin Desk
+            </button>
+          )}
 
           <button
             onClick={handleLogout}

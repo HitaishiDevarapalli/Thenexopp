@@ -4,12 +4,12 @@ import { API_BASE_URL } from '../db/marketplaceDb';
 export interface User {
   id?: string;
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   gender?: string;
   district?: string;
   avatar?: string;
-  role?: 'Verified Investor' | 'Franchise Partner' | 'Business Buyer' | 'Capital Partner' | 'SUPER_ADMIN' | 'ADMIN';
+  role?: string;
   profileCompleted?: boolean;
   propertyInterest?: boolean;
   businessInterest?: boolean;
@@ -21,6 +21,7 @@ interface AuthState {
   openLoginModal: () => void;
   closeLoginModal: () => void;
   initializeAuth: () => Promise<void>;
+  setUser: (user: User | null) => void;
   loginWithGmail: (
     email: string,
     role?: string,
@@ -41,7 +42,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   closeLoginModal: () => {
     set((state) => {
       if (state.user && state.user.profileCompleted !== true) {
-        // Run logout asynchronously to prevent state transition conflicts
         setTimeout(() => {
           useAuthStore.getState().logout();
         }, 50);
@@ -50,26 +50,35 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
+  setUser: (user: User | null) => {
+    set({ user });
+    window.dispatchEvent(new Event('nexopp_data_changed'));
+  },
+
   initializeAuth: async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/me`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.user) {
+          const rawEmail = data.user.email || '';
+          const cleanEmail = (rawEmail && !rawEmail.includes('@nexopp.in') && !rawEmail.includes('@thenexopp')) ? rawEmail : '';
+          const userName = data.user.fullName || data.user.name || 'User';
+
           set({
             user: {
               id: data.user.id,
-              name: data.user.fullName || data.user.name,
-              email: data.user.email,
-              phone: data.user.mobile || data.user.phone,
+              name: userName,
+              email: cleanEmail,
+              phone: data.user.mobile || data.user.phone || '',
               gender: data.user.gender,
               district: data.user.district || data.user.area,
-              role: data.user.role,
-              avatar: data.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.fullName || 'U')}&background=007A55&color=fff`,
-              profileCompleted: data.user.profileCompleted,
+              role: data.user.role || 'User',
+              avatar: data.user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=007A55&color=fff`,
+              profileCompleted: data.user.profileCompleted !== false,
               propertyInterest: data.user.propertyInterest,
               businessInterest: data.user.businessInterest
-            } as any
+            }
           });
         }
       }
@@ -79,39 +88,41 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   loginWithGmail: async (
-    emailInput: string,
-    role: string = 'Verified Investor',
+    emailInput: string = '',
+    role: string = 'User',
     customName?: string,
     customPhone?: string,
     customGender?: string,
     customDistrict?: string
   ) => {
-    let email = emailInput.trim();
-    if (!email) return;
-
-    if (!email.includes('@')) {
-      email = `${email}@gmail.com`;
+    let email = (emailInput || '').trim();
+    if (email.includes('@nexopp.in') || email.includes('@thenexopp')) {
+      email = '';
     }
 
     let formattedName = '';
     if (customName && customName.trim()) {
       formattedName = customName.trim();
-    } else {
+    } else if (email && email.includes('@')) {
       const namePart = email.split('@')[0];
       formattedName = namePart
         .split(/[\.\-_]/)
         .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
         .join(' ');
+    } else {
+      formattedName = 'User';
     }
 
+    const assignedRole = (role === 'Verified Investor' ? 'User' : (role || 'User'));
+
     const newUser: User = {
-      name: formattedName || 'Google User',
+      name: formattedName,
       email: email,
       phone: customPhone,
       gender: customGender,
       district: customDistrict,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formattedName || 'G')}&background=007A55&color=fff&size=128&bold=true`,
-      role: role as any,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formattedName || 'U')}&background=007A55&color=fff&size=128&bold=true`,
+      role: assignedRole,
       profileCompleted: true,
     };
 
@@ -125,11 +136,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         credentials: 'include',
         body: JSON.stringify({
           name: newUser.name,
-          email: newUser.email,
+          email: newUser.email || '',
           phone: newUser.phone || '',
           gender: newUser.gender || 'Male',
           district: newUser.district || 'Guntur',
-          role: newUser.role || 'Verified Investor',
+          role: assignedRole,
           avatar: newUser.avatar,
         }),
       });

@@ -6903,11 +6903,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
 
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>VERIFIED INVESTORS</div>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>APP USERS</div>
                 <div style={{ fontSize: '2rem', fontWeight: 800, color: '#10B981', marginTop: '6px' }}>
-                  {registeredCustomers.filter(c => c.role === 'Verified Investor' || !c.role).length}
+                  {registeredCustomers.filter(c => c.role === 'User' || c.role === 'USER' || !c.role).length}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Property Buyers & Investors</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, marginTop: '4px' }}>Standard Platform Users</div>
               </div>
 
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -7011,7 +7011,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         <td style={{ padding: '16px 20px', fontWeight: 700, color: '#047857' }}>{cust.district || 'Guntur'}</td>
                         <td style={{ padding: '16px 20px' }}>
                           <span style={{ padding: '4px 12px', borderRadius: '14px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>
-                            {cust.role || 'Verified Investor'}
+                            {cust.role === 'Verified Investor' ? 'User' : (cust.role || 'User')}
                           </span>
                         </td>
                         <td style={{ padding: '16px 20px', fontSize: '0.82rem', color: '#64748B' }}>{cust.lastLoginAt || cust.registeredDate || 'Just now'}</td>
@@ -7070,8 +7070,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                 style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                               />
                               <div>
-                                <div style={{ fontWeight: 800, color: '#0F172A' }}>{log.customer?.name || 'Verified Investor'}</div>
-                                <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{log.customer?.email}</div>
+                                <div style={{ fontWeight: 800, color: '#0F172A' }}>{log.customer?.name || 'User'}</div>
+                                <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                                  {log.customer?.email && !log.customer.email.includes('@nexopp.in') && !log.customer.email.includes('@thenexopp') ? log.customer.email : ''}
+                                </div>
                               </div>
                             </div>
                           </td>
