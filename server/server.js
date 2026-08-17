@@ -198,52 +198,69 @@ checkDatabaseConnection().then(async (connected) => {
 // Every endpoint MUST use this function to resolve or create a customer.
 async function resolveCustomer({ phone, email, name, id, gender, district, role, avatar } = {}) {
   try {
-    // 1. Normalize phone to last 10 digits only
     const rawPhone = String(phone || '').replace(/\D/g, '');
     const normalizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
 
     if (!normalizedPhone && !id && !email) return null;
 
-    // 2. Try by explicit UUID first (from JWT or frontend)
-    if (id && !id.startsWith('cust-') && !id.startsWith('guest_') && !id.startsWith('user_')) {
-      const byId = await prisma.customer.findUnique({ where: { id } }).catch(() => null);
-      if (byId) return byId;
-    }
-
-    // 3. Try by normalized phone (the primary dedup key)
-    if (normalizedPhone) {
-      const byPhone = await prisma.customer.findFirst({
-        where: {
-          OR: [
+    // Find ALL customer rows in PostgreSQL matching phone, id, or email
+    const matchingCustomers = await prisma.customer.findMany({
+      where: {
+        OR: [
+          ...(id ? [{ id }] : []),
+          ...(normalizedPhone ? [
             { mobile: normalizedPhone },
             { phone: normalizedPhone },
             { mobile: `+91${normalizedPhone}` },
             { phone: `+91${normalizedPhone}` },
-            { mobile: { endsWith: normalizedPhone } },
-            { phone: { endsWith: normalizedPhone } }
-          ]
-        }
-      }).catch(() => null);
+            { mobile: { contains: normalizedPhone } },
+            { phone: { contains: normalizedPhone } }
+          ] : []),
+          ...(email && !email.includes('@nexopp.in') && !email.includes('@thenexopp') ? [{ email }] : [])
+        ]
+      },
+      orderBy: { createdAt: 'asc' } // Oldest primary customer first
+    }).catch(() => []);
 
-      if (byPhone) {
-        // Normalize stored phone to consistent format
-        if (byPhone.mobile !== normalizedPhone || byPhone.phone !== normalizedPhone) {
-          await prisma.customer.update({
-            where: { id: byPhone.id },
-            data: { mobile: normalizedPhone, phone: normalizedPhone }
-          }).catch(() => {});
-        }
-        return byPhone;
+    if (matchingCustomers.length > 0) {
+      const primaryCustomer = matchingCustomers[0];
+
+      // Auto-consolidate duplicates if more than 1 customer record exists for this phone
+      if (matchingCustomers.length > 1) {
+        const extraIds = matchingCustomers.slice(1).map(c => c.id);
+
+        await prisma.customerFavorite.updateMany({
+          where: { customerId: { in: extraIds } },
+          data: { customerId: primaryCustomer.id }
+        }).catch(() => {});
+
+        await prisma.enquiry.updateMany({
+          where: { customerId: { in: extraIds } },
+          data: { customerId: primaryCustomer.id }
+        }).catch(() => {});
+
+        await prisma.booking.updateMany({
+          where: { customerId: { in: extraIds } },
+          data: { customerId: primaryCustomer.id }
+        }).catch(() => {});
+
+        await prisma.userActivity.updateMany({
+          where: { customerId: { in: extraIds } },
+          data: { customerId: primaryCustomer.id }
+        }).catch(() => {});
       }
+
+      // Ensure normalized mobile phone saved on primary record
+      if (normalizedPhone && (primaryCustomer.mobile !== normalizedPhone || primaryCustomer.phone !== normalizedPhone)) {
+        await prisma.customer.update({
+          where: { id: primaryCustomer.id },
+          data: { mobile: normalizedPhone, phone: normalizedPhone }
+        }).catch(() => {});
+      }
+
+      return primaryCustomer;
     }
 
-    // 4. Try by email
-    if (email && !email.includes('@nexopp.in') && !email.includes('@thenexopp')) {
-      const byEmail = await prisma.customer.findFirst({ where: { email } }).catch(() => null);
-      if (byEmail) return byEmail;
-    }
-
-    // 5. No existing customer — create ONE new record with normalized phone
     if (!normalizedPhone) return null;
 
     const newCustomer = await prisma.customer.create({
@@ -262,9 +279,8 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
         registeredDate: new Date().toLocaleDateString()
       }
     }).catch(async () => {
-      // Unique constraint hit — the customer was just created by another request
       return await prisma.customer.findFirst({
-        where: { OR: [{ mobile: normalizedPhone }, { phone: normalizedPhone }] }
+        where: { OR: [{ mobile: { contains: normalizedPhone } }, { phone: { contains: normalizedPhone } }] }
       }).catch(() => null);
     });
 
@@ -1255,19 +1271,29 @@ app.get('/api/favorites', optionalAuthMiddleware, async (req, res) => {
     const passedCustomerId = req.query.customerId || (req.user ? req.user.id : null);
     const userEmail = req.user ? req.user.email : null;
 
+    const rawPhone = String(userPhone || '').replace(/\D/g, '');
+    const normalizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
+
     const customer = await resolveCustomer({
       phone: userPhone,
       id: passedCustomerId,
       email: userEmail
     });
 
-    if (!customer) {
+    const targetCustomerId = customer ? customer.id : passedCustomerId;
+
+    if (!targetCustomerId && !normalizedPhone) {
       return res.json([]);
     }
 
     const favorites = await prisma.customerFavorite.findMany({
       where: {
-        customerId: customer.id,
+        OR: [
+          ...(targetCustomerId ? [{ customerId: targetCustomerId }] : []),
+          ...(normalizedPhone ? [
+            { customer: { OR: [{ mobile: { contains: normalizedPhone } }, { phone: { contains: normalizedPhone } }] } }
+          ] : [])
+        ],
         status: 'ACTIVE'
       },
       include: { property: true, business: true },
