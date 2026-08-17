@@ -2116,6 +2116,7 @@ export interface BusinessEnquiry {
   email: string;
   message: string;
   status: string;
+  notes?: string;
   adminNotes?: string;
   createdAt?: string;
 }

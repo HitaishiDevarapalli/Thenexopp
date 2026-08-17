@@ -124,7 +124,7 @@ const parseUrl = (path: string) => {
 };
 
 export const App: React.FC = () => {
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const [heroBgIndex, setHeroBgIndex] = useState(0);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   

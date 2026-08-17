@@ -200,7 +200,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   // Contact Inquiries Filter States
   const [inquirySearch, setInquirySearch] = useState('');
-  const [inquiryCategoryFilter, setInquiryCategoryFilter] = useState<'ALL' | 'CONTACT_US' | 'PROPERTY' | 'SLOT_BOOKING'>('ALL');
+  const [inquiryCategoryFilter, setInquiryCategoryFilter] = useState<'ALL' | 'CONTACT_US' | 'PROPERTY' | 'BUSINESS' | 'SLOT_BOOKING'>('ALL');
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState<string>('ALL');
 
   useEffect(() => {

@@ -169,6 +169,7 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
           name: contactName,
           mobile: contactPhone,
           email: contactEmail,
+          message: contactMessage || (mode === 'book' ? `Visit Slot: ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`),
           status: 'New',
           notes: mode === 'book' ? `Visit Slot: ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`,
           createdAt: new Date().toISOString()

@@ -207,6 +207,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         name: contactName,
         mobile: contactPhone,
         email: '',
+        message: modalMode === 'book' ? `Visit Slot: ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`,
         status: 'New',
         notes: modalMode === 'book' ? `Visit Slot: ${bookingDate} at ${bookingTime}` : `Offer: ${contactPrice}`,
         createdAt: new Date().toISOString()
