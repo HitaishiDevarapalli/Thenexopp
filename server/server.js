@@ -1711,27 +1711,36 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res) => {
       }
     } catch (_) {}
 
-    if (!customerId) {
-      const fallbackCust = await prisma.customer.create({
+    let validCustomerId = null;
+    if (customerId) {
+      const c = await prisma.customer.findUnique({ where: { id: customerId } }).catch(() => null);
+      if (c) validCustomerId = c.id;
+    }
+    if (!validCustomerId && custPhone) {
+      const cleanPhone = String(custPhone).replace(/\D/g, '');
+      const c = await prisma.customer.findFirst({
+        where: { OR: [{ mobile: cleanPhone }, { phone: cleanPhone }, { mobile: { contains: cleanPhone } }, { phone: { contains: cleanPhone } }] }
+      }).catch(() => null);
+      if (c) validCustomerId = c.id;
+    }
+    if (!validCustomerId) {
+      const uniqueMobile = `guest_${Date.now()}`;
+      const newC = await prisma.customer.create({
         data: {
-          id: `cust-guest-${Date.now()}`,
-          name: custName || 'Guest Visitor',
-          email: null,
-          phone: custPhone || '',
-          mobile: custPhone || '',
-          district: 'Hyderabad',
+          name: custName || 'Guest User',
+          phone: custPhone || uniqueMobile,
+          mobile: uniqueMobile,
           role: 'User',
-          status: 'Active',
-          registeredDate: new Date().toLocaleDateString(),
+          status: 'Active'
         }
       }).catch(() => null);
-      if (fallbackCust) customerId = fallbackCust.id;
+      if (newC) validCustomerId = newC.id;
     }
 
     const booking = await prisma.booking.create({
       data: {
         id: `book-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        customerId: customerId || `cust-temp-${Date.now()}`,
+        customerId: validCustomerId,
         listingType,
         listingId,
         bookingDate,
@@ -1747,7 +1756,7 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res) => {
     await prisma.enquiry.create({
       data: {
         id: `enq-bk-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        customerId,
+        customerId: validCustomerId,
         customerName: custName,
         phone: custPhone,
         email: custEmail,
