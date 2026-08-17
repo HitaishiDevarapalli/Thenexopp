@@ -175,12 +175,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       label: 'Properties', 
       icon: <FaBuilding />, 
       dropdown: [
-        { name: 'All Properties', desc: 'Browse verified real estate listings', link: 'propertiesPage', subIcon: <FaBuilding />, color: '#059669' },
-        { name: 'Flats & Apartments', desc: '1, 2, 3, 4+ BHK Gated communities', link: 'flatsPage', subIcon: <FaBuilding />, color: '#002B66' },
-        { name: 'Luxury Villas & Houses', desc: 'Premium standalone duplex & villas', link: 'villasPage', subIcon: <FaHome />, color: '#D97706' },
-        { name: 'Plots & Lands', desc: 'RERA & DTCP approved commercial lands', link: 'landPage', subIcon: <FaLayerGroup />, color: '#2563EB' },
-        { name: 'Rental Properties', desc: 'Residential & corporate office rentals', link: 'rentPage', subIcon: <FaStore />, color: '#7C3AED' },
-        { name: 'Sell / Post Property', desc: 'List your property to thousands of buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#059669', isCta: true },
+        { name: 'Buy Property', desc: 'Browse verified real estate & property listings', link: 'propertiesPage', subIcon: <FaBuilding />, color: '#059669' },
+        { name: 'Sell / Post Property', desc: 'List your property to thousands of buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#D97706', isCta: true },
       ]
     },
     { 
