@@ -9,7 +9,8 @@ import {
   sellPropertyRequestsDb,
   updateSellPropertyRequest,
   deleteSellPropertyRequest,
-  setPropertyViewCount
+  setPropertyViewCount,
+  togglePropertyRecentlySold
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
@@ -816,7 +817,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => handleBulkStatusChange('Published')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Publish Selected</button>
                 <button onClick={() => handleBulkStatusChange('Approved')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Approve Selected</button>
-                <button onClick={() => handleBulkStatusChange('Sold')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Mark as Reserved</button>
+                <button onClick={() => handleBulkStatusChange('Sold')} style={{ padding: '6px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Mark as Sold</button>
                 <button onClick={() => handleBulkStatusChange('Archived')} style={{ padding: '6px 14px', backgroundColor: '#64748B', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Archive Selected</button>
                 <button onClick={handleBulkDelete} style={{ padding: '6px 14px', backgroundColor: '#DC2626', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Delete Selected</button>
               </div>
@@ -1008,6 +1009,28 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             >
                               <FaEye /> Views ({(prop.viewsCount || 0).toLocaleString()})
                             </button>
+                            {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
+                              <button
+                                onClick={() => togglePropertyRecentlySold(prop.id)}
+                                title={prop.recentlySold ? "Currently published on Main Page under Recently Sold section. Click to remove." : "Push property to Main Page under Recently Sold section"}
+                                style={{
+                                  padding: '6px 12px',
+                                  backgroundColor: prop.recentlySold ? '#ECFDF5' : '#FEF3C7',
+                                  color: prop.recentlySold ? '#059669' : '#D97706',
+                                  border: `1px solid ${prop.recentlySold ? '#6EE7B7' : '#FCD34D'}`,
+                                  borderRadius: '8px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  fontSize: '0.75rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                {prop.recentlySold ? '✓ Pushed to Main (Recently Sold)' : '🚀 Push Property to Main'}
+                              </button>
+                            )}
                             {activeModuleTab === 'editProperty' ? (
                               <button
                                 onClick={() => openEditModal(prop)}
@@ -2174,20 +2197,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <option value="Published">Published Immediately</option>
                         <option value="Pending Approval">Pending Approval</option>
                         <option value="Draft">Save as Draft</option>
-                        <option value="Sold">Mark as Reserved</option>
+                        <option value="Sold">Mark as Sold</option>
                       </select>
                     </div>
                   </div>
 
-                  {/* Mark as Reserved Toggle Switch Component */}
+                  {/* Mark as Sold Toggle Switch Component */}
                   <div style={{ backgroundColor: formData.sold ? '#FEF2F2' : '#F8FAFC', border: `1.5px solid ${formData.sold ? '#EF4444' : '#CBD5E1'}`, borderRadius: '14px', padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '1rem', fontWeight: 800, color: formData.sold ? '#DC2626' : '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span>Mark Property as Reserved</span>
-                        {formData.sold && <span style={{ backgroundColor: '#DC2626', color: '#FFF', fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, letterSpacing: '0.5px' }}>RESERVED</span>}
+                        <span>Mark Property as Sold</span>
+                        {formData.sold && <span style={{ backgroundColor: '#DC2626', color: '#FFF', fontSize: '0.75rem', padding: '3px 10px', borderRadius: '6px', fontWeight: 800, letterSpacing: '0.5px' }}>SOLD</span>}
                       </div>
                       <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '4px' }}>
-                        When enabled, a prominent red <strong>RESERVED</strong> badge will appear on all property cards, search listings, and detail pages.
+                        When marked as Sold, this property moves to the Sold list and disappears from active website listings. You can push it to the main page recently sold section anytime.
                       </div>
                     </div>
                     <label style={{ position: 'relative', display: 'inline-block', width: '56px', height: '30px', cursor: 'pointer' }}>

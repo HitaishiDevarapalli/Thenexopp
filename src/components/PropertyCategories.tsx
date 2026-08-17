@@ -719,6 +719,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         listingStatus: p.listingStatus,
         sold: p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || false,
         soldDate: p.soldDate,
+        recentlySold: p.recentlySold || p.badge === 'RECENTLY SOLD' || false,
         viewsCount: p.viewsCount || 0,
         cityId: resolvedCityId,
         areaId: resolvedAreaId,
@@ -1013,6 +1014,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (activeQuickFilter === 'Top Brokers' && parseFloat(item.brokerRating) < 4.5) return false;
       }
 
+      // Hide sold properties from main active grid unless Availability filter is set to "Sold"
+      if (item.sold && availabilityFilter !== 'Sold') {
+        return false;
+      }
+
       return true;
     });
 
@@ -1044,6 +1050,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const start = (validPage - 1) * itemsPerPage;
     return displayProperties.slice(start, start + itemsPerPage);
   }, [displayProperties, validPage, itemsPerPage]);
+
+  const recentlySoldList = useMemo(() => {
+    return propertiesDb.filter((p: any) => p.recentlySold || p.badge === 'RECENTLY SOLD');
+  }, [propertiesDb]);
 
   const tabs = [
     { id: 'Buy' as const, label: 'Buy', icon: FaHome },
@@ -1887,7 +1897,28 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       />
 
                       {/* Top Left Badge */}
-                      {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? (
+                      {(prop.recentlySold || prop.badge === 'RECENTLY SOLD') ? (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            backgroundColor: '#DC2626',
+                            backgroundImage: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
+                            color: '#FFFFFF',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 800,
+                            letterSpacing: '0.05em',
+                            boxShadow: '0 2px 10px rgba(220, 38, 38, 0.5)',
+                            zIndex: 10,
+                            fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif"
+                          }}
+                        >
+                          RECENTLY SOLD
+                        </div>
+                      ) : (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? (
                         <div
                           style={{
                             position: 'absolute',
@@ -2115,6 +2146,114 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     <option value="24 per page">24 per page</option>
                     <option value="48 per page">48 per page</option>
                   </select>
+                </div>
+              </div>
+            )}
+
+            {/* DOWN RECENTLY SOLD PROPERTIES SECTION */}
+            {recentlySoldList.length > 0 && (
+              <div style={{ marginTop: '48px', paddingTop: '36px', borderTop: '2px dashed #E2E8F0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.05em', backgroundColor: '#FEF2F2', padding: '4px 12px', borderRadius: '20px', border: '1px solid #FCA5A5' }}>
+                      🏷️ Successfully Closed Deals
+                    </span>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginTop: '8px', margin: '8px 0 0 0' }}>Recently Sold Properties</h2>
+                  </div>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#64748B' }}>
+                    {recentlySoldList.length} Verified Closed Deals
+                  </span>
+                </div>
+
+                <div className="responsive-property-grid">
+                  {recentlySoldList.map((prop: any) => {
+                    const isFav = isWishlisted(prop.id);
+                    return (
+                      <div
+                        key={'sold-' + prop.id}
+                        onClick={() => onPropertyClick?.(prop.id)}
+                        style={{
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: '20px',
+                          border: '1.5px solid #FECACA',
+                          overflow: 'hidden',
+                          boxShadow: '0 4px 16px rgba(220, 38, 38, 0.06)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          position: 'relative'
+                        }}
+                      >
+                        <div style={{ position: 'relative', height: '180px', backgroundColor: '#0F172A' }}>
+                          <img
+                            src={prop.image}
+                            alt={prop.title}
+                            loading="lazy"
+                            decoding="async"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '12px',
+                              left: '12px',
+                              backgroundColor: '#DC2626',
+                              backgroundImage: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
+                              color: '#FFFFFF',
+                              padding: '6px 12px',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              letterSpacing: '0.05em',
+                              boxShadow: '0 2px 10px rgba(220, 38, 38, 0.5)',
+                              zIndex: 10,
+                            }}
+                          >
+                            RECENTLY SOLD
+                          </div>
+                          <button
+                            onClick={(e) => toggleWishlist(prop.id, e)}
+                            style={{
+                              position: 'absolute',
+                              top: '12px',
+                              right: '12px',
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                              border: 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {isFav ? <FaHeart style={{ color: '#EF4444', fontSize: '15px' }} /> : <FaRegHeart style={{ color: '#FFFFFF', fontSize: '15px' }} />}
+                          </button>
+                        </div>
+
+                        <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                          <div>
+                            <h3 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', textTransform: 'capitalize' }}>
+                              {prop.title}
+                            </h3>
+                            <div style={{ fontSize: '12.5px', color: '#64748B', fontWeight: 600, marginBottom: '12px' }}>
+                              {prop.location}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}>
+                              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#DC2626' }}>
+                                {prop.price}
+                              </span>
+                              <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEF2F2', padding: '3px 8px', borderRadius: '6px' }}>
+                                Deal Closed
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

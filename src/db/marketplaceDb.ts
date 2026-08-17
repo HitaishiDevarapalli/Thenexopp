@@ -129,6 +129,9 @@ export interface PropertyListing {
   createdDate: string;
   sold?: boolean;
   soldDate?: string;
+  recentlySold?: boolean;
+  badge?: string;
+  badgeType?: string;
   listingStatus?: 'Draft' | 'Pending' | 'Published' | 'Hidden' | 'Reserved' | 'Sold' | 'Expired' | 'Archived';
   urgent?: boolean;
   luxury?: boolean;
@@ -1010,6 +1013,20 @@ export const togglePropertyFeatured = (id: string) => {
 export const togglePropertyTrending = (id: string) => {
   const item = propertiesDb.find(p => p.id === id);
   if (item) updateProperty(id, { trending: !item.trending });
+};
+
+export const togglePropertyRecentlySold = (id: string) => {
+  const item = propertiesDb.find(p => p.id === id);
+  if (item) {
+    const isRecentlySold = !item.recentlySold;
+    updateProperty(id, {
+      recentlySold: isRecentlySold,
+      sold: true,
+      approvalStatus: 'Sold',
+      listingStatus: 'Sold',
+      badge: isRecentlySold ? 'RECENTLY SOLD' : 'SOLD'
+    });
+  }
 };
 
 export const setPropertyViewCount = (id: string, newViewsCount: number, newUniqueVisitors?: number) => {
