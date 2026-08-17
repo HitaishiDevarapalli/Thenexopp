@@ -570,10 +570,17 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   // Bulk Status Change
   const handleBulkStatusChange = (newStatus: PropertyListing['approvalStatus']) => {
     if (selectedIds.length === 0) return;
+    const isSold = newStatus === 'Sold';
     selectedIds.forEach(id => {
-      updateProperty(id, { approvalStatus: newStatus, listingStatus: newStatus as any });
+      updateProperty(id, { 
+        approvalStatus: newStatus, 
+        listingStatus: newStatus as any,
+        sold: isSold,
+        soldDate: isSold ? new Date().toISOString().slice(0, 10) : undefined,
+        recentlySold: false
+      });
     });
-    showNotification?.(`Updated status to '${newStatus}' for ${selectedIds.length} properties.`, "success");
+    showNotification?.(`Updated status to '${newStatus}' for ${selectedIds.length} properties. Property moved to Sold list and hidden from active main page.`, "success");
     setSelectedIds([]);
   };
 
@@ -973,20 +980,37 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           ) : null}
                         </td>
                         <td style={{ padding: '16px' }}>
-                          <span style={{
-                            padding: '2px 6px',
-                            borderRadius: '4px',
-                            fontSize: '0.72rem',
-                            fontWeight: 600,
-                            display: 'inline-block',
-                            backgroundColor: 
-                              (prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#FEE2E2' : '#ECFDF5',
-                            color:
-                              (prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#EF4444' : '#059669'
-                          }}>
-                            {prop.approvalStatus || prop.listingStatus || 'Published'}
-                          </span>
-                          <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '4px' }}>Recently updated</div>
+                          <select
+                            value={(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? 'Sold' : (prop.approvalStatus || 'Published')}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const isSold = val === 'Sold';
+                              updateProperty(prop.id, {
+                                approvalStatus: val as any,
+                                listingStatus: val as any,
+                                sold: isSold,
+                                soldDate: isSold ? new Date().toISOString().slice(0, 10) : undefined,
+                                recentlySold: false
+                              });
+                              showNotification?.(`Property status changed to ${val}`, "success");
+                            }}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              backgroundColor: (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#FEF2F2' : '#ECFDF5',
+                              color: (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '#DC2626' : '#059669',
+                              border: (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') ? '1.5px solid #FCA5A5' : '1.5px solid #A7F3D0',
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                          >
+                            <option value="Published">Published</option>
+                            <option value="Pending Approval">Pending Approval</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Sold">Sold</option>
+                          </select>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
