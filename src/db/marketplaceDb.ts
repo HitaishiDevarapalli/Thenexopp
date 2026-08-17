@@ -1259,10 +1259,12 @@ export const addEnquiry = (enquiry: any) => {
     source: enquiry.source || 'Website',
     listingType: enquiry.listingType || 'PROPERTY',
     enquiryType: (enquiry.enquiryType as any) || 'BUY',
-    date: enquiry.date || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+    date: enquiry.date || enquiry.preferredMoveInDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+    preferredTime: enquiry.preferredTime || '',
+    preferredMoveInDate: enquiry.preferredMoveInDate || enquiry.date || '',
     name: enquiry.customerName || enquiry.name || 'Guest User',
     interest: enquiry.interest || enquiry.message || '',
-    message: enquiry.message || ''
+    message: enquiry.message || enquiry.interest || ''
   };
 
   // Deduplicate recent identical submissions

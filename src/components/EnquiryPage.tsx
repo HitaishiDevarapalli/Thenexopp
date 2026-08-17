@@ -148,12 +148,14 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
         source: 'Enquiry Page',
         listingType: listingType || 'PROPERTY',
         enquiryType: mode === 'book' ? ('SLOT_BOOKING' as const) : ('BUY' as const),
-        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        date: mode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        preferredTime: mode === 'book' ? bookingTime : undefined,
+        preferredMoveInDate: mode === 'book' ? bookingDate : undefined,
         name: contactName,
         interest: mode === 'book'
           ? `Requested Visit: ${bookingDate} at ${bookingTime}`
           : `Offered Price: ${contactPrice}`,
-        message: contactMessage
+        message: contactMessage || (mode === 'book' ? `Visit Slot Booking for ${bookingDate} at ${bookingTime}` : `Offered Price: ${contactPrice}`)
       });
 
       if (isBusiness) {

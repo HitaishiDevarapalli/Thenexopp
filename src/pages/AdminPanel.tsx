@@ -4619,8 +4619,58 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                               </div>
                             </div>
 
+                            {/* Scheduled Visit Slot Box */}
+                            {(() => {
+                              const isSlot = isSlotBooking(enq) || enq.enquiryType === 'SLOT_BOOKING';
+                              const rawMsg = enq.message || enq.interest || enq.notes || '';
+                              
+                              // Extract time
+                              let visitTime = enq.preferredTime || '';
+                              if (!visitTime && rawMsg.includes(' at ')) {
+                                visitTime = rawMsg.split(' at ')[1]?.trim();
+                              }
+                              
+                              // Extract date
+                              let visitDate = enq.preferredMoveInDate || '';
+                              if (!visitDate && rawMsg.includes('Requested Visit: ')) {
+                                visitDate = rawMsg.split('Requested Visit: ')[1]?.split(' at ')[0]?.trim();
+                              } else if (!visitDate && rawMsg.includes('Visit Slot: ')) {
+                                visitDate = rawMsg.split('Visit Slot: ')[1]?.split(' at ')[0]?.trim();
+                              } else if (!visitDate && rawMsg.includes('for ')) {
+                                visitDate = rawMsg.split('for ')[1]?.split(' at ')[0]?.trim();
+                              }
+                              if (!visitDate) visitDate = enq.date || 'Scheduled Date';
+
+                              if (!isSlot && !visitTime && !enq.preferredTime) return null;
+
+                              return (
+                                <div style={{ backgroundColor: '#FEF3C7', padding: '14px 18px', borderRadius: '10px', border: '1.5px solid #FCD34D', color: '#92400E', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#FDE68A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', flexShrink: 0 }}>
+                                      📅
+                                    </div>
+                                    <div>
+                                      <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#B45309', fontWeight: 800 }}>
+                                        Scheduled Property Visit Slot
+                                      </div>
+                                      <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#78350F', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                        <span>🗓️ {visitDate}</span>
+                                        <span style={{ color: '#D97706' }}>•</span>
+                                        <span style={{ backgroundColor: '#FDE68A', padding: '3px 10px', borderRadius: '6px', color: '#78350F', fontWeight: 800 }}>
+                                          ⏰ Preferred Time: {visitTime || '10:00 AM - 01:00 PM (Morning Slot)'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span style={{ backgroundColor: '#F59E0B', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800 }}>
+                                    CONFIRMED SLOT
+                                  </span>
+                                </div>
+                              );
+                            })()}
+
                             {/* Message Content Bubble */}
-                            {enq.message && (
+                            {enq.message && !enq.message.startsWith('Requested Visit Slot for') && (
                               <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '8px', borderLeft: '4px solid #059669', color: '#334155', fontSize: '0.9rem', lineHeight: '1.5' }}>
                                 <strong style={{ color: '#059669', fontSize: '0.8rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Customer Message:</strong>
                                 "{enq.message}"

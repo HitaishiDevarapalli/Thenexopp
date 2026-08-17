@@ -186,11 +186,16 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       source: isBiz ? 'Business Details Page' : 'Property Details Page',
       listingType: listingType as any,
       enquiryType: modalMode === 'book' ? ('SLOT_BOOKING' as const) : ('BUY' as const),
-      date: new Date().toLocaleDateString('en-IN', {
+      date: modalMode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'
       }),
+      preferredTime: modalMode === 'book' ? bookingTime : undefined,
+      preferredMoveInDate: modalMode === 'book' ? bookingDate : undefined,
+      message: modalMode === 'book' 
+        ? `Requested Visit Slot for ${bookingDate} at ${bookingTime}`
+        : (contactPrice ? `Offered Price: ${contactPrice}` : 'Customer submitted property enquiry'),
       name: contactName,
       interest: modalMode === 'book' 
         ? `Requested Visit: ${bookingDate} at ${bookingTime}`
