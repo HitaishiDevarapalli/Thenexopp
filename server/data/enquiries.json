@@ -1,0 +1,46 @@
+[
+  {
+    "id": "ENQ-SLOT-1786963544249",
+    "customerName": "M Mani",
+    "phone": "9988776655",
+    "email": "mani@nexopp.com",
+    "listingTitle": "Commercial Retail Space in Gachibowli",
+    "listingType": "PROPERTY",
+    "listingId": "prop-303",
+    "enquiryType": "SLOT_BOOKING",
+    "preferredTime": "11:00 AM",
+    "preferredMoveInDate": "20 Aug 2026",
+    "date": "20 Aug 2026",
+    "message": "Visit requested on 20 Aug 2026 at 11:00 AM",
+    "status": "New",
+    "createdAt": "2026-08-17T10:45:44.249Z"
+  },
+  {
+    "id": "ENQ-BIZ-1786963544249",
+    "customerName": "Suresh Reddy",
+    "phone": "9849054321",
+    "email": "suresh@business.com",
+    "listingTitle": "Profitable Supermarket in Madhapur",
+    "listingType": "BUSINESS",
+    "listingId": "biz-202",
+    "enquiryType": "BUY",
+    "message": "Please send latest P&L statement and valuation details",
+    "date": "17/8/2026",
+    "status": "New",
+    "createdAt": "2026-08-17T10:45:44.249Z"
+  },
+  {
+    "id": "ENQ-PROP-1786963544198",
+    "customerName": "Kiran Kumar",
+    "phone": "9848012345",
+    "email": "kiran@gmail.com",
+    "listingTitle": "Luxury 3BHK Villa in Jubilee Hills",
+    "listingType": "PROPERTY",
+    "listingId": "prop-101",
+    "enquiryType": "BUY",
+    "message": "Interested in site inspection this weekend",
+    "date": "17/8/2026",
+    "status": "New",
+    "createdAt": "2026-08-17T10:45:44.249Z"
+  }
+]
