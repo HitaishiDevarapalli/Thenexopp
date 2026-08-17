@@ -988,6 +988,7 @@ loadData();
 // Mutations
 export const addProperty = (item: PropertyListing) => {
   propertiesDb = [item, ...propertiesDb];
+  saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/properties`, {
     method: 'POST',
@@ -998,6 +999,7 @@ export const addProperty = (item: PropertyListing) => {
 
 export const updateProperty = (id: string, updated: Partial<PropertyListing>) => {
   propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...updated } : p);
+  saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'PUT',
@@ -1009,6 +1011,7 @@ export const updateProperty = (id: string, updated: Partial<PropertyListing>) =>
 export const deleteProperty = (id: string) => {
   propertiesDb = propertiesDb.filter(p => p.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Property' && v.linkedId === id));
+  saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'DELETE'

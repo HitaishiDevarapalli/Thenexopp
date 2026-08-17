@@ -180,14 +180,31 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   ];
   const popularCategories = rawPopularCategories.filter(c => !c.mod || isModuleActive(c.mod));
 
-  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb]);
+  const isPropertySold = (p: any) => {
+    if (!p) return false;
+    const statusUpper = String(p.status || '').toUpperCase();
+    const listingUpper = String(p.listingStatus || '').toUpperCase();
+    const approvalUpper = String(p.approvalStatus || '').toUpperCase();
+    const badgeUpper = String(p.badge || '').toUpperCase();
+    return (
+      p.sold === true ||
+      p.recentlySold === true ||
+      statusUpper === 'SOLD' ||
+      listingUpper === 'SOLD' ||
+      approvalUpper === 'SOLD' ||
+      badgeUpper === 'RECENTLY SOLD' ||
+      badgeUpper === 'SOLD'
+    );
+  };
+
+  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !isPropertySold(p) && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb]);
   const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb]);
   const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb]);
 
   // Recently Sold properties (ordered by soldDate descending)
   const recentlySoldListings = React.useMemo(() => {
     return propertiesDb
-      .filter((p: any) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold' || p.recentlySold || p.badge === 'RECENTLY SOLD')
+      .filter(isPropertySold)
       .sort((a, b) => {
         const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
         const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
@@ -218,7 +235,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     const targetLoc = (location?.city || currentGlobalCity || '').toLowerCase();
 
     const matched = items.filter(item => {
-      if (isProperty && (item.sold || item.approvalStatus === 'Sold' || item.listingStatus === 'Sold')) return false;
+      if (isProperty && isPropertySold(item)) return false;
 
       const itemCity = (item.city || '').toLowerCase();
       const itemLocStr = (item.location || item.formatted_address || '').toLowerCase();
@@ -242,7 +259,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
 
     // Fallback if fewer than 2 properties within 30km: return all items sorted by distance
     if (matched.length < 2 && targetLat && targetLng) {
-      return items.filter(i => !isProperty || !(i.sold || i.approvalStatus === 'Sold' || i.listingStatus === 'Sold')).map(item => {
+      return items.filter(i => !isProperty || !isPropertySold(i)).map(item => {
         if (item.latitude && item.longitude) {
           item.distanceKm = Math.round(getDistance(targetLat, targetLng, item.latitude, item.longitude) * 10) / 10;
         } else {
@@ -288,7 +305,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   // Separate Property Showcase Listings (4-5 items)
   const propertyListingsShowcase = React.useMemo(() => {
     return activeProperties
-      .filter(p => !p.sold && p.listingStatus !== 'Sold' && p.listingStatus !== 'Hidden' && p.listingStatus !== 'Draft')
+      .filter(p => !isPropertySold(p) && p.listingStatus !== 'Hidden' && p.listingStatus !== 'Draft')
       .slice(0, 4)
       .map(p => ({
         id: p.id,

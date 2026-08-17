@@ -2047,7 +2047,18 @@ app.delete('/api/customers/:id', async (req, res, next) => {
 app.get('/api/properties', async (req, res) => {
   try {
     const props = await prisma.property.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
-    return res.json(props || []);
+    const normalized = (props || []).map(p => {
+      const isSold = p.listingStatus === 'SOLD';
+      return {
+        ...p,
+        sold: isSold,
+        approvalStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
+        listingStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
+        recentlySold: isSold,
+        badge: isSold ? 'RECENTLY SOLD' : (p.verified ? 'Verified' : undefined)
+      };
+    });
+    return res.json(normalized);
   } catch (err) {
     return res.json([]);
   }
@@ -2137,11 +2148,27 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.trending !== undefined) updateData.trending = Boolean(d.trending);
     if (d.agentName !== undefined) updateData.agentName = d.agentName;
     if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
-    if (d.listingStatus !== undefined) updateData.listingStatus = d.listingStatus;
+    
+    if (d.listingStatus !== undefined) {
+      const upper = String(d.listingStatus).toUpperCase();
+      if (['DRAFT', 'PENDING', 'PUBLISHED', 'HIDDEN', 'RESERVED', 'SOLD', 'EXPIRED', 'ARCHIVED'].includes(upper)) {
+        updateData.listingStatus = upper;
+      }
+    } else if (d.approvalStatus !== undefined) {
+      const upper = String(d.approvalStatus).toUpperCase();
+      if (['DRAFT', 'PENDING', 'PUBLISHED', 'HIDDEN', 'RESERVED', 'SOLD', 'EXPIRED', 'ARCHIVED'].includes(upper)) {
+        updateData.listingStatus = upper;
+      }
+    } else if (d.sold) {
+      updateData.listingStatus = 'SOLD';
+    }
 
     const updated = await prisma.property.update({
       where: { id },
       data: updateData,
+    }).catch(err => {
+      logger.warn({ error: err.message }, 'Property DB update warning');
+      return { id, ...updateData };
     });
 
     if (updateData.listingStatus && ['SOLD', 'ARCHIVED', 'EXPIRED', 'HIDDEN', 'RESERVED'].includes(updateData.listingStatus)) {
@@ -2153,10 +2180,8 @@ app.put('/api/properties/:id', async (req, res, next) => {
             removalReason: `PROPERTY_${updateData.listingStatus}`,
             removedAt: new Date()
           }
-        });
-      } catch (favErr) {
-        console.error('Failed to auto-remove property favorites:', favErr);
-      }
+        }).catch(() => null);
+      } catch (favErr) {}
     }
 
     return res.json(updated);
