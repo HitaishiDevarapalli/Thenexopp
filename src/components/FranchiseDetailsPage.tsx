@@ -32,6 +32,22 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
   const [modalMode, setModalMode] = useState<'contact' | 'book'>('contact');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
+  const [timePeriod, setTimePeriod] = useState<'AM' | 'PM'>('AM');
+
+  const AM_SLOTS = [
+    { label: '09:00 AM - 10:00 AM', time: '09:00 AM' },
+    { label: '10:00 AM - 11:00 AM', time: '10:00 AM' },
+    { label: '11:00 AM - 12:00 PM', time: '11:00 AM' },
+  ];
+
+  const PM_SLOTS = [
+    { label: '12:00 PM - 01:00 PM', time: '12:00 PM' },
+    { label: '02:00 PM - 03:00 PM', time: '02:00 PM' },
+    { label: '03:00 PM - 04:00 PM', time: '03:00 PM' },
+    { label: '04:00 PM - 05:00 PM', time: '04:00 PM' },
+    { label: '05:00 PM - 06:00 PM', time: '05:00 PM' },
+    { label: '06:00 PM - 07:00 PM', time: '06:00 PM' },
+  ];
 
 
   // Form states
@@ -467,14 +483,83 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
               </div>
 
               {modalMode === 'book' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>SELECT DATE *</label>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>PREFERRED VISIT DATE *</label>
                     <input type="date" required value={bookingDate} onChange={e => setBookingDate(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
                   </div>
-                  <div>
-                    <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '6px' }}>SELECT TIME *</label>
-                    <input type="time" required value={bookingTime} onChange={e => setBookingTime(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', boxSizing: 'border-box' }} />
+                  
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>SELECT TIME SLOT *</label>
+                      <div style={{ display: 'flex', backgroundColor: '#E2E8F0', padding: '2px', borderRadius: '6px', gap: '2px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setTimePeriod('AM')}
+                          style={{
+                            padding: '4px 10px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            backgroundColor: timePeriod === 'AM' ? '#FFFFFF' : 'transparent',
+                            color: timePeriod === 'AM' ? '#1E40AF' : '#64748B'
+                          }}
+                        >
+                          ☀️ Morning (AM)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTimePeriod('PM')}
+                          style={{
+                            padding: '4px 10px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            backgroundColor: timePeriod === 'PM' ? '#FFFFFF' : 'transparent',
+                            color: timePeriod === 'PM' ? '#1E40AF' : '#64748B'
+                          }}
+                        >
+                          🌙 Afternoon / Evening (PM)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px' }}>
+                      {(timePeriod === 'AM' ? AM_SLOTS : PM_SLOTS).map(slot => {
+                        const isSelected = bookingTime === slot.label || bookingTime === slot.time;
+                        return (
+                          <button
+                            key={slot.label}
+                            type="button"
+                            onClick={() => setBookingTime(slot.label)}
+                            style={{
+                              padding: '8px',
+                              borderRadius: '6px',
+                              border: isSelected ? '2px solid #1E40AF' : '1px solid #CBD5E1',
+                              backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+                              color: isSelected ? '#1E40AF' : '#334155',
+                              fontWeight: isSelected ? 800 : 600,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                              textAlign: 'center'
+                            }}
+                          >
+                            {slot.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {bookingTime && (
+                      <div style={{ marginTop: '10px', padding: '6px 10px', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '6px', fontSize: '0.8rem', color: '#1E40AF', fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>✓ Selected: {bookingTime}</span>
+                        <button type="button" onClick={() => setBookingTime('')} style={{ background: 'none', border: 'none', color: '#1E40AF', cursor: 'pointer', fontSize: '0.72rem', textDecoration: 'underline' }}>Change</button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

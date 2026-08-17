@@ -78,8 +78,25 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
   const [contactPrice, setContactPrice] = useState(property?.priceDisplay || '');
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
+  const [timePeriod, setTimePeriod] = useState<'AM' | 'PM'>('AM');
+  const [customTime, setCustomTime] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
+
+  const AM_SLOTS = [
+    { label: '09:00 AM - 10:00 AM', time: '09:00 AM', tag: 'Early Morning' },
+    { label: '10:00 AM - 11:00 AM', time: '10:00 AM', tag: '⭐ Popular' },
+    { label: '11:00 AM - 12:00 PM', time: '11:00 AM', tag: 'Morning' },
+  ];
+
+  const PM_SLOTS = [
+    { label: '12:00 PM - 01:00 PM', time: '12:00 PM', tag: 'Noon' },
+    { label: '02:00 PM - 03:00 PM', time: '02:00 PM', tag: 'Afternoon' },
+    { label: '03:00 PM - 04:00 PM', time: '03:00 PM', tag: 'Afternoon' },
+    { label: '04:00 PM - 05:00 PM', time: '04:00 PM', tag: '⭐ Popular' },
+    { label: '05:00 PM - 06:00 PM', time: '05:00 PM', tag: 'Evening' },
+    { label: '06:00 PM - 07:00 PM', time: '06:00 PM', tag: 'Late Evening' },
+  ];
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -432,31 +449,155 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
                     </div>
                   )}
 
-                  {/* Book mode: Date + Time */}
+                  {/* Book mode: Date + Enhanced AM/PM Time Slot Selector */}
                   {mode === 'book' && (
-                    <div className="enquiry-date-time-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {/* Preferred Date Input */}
                       <div>
-                        <label style={labelStyle}>Preferred Date *</label>
+                        <label style={labelStyle}>Preferred Visit Date *</label>
                         <div style={{ position: 'relative' }}>
                           <FaCalendarAlt style={iconStyle} />
                           <input
-                            type="date" required value={bookingDate}
+                            type="date"
+                            required
+                            value={bookingDate}
                             onChange={e => setBookingDate(e.target.value)}
                             min={todayStr}
                             style={inputStyle}
                           />
                         </div>
                       </div>
-                      <div>
-                        <label style={labelStyle}>Preferred Time *</label>
-                        <div style={{ position: 'relative' }}>
-                          <FaClock style={iconStyle} />
-                          <input
-                            type="time" required value={bookingTime}
-                            onChange={e => setBookingTime(e.target.value)}
-                            style={inputStyle}
-                          />
+
+                      {/* Intuitive AM/PM Time Slot Selector */}
+                      <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1.5px solid #E2E8F0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                          <label style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                            <FaClock style={{ color: '#059669' }} /> Select Visit Time Slot *
+                          </label>
+                          
+                          {/* AM / PM Segmented Switch */}
+                          <div style={{ display: 'flex', backgroundColor: '#E2E8F0', padding: '3px', borderRadius: '8px', gap: '2px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setTimePeriod('AM')}
+                              style={{
+                                padding: '6px 14px',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.8rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                backgroundColor: timePeriod === 'AM' ? '#FFFFFF' : 'transparent',
+                                color: timePeriod === 'AM' ? '#059669' : '#64748B',
+                                boxShadow: timePeriod === 'AM' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
+                              }}
+                            >
+                              ☀️ Morning (AM)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTimePeriod('PM')}
+                              style={{
+                                padding: '6px 14px',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '0.8rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                backgroundColor: timePeriod === 'PM' ? '#FFFFFF' : 'transparent',
+                                color: timePeriod === 'PM' ? '#059669' : '#64748B',
+                                boxShadow: timePeriod === 'PM' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
+                              }}
+                            >
+                              🌙 Afternoon / Evening (PM)
+                            </button>
+                          </div>
                         </div>
+
+                        {/* Quick-Pick Slot Chips Grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '10px' }}>
+                          {(timePeriod === 'AM' ? AM_SLOTS : PM_SLOTS).map(slot => {
+                            const isSelected = bookingTime === slot.label || bookingTime === slot.time;
+                            return (
+                              <button
+                                key={slot.label}
+                                type="button"
+                                onClick={() => setBookingTime(slot.label)}
+                                style={{
+                                  padding: '10px 12px',
+                                  borderRadius: '8px',
+                                  border: isSelected ? '2px solid #059669' : '1px solid #CBD5E1',
+                                  backgroundColor: isSelected ? '#ECFDF5' : '#FFFFFF',
+                                  color: isSelected ? '#059669' : '#334155',
+                                  fontWeight: isSelected ? 800 : 600,
+                                  fontSize: '0.82rem',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  transition: 'all 0.2s',
+                                  boxShadow: isSelected ? '0 2px 8px rgba(5, 150, 105, 0.15)' : 'none'
+                                }}
+                              >
+                                <span style={{ fontSize: '0.85rem' }}>{slot.label}</span>
+                                {slot.tag && (
+                                  <span style={{
+                                    fontSize: '0.7rem',
+                                    fontWeight: 700,
+                                    color: isSelected ? '#047857' : '#64748B',
+                                    backgroundColor: isSelected ? '#D1FAE5' : '#F1F5F9',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px'
+                                  }}>
+                                    {slot.tag}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Selected Time Confirmation Badge */}
+                        {bookingTime && (
+                          <div style={{ marginTop: '12px', padding: '8px 12px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', color: '#065F46' }}>
+                            <span>
+                              ✓ Selected Visit Time: <strong style={{ color: '#047857' }}>{bookingTime}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setBookingTime('')}
+                              style={{ background: 'none', border: 'none', color: '#059669', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem', textDecoration: 'underline' }}
+                            >
+                              Change
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Custom Time Option Toggle */}
+                        <div style={{ marginTop: '10px', textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            onClick={() => setCustomTime(!customTime)}
+                            style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '0.78rem', cursor: 'pointer', textDecoration: 'underline', fontWeight: 600 }}
+                          >
+                            {customTime ? 'Hide custom time' : 'Need a custom specific time?'}
+                          </button>
+                        </div>
+
+                        {customTime && (
+                          <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                              type="time"
+                              value={bookingTime.includes('-') ? '' : bookingTime}
+                              onChange={e => setBookingTime(e.target.value)}
+                              style={{ ...inputStyle, paddingLeft: '14px', flexGrow: 1 }}
+                              placeholder="Select exact time..."
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
