@@ -309,12 +309,13 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
         }).catch(() => {});
       }
 
+      saveBackupCustomer(primaryCustomer);
       return primaryCustomer;
     }
 
     if (!normalizedPhone) return null;
 
-    const newCustomer = await prisma.customer.create({
+    let newCustomer = await prisma.customer.create({
       data: {
         name: name || 'User',
         phone: normalizedPhone,
@@ -335,6 +336,23 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
       }).catch(() => null);
     });
 
+    if (!newCustomer) {
+      newCustomer = {
+        id: `cust-${normalizedPhone}`,
+        name: name || 'User',
+        phone: normalizedPhone,
+        mobile: normalizedPhone,
+        email: normalizedEmail || null,
+        gender: gender || 'Male',
+        district: district || 'Hyderabad',
+        role: role || 'User',
+        status: 'Active',
+        lastLoginAt: new Date().toLocaleString(),
+        registeredDate: new Date().toLocaleDateString()
+      };
+    }
+
+    saveBackupCustomer(newCustomer);
     return newCustomer;
   } catch (err) {
     logger.error({ error: err.message }, 'resolveCustomer error');
@@ -1591,6 +1609,37 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res) => {
 });
 
 const ENQUIRIES_BACKUP_FILE = path.join(__dirname, 'data', 'enquiries.json');
+const CUSTOMERS_BACKUP_FILE = path.join(__dirname, 'data', 'customers.json');
+
+const getBackupCustomers = () => {
+  try {
+    if (fs.existsSync(CUSTOMERS_BACKUP_FILE)) {
+      const content = fs.readFileSync(CUSTOMERS_BACKUP_FILE, 'utf-8');
+      return JSON.parse(content || '[]');
+    }
+  } catch (e) {}
+  return [];
+};
+
+const saveBackupCustomer = (cust) => {
+  if (!cust || !cust.id) return;
+  try {
+    const list = getBackupCustomers();
+    const targetPhone = String(cust.phone || cust.mobile || '').replace(/\D/g, '');
+    const filtered = list.filter(c => {
+      if (!c || !c.id) return false;
+      if (c.id === cust.id) return false;
+      const cPhone = String(c.phone || c.mobile || '').replace(/\D/g, '');
+      if (targetPhone && cPhone && (targetPhone === cPhone || cPhone.includes(targetPhone) || targetPhone.includes(cPhone))) {
+        return false;
+      }
+      return true;
+    });
+    const updated = [cust, ...filtered];
+    fs.mkdirSync(path.dirname(CUSTOMERS_BACKUP_FILE), { recursive: true });
+    fs.writeFileSync(CUSTOMERS_BACKUP_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {}
+};
 
 const getBackupEnquiries = () => {
   try {
@@ -2184,20 +2233,60 @@ app.get('/api/admin/customers', optionalAuthMiddleware, async (req, res) => {
       }
     }
 
-    const total = await prisma.customer.count({ where }).catch(() => 0);
-    const customers = await prisma.customer.findMany({
+    const dbCustomers = await prisma.customer.findMany({
       where,
-      skip,
-      take,
-      orderBy: { lastLoginAt: 'desc' }
+      orderBy: { createdAt: 'desc' }
     }).catch(() => []);
+
+    const backupCustomers = getBackupCustomers();
+
+    // Merge DB & Disk Backup Customers
+    const customerMap = new Map();
+
+    // Add backup customers first
+    backupCustomers.forEach(c => {
+      if (c && c.id) customerMap.set(c.id, c);
+    });
+
+    // Add DB customers (overwriting backup entries with official DB state)
+    dbCustomers.forEach(c => {
+      if (c && c.id) customerMap.set(c.id, c);
+    });
+
+    let mergedCustomers = Array.from(customerMap.values());
+
+    // Apply search filter if present
+    if (search) {
+      const q = String(search).toLowerCase();
+      mergedCustomers = mergedCustomers.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.toLowerCase().includes(q)) ||
+        (c.mobile && c.mobile.toLowerCase().includes(q)) ||
+        (c.email && c.email.toLowerCase().includes(q))
+      );
+    }
+
+    if (area) {
+      const a = String(area).toLowerCase();
+      mergedCustomers = mergedCustomers.filter(c => c.district && c.district.toLowerCase().includes(a));
+    }
+
+    // Sort by createdAt / registeredDate / lastLoginAt descending (newest registered customers first)
+    mergedCustomers.sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.lastLoginAt || a.registeredDate || 0).getTime();
+      const timeB = new Date(b.createdAt || b.lastLoginAt || b.registeredDate || 0).getTime();
+      return timeB - timeA;
+    });
+
+    const total = mergedCustomers.length;
+    const paginatedCustomers = mergedCustomers.slice(skip, skip + take);
 
     return res.json({
       total,
       page: Number(page),
       limit: Number(limit),
       totalPages: Math.ceil(total / take) || 1,
-      customers: customers || []
+      customers: paginatedCustomers
     });
   } catch (err) {
     return res.json({ total: 0, page: 1, limit: 10, totalPages: 1, customers: [] });
