@@ -1156,14 +1156,9 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                     <button
                       type="button"
                       onClick={() => {
-                        const targetIdx = arr.findIndex(x => x.id === step.id);
-                        if (targetIdx <= currentStepIndex) {
-                          setModalSubTab(step.id as any);
-                        } else if (validateStep(modalSubTab)) {
-                          setModalSubTab(step.id as any);
-                        }
+                        setModalSubTab(step.id as any);
                       }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap', opacity: arr.findIndex(x => x.id === modalSubTab) >= idx ? 1 : 0.6 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
                     >
                       <div style={{
                         width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.95rem',
@@ -1983,13 +1978,23 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   )}
 
                   {currentStepIndex < stepOrder.length - 1 ? (
-                    <button
-                      type="button"
-                      onClick={goNextStep}
-                      style={{ padding: '10px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
-                    >
-                      Next Step →
-                    </button>
+                    <>
+                      {formData.title?.trim() && (
+                        <button
+                          type="submit"
+                          style={{ padding: '10px 20px', backgroundColor: '#FFFFFF', color: '#059669', border: '1.5px solid #059669', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer' }}
+                        >
+                          Save Business Now
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={goNextStep}
+                        style={{ padding: '10px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
+                      >
+                        Next Step →
+                      </button>
+                    </>
                   ) : (
                     <button
                       type="submit"

@@ -3004,79 +3004,96 @@ app.post('/api/businesses', async (req, res, next) => {
     const assignedIds = Array.isArray(b.assignedBrokerIds) ? b.assignedBrokerIds : (b.dealerId ? [b.dealerId] : []);
     const imagesList = Array.isArray(b.images) ? b.images : (b.image ? [b.image] : []);
     const bId = b.dealerId || b.brokerId || assignedIds[0] || null;
+    const businessId = b.id || `biz-pg-${Date.now()}`;
 
+    let safeBrokerId = null;
     if (bId) {
-      const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-      if (!brokerExists) {
-        await prisma.broker.create({
-          data: {
+      try {
+        await prisma.broker.upsert({
+          where: { id: bId },
+          update: {
+            companyName: b.agentName || undefined,
+            phone: b.agentPhone || undefined,
+          },
+          create: {
             id: bId,
             companyName: b.agentName || 'RealtyPlus Advisors',
             rating: Number(b.agentRating) || 4.8,
-            phone: b.agentPhone || null,
+            phone: b.agentPhone || '+91 95539 25956',
             city: b.city || 'Hyderabad',
             state: b.state || 'Telangana'
           }
-        }).catch(() => null);
+        });
+        safeBrokerId = bId;
+      } catch (e) {
+        console.warn('Broker upsert warning:', e.message);
+        safeBrokerId = null;
       }
     }
 
-    const created = await prisma.business.create({
-      data: {
-        id: b.id || `biz-pg-${Date.now()}`,
-        name: b.name || b.title || 'Business Listing',
-        title: b.title || b.name || 'Business Listing',
-        industry: b.category || b.industry || 'Retail',
-        category: b.category || b.industry || 'Retail',
-        businessType: b.businessType || 'Private Limited',
-        location: b.location || b.city || 'Hyderabad',
-        state: b.state || 'Telangana',
-        district: b.district || '',
-        city: b.city || 'Hyderabad',
-        area: b.area || '',
-        subLocation: b.subLocation || b.sub_location || b.landmark || '',
-        landmark: b.landmark || b.subLocation || '',
-        pincode: b.pincode || b.postal_code || '',
-        fullAddress: b.fullAddress || '',
-        latitude: Number(b.latitude) || 17.4326,
-        longitude: Number(b.longitude) || 78.4071,
-        price: Number(b.price) || Number(b.askingPrice) || 0,
-        askingPrice: Number(b.askingPrice) || Number(b.price) || 0,
-        priceDisplay: b.priceDisplay || `₹${b.price || b.askingPrice || 0} Lakhs`,
-        revenueMonthly: b.revenueMonthly || '',
-        profitMonthly: b.profitMonthly || '',
-        establishedYear: b.establishedYear ? Number(b.establishedYear) : null,
-        employeesCount: b.employeesCount ? Number(b.employeesCount) : 0,
-        rating: Number(b.rating) || 0,
-        reviewCount: Number(b.reviewCount) || 0,
-        verified: b.verified !== false,
-        image: b.image || b.imageUrl || (imagesList[0] || ''),
-        image2: b.image2 || (imagesList[1] || null),
-        image3: b.image3 || (imagesList[2] || null),
-        image4: b.image4 || (imagesList[3] || null),
-        image5: b.image5 || (imagesList[4] || null),
-        image6: b.image6 || (imagesList[5] || null),
-        images: imagesList,
-        description: b.description || '',
-        reasonForSale: b.reasonForSale || '',
-        trustScore: Number(b.trustScore) || 0,
-        sellerProfile: b.sellerProfile || '',
-        dealerId: bId,
-        brokerId: bId,
-        agentName: b.agentName || null,
-        agentPhone: b.agentPhone || null,
-        assignedBrokerIds: assignedIds,
-        published: b.published !== false,
-        featured: b.featured === true || b.featured === 'true',
-        status: b.status || (b.sold ? 'Sold' : 'Available'),
-        sold: b.sold === true || b.status === 'Sold',
-        recentlySold: b.recentlySold === true,
-        soldDate: b.soldDate || (b.sold || b.status === 'Sold' ? new Date().toISOString().slice(0, 10) : null),
-        badge: b.badge || (b.recentlySold ? 'RECENTLY ACQUIRED' : (b.sold ? 'SOLD' : null)),
-      },
+    const businessData = {
+      name: b.name || b.title || 'Business Listing',
+      title: b.title || b.name || 'Business Listing',
+      industry: b.category || b.industry || 'Retail',
+      category: b.category || b.industry || 'Retail',
+      businessType: b.businessType || 'Private Limited',
+      location: b.location || b.city || 'Hyderabad',
+      state: b.state || 'Telangana',
+      district: b.district || '',
+      city: b.city || 'Hyderabad',
+      area: b.area || '',
+      subLocation: b.subLocation || b.sub_location || b.landmark || '',
+      landmark: b.landmark || b.subLocation || '',
+      pincode: b.pincode || b.postal_code || '',
+      fullAddress: b.fullAddress || '',
+      latitude: Number(b.latitude) || 17.4326,
+      longitude: Number(b.longitude) || 78.4071,
+      price: Number(b.price) || Number(b.askingPrice) || 0,
+      askingPrice: Number(b.askingPrice) || Number(b.price) || 0,
+      priceDisplay: b.priceDisplay || `₹${b.price || b.askingPrice || 0} Lakhs`,
+      revenueMonthly: b.revenueMonthly || '',
+      profitMonthly: b.profitMonthly || '',
+      establishedYear: b.establishedYear ? Number(b.establishedYear) : null,
+      employeesCount: b.employeesCount ? Number(b.employeesCount) : 0,
+      rating: Number(b.rating) || 0,
+      reviewCount: Number(b.reviewCount) || 0,
+      verified: b.verified !== false,
+      image: b.image || b.imageUrl || (imagesList[0] || ''),
+      image2: b.image2 || (imagesList[1] || null),
+      image3: b.image3 || (imagesList[2] || null),
+      image4: b.image4 || (imagesList[3] || null),
+      image5: b.image5 || (imagesList[4] || null),
+      image6: b.image6 || (imagesList[5] || null),
+      images: imagesList,
+      description: b.description || '',
+      reasonForSale: b.reasonForSale || '',
+      trustScore: Number(b.trustScore) || 0,
+      sellerProfile: b.sellerProfile || '',
+      dealerId: bId,
+      brokerId: safeBrokerId,
+      agentName: b.agentName || null,
+      agentPhone: b.agentPhone || null,
+      assignedBrokerIds: assignedIds,
+      published: b.published !== false,
+      featured: b.featured === true || b.featured === 'true',
+      status: b.status || (b.sold ? 'Sold' : 'Available'),
+      sold: b.sold === true || b.status === 'Sold',
+      recentlySold: b.recentlySold === true,
+      soldDate: b.soldDate || (b.sold || b.status === 'Sold' ? new Date().toISOString().slice(0, 10) : null),
+      badge: b.badge || (b.recentlySold ? 'RECENTLY ACQUIRED' : (b.sold ? 'SOLD' : null)),
+    };
+
+    const created = await prisma.business.upsert({
+      where: { id: businessId },
+      update: businessData,
+      create: {
+        id: businessId,
+        ...businessData,
+      }
     });
     return res.status(201).json(created);
   } catch (err) {
+    console.error('Error creating/upserting business:', err);
     next(err);
   }
 });

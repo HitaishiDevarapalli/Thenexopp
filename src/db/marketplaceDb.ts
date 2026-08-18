@@ -649,10 +649,10 @@ const loadFromStorage = <T>(key: string, fallback: T): T => {
 };
 
 // Exported Reactive Data Variables
-export let dealersDb: Dealer[] = [];
-export let propertiesDb: PropertyListing[] = [];
-export let franchiseDb: FranchiseListing[] = [];
-export let businessDb: BusinessListing[] = [];
+export let dealersDb: Dealer[] = loadFromStorage('nexopp_dealers_db', []);
+export let propertiesDb: PropertyListing[] = loadFromStorage('nexopp_properties_db', []);
+export let franchiseDb: FranchiseListing[] = loadFromStorage('nexopp_franchise_db', []);
+export let businessDb: BusinessListing[] = loadFromStorage('nexopp_business_db', []);
 export let insuranceDb: InsuranceProvider[] = [];
 export let servicesDb: ServiceProvider[] = [];
 export let enquiriesDb: CustomerEnquiry[] = [];
@@ -925,9 +925,9 @@ const loadData = async () => {
       if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) {
         const localBizSaved = loadFromStorage('nexopp_business_db', []);
         const localBizMap = new Map((localBizSaved || []).map((b: any) => [b.id, b]));
-        businessDb = bizRes.value.map((b: any) => {
+        const serverBusinesses = bizRes.value.map((b: any) => {
           const local = localBizMap.get(b.id);
-          const brokerId = b.dealerId || local?.dealerId;
+          const brokerId = b.dealerId || b.brokerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]) || local?.dealerId;
           const cleanRev = (b.revenueMonthly === '₹1 Lakh/mo' || b.revenueMonthly === '₹ 1 Lakh/mo' || local?.revenueMonthly === '₹1 Lakh/mo') ? '' : (b.revenueMonthly || local?.revenueMonthly || '');
           const cleanProfit = (b.profitMonthly === '₹30,000/mo' || b.profitMonthly === '₹ 30,000/mo' || local?.profitMonthly === '₹30,000/mo') ? '' : (b.profitMonthly || local?.profitMonthly || '');
           return {
@@ -936,9 +936,16 @@ const loadData = async () => {
             profitMonthly: cleanProfit,
             reasonForSale: b.reasonForSale === 'Retirement' ? '' : (b.reasonForSale || local?.reasonForSale || ''),
             dealerId: brokerId,
+            brokerId: brokerId,
             assignedBrokerIds: b.assignedBrokerIds?.length ? b.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
           };
         });
+
+        // Merge: keep locally created businesses that are not yet returned by server
+        const serverIds = new Set(bizRes.value.map((b: any) => b.id));
+        const unsyncedLocals = (localBizSaved || []).filter((b: any) => !serverIds.has(b.id));
+
+        businessDb = [...serverBusinesses, ...unsyncedLocals];
         saveToStorage('nexopp_business_db', businessDb);
       }
       if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value) && dealersRes.value.length > 0) {
@@ -1232,6 +1239,7 @@ export const deleteDealer = (id: string) => {
 export const addBusiness = (item: BusinessListing) => {
   const primaryImg = item.image || item.imageUrl || (item.images && item.images[0]) || '';
   const allImages = item.images && item.images.length > 0 ? item.images : (primaryImg ? [primaryImg] : []);
+  const effectiveDealerId = item.dealerId || item.brokerId || (item.assignedBrokerIds && item.assignedBrokerIds[0]) || undefined;
   const norm: BusinessListing = {
     ...item,
     id: item.id || `biz-${Date.now()}`,
@@ -1244,8 +1252,11 @@ export const addBusiness = (item: BusinessListing) => {
     images: allImages,
     published: item.published !== false,
     status: item.status || 'Available',
+    dealerId: effectiveDealerId,
+    brokerId: effectiveDealerId,
+    assignedBrokerIds: effectiveDealerId ? [effectiveDealerId] : (item.assignedBrokerIds || []),
   };
-  businessDb = [norm, ...businessDb];
+  businessDb = [norm, ...businessDb.filter(b => b.id !== norm.id)];
   saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses`, {
@@ -1261,6 +1272,10 @@ export const updateBusiness = (id: string, updated: Partial<BusinessListing>) =>
       const merged = { ...b, ...updated };
       if (updated.images && updated.images.length > 0 && !updated.image) {
         merged.image = updated.images[0];
+      }
+      if (updated.dealerId !== undefined) {
+        merged.brokerId = updated.dealerId;
+        merged.assignedBrokerIds = updated.dealerId ? [updated.dealerId] : [];
       }
       return merged;
     }
