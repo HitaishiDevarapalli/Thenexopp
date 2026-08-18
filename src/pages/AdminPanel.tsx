@@ -145,16 +145,34 @@ interface AdminPanelProps {
   onRefresh?: () => void;
 }
 
+const ADMIN_AUTH_KEY = 'nexopp_admin_auth';
+const ADMIN_AUTH_EXPIRES_KEY = 'nexopp_admin_auth_expires';
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+const getInitialAdminAuth = (): boolean => {
+  const isAuth = localStorage.getItem(ADMIN_AUTH_KEY) === 'true' || sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+  const expiresAt = localStorage.getItem(ADMIN_AUTH_EXPIRES_KEY);
+  if (!isAuth) return false;
+  if (expiresAt && Date.now() > Number(expiresAt)) {
+    localStorage.removeItem(ADMIN_AUTH_KEY);
+    localStorage.removeItem(ADMIN_AUTH_EXPIRES_KEY);
+    localStorage.removeItem('nexopp_admin_role');
+    localStorage.removeItem('nexopp_admin_user_name');
+    localStorage.removeItem('nexopp_admin_user_email');
+    sessionStorage.removeItem(ADMIN_AUTH_KEY);
+    return false;
+  }
+  return true;
+};
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh }) => {
-  // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem('nexopp_admin_auth') === 'true';
-  });
+  // Authentication State (7-Day Persistent Session)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getInitialAdminAuth);
   const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
-    return sessionStorage.getItem('nexopp_admin_role') || 'Super Admin';
+    return localStorage.getItem('nexopp_admin_role') || sessionStorage.getItem('nexopp_admin_role') || 'Super Admin';
   });
   const [currentUserName, setCurrentUserName] = useState<string>(() => {
-    return sessionStorage.getItem('nexopp_admin_user_name') || 'Super Admin';
+    return localStorage.getItem('nexopp_admin_user_name') || sessionStorage.getItem('nexopp_admin_user_name') || 'Super Admin';
   });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -558,10 +576,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     const isMasterPassword = password === 'thenexopp123' || password === 'thenexoop123';
 
     if (isMasterEmail && isMasterPassword) {
+      const expiresAt = Date.now() + SEVEN_DAYS_MS;
+      localStorage.setItem('nexopp_admin_auth', 'true');
+      localStorage.setItem('nexopp_admin_auth_expires', String(expiresAt));
+      localStorage.setItem('nexopp_admin_role', 'Super Admin');
+      localStorage.setItem('nexopp_admin_user_name', 'Super Admin');
+      localStorage.setItem('nexopp_admin_user_email', cleanEmail);
+
       sessionStorage.setItem('nexopp_admin_auth', 'true');
       sessionStorage.setItem('nexopp_admin_role', 'Super Admin');
       sessionStorage.setItem('nexopp_admin_user_name', 'Super Admin');
       sessionStorage.setItem('nexopp_admin_user_email', cleanEmail);
+
       setIsAuthenticated(true);
       setCurrentUserRole('Super Admin');
       setCurrentUserName('Super Admin');
@@ -579,10 +605,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         setError('Your account is currently suspended. Please contact the administrator.');
         return;
       }
+      const expiresAt = Date.now() + SEVEN_DAYS_MS;
+      localStorage.setItem('nexopp_admin_auth', 'true');
+      localStorage.setItem('nexopp_admin_auth_expires', String(expiresAt));
+      localStorage.setItem('nexopp_admin_role', employee.role);
+      localStorage.setItem('nexopp_admin_user_name', employee.fullName);
+      localStorage.setItem('nexopp_admin_user_email', employee.email);
+
       sessionStorage.setItem('nexopp_admin_auth', 'true');
       sessionStorage.setItem('nexopp_admin_role', employee.role);
       sessionStorage.setItem('nexopp_admin_user_name', employee.fullName);
       sessionStorage.setItem('nexopp_admin_user_email', employee.email);
+
       setIsAuthenticated(true);
       setCurrentUserRole(employee.role);
       setCurrentUserName(employee.fullName);
@@ -624,6 +658,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('nexopp_admin_auth');
+    localStorage.removeItem('nexopp_admin_auth_expires');
+    localStorage.removeItem('nexopp_admin_role');
+    localStorage.removeItem('nexopp_admin_user_name');
+    localStorage.removeItem('nexopp_admin_user_email');
     sessionStorage.removeItem('nexopp_admin_auth');
     sessionStorage.removeItem('nexopp_admin_role');
     sessionStorage.removeItem('nexopp_admin_user_name');
