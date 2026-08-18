@@ -163,7 +163,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
   const userDistrict = user?.district || 'guntur';
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', padding: '2rem 0 5rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', padding: '6.5rem 0 5rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
       <div className="container" style={{ maxWidth: '1140px', margin: '0 auto', padding: '0 16px' }}>
         
         {/* ── LOGIN WALL IF GUEST ── */}
