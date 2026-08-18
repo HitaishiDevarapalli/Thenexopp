@@ -49,6 +49,13 @@ const DEFAULT_BUSINESS_TYPES = [
   'Joint Venture'
 ];
 
+const FALLBACK_DEALERS: Dealer[] = [
+  { id: 'D1', companyName: 'RealtyPlus Advisors', fullName: 'Rajesh Sharma', rating: 4.9, reviewCount: 142, phone: '+91 98480 22338', mobile: '+91 98480 22338', state: 'Andhra Pradesh', city: 'Guntur', verified: true, yearsExperience: 12, specialization: 'Commercial & Business Acquisitions', photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&auto=format&fit=crop&q=80', logo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&auto=format&fit=crop&q=80', premiumPartner: true, bestSeller: true, responseTime: '< 15 mins', inventoryCount: 24, coverage: { Guntur: 15, Vijayawada: 9 }, latitude: 16.3067, longitude: 80.4365 },
+  { id: 'D2', companyName: 'NexOpp Prime Realty', fullName: 'Vikram Reddy', rating: 4.8, reviewCount: 98, phone: '+91 95539 25956', mobile: '+91 95539 25956', state: 'Telangana', city: 'Hyderabad', verified: true, yearsExperience: 8, specialization: 'High-Value Enterprises & Retails', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80', logo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80', premiumPartner: true, bestSeller: false, responseTime: '< 30 mins', inventoryCount: 18, coverage: { Hyderabad: 18 }, latitude: 17.4326, longitude: 78.4071 },
+  { id: 'D3', companyName: 'Capital Asset Partners', fullName: 'Priya Narang', rating: 4.9, reviewCount: 115, phone: '+91 98765 43210', mobile: '+91 98765 43210', state: 'Andhra Pradesh', city: 'Vijayawada', verified: true, yearsExperience: 10, specialization: 'Business Sales & Franchises', photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80', logo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80', premiumPartner: true, bestSeller: true, responseTime: '< 10 mins', inventoryCount: 31, coverage: { Vijayawada: 20, Guntur: 11 }, latitude: 16.5062, longitude: 80.6480 },
+  { id: 'D4', companyName: 'Elite Estate Consultants', fullName: 'Suresh Kumar', rating: 4.7, reviewCount: 76, phone: '+91 91234 56789', mobile: '+91 91234 56789', state: 'Andhra Pradesh', city: 'Visakhapatnam', verified: true, yearsExperience: 6, specialization: 'Commercial Outlets & Industrial Units', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80', logo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80', premiumPartner: false, bestSeller: false, responseTime: '< 1 hr', inventoryCount: 14, coverage: { Visakhapatnam: 14 }, latitude: 17.6868, longitude: 83.2185 }
+];
+
 const GOOGLE_PLACES_SUGGESTIONS = COMPREHENSIVE_INDIA_PLACES_DB;
 
 export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> = ({ 
@@ -95,6 +102,16 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     if (master.length > 0) return master.map(t => t.name);
     return DEFAULT_BUSINESS_TYPES;
   }, [dataUpdated, masterBusinessTypesDb]);
+
+  const availableDealers = useMemo(() => {
+    if (dealersDb && dealersDb.length > 0) return dealersDb;
+    return FALLBACK_DEALERS;
+  }, [dataUpdated, dealersDb]);
+
+  const findBroker = (bId?: string) => {
+    if (!bId) return null;
+    return availableDealers.find(d => d.id.toLowerCase() === bId.toLowerCase()) || null;
+  };
 
   // Modal States for Add / Edit / Duplicate
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -316,6 +333,9 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       setMapMarkerPos({ lat: Number(b.latitude), lng: Number(b.longitude) });
     }
 
+    const effectiveDealerId = b.dealerId || b.brokerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]) || '';
+    const foundBroker = findBroker(effectiveDealerId);
+
     setFormData({
       ...b,
       title: b.name || b.title || '',
@@ -323,6 +343,11 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       askingPrice: rawPrice > 0 ? rawPrice : ('' as any),
       price: b.price || b.askingPrice || 0,
       priceDisplay: b.priceDisplay || (b.price ? `₹${b.price} Lakhs` : ''),
+      dealerId: effectiveDealerId,
+      brokerId: effectiveDealerId,
+      assignedBrokerIds: effectiveDealerId ? [effectiveDealerId] : [],
+      agentName: foundBroker ? (foundBroker.companyName || foundBroker.fullName || foundBroker.name) : (b.agentName || ''),
+      agentPhone: foundBroker ? (foundBroker.mobile || foundBroker.phone || foundBroker.contactNumber) : (b.agentPhone || ''),
       images: photosList,
       image: photosList[0] || b.image || ''
     });
@@ -390,7 +415,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     );
 
     const primaryImage = uploadedPhotos[0] || formData.image || '';
-    const selectedDealer = dealersDb.find(d => d.id === formData.dealerId);
+    const selectedDealer = findBroker(formData.dealerId);
 
     const locSummary = [
       formData.subLocation || formData.landmark,
@@ -435,8 +460,9 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       image6: uploadedPhotos[5] || undefined,
       images: uploadedPhotos,
       dealerId: formData.dealerId || undefined,
-      agentName: selectedDealer ? (selectedDealer.companyName || selectedDealer.fullName) : undefined,
-      agentPhone: selectedDealer ? (selectedDealer.mobile || selectedDealer.contactNumber) : undefined,
+      brokerId: formData.dealerId || undefined,
+      agentName: selectedDealer ? (selectedDealer.companyName || selectedDealer.fullName || selectedDealer.name) : undefined,
+      agentPhone: selectedDealer ? (selectedDealer.mobile || selectedDealer.phone || selectedDealer.contactNumber) : undefined,
       assignedBrokerIds: formData.dealerId ? [formData.dealerId] : [],
       published: formData.published !== false,
       featured: !!formData.featured,
@@ -521,7 +547,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
     });
   }, [businesses, searchTerm, selectedCategoryFilter, selectedStatusFilter]);
 
-  const assignedBroker = formData.dealerId ? dealersDb.find(d => d.id === formData.dealerId) : null;
+  const assignedBroker = findBroker(formData.dealerId);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif" }}>
@@ -679,7 +705,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   </tr>
                 ) : (
                   filteredBusinesses.map(biz => {
-                    const assignedD = biz.dealerId ? dealersDb.find(d => d.id === biz.dealerId) : null;
+                    const currentBrokerId = biz.dealerId || biz.brokerId || (biz.assignedBrokerIds && biz.assignedBrokerIds[0]) || '';
+                    const assignedD = findBroker(currentBrokerId);
                     return (
                       <tr key={biz.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background 0.15s' }}>
                         <td style={{ padding: '14px 20px' }}>
@@ -708,23 +735,46 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                           </span>
                         </td>
                         <td style={{ padding: '14px 20px' }}>
-                          {assignedD ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {assignedD.photo || assignedD.logo ? (
-                                <img src={assignedD.photo || assignedD.logo} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />
-                              ) : (
-                                <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
-                                  <FaUserTie />
-                                </div>
-                              )}
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0F172A' }}>{assignedD.companyName || assignedD.fullName}</div>
-                                <div style={{ fontSize: '0.7rem', color: '#64748B' }}>Verified Broker</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <select
+                              value={currentBrokerId}
+                              onChange={(e) => {
+                                const newBId = e.target.value;
+                                const newBroker = findBroker(newBId);
+                                updateBusiness(biz.id, {
+                                  dealerId: newBId || undefined,
+                                  brokerId: newBId || undefined,
+                                  assignedBrokerIds: newBId ? [newBId] : [],
+                                  agentName: newBroker ? (newBroker.companyName || newBroker.fullName || newBroker.name) : undefined,
+                                  agentPhone: newBroker ? (newBroker.mobile || newBroker.phone || newBroker.contactNumber) : undefined,
+                                });
+                                showNotification(`Broker ${newBroker ? (newBroker.companyName || newBroker.fullName) : 'unassigned'} updated for ${biz.name || biz.title}`, 'success');
+                              }}
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #CBD5E1',
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                backgroundColor: currentBrokerId ? '#ECFDF5' : '#FFFFFF',
+                                color: currentBrokerId ? '#065F46' : '#64748B',
+                                cursor: 'pointer',
+                                outline: 'none'
+                              }}
+                            >
+                              <option value="">-- Direct / Unassigned --</option>
+                              {availableDealers.map(d => (
+                                <option key={d.id} value={d.id}>
+                                  {d.companyName || d.fullName} — {d.city || 'AP/TS'}
+                                </option>
+                              ))}
+                            </select>
+                            {assignedD && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#059669', fontWeight: 600 }}>
+                                <span>⭐ {assignedD.rating || 4.8} • 📞 {assignedD.mobile || assignedD.phone || assignedD.contactNumber}</span>
                               </div>
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontStyle: 'italic' }}>Direct Listing (Unassigned)</span>
-                          )}
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '14px 20px' }}>
                           <span style={{
@@ -1569,7 +1619,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px' }}>
                     <h4 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669', margin: '0 0 16px 0' }}>6. Assign Verified Broker &amp; Publishing Options</h4>
                     
-                    {/* Broker Selector */}
+                    {/* Broker Selector Dropdown */}
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
                         Assigned Partner Broker (CRM Account)
@@ -1578,24 +1628,93 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                         value={formData.dealerId || ''}
                         onChange={e => {
                           const did = e.target.value;
-                          const foundD = dealersDb.find(d => d.id === did);
+                          const foundD = findBroker(did);
                           setFormData({
                             ...formData,
                             dealerId: did,
-                            agentName: foundD ? (foundD.companyName || foundD.fullName) : '',
-                            agentPhone: foundD ? (foundD.mobile || foundD.contactNumber) : '',
+                            brokerId: did,
+                            agentName: foundD ? (foundD.companyName || foundD.fullName || foundD.name) : '',
+                            agentPhone: foundD ? (foundD.mobile || foundD.phone || foundD.contactNumber) : '',
                             assignedBrokerIds: did ? [did] : []
                           });
                         }}
                         style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', backgroundColor: '#FFF', fontWeight: 600, boxSizing: 'border-box' }}
                       >
                         <option value="">-- No Broker Assigned (Direct NexOpp Listing) --</option>
-                        {dealersDb.map(d => (
+                        {availableDealers.map(d => (
                           <option key={d.id} value={d.id}>
-                            {d.companyName || d.fullName} — {d.city || 'Hyderabad'} ({d.mobile || 'No Mobile'})
+                            {d.companyName || d.fullName} — {d.city || 'AP/TS'} ({d.mobile || d.phone || 'Verified'})
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    {/* Visual Broker Selection Cards Grid */}
+                    <div style={{ marginBottom: '24px' }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: '10px' }}>
+                        Select from Verified Partner Brokers
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+                        {availableDealers.map(d => {
+                          const isSelected = formData.dealerId?.toLowerCase() === d.id.toLowerCase();
+                          return (
+                            <div
+                              key={d.id}
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  dealerId: d.id,
+                                  brokerId: d.id,
+                                  agentName: d.companyName || d.fullName || d.name,
+                                  agentPhone: d.mobile || d.phone || d.contactNumber,
+                                  assignedBrokerIds: [d.id]
+                                });
+                              }}
+                              style={{
+                                border: isSelected ? '2px solid #059669' : '1px solid #E2E8F0',
+                                backgroundColor: isSelected ? '#ECFDF5' : '#FFFFFF',
+                                borderRadius: '12px',
+                                padding: '14px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                                boxShadow: isSelected ? '0 4px 12px rgba(5, 150, 105, 0.15)' : 'none'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {d.photo || d.logo ? (
+                                  <img src={d.photo || d.logo} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#F1F5F9', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <FaUserTie />
+                                  </div>
+                                )}
+                                <div style={{ overflow: 'hidden' }}>
+                                  <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {d.companyName || d.fullName}
+                                  </div>
+                                  <div style={{ fontSize: '0.72rem', color: '#64748B' }}>📍 {d.city || 'AP/TS'}</div>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '4px' }}>
+                                <span style={{ color: '#059669', fontWeight: 700 }}>⭐ {d.rating || 4.8}</span>
+                                <span style={{
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 800,
+                                  backgroundColor: isSelected ? '#059669' : '#F1F5F9',
+                                  color: isSelected ? '#FFFFFF' : '#475569'
+                                }}>
+                                  {isSelected ? '✓ Assigned' : 'Assign'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     {/* Broker Profile Card Preview */}
@@ -1611,7 +1730,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A' }}>{assignedBroker.companyName || assignedBroker.fullName}</div>
                           <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
-                            📞 {assignedBroker.mobile || assignedBroker.contactNumber || 'N/A'} • ✉️ {assignedBroker.email || 'N/A'}
+                            📞 {assignedBroker.mobile || assignedBroker.phone || assignedBroker.contactNumber || 'N/A'} • ✉️ {assignedBroker.email || 'N/A'}
                           </div>
                           <div style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 700, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <FaShieldAlt /> Verified Partner Broker • ⭐ {assignedBroker.rating || 4.8} Rating

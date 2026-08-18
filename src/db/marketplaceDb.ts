@@ -410,6 +410,7 @@ export interface BusinessListing {
   category?: string;
   businessType?: string;
   dealerId?: string;
+  brokerId?: string;
   agentName?: string;
   agentPhone?: string;
   assignedBrokerIds?: string[];

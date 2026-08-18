@@ -3003,6 +3003,24 @@ app.post('/api/businesses', async (req, res, next) => {
     const b = req.body;
     const assignedIds = Array.isArray(b.assignedBrokerIds) ? b.assignedBrokerIds : (b.dealerId ? [b.dealerId] : []);
     const imagesList = Array.isArray(b.images) ? b.images : (b.image ? [b.image] : []);
+    const bId = b.dealerId || b.brokerId || assignedIds[0] || null;
+
+    if (bId) {
+      const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
+      if (!brokerExists) {
+        await prisma.broker.create({
+          data: {
+            id: bId,
+            companyName: b.agentName || 'RealtyPlus Advisors',
+            rating: Number(b.agentRating) || 4.8,
+            phone: b.agentPhone || null,
+            city: b.city || 'Hyderabad',
+            state: b.state || 'Telangana'
+          }
+        }).catch(() => null);
+      }
+    }
+
     const created = await prisma.business.create({
       data: {
         id: b.id || `biz-pg-${Date.now()}`,
@@ -3043,8 +3061,8 @@ app.post('/api/businesses', async (req, res, next) => {
         reasonForSale: b.reasonForSale || '',
         trustScore: Number(b.trustScore) || 0,
         sellerProfile: b.sellerProfile || '',
-        dealerId: b.dealerId || assignedIds[0] || null,
-        brokerId: b.dealerId || assignedIds[0] || null,
+        dealerId: bId,
+        brokerId: bId,
         agentName: b.agentName || null,
         agentPhone: b.agentPhone || null,
         assignedBrokerIds: assignedIds,
@@ -3097,10 +3115,38 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.description !== undefined) updateData.description = b.description;
     if (b.reasonForSale !== undefined) updateData.reasonForSale = b.reasonForSale;
     if (b.sellerProfile !== undefined) updateData.sellerProfile = b.sellerProfile;
-    if (b.dealerId !== undefined) updateData.dealerId = b.dealerId;
+    
+    if (b.dealerId !== undefined || b.brokerId !== undefined) {
+      const bId = b.dealerId || b.brokerId || null;
+      if (bId) {
+        const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
+        if (!brokerExists) {
+          await prisma.broker.create({
+            data: {
+              id: bId,
+              companyName: b.agentName || 'RealtyPlus Advisors',
+              rating: Number(b.agentRating) || 4.8,
+              phone: b.agentPhone || null,
+              city: b.city || 'Hyderabad',
+              state: b.state || 'Telangana'
+            }
+          }).catch(() => null);
+        }
+        updateData.dealerId = bId;
+        updateData.brokerId = bId;
+        updateData.assignedBrokerIds = [bId];
+      } else {
+        updateData.dealerId = null;
+        updateData.brokerId = null;
+        updateData.assignedBrokerIds = [];
+      }
+    }
+
     if (b.agentName !== undefined) updateData.agentName = b.agentName;
     if (b.agentPhone !== undefined) updateData.agentPhone = b.agentPhone;
-    if (b.assignedBrokerIds !== undefined) updateData.assignedBrokerIds = Array.isArray(b.assignedBrokerIds) ? b.assignedBrokerIds : (b.assignedBrokerIds ? [b.assignedBrokerIds] : []);
+    if (b.assignedBrokerIds !== undefined && updateData.assignedBrokerIds === undefined) {
+      updateData.assignedBrokerIds = Array.isArray(b.assignedBrokerIds) ? b.assignedBrokerIds : (b.assignedBrokerIds ? [b.assignedBrokerIds] : []);
+    }
     if (b.verified !== undefined) updateData.verified = b.verified === true || b.verified === 'true';
     if (b.trustScore !== undefined) updateData.trustScore = Number(b.trustScore);
     if (b.rating !== undefined) updateData.rating = Number(b.rating);
