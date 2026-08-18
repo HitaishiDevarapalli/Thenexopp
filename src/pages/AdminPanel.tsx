@@ -4427,10 +4427,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 });
               });
 
+              // Deduplicate by ID and by phone+listing+date fingerprint
+              const fingerprintSet = new Set<string>();
               const baseList: any[] = [];
               for (const item of rawCombined) {
                 if (!item) continue;
                 if (item.id && combinedMap.has(item.id)) continue;
+                // Fingerprint dedup: same phone + same listing + same date = duplicate
+                const phone10 = String(item.phone || '').replace(/\D/g, '').slice(-10);
+                const fp = `${phone10}|${(item.listingTitle || '').toLowerCase().trim()}|${item.date || item.preferredMoveInDate || ''}|${item.preferredTime || ''}`;
+                if (phone10 && fp.length > 15 && fingerprintSet.has(fp)) continue;
+                if (phone10 && fp.length > 15) fingerprintSet.add(fp);
                 if (item.id) combinedMap.set(item.id, item);
                 baseList.push(item);
               }
