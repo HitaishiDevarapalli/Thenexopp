@@ -51,7 +51,12 @@ import {
   FaPhoneAlt,
   FaWhatsapp,
   FaCommentDots,
-  FaFilter
+  FaFilter,
+  FaExclamationCircle,
+  FaCheckDouble,
+  FaFolderOpen,
+  FaQuoteLeft,
+  FaDownload
 } from 'react-icons/fa';
 import { 
   propertiesDb, 
@@ -4362,11 +4367,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
         {/* ================= CATEGORY 5.5: CONTACT INQUIRIES & LEADS INBOX ================= */}
         {activeTab === 'inquiries' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
             
             {(() => {
               const combinedMap = new Map();
-              const seenSignatures = new Set();
               const rawCombined: any[] = [];
 
               (allEnquiries || []).forEach(e => rawCombined.push(e));
@@ -4383,7 +4387,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   listingType: b.listingType || 'PROPERTY',
                   listingId: b.listingId,
                   enquiryType: 'SLOT_BOOKING',
-                  message: b.notes || `Requested visit slot on ${b.bookingDate} at ${b.bookingTime}`,
+                  message: b.notes || `Visit requested for ${b.bookingDate || 'Scheduled Date'} at ${b.bookingTime || '11:00 AM'}`,
                   date: b.bookingDate,
                   preferredTime: b.bookingTime,
                   preferredMoveInDate: b.bookingDate,
@@ -4431,18 +4435,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 (e.source && (e.source.toLowerCase().includes('property') || e.source.toLowerCase().includes('enquiry'))) || 
                 (!isContactUs(e) && !isBusiness(e));
 
-              // Filter inquiries based on search, category, and status
+              // Counts calculation
+              const totalCount = baseList.length;
+              const newCount = baseList.filter(e => e.status === 'New' || !e.status).length;
+              const inProgressCount = baseList.filter(e => e.status === 'Follow-up' || e.status === 'In Progress').length;
+              const respondedCount = baseList.filter(e => e.status === 'Contacted' || e.status === 'Responded').length;
+              const closedCount = baseList.filter(e => e.status === 'Closed').length;
+
+              // Filter inquiries based on search, category, status, and sort
               const filteredEnquiries = baseList.filter(enq => {
-                // Category Filter
                 if (inquiryCategoryFilter === 'CONTACT_US' && !isContactUs(enq)) return false;
                 if (inquiryCategoryFilter === 'PROPERTY' && !isProperty(enq)) return false;
                 if (inquiryCategoryFilter === 'BUSINESS' && !isBusiness(enq)) return false;
                 if (inquiryCategoryFilter === 'SLOT_BOOKING' && !isSlotBooking(enq)) return false;
 
-                // Status Filter
-                if (inquiryStatusFilter !== 'ALL' && enq.status !== inquiryStatusFilter) return false;
+                if (inquiryStatusFilter !== 'ALL') {
+                  if (inquiryStatusFilter === 'New' && enq.status !== 'New' && !!enq.status) return false;
+                  if (inquiryStatusFilter === 'Follow-up' && enq.status !== 'Follow-up' && enq.status !== 'In Progress') return false;
+                  if (inquiryStatusFilter === 'Contacted' && enq.status !== 'Contacted' && enq.status !== 'Responded') return false;
+                  if (inquiryStatusFilter === 'Closed' && enq.status !== 'Closed') return false;
+                }
 
-                // Search Filter
                 if (inquirySearch.trim()) {
                   const q = inquirySearch.toLowerCase().trim();
                   const name = (enq.customerName || enq.name || '').toLowerCase();
@@ -4456,70 +4469,283 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 return true;
               });
 
-              const totalCount = baseList.length;
-              const newCount = baseList.filter(e => e.status === 'New').length;
-              const contactedCount = baseList.filter(e => e.status === 'Contacted' || e.status === 'Follow-up').length;
-              const closedCount = baseList.filter(e => e.status === 'Closed').length;
-
               return (
                 <>
-                  {/* Top Stats Overview Row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                    <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Total Inquiries</span>
-                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#0F172A' }}>{totalCount}</h3>
+                  {/* Top Title & Header Actions Bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+                        Contact Inquiries &amp; Leads Inbox
+                      </h2>
+                      <p style={{ fontSize: '0.88rem', color: '#64748B', margin: '4px 0 0 0' }}>
+                        Manage and respond to buyer leads &amp; consultation requests
+                      </p>
                     </div>
 
-                    <div style={{ backgroundColor: '#FEF2F2', padding: '18px 20px', borderRadius: '12px', border: '1px solid #FECACA', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#DC2626', textTransform: 'uppercase' }}>New / Unread</span>
-                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#DC2626' }}>{newCount}</h3>
-                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const csvHeader = 'Name,Phone,Email,Title,Status,Date\n';
+                          const csvRows = filteredEnquiries.map(e => `"${e.customerName || e.name || ''}","${e.phone || ''}","${e.email || ''}","${e.listingTitle || ''}","${e.status || 'New'}","${e.date || ''}"`).join('\n');
+                          const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `leads_inbox_${Date.now()}.csv`;
+                          a.click();
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 18px',
+                          backgroundColor: '#FFFFFF',
+                          color: '#334155',
+                          border: '1px solid #E2E8F0',
+                          borderRadius: '10px',
+                          fontSize: '0.88rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        <FaDownload /> Export
+                      </button>
 
-                    <div style={{ backgroundColor: '#EFF6FF', padding: '18px 20px', borderRadius: '12px', border: '1px solid #BFDBFE', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1E40AF', textTransform: 'uppercase' }}>In Follow-Up</span>
-                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#1E40AF' }}>{contactedCount}</h3>
-                    </div>
-
-                    <div style={{ backgroundColor: '#F0FDF4', padding: '18px 20px', borderRadius: '12px', border: '1px solid #BBF7D0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#16A34A', textTransform: 'uppercase' }}>Closed Deals</span>
-                      <h3 style={{ margin: '6px 0 0 0', fontSize: '1.7rem', fontWeight: 800, color: '#16A34A' }}>{closedCount}</h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          alert('Add New Inquiry Form: Use the website forms or admin listing editor to register a lead.');
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 20px',
+                          backgroundColor: '#007A55',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontSize: '0.88rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(0, 122, 85, 0.25)',
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        <FaPlus /> New Inquiry
+                      </button>
                     </div>
                   </div>
 
-                  {/* Filter & Search Bar */}
-                  <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                  {/* Top 5 Metric Cards Row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
                     
-                    {/* Category Filter Pills */}
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
-                      {[
-                        { id: 'ALL', label: `All Inquiries (${totalCount})` },
-                        { id: 'CONTACT_US', label: `📩 Contact Us Page (${baseList.filter(isContactUs).length})` },
-                        { id: 'PROPERTY', label: `🏢 Property Leads (${baseList.filter(isProperty).length})` },
-                        { id: 'BUSINESS', label: `💼 Business Leads (${baseList.filter(isBusiness).length})` },
-                        { id: 'SLOT_BOOKING', label: `📅 Slot Bookings (${baseList.filter(isSlotBooking).length})` },
-                      ].map(pill => (
-                        <button
-                          key={pill.id}
-                          type="button"
-                          onClick={() => setInquiryCategoryFilter(pill.id as any)}
-                          style={{
-                            padding: '8px 16px',
-                            borderRadius: '20px',
-                            border: inquiryCategoryFilter === pill.id ? '1px solid #059669' : '1px solid #E2E8F0',
-                            backgroundColor: inquiryCategoryFilter === pill.id ? '#ECFDF5' : '#FFFFFF',
-                            color: inquiryCategoryFilter === pill.id ? '#059669' : '#475569',
-                            fontWeight: inquiryCategoryFilter === pill.id ? 700 : 500,
-                            fontSize: '0.85rem',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {pill.label}
-                        </button>
-                      ))}
+                    {/* Card 1: All Inquiries */}
+                    <div
+                      onClick={() => setInquiryStatusFilter('ALL')}
+                      style={{
+                        backgroundColor: inquiryStatusFilter === 'ALL' ? '#ECFDF5' : '#FFFFFF',
+                        padding: '16px 18px',
+                        borderRadius: '14px',
+                        border: inquiryStatusFilter === 'ALL' ? '2px solid #007A55' : '1px solid #E2E8F0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#DCFCE7', color: '#007A55', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                        <FaCommentDots />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#007A55', textTransform: 'uppercase' }}>All Inquiries</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1, marginTop: '2px' }}>
+                          {totalCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Total</span>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Search & Status Controls */}
+                    {/* Card 2: New */}
+                    <div
+                      onClick={() => setInquiryStatusFilter('New')}
+                      style={{
+                        backgroundColor: inquiryStatusFilter === 'New' ? '#EFF6FF' : '#FFFFFF',
+                        padding: '16px 18px',
+                        borderRadius: '14px',
+                        border: inquiryStatusFilter === 'New' ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#DBEAFE', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                        <FaExclamationCircle />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase' }}>New</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1, marginTop: '2px' }}>
+                          {newCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>New</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 3: In Progress */}
+                    <div
+                      onClick={() => setInquiryStatusFilter('Follow-up')}
+                      style={{
+                        backgroundColor: inquiryStatusFilter === 'Follow-up' ? '#FFFBEB' : '#FFFFFF',
+                        padding: '16px 18px',
+                        borderRadius: '14px',
+                        border: inquiryStatusFilter === 'Follow-up' ? '2px solid #D97706' : '1px solid #E2E8F0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                        <FaFolderOpen />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#D97706', textTransform: 'uppercase' }}>In Progress</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1, marginTop: '2px' }}>
+                          {inProgressCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>In Progress</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 4: Responded */}
+                    <div
+                      onClick={() => setInquiryStatusFilter('Contacted')}
+                      style={{
+                        backgroundColor: inquiryStatusFilter === 'Contacted' ? '#ECFDF5' : '#FFFFFF',
+                        padding: '16px 18px',
+                        borderRadius: '14px',
+                        border: inquiryStatusFilter === 'Contacted' ? '2px solid #059669' : '1px solid #E2E8F0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#D1FAE5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                        <FaCheckCircle />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase' }}>Responded</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1, marginTop: '2px' }}>
+                          {respondedCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Responded</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 5: Closed */}
+                    <div
+                      onClick={() => setInquiryStatusFilter('Closed')}
+                      style={{
+                        backgroundColor: inquiryStatusFilter === 'Closed' ? '#F8FAFC' : '#FFFFFF',
+                        padding: '16px 18px',
+                        borderRadius: '14px',
+                        border: inquiryStatusFilter === 'Closed' ? '2px solid #475569' : '1px solid #E2E8F0',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#F1F5F9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                        <FaCheckDouble />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Closed</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.1, marginTop: '2px' }}>
+                          {closedCount} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>Closed</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Horizontal Tabs & Category Filter Controls */}
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '16px 20px', borderRadius: '14px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px' }}>
+                      {/* Status Tabs */}
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {[
+                          { id: 'ALL', label: 'All' },
+                          { id: 'New', label: 'New' },
+                          { id: 'Follow-up', label: 'In Progress' },
+                          { id: 'Contacted', label: 'Responded' },
+                          { id: 'Closed', label: 'Closed' },
+                        ].map(tab => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setInquiryStatusFilter(tab.id as any)}
+                            style={{
+                              padding: '8px 18px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              backgroundColor: inquiryStatusFilter === tab.id ? '#ECFDF5' : 'transparent',
+                              color: inquiryStatusFilter === tab.id ? '#007A55' : '#64748B',
+                              fontWeight: inquiryStatusFilter === tab.id ? 800 : 600,
+                              fontSize: '0.88rem',
+                              cursor: 'pointer',
+                              borderBottom: inquiryStatusFilter === tab.id ? '2px solid #007A55' : 'none',
+                              transition: 'all 0.15s'
+                            }}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Category Pills */}
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {[
+                          { id: 'ALL', label: `All (${totalCount})` },
+                          { id: 'PROPERTY', label: `🏢 Property (${baseList.filter(isProperty).length})` },
+                          { id: 'BUSINESS', label: `💼 Business (${baseList.filter(isBusiness).length})` },
+                          { id: 'SLOT_BOOKING', label: `📅 Visits (${baseList.filter(isSlotBooking).length})` },
+                          { id: 'CONTACT_US', label: `📩 Contact Us (${baseList.filter(isContactUs).length})` },
+                        ].map(pill => (
+                          <button
+                            key={pill.id}
+                            type="button"
+                            onClick={() => setInquiryCategoryFilter(pill.id as any)}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '20px',
+                              border: inquiryCategoryFilter === pill.id ? '1px solid #007A55' : '1px solid #E2E8F0',
+                              backgroundColor: inquiryCategoryFilter === pill.id ? '#ECFDF5' : '#FFFFFF',
+                              color: inquiryCategoryFilter === pill.id ? '#007A55' : '#475569',
+                              fontWeight: inquiryCategoryFilter === pill.id ? 800 : 600,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {pill.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Search & Sort Controls */}
                     <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div style={{ position: 'relative', flexGrow: 1, minWidth: '260px' }}>
                         <FaSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
@@ -4527,23 +4753,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           type="text"
                           value={inquirySearch}
                           onChange={e => setInquirySearch(e.target.value)}
-                          placeholder="Search inquiries by customer name, phone, email, or message..."
+                          placeholder="Search by customer name, phone, email, or message..."
                           style={{ width: '100%', padding: '10px 14px 10px 38px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }}
                         />
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Status:</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <FaFilter style={{ fontSize: '0.8rem', color: '#64748B' }} /> Filter:
+                        </span>
                         <select
-                          value={inquiryStatusFilter}
-                          onChange={e => setInquiryStatusFilter(e.target.value)}
-                          style={{ padding: '9px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem', fontWeight: 600, outline: 'none', backgroundColor: '#FFFFFF' }}
+                          style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem', fontWeight: 700, outline: 'none', backgroundColor: '#FFFFFF', cursor: 'pointer' }}
                         >
-                          <option value="ALL">All Statuses</option>
-                          <option value="New">🔴 New</option>
-                          <option value="Contacted">🔵 Contacted</option>
-                          <option value="Follow-up">🟡 Follow-up</option>
-                          <option value="Closed">🟢 Closed</option>
+                          <option value="NEWEST">Newest First</option>
+                          <option value="OLDEST">Oldest First</option>
                         </select>
                       </div>
                     </div>
@@ -4552,157 +4775,166 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
                   {/* Inquiry Cards List */}
                   {filteredEnquiries.length === 0 ? (
-                    <div style={{ backgroundColor: '#FFFFFF', padding: '60px', textAlign: 'center', borderRadius: '14px', border: '1px solid #E2E8F0', color: '#64748B', fontSize: '1rem', fontWeight: 600 }}>
+                    <div style={{ backgroundColor: '#FFFFFF', padding: '60px', textAlign: 'center', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B', fontSize: '1rem', fontWeight: 600 }}>
                       No inquiries match the selected filters or search query.
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {filteredEnquiries.map(enq => {
-                        const isNew = enq.status === 'New';
+                        const isNew = enq.status === 'New' || !enq.status;
                         const isClosed = enq.status === 'Closed';
-                        const isContacted = enq.status === 'Contacted';
-                        const isFollowUp = enq.status === 'Follow-up';
+                        const isContacted = enq.status === 'Contacted' || enq.status === 'Responded';
 
                         const cleanPhone = (enq.phone || '').replace(/\D/g, '');
+                        const name = enq.customerName || enq.name || 'User Lead';
+                        const initial = name.trim().charAt(0).toUpperCase() || 'U';
+
+                        const isSlot = isSlotBooking(enq) || enq.enquiryType === 'SLOT_BOOKING';
+                        const rawMsg = enq.message || enq.interest || enq.notes || '';
+                        
+                        let visitTime = enq.preferredTime || '';
+                        if (!visitTime && rawMsg.includes(' at ')) {
+                          visitTime = rawMsg.split(' at ')[1]?.trim();
+                        }
+                        
+                        let visitDate = enq.preferredMoveInDate || '';
+                        if (!visitDate && rawMsg.includes('Requested Visit: ')) {
+                          visitDate = rawMsg.split('Requested Visit: ')[1]?.split(' at ')[0]?.trim();
+                        } else if (!visitDate && rawMsg.includes('for ')) {
+                          visitDate = rawMsg.split('for ')[1]?.split(' at ')[0]?.trim();
+                        }
+                        if (!visitDate) visitDate = enq.date || 'Scheduled Visit';
 
                         return (
                           <div
                             key={enq.id}
                             style={{
                               backgroundColor: '#FFFFFF',
-                              borderRadius: '14px',
-                              padding: '20px 24px',
-                              border: isNew ? '2px solid #FECACA' : '1px solid #E2E8F0',
-                              boxShadow: isNew ? '0 4px 12px rgba(220, 38, 38, 0.06)' : '0 2px 4px rgba(0,0,0,0.02)',
+                              borderRadius: '16px',
+                              padding: '22px 26px',
+                              border: '1px solid #E2E8F0',
+                              borderLeft: isNew ? '5px solid #3B82F6' : isClosed ? '5px solid #64748B' : '5px solid #8B5CF6',
+                              boxShadow: '0 2px 12px rgba(0,0,0,0.03)',
                               display: 'flex',
                               flexDirection: 'column',
-                              gap: '12px',
+                              gap: '16px',
                               transition: 'all 0.2s'
                             }}
                           >
-                            {/* Top Row: Customer Name, Status Badge, Date, Source */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
-                              <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                                  <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
-                                    {enq.customerName || enq.name || 'Anonymous Investor'}
-                                  </h4>
-
-                                  {/* Status Badge */}
-                                  <span
-                                    style={{
-                                      padding: '3px 10px',
-                                      fontSize: '0.72rem',
-                                      fontWeight: 800,
-                                      borderRadius: '6px',
-                                      backgroundColor: isNew ? '#FEE2E2' : isClosed ? '#DCFCE7' : isContacted ? '#EFF6FF' : '#FEF3C7',
-                                      color: isNew ? '#DC2626' : isClosed ? '#16A34A' : isContacted ? '#1E40AF' : '#D97706',
-                                      border: isNew ? '1px solid #FECACA' : isClosed ? '1px solid #BBF7D0' : isContacted ? '1px solid #BFDBFE' : '1px solid #FDE68A',
-                                      textTransform: 'uppercase'
-                                    }}
-                                  >
-                                    {enq.status}
-                                  </span>
-
-                                  {/* Source Badge */}
-                                  <span style={{ padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, borderRadius: '6px', backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #E2E8F0' }}>
-                                    {enq.source || 'Direct Portal'}
-                                  </span>
-
-                                  {enq.enquiryType === 'SLOT_BOOKING' && (
-                                    <span style={{ padding: '3px 10px', fontSize: '0.72rem', fontWeight: 800, borderRadius: '6px', backgroundColor: '#FEF3C7', color: '#D97706', border: '1px solid #FDE68A' }}>
-                                      📅 SLOT BOOKING
-                                    </span>
-                                  )}
+                            {/* Card Top Row: Avatar, Name, Badges, Date, Actions menu */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                {/* Avatar */}
+                                <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#DCFCE7', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 800, flexShrink: 0 }}>
+                                  {initial}
                                 </div>
 
-                                <p style={{ margin: 0, fontSize: '0.9rem', color: '#334155' }}>
-                                  Subject / Interest: <strong style={{ color: '#0F172A' }}>{enq.listingTitle || enq.interest || 'Advisory Consultation'}</strong>
-                                </p>
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>
+                                      {name}
+                                    </h3>
+                                    {isNew && (
+                                      <span style={{ padding: '2px 8px', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, backgroundColor: '#DBEAFE', color: '#1D4ED8' }}>
+                                        NEW
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
 
-                              <div style={{ textAlign: 'right', fontSize: '0.82rem', color: '#94A3B8' }}>
-                                {enq.date || (enq.createdAt ? new Date(enq.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent')}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
+                                <span>🗓️ {enq.date || (enq.createdAt ? new Date(enq.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent')}</span>
+                                <span>⏰ {visitTime || '10:45 AM'}</span>
+                                <span
+                                  style={{
+                                    padding: '4px 12px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 800,
+                                    borderRadius: '8px',
+                                    backgroundColor: isNew ? '#DBEAFE' : isClosed ? '#F1F5F9' : isContacted ? '#DCFCE7' : '#FEF3C7',
+                                    color: isNew ? '#1D4ED8' : isClosed ? '#475569' : isContacted ? '#15803D' : '#B45309'
+                                  }}
+                                >
+                                  {enq.status || 'New'}
+                                </span>
+                                <FaEllipsisV style={{ cursor: 'pointer', color: '#94A3B8' }} />
                               </div>
                             </div>
 
-                            {/* Scheduled Visit Slot Box */}
-                            {(() => {
-                              const isSlot = isSlotBooking(enq) || enq.enquiryType === 'SLOT_BOOKING';
-                              const rawMsg = enq.message || enq.interest || enq.notes || '';
-                              
-                              // Extract time
-                              let visitTime = enq.preferredTime || '';
-                              if (!visitTime && rawMsg.includes(' at ')) {
-                                visitTime = rawMsg.split(' at ')[1]?.trim();
-                              }
-                              
-                              // Extract date
-                              let visitDate = enq.preferredMoveInDate || '';
-                              if (!visitDate && rawMsg.includes('Requested Visit: ')) {
-                                visitDate = rawMsg.split('Requested Visit: ')[1]?.split(' at ')[0]?.trim();
-                              } else if (!visitDate && rawMsg.includes('Visit Slot: ')) {
-                                visitDate = rawMsg.split('Visit Slot: ')[1]?.split(' at ')[0]?.trim();
-                              } else if (!visitDate && rawMsg.includes('for ')) {
-                                visitDate = rawMsg.split('for ')[1]?.split(' at ')[0]?.trim();
-                              }
-                              if (!visitDate) visitDate = enq.date || 'Scheduled Date';
+                            {/* Listing Title & Category Tags */}
+                            <div>
+                              <h4 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
+                                {enq.listingTitle || enq.interest || 'Property Inquiry'}
+                              </h4>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#F1F5F9', color: '#475569' }}>
+                                  {enq.source || 'Property Details Page'}
+                                </span>
+                                {isSlot && (
+                                  <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, backgroundColor: '#FEF3C7', color: '#D97706' }}>
+                                    Slot Booking
+                                  </span>
+                                )}
+                              </div>
+                            </div>
 
-                              if (!isSlot && !visitTime && !enq.preferredTime) return null;
-
-                              return (
-                                <div style={{ backgroundColor: '#FEF3C7', padding: '14px 18px', borderRadius: '10px', border: '1.5px solid #FCD34D', color: '#92400E', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: '#FDE68A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', flexShrink: 0 }}>
-                                      📅
+                            {/* Middle Row: 2-Column Cards for Slot & Message */}
+                            <div style={{ display: 'grid', gridTemplateColumns: isSlot && rawMsg ? '1fr 1fr' : '1fr', gap: '14px' }}>
+                              {/* Left Box: Scheduled Visit Slot */}
+                              {isSlot && (
+                                <div style={{ backgroundColor: '#F0F9FF', padding: '14px 18px', borderRadius: '12px', border: '1px solid #BAE6FD', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#E0F2FE', color: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                                    <FaCalendarAlt />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0369A1', textTransform: 'uppercase' }}>
+                                      Scheduled Property Visit Slot
                                     </div>
-                                    <div>
-                                      <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#B45309', fontWeight: 800 }}>
-                                        Scheduled Property Visit Slot
-                                      </div>
-                                      <div style={{ fontSize: '0.98rem', fontWeight: 800, color: '#78350F', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                        <span>🗓️ {visitDate}</span>
-                                        <span style={{ color: '#D97706' }}>•</span>
-                                        <span style={{ backgroundColor: '#FDE68A', padding: '3px 10px', borderRadius: '6px', color: '#78350F', fontWeight: 800 }}>
-                                          ⏰ Preferred Time: {visitTime || '10:00 AM - 01:00 PM (Morning Slot)'}
-                                        </span>
-                                      </div>
+                                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0C4A6E', marginTop: '2px' }}>
+                                      <strong style={{ color: '#0284C7' }}>{visitDate}</strong> • Preferred Time: <strong style={{ color: '#0284C7' }}>{visitTime || '11:00 AM'}</strong>
                                     </div>
                                   </div>
-                                  <span style={{ backgroundColor: '#F59E0B', color: '#FFFFFF', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800 }}>
-                                    CONFIRMED SLOT
-                                  </span>
                                 </div>
-                              );
-                            })()}
+                              )}
 
-                            {/* Message Content Bubble */}
-                            {enq.message && !enq.message.startsWith('Requested Visit Slot for') && (
-                              <div style={{ backgroundColor: '#F8FAFC', padding: '12px 16px', borderRadius: '8px', borderLeft: '4px solid #059669', color: '#334155', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                <strong style={{ color: '#059669', fontSize: '0.8rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Customer Message:</strong>
-                                "{enq.message}"
-                              </div>
-                            )}
+                              {/* Right Box: Customer Message */}
+                              {rawMsg && (
+                                <div style={{ backgroundColor: '#F8FAFC', padding: '14px 18px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#F1F5F9', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                                    <FaQuoteLeft />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>
+                                      Customer Message
+                                    </div>
+                                    <div style={{ fontSize: '0.88rem', color: '#334155', marginTop: '2px', lineHeight: 1.4 }}>
+                                      {rawMsg}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
 
-                            {/* Contact Details & Quick Action Bar */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', paddingTop: '8px', borderTop: '1px solid #F1F5F9' }}>
+                            {/* Card Bottom Row: Contact Details & Quick Action Buttons */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', paddingTop: '10px', borderTop: '1px solid #F1F5F9' }}>
                               
-                              {/* Contact Info */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', fontSize: '0.88rem', color: '#475569' }}>
+                              {/* Left Contact Info */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap', fontSize: '0.88rem', color: '#475569' }}>
                                 {enq.phone && (
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    📞 <strong style={{ color: '#0F172A' }}>{enq.phone}</strong>
+                                    <FaPhoneAlt style={{ fontSize: '0.8rem', color: '#2563EB' }} /> <strong style={{ color: '#0F172A' }}>{enq.phone}</strong>
                                   </span>
                                 )}
                                 {enq.email && (
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    ✉️ <strong style={{ color: '#0F172A' }}>{enq.email}</strong>
+                                    <FaEnvelope style={{ fontSize: '0.8rem', color: '#64748B' }} /> <strong style={{ color: '#0F172A' }}>{enq.email}</strong>
                                   </span>
                                 )}
                               </div>
 
-                              {/* Action Buttons: WhatsApp, Call, Email, Status Changer, Delete */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              {/* Right Action Buttons */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                                 {enq.phone && cleanPhone && (
                                   <a
                                     href={`https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}`}
@@ -4712,13 +4944,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '6px',
-                                      padding: '7px 12px',
+                                      padding: '8px 14px',
                                       backgroundColor: '#DCFCE7',
                                       color: '#15803D',
                                       border: '1px solid #BBF7D0',
-                                      borderRadius: '6px',
-                                      fontSize: '0.82rem',
-                                      fontWeight: 700,
+                                      borderRadius: '8px',
+                                      fontSize: '0.85rem',
+                                      fontWeight: 800,
                                       textDecoration: 'none'
                                     }}
                                   >
@@ -4733,12 +4965,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '6px',
-                                      padding: '7px 12px',
-                                      backgroundColor: '#F1F5F9',
+                                      padding: '8px 14px',
+                                      backgroundColor: '#FFFFFF',
                                       color: '#334155',
                                       border: '1px solid #CBD5E1',
-                                      borderRadius: '6px',
-                                      fontSize: '0.82rem',
+                                      borderRadius: '8px',
+                                      fontSize: '0.85rem',
                                       fontWeight: 700,
                                       textDecoration: 'none'
                                     }}
@@ -4754,12 +4986,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                       display: 'inline-flex',
                                       alignItems: 'center',
                                       gap: '6px',
-                                      padding: '7px 12px',
-                                      backgroundColor: '#F1F5F9',
+                                      padding: '8px 14px',
+                                      backgroundColor: '#FFFFFF',
                                       color: '#334155',
                                       border: '1px solid #CBD5E1',
-                                      borderRadius: '6px',
-                                      fontSize: '0.82rem',
+                                      borderRadius: '8px',
+                                      fontSize: '0.85rem',
                                       fontWeight: 700,
                                       textDecoration: 'none'
                                     }}
@@ -4768,25 +5000,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                   </a>
                                 )}
 
-                                {/* Status Selector */}
+                                {/* Status Selector Dropdown */}
                                 <select
-                                  value={enq.status}
+                                  value={enq.status || 'New'}
                                   onChange={e => handleUpdateEnquiryStatus(enq.id, e.target.value)}
                                   style={{
-                                    padding: '7px 12px',
+                                    padding: '8px 12px',
                                     border: '1px solid #CBD5E1',
                                     fontWeight: 700,
-                                    fontSize: '0.82rem',
-                                    borderRadius: '6px',
+                                    fontSize: '0.85rem',
+                                    borderRadius: '8px',
                                     outline: 'none',
                                     backgroundColor: '#FFFFFF',
                                     cursor: 'pointer'
                                   }}
                                 >
-                                  <option value="New">STATUS: NEW</option>
-                                  <option value="Contacted">STATUS: CONTACTED</option>
-                                  <option value="Follow-up">STATUS: FOLLOW-UP</option>
-                                  <option value="Closed">STATUS: CLOSED</option>
+                                  <option value="New">Status: New</option>
+                                  <option value="Follow-up">Status: In Progress</option>
+                                  <option value="Contacted">Status: Responded</option>
+                                  <option value="Closed">Status: Closed</option>
                                 </select>
 
                                 {/* Delete Button */}
@@ -4795,12 +5027,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                   onClick={() => handleDeleteEnquiry(enq.id)}
                                   title="Delete Inquiry Message"
                                   style={{
-                                    padding: '7px 10px',
-                                    backgroundColor: '#FEE2E2',
+                                    padding: '8px 12px',
+                                    backgroundColor: '#FEF2F2',
                                     color: '#DC2626',
                                     border: '1px solid #FECACA',
                                     cursor: 'pointer',
-                                    borderRadius: '6px',
+                                    borderRadius: '8px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
