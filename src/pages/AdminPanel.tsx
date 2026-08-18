@@ -303,16 +303,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchCustomerLoginHistory = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/customers-login-history`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setCustomerLoginHistory(Array.isArray(data) ? data : []);
-      } else {
-        const fallbackRes = await fetch(`${API_BASE_URL}/api/customers-login-history`);
-        if (fallbackRes.ok) {
-          const data = await fallbackRes.json();
-          setCustomerLoginHistory(Array.isArray(data) ? data : []);
+      let res = await fetch(`${API_BASE_URL}/api/admin/customers-login-history`, { credentials: 'include' }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch('/api/admin/customers-login-history', { credentials: 'include' }).catch(() => null);
+      }
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (Array.isArray(data)) {
+          setCustomerLoginHistory(data);
+          return;
         }
+      }
+      const fallbackRes = await fetch('/api/customers-login-history').catch(() => null);
+      if (fallbackRes && fallbackRes.ok) {
+        const data = await fallbackRes.json().catch(() => null);
+        setCustomerLoginHistory(Array.isArray(data) ? data : []);
       }
     } catch (e) {
       console.error('Failed to fetch login history:', e);
@@ -321,11 +326,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchCustomerDetails = async (id: string) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/customers/${id}`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setSelectedCustomerProfile(data);
-        setCustomerProfileActiveTab('overview');
+      let res = await fetch(`${API_BASE_URL}/api/admin/customers/${id}`, { credentials: 'include' }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`/api/admin/customers/${id}`, { credentials: 'include' }).catch(() => null);
+      }
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data) {
+          setSelectedCustomerProfile(data);
+          setCustomerProfileActiveTab('overview');
+        }
       }
     } catch (e) {
       console.error('Failed to fetch customer profile details:', e);
@@ -381,10 +391,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchAdminDashboardStats = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/dashboard-stats`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setAdminStats(data);
+      let res = await fetch(`${API_BASE_URL}/api/admin/dashboard-stats`, { credentials: 'include' }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch('/api/admin/dashboard-stats', { credentials: 'include' }).catch(() => null);
+      }
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data) setAdminStats(data);
       }
     } catch (e) {
       console.error('Failed to fetch admin stats:', e);

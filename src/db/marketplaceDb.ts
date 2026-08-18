@@ -850,14 +850,20 @@ const loadData = async () => {
     sellPropertyRequestsDb = [];
     sellBusinessRequestsDb = [];
 
-    // 2. Fetch from backend server API with resilient error protection
+    // 2. Fetch from backend server API with resilient error protection and relative endpoint fallback
     const safeFetchJson = async (url: string) => {
       try {
-        const res = await fetch(url);
-        if (!res.ok) return null;
+        let res = await fetch(url).catch(() => null);
+        if (!res || !res.ok) {
+          const relativePath = url.includes('/api/') ? '/api/' + url.split('/api/')[1] : null;
+          if (relativePath && relativePath !== url) {
+            res = await fetch(relativePath).catch(() => null);
+          }
+        }
+        if (!res || !res.ok) return null;
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) return null;
-        return await res.json();
+        return await res.json().catch(() => null);
       } catch {
         return null;
       }
@@ -876,7 +882,9 @@ const loadData = async () => {
       safeFetchJson(`${API_BASE_URL}/api/franchise-enquiries`),
       safeFetchJson(`${API_BASE_URL}/api/settings`),
       safeFetchJson(`${API_BASE_URL}/api/contact-settings`),
-    ]).then(([propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes]) => {
+      safeFetchJson(`${API_BASE_URL}/api/customers`),
+      safeFetchJson(`${API_BASE_URL}/api/bookings`),
+    ]).then(([propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes, custRes, bookRes]) => {
       if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) propertiesDb = propsRes.value;
       if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) franchiseDb = franRes.value;
       if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) businessDb = bizRes.value;
