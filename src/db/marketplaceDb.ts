@@ -437,6 +437,8 @@ export interface ServiceProvider {
 
 export interface CustomerEnquiry {
   id: string;
+  customerId?: string;
+  userId?: string;
   customerName: string;
   phone: string;
   email: string;
