@@ -998,10 +998,15 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
             loginCount: isNewCustomer ? Math.max(resolved.loginCount || 1, 1) : (resolved.loginCount || 0) + 1,
             status: 'Active'
           },
-        });
+        }).catch(() => resolved);
+      } else {
+        customer = resolved;
       }
     } catch (dbErr) {
       logger.warn({ dbErr }, 'Database offline or query error during OTP verification, falling back to session payload');
+    }
+
+    if (!customer) {
       customer = {
         id: `cust-${verifiedMobile}`,
         name: targetName,
