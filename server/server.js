@@ -980,25 +980,40 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
 
     let customer = null;
     let isNewCustomer = false;
+    let existingCustomer = null;
+
     try {
-      const existing = await prisma.customer.findFirst({
+      const cleanMobile = verifiedMobile.replace(/\D/g, '').slice(-10);
+      const backupList = getBackupCustomers();
+      const existingBackup = backupList.find(c => {
+        if (!c) return false;
+        const cP = getCleanPhone(c);
+        return cP && cleanMobile && cP === cleanMobile;
+      });
+
+      let existingDb = await prisma.customer.findFirst({
         where: {
           OR: [
             { mobile: verifiedMobile },
             { phone: verifiedMobile },
-            { mobile: { contains: verifiedMobile } },
-            { phone: { contains: verifiedMobile } }
+            { mobile: { contains: cleanMobile } },
+            { phone: { contains: cleanMobile } }
           ]
         },
       }).catch(() => null);
 
-      isNewCustomer = !existing;
+      existingCustomer = existingDb || existingBackup;
+      isNewCustomer = !existingCustomer;
+
+      const effectiveName = (fullName && fullName.trim()) ? fullName.trim() : (existingCustomer?.name && existingCustomer.name !== 'User' ? existingCustomer.name : 'User');
+      const effectiveGender = gender || existingCustomer?.gender || 'Male';
+      const effectiveDistrict = district || existingCustomer?.district || '';
 
       const resolved = await resolveCustomer({
         phone: verifiedMobile,
-        name: targetName,
-        gender,
-        district,
+        name: effectiveName,
+        gender: effectiveGender,
+        district: effectiveDistrict,
         role: 'User'
       });
 
@@ -1009,12 +1024,13 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
             mobile: verifiedMobile,
             phone: verifiedMobile,
             email: cleanCustomerEmail(resolved.email),
-            name: (fullName && fullName.trim()) ? fullName.trim() : (resolved.name || 'User'),
-            gender: gender || resolved.gender,
-            district: district || resolved.district,
+            name: effectiveName !== 'User' ? effectiveName : (resolved.name || 'User'),
+            gender: effectiveGender || resolved.gender,
+            district: effectiveDistrict || resolved.district,
             lastLoginAt: timestamp,
             loginCount: isNewCustomer ? Math.max(resolved.loginCount || 1, 1) : (resolved.loginCount || 0) + 1,
-            status: 'Active'
+            status: 'Active',
+            ...(existingCustomer?.profileCompleted || (existingCustomer?.name && existingCustomer.name !== 'User') ? { profileCompleted: true } : {})
           },
         }).catch(() => resolved);
       } else {
@@ -1026,17 +1042,20 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
 
     if (!customer) {
       customer = {
-        id: `cust-${verifiedMobile}`,
-        name: targetName,
+        id: existingCustomer?.id || `cust-${verifiedMobile}`,
+        name: existingCustomer?.name || targetName,
         email: null,
         mobile: verifiedMobile,
         phone: verifiedMobile,
-        gender: gender || 'Male',
-        district: district || 'Hyderabad',
+        gender: gender || existingCustomer?.gender || 'Male',
+        district: district || existingCustomer?.district || '',
         role: 'User',
-        status: 'Active'
+        status: 'Active',
+        profileCompleted: existingCustomer?.profileCompleted === true || (existingCustomer?.name && existingCustomer.name !== 'User')
       };
     }
+
+    saveBackupCustomer(customer);
 
     // Record Login History and User Activity
     if (customer && customer.id && !customer.id.startsWith('cust-')) {
@@ -1073,18 +1092,25 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
       }
     }
 
+    const isProfileAlreadyCompleted = Boolean(
+      customer.profileCompleted === true ||
+      existingCustomer?.profileCompleted === true ||
+      (customer.name && customer.name !== 'User' && customer.name.trim() !== '') ||
+      (existingCustomer?.name && existingCustomer.name !== 'User' && existingCustomer.name.trim() !== '')
+    );
+
     // Generate JWT Token
     const userPayload = {
       id: customer.id,
       email: (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null,
-      fullName: customer.name,
+      fullName: customer.name && customer.name !== 'User' ? customer.name : (existingCustomer?.name && existingCustomer.name !== 'User' ? existingCustomer.name : 'User'),
       mobile: customer.mobile || customer.phone || verifiedMobile,
       phone: customer.mobile || customer.phone || verifiedMobile,
       role: customer.role || 'User',
-      gender: customer.gender,
-      district: customer.district || '',
-      profileCompleted: customer.profileCompleted === true,
-      isNewCustomer,
+      gender: customer.gender || existingCustomer?.gender || 'Male',
+      district: customer.district || existingCustomer?.district || '',
+      profileCompleted: isProfileAlreadyCompleted,
+      isNewCustomer: !isProfileAlreadyCompleted && isNewCustomer,
     };
 
     const tokens = generateTokens(userPayload);
