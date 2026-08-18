@@ -3068,7 +3068,11 @@ app.post('/api/businesses', async (req, res, next) => {
         assignedBrokerIds: assignedIds,
         published: b.published !== false,
         featured: b.featured === true || b.featured === 'true',
-        status: b.status || 'Available',
+        status: b.status || (b.sold ? 'Sold' : 'Available'),
+        sold: b.sold === true || b.status === 'Sold',
+        recentlySold: b.recentlySold === true,
+        soldDate: b.soldDate || (b.sold || b.status === 'Sold' ? new Date().toISOString().slice(0, 10) : null),
+        badge: b.badge || (b.recentlySold ? 'RECENTLY ACQUIRED' : (b.sold ? 'SOLD' : null)),
       },
     });
     return res.status(201).json(created);
@@ -3153,6 +3157,10 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.published !== undefined) updateData.published = b.published === true || b.published === 'true';
     if (b.featured !== undefined) updateData.featured = b.featured === true || b.featured === 'true';
     if (b.status !== undefined) updateData.status = b.status;
+    if (b.sold !== undefined) updateData.sold = b.sold === true;
+    if (b.recentlySold !== undefined) updateData.recentlySold = b.recentlySold === true;
+    if (b.soldDate !== undefined) updateData.soldDate = b.soldDate;
+    if (b.badge !== undefined) updateData.badge = b.badge;
 
     const updated = await prisma.business.update({ where: { id }, data: updateData });
 

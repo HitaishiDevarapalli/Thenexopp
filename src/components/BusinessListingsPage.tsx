@@ -85,6 +85,7 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
 
   const dbIndustry = getDbIndustryName();
   const filteredListings = businessDb.filter(biz => {
+    if (biz.published === false || biz.sold === true || biz.status === 'Sold') return false;
     if (dbIndustry !== 'All' && biz.industry !== dbIndustry) {
       // If active search query is present, check if it matches regardless of industry
       if (!searchQuery || searchQuery.trim() === '') return false;

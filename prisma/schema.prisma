@@ -420,6 +420,10 @@ model Business {
   published         Boolean  @default(true)
   featured          Boolean  @default(false)
   status            String   @default("Available")
+  sold              Boolean  @default(false)
+  recentlySold      Boolean  @default(false)
+  soldDate          String?
+  badge             String?
   image             String
   image2            String?
   image3            String?

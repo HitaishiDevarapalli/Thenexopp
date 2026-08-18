@@ -417,6 +417,10 @@ export interface BusinessListing {
   published?: boolean;
   featured?: boolean;
   status?: string;  // 'Available' | 'Sold' | 'Unavailable' | 'Under_Review'
+  sold?: boolean;
+  recentlySold?: boolean;
+  soldDate?: string;
+  badge?: string;
   updatedAt?: string;
 }
 

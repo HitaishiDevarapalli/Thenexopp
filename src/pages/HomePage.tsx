@@ -201,28 +201,42 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb]);
   const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb]);
 
-  // Recently Sold properties (ordered by soldDate descending)
+  // Recently Sold properties and businesses (ordered by soldDate descending)
   const recentlySoldListings = React.useMemo(() => {
-    return propertiesDb
+    const soldProps = propertiesDb
       .filter(isPropertySold)
-      .sort((a, b) => {
-        const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
-        const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
-        return dateB - dateA;
-      })
-      .map((p) => {
-        return {
-          id: p.id,
-          title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
-          price: p.priceDisplay || (`₹${p.price || 1} L`),
-          image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
-          location: `${p.area ? p.area + ', ' : ''}${p.city || 'Hyderabad'}`,
-          bhk: `${p.bedrooms || 3} BHK`,
-          area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
-          soldDate: p.soldDate
-        };
-      });
-  }, [propertiesDb]);
+      .map((p) => ({
+        id: p.id,
+        title: p.title || `${p.bedrooms || 3} BHK ${p.category}`,
+        price: p.priceDisplay || (`₹${p.price || 1} L`),
+        image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
+        location: `${p.area ? p.area + ', ' : ''}${p.city || 'Hyderabad'}`,
+        bhk: `${p.bedrooms || 3} BHK`,
+        area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
+        soldDate: p.soldDate,
+        itemType: 'property' as const
+      }));
+
+    const soldBiz = businessDb
+      .filter(b => b.sold === true || b.recentlySold === true || String(b.status).toUpperCase() === 'SOLD')
+      .map((b) => ({
+        id: b.id,
+        title: b.name || b.title || 'Operational Business',
+        price: b.priceDisplay || (`₹${b.price || b.askingPrice || 1} Lakhs`),
+        image: b.image || (b.images && b.images[0]) || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=600&auto=format&fit=crop&q=80',
+        location: [b.area, b.city, b.state].filter(Boolean).join(', ') || b.location || 'AP/TS',
+        bhk: b.category || b.industry || 'Enterprise',
+        area: b.businessType || 'Operational Company',
+        soldDate: b.soldDate,
+        itemType: 'business' as const
+      }));
+
+    return [...soldProps, ...soldBiz].sort((a, b) => {
+      const dateA = a.soldDate ? new Date(a.soldDate).getTime() : 0;
+      const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [propertiesDb, businessDb]);
 
   // Featured Listings from marketplaceDb
   // Get the target region for distance calculations
@@ -1314,7 +1328,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 🏷️ SUCCESSFULLY CLOSED DEALS
               </span>
               <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#0F172A', margin: 0, letterSpacing: '-0.5px' }}>
-                Recently Sold Properties
+                Recently Sold Properties &amp; Closed Acquisitions
               </h2>
             </div>
             <span style={{ fontSize: '13px', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEF2F2', padding: '6px 16px', borderRadius: '20px', border: '1px solid #FECACA' }}>
@@ -1326,7 +1340,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
             {recentlySoldListings.map(prop => (
               <div 
                 key={prop.id}
-                onClick={() => onPropertyClick ? onPropertyClick(prop.id) : onNavigate('propertyDetails', prop.id)}
+                onClick={() => {
+                  if (prop.itemType === 'business') {
+                    onNavigate('businessPage');
+                  } else {
+                    if (onPropertyClick) onPropertyClick(prop.id);
+                    else onNavigate('propertyDetails', prop.id);
+                  }
+                }}
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderRadius: '16px',

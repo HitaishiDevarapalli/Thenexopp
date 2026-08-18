@@ -73,11 +73,16 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   }, []);
 
   // Main Navigation Tabs
-  const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'categories' | 'types' | 'sellRequests' | 'enquiries'>('listings');
+  const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'soldOut' | 'categories' | 'types' | 'sellRequests' | 'enquiries'>('listings');
 
   useEffect(() => {
-    if (activeSubTab && ['listings', 'categories', 'types', 'sellRequests', 'enquiries'].includes(activeSubTab)) {
-      setActiveModuleTab(activeSubTab as any);
+    if (activeSubTab) {
+      if (activeSubTab === 'soldOut') setActiveModuleTab('soldOut');
+      else if (activeSubTab === 'buyEnquiries') setActiveModuleTab('enquiries');
+      else if (activeSubTab === 'businessTypes') setActiveModuleTab('types');
+      else if (['listings', 'categories', 'types', 'sellRequests', 'enquiries'].includes(activeSubTab)) {
+        setActiveModuleTab(activeSubTab as any);
+      }
     }
   }, [activeSubTab]);
 
@@ -349,7 +354,11 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       agentName: foundBroker ? (foundBroker.companyName || foundBroker.fullName || foundBroker.name) : (b.agentName || ''),
       agentPhone: foundBroker ? (foundBroker.mobile || foundBroker.phone || foundBroker.contactNumber) : (b.agentPhone || ''),
       images: photosList,
-      image: photosList[0] || b.image || ''
+      image: photosList[0] || b.image || '',
+      status: b.status || (b.sold ? 'Sold' : 'Available'),
+      sold: b.sold === true || b.status === 'Sold',
+      recentlySold: b.recentlySold === true,
+      soldDate: b.soldDate
     });
     setIsModalOpen(true);
   };
@@ -366,6 +375,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       images: b.images && b.images.length > 0 ? [...b.images] : (primaryImg ? [primaryImg] : []),
       published: false,
       status: 'Available',
+      sold: false,
+      recentlySold: false,
     };
     addBusiness(cloned);
     showNotification(`Cloned "${b.name || b.title}" successfully as draft`, 'success');
@@ -424,6 +435,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       formData.state
     ].filter(Boolean).join(', ') || formData.city || formData.fullAddress || '';
 
+    const isSold = formData.status === 'Sold' || formData.sold === true;
+
     const payload: BusinessListing = {
       id: isModalOpen && editingId ? editingId : `biz-${Date.now()}`,
       name: formData.title.trim(),
@@ -467,7 +480,11 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       published: formData.published !== false,
       featured: !!formData.featured,
       verified: !!formData.verified,
-      status: formData.status || 'Available',
+      status: formData.status || (isSold ? 'Sold' : 'Available'),
+      sold: isSold,
+      recentlySold: isSold ? (formData.recentlySold !== false) : false,
+      soldDate: isSold ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined,
+      badge: isSold ? (formData.badge || 'RECENTLY ACQUIRED') : undefined,
       description: formData.description?.trim() || '',
     };
 
@@ -535,6 +552,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   // Filtered Listings
   const filteredBusinesses = useMemo(() => {
     return businesses.filter(b => {
+      const isSold = b.sold || b.status === 'Sold';
+      if (activeModuleTab === 'listings' && isSold) return false;
+      if (activeModuleTab === 'soldOut' && !isSold) return false;
+
       const matchSearch = !searchTerm || 
         (b.name || b.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (b.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -545,7 +566,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
 
       return matchSearch && matchCategory && matchStatus;
     });
-  }, [businesses, searchTerm, selectedCategoryFilter, selectedStatusFilter]);
+  }, [businesses, activeModuleTab, searchTerm, selectedCategoryFilter, selectedStatusFilter]);
 
   const assignedBroker = findBroker(formData.dealerId);
 
@@ -582,16 +603,22 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
         <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>Active for Sale</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#059669', marginTop: '4px' }}>
-            {businesses.filter(b => b.status === 'Available' && b.published !== false).length}
+            {businesses.filter(b => (!b.sold && b.status !== 'Sold') && b.published !== false).length}
           </div>
           <div style={{ fontSize: '0.72rem', color: '#059669', marginTop: '2px' }}>Live on marketplace</div>
         </div>
-        <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>Sold / Acquired</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#2563EB', marginTop: '4px' }}>
-            {businesses.filter(b => b.status === 'Sold').length}
+        <div 
+          onClick={() => {
+            setActiveModuleTab('soldOut');
+            onSubTabChange('soldOut');
+          }}
+          style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '14px', border: '1px solid #E2E8F0', cursor: 'pointer', transition: 'border-color 0.2s' }}
+        >
+          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626', textTransform: 'uppercase' }}>Sold / Acquired</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#DC2626', marginTop: '4px' }}>
+            {businesses.filter(b => b.sold || b.status === 'Sold').length}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#2563EB', marginTop: '2px' }}>Completed acquisitions</div>
+          <div style={{ fontSize: '0.72rem', color: '#DC2626', marginTop: '2px' }}>Click to view Sold tab →</div>
         </div>
         <div style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>Owner Sell Enquiries</div>
@@ -601,9 +628,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       </div>
 
       {/* Navigation Subtabs */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E2E8F0', paddingBottom: '2px' }}>
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E2E8F0', paddingBottom: '2px', overflowX: 'auto' }}>
         {[
-          { id: 'listings', label: 'All Businesses', count: businesses.length, icon: FaStore },
+          { id: 'listings', label: 'All Businesses', count: businesses.filter(b => !b.sold && b.status !== 'Sold').length, icon: FaStore },
+          { id: 'soldOut', label: 'Sold Businesses', count: businesses.filter(b => b.sold || b.status === 'Sold').length, icon: FaCheckCircle },
           { id: 'sellRequests', label: 'Seller Enquiries CRM', count: sellRequests.length, icon: FaFileAlt },
           { id: 'enquiries', label: 'Buyer Inquiries', count: buyEnquiries.length, icon: FaEnvelope },
           { id: 'categories', label: 'Industry Categories', count: categories.length, icon: FaList },
@@ -777,16 +805,42 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                           </div>
                         </td>
                         <td style={{ padding: '14px 20px' }}>
-                          <span style={{
-                            padding: '4px 10px',
-                            borderRadius: '12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            backgroundColor: biz.status === 'Available' ? '#ECFDF5' : biz.status === 'Sold' ? '#EFF6FF' : '#FEF2F2',
-                            color: biz.status === 'Available' ? '#059669' : biz.status === 'Sold' ? '#2563EB' : '#DC2626'
-                          }}>
-                            {biz.status || 'Available'}
-                          </span>
+                          <select
+                            value={(biz.sold || biz.status === 'Sold') ? 'Sold' : (biz.status || 'Available')}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              const isSold = newStatus === 'Sold';
+                              updateBusiness(biz.id, {
+                                status: newStatus,
+                                sold: isSold,
+                                recentlySold: isSold,
+                                soldDate: isSold ? new Date().toISOString().slice(0, 10) : undefined,
+                                badge: isSold ? 'RECENTLY ACQUIRED' : (biz.verified ? 'Verified' : undefined)
+                              });
+                              showNotification(
+                                isSold
+                                  ? `Business "${biz.name || biz.title}" marked as Sold, moved to Sold list, and pushed to Recently Sold showcase on main page.`
+                                  : `Business status updated to ${newStatus}`,
+                                'success'
+                              );
+                            }}
+                            style={{
+                              padding: '5px 10px',
+                              borderRadius: '12px',
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                              backgroundColor: (biz.sold || biz.status === 'Sold') ? '#FEF2F2' : biz.status === 'Under_Review' ? '#FFFBEB' : '#ECFDF5',
+                              color: (biz.sold || biz.status === 'Sold') ? '#DC2626' : biz.status === 'Under_Review' ? '#D97706' : '#059669',
+                              border: (biz.sold || biz.status === 'Sold') ? '1.5px solid #FECACA' : biz.status === 'Under_Review' ? '1.5px solid #FDE68A' : '1.5px solid #A7F3D0',
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                          >
+                            <option value="Available">🟢 Available</option>
+                            <option value="Under_Review">🟡 Under Review</option>
+                            <option value="Sold">🏷️ Sold / Acquired</option>
+                            <option value="Unavailable">⚪ Unavailable</option>
+                          </select>
                         </td>
                         <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
@@ -821,6 +875,148 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                       </tr>
                     );
                   })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ================= SUBTAB: SOLD OUT / ACQUIRED BUSINESSES ================= */}
+      {activeModuleTab === 'soldOut' && (
+        <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0', borderRadius: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 6px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>
+                🏷️ Sold Out &amp; Acquired Businesses
+              </h2>
+              <p style={{ color: '#64748B', margin: 0, fontSize: '0.88rem' }}>
+                Manage businesses marked as Sold/Acquired. You can restore them back to active marketplace listings or push them to the Recently Sold / Closed Deals showcase on the main website.
+              </p>
+            </div>
+            <div style={{ padding: '6px 14px', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '20px', color: '#DC2626', fontWeight: 800, fontSize: '0.85rem' }}>
+              {businesses.filter(b => b.sold || b.status === 'Sold').length} Sold Businesses
+            </div>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <th style={{ padding: '12px 16px' }}>Business Details</th>
+                  <th style={{ padding: '12px 16px' }}>Category &amp; Type</th>
+                  <th style={{ padding: '12px 16px' }}>Acquisition Price &amp; Location</th>
+                  <th style={{ padding: '12px 16px' }}>Status</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {businesses.filter(b => b.sold || b.status === 'Sold').map(biz => (
+                  <tr key={biz.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '64px', height: '48px', backgroundColor: '#E2E8F0', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                          <img src={biz.image || (biz.images && biz.images[0]) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='45' viewBox='0 0 60 45'%3E%3Crect fill='%23F1F5F9' width='60' height='45'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10'%3EBiz%3C/text%3E%3C/svg%3E"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.95rem' }}>{biz.name || biz.title}</div>
+                          <div style={{ color: '#64748B', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                            <FaMapMarkerAlt style={{ color: '#94A3B8' }} /> {[biz.area, biz.city, biz.state].filter(Boolean).join(', ') || biz.location || 'AP/TS'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.88rem' }}>{biz.category || biz.industry || '-'}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{biz.businessType || '-'}</div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ fontWeight: 800, color: '#059669', fontSize: '0.95rem' }}>{biz.priceDisplay || (biz.price ? `₹${biz.price} Lakhs` : '-')}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Sold on: {biz.soldDate || 'Recently'}</div>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <span style={{ padding: '5px 12px', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #FECACA', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        🏷️ Sold Out / Acquired
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px', textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {/* Option 1: Restore to Active Listings */}
+                        <button
+                          onClick={() => {
+                            updateBusiness(biz.id, {
+                              sold: false,
+                              status: 'Available',
+                              recentlySold: false,
+                              badge: biz.verified ? 'Verified' : undefined
+                            });
+                            showNotification(`Business "${biz.name || biz.title}" restored back to Active Marketplace Listings!`, 'success');
+                          }}
+                          title="Restore business back to active listings on main page"
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#FFFFFF',
+                            color: '#2563EB',
+                            border: '1.5px solid #2563EB',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          🔄 Restore to Active
+                        </button>
+
+                        {/* Option 2: Push to Recently Sold Showcase on Main Page */}
+                        <button
+                          onClick={() => {
+                            const nextState = !biz.recentlySold;
+                            updateBusiness(biz.id, {
+                              recentlySold: nextState,
+                              sold: true,
+                              status: 'Sold',
+                              badge: nextState ? 'RECENTLY ACQUIRED' : 'SOLD'
+                            });
+                            showNotification(
+                              nextState
+                                ? `Business "${biz.name || biz.title}" pushed to Recently Sold Showcase on main website!`
+                                : `Business "${biz.name || biz.title}" removed from Recently Sold Showcase on main website.`,
+                              'success'
+                            );
+                          }}
+                          title={biz.recentlySold ? "Currently displayed under Recently Sold / Closed Deals on Main Website. Click to remove." : "Push to Recently Sold Showcase on Main Website"}
+                          style={{
+                            padding: '8px 16px',
+                            backgroundColor: biz.recentlySold ? '#ECFDF5' : '#059669',
+                            color: biz.recentlySold ? '#059669' : '#FFFFFF',
+                            border: biz.recentlySold ? '1.5px solid #6EE7B7' : 'none',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s',
+                            boxShadow: biz.recentlySold ? 'none' : '0 2px 8px rgba(5, 150, 105, 0.25)'
+                          }}
+                        >
+                          {biz.recentlySold ? '✓ Pushed to Main Page' : '🚀 Push to Main Page'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {businesses.filter(b => b.sold || b.status === 'Sold').length === 0 && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '36px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>
+                      No sold out businesses currently. When you mark any business as "Sold" in All Businesses or Edit Business, it will appear here.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
