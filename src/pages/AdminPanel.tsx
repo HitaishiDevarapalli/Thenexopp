@@ -7006,6 +7006,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                               if (window.confirm(`Are you sure you want to remove user record ${cust.name}?`)) {
                                 setRegisteredCustomers(prev => prev.filter(c => c.id !== cust.id));
                                 setCustomersData(prev => prev.filter(c => c.id !== cust.id));
+                                setCustomerTotalCount(prev => Math.max(0, prev - 1));
                                 fetch(`${API_BASE_URL}/api/customers/${cust.id}`, { method: 'DELETE', credentials: 'include' })
                                   .then(() => fetchRegisteredCustomers());
                               }
