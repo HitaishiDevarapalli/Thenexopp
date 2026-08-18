@@ -4554,6 +4554,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
                       <button
                         type="button"
+                        onClick={async () => {
+                          if (window.confirm('Are you sure you want to CLEAR ALL enquiries & test leads back to 0? This cannot be undone.')) {
+                            setAllEnquiries([]);
+                            setAllBookings([]);
+                            try {
+                              await fetch(`${API_BASE_URL}/api/admin/clear-all-enquiries`, { method: 'DELETE', credentials: 'include' }).catch(() => null);
+                              await fetch('/api/admin/clear-all-enquiries', { method: 'DELETE', credentials: 'include' }).catch(() => null);
+                            } catch (e) {}
+                            fetchAllEnquiriesAndBookings();
+                            fetchAdminDashboardStats();
+                            alert('All test enquiries and bookings have been cleared to 0!');
+                          }
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 18px',
+                          backgroundColor: '#FEF2F2',
+                          color: '#DC2626',
+                          border: '1px solid #FECACA',
+                          borderRadius: '10px',
+                          fontSize: '0.88rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                          transition: 'all 0.15s'
+                        }}
+                      >
+                        <FaTrash /> Clear All Enquiries (Reset to 0)
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => {
                           alert('Add New Inquiry Form: Use the website forms or admin listing editor to register a lead.');
                         }}

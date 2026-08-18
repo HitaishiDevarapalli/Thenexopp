@@ -1996,6 +1996,22 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+// Reset/Clear all enquiries and bookings (Super Admin action)
+app.delete(['/api/admin/clear-all-enquiries', '/api/enquiries/clear-all'], async (req, res) => {
+  try {
+    await prisma.enquiry.deleteMany({}).catch(() => {});
+    await prisma.booking.deleteMany({}).catch(() => {});
+    try {
+      if (fs.existsSync(ENQUIRIES_BACKUP_FILE)) {
+        fs.writeFileSync(ENQUIRIES_BACKUP_FILE, JSON.stringify([], null, 2));
+      }
+    } catch (e) {}
+    return res.json({ success: true, message: 'All test enquiries and bookings cleared to 0.' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. Slot Bookings
 app.get('/api/bookings', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -2102,26 +2118,6 @@ app.post('/api/bookings', optionalAuthMiddleware, async (req, res) => {
         businessId: validBusinessId,
       }
     });
-
-    // Shadow enquiry for compatibility & dashboard
-    await prisma.enquiry.create({
-      data: {
-        id: `enq-bk-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        customerId: customer.id,
-        customerName: custName,
-        phone: custPhone,
-        email: custEmail,
-        listingTitle,
-        listingType,
-        listingId: String(listingId),
-        enquiryType: 'SLOT_BOOKING',
-        message: notes || `Visit slot requested for ${bookingDate} at ${bookingTime}`,
-        preferredMoveInDate: String(bookingDate),
-        date: String(bookingDate),
-        preferredTime: String(bookingTime),
-        status: 'New'
-      }
-    }).catch(e => console.warn('Shadow enquiry warning:', e));
 
     return res.status(201).json({ success: true, booking });
   } catch (err) {
