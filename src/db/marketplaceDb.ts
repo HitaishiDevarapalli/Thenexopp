@@ -386,19 +386,25 @@ export interface BusinessListing {
   price: number;
   askingPrice?: number;
   priceDisplay: string;
-  revenueMonthly: string;
-  profitMonthly: string;
-  establishedYear: number;
-  employeesCount: number | string;
-  rating: number;
-  reviewCount: number;
-  verified: boolean;
-  trending: boolean;
+  revenueMonthly?: string;
+  profitMonthly?: string;
+  establishedYear?: number;
+  employeesCount?: number | string;
+  rating?: number;
+  reviewCount?: number;
+  verified?: boolean;
+  trending?: boolean;
   image: string;
+  image2?: string;
+  image3?: string;
+  image4?: string;
+  image5?: string;
+  image6?: string;
+  images?: string[];
   imageUrl?: string;
   description: string;
-  reasonForSale: string;
-  trustScore: number;
+  reasonForSale?: string;
+  trustScore?: number;
   revenue?: string;
   sellerProfile?: string;
   category?: string;
@@ -841,7 +847,12 @@ const loadData = async () => {
     // 1. Restore from permanent local storage immediately on startup
     propertiesDb = loadFromStorage('nexopp_properties_db', []);
     franchiseDb = loadFromStorage('nexopp_franchise_db', []);
-    businessDb = loadFromStorage('nexopp_business_db', []);
+    businessDb = loadFromStorage('nexopp_business_db', []).map((b: any) => ({
+      ...b,
+      revenueMonthly: (b.revenueMonthly === '₹1 Lakh/mo' || b.revenueMonthly === '₹ 1 Lakh/mo') ? '' : (b.revenueMonthly || ''),
+      profitMonthly: (b.profitMonthly === '₹30,000/mo' || b.profitMonthly === '₹ 30,000/mo') ? '' : (b.profitMonthly || ''),
+      reasonForSale: b.reasonForSale === 'Retirement' ? '' : (b.reasonForSale || '')
+    }));
     dealersDb = loadFromStorage('nexopp_dealers_db', []);
     enquiriesDb = loadFromStorage('nexopp_enquiries_db', []);
     franchiseEnquiriesDb = loadFromStorage('nexopp_franchise_enquiries_db', []);
@@ -912,8 +923,13 @@ const loadData = async () => {
         businessDb = bizRes.value.map((b: any) => {
           const local = localBizMap.get(b.id);
           const brokerId = b.dealerId || local?.dealerId;
+          const cleanRev = (b.revenueMonthly === '₹1 Lakh/mo' || b.revenueMonthly === '₹ 1 Lakh/mo' || local?.revenueMonthly === '₹1 Lakh/mo') ? '' : (b.revenueMonthly || local?.revenueMonthly || '');
+          const cleanProfit = (b.profitMonthly === '₹30,000/mo' || b.profitMonthly === '₹ 30,000/mo' || local?.profitMonthly === '₹30,000/mo') ? '' : (b.profitMonthly || local?.profitMonthly || '');
           return {
             ...b,
+            revenueMonthly: cleanRev,
+            profitMonthly: cleanProfit,
+            reasonForSale: b.reasonForSale === 'Retirement' ? '' : (b.reasonForSale || local?.reasonForSale || ''),
             dealerId: brokerId,
             assignedBrokerIds: b.assignedBrokerIds?.length ? b.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
           };
@@ -1209,12 +1225,18 @@ export const deleteDealer = (id: string) => {
 };
 
 export const addBusiness = (item: BusinessListing) => {
+  const primaryImg = item.image || item.imageUrl || (item.images && item.images[0]) || '';
+  const allImages = item.images && item.images.length > 0 ? item.images : (primaryImg ? [primaryImg] : []);
   const norm: BusinessListing = {
     ...item,
     id: item.id || `biz-${Date.now()}`,
-    name: item.name || (item as any).title || 'Business Listing',
-    price: item.price !== undefined ? item.price : ((item as any).askingPrice || 50),
-    priceDisplay: item.priceDisplay || `₹ ${item.price || (item as any).askingPrice || 50} Lakhs`,
+    name: item.name || item.title || 'Business Listing',
+    title: item.title || item.name || 'Business Listing',
+    price: item.price !== undefined ? item.price : (item.askingPrice || 0),
+    askingPrice: item.askingPrice !== undefined ? item.askingPrice : (item.price || 0),
+    priceDisplay: item.priceDisplay || `₹${item.askingPrice || item.price || 0} Lakhs`,
+    image: primaryImg,
+    images: allImages,
     published: item.published !== false,
     status: item.status || 'Available',
   };
@@ -1229,7 +1251,17 @@ export const addBusiness = (item: BusinessListing) => {
 };
 
 export const updateBusiness = (id: string, updated: Partial<BusinessListing>) => {
-  businessDb = businessDb.map(b => b.id === id ? { ...b, ...updated } : b);
+  businessDb = businessDb.map(b => {
+    if (b.id === id) {
+      const merged = { ...b, ...updated };
+      if (updated.images && updated.images.length > 0 && !updated.image) {
+        merged.image = updated.images[0];
+      }
+      return merged;
+    }
+    return b;
+  });
+  saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses/${id}`, {
     method: 'PUT',
@@ -1241,6 +1273,7 @@ export const updateBusiness = (id: string, updated: Partial<BusinessListing>) =>
 export const deleteBusiness = (id: string) => {
   businessDb = businessDb.filter(b => b.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Business' && v.linkedId === id));
+  saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/businesses/${id}`, {
     method: 'DELETE'

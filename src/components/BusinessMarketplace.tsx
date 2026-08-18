@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
+import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb, masterAreasDb, dealersDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -351,32 +351,39 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   const businessesList = useMemo(() => {
     const list = businessDb
       .filter((b: any) => b.published !== false && !b.sold && b.status !== 'Sold' && b.listingStatus !== 'Sold')
-      .map((b: any) => ({
-      id: b.id,
-      title: b.name || b.title || 'Business For Sale',
-      industry: b.category || b.industry || 'Retail',
-      category: b.category || b.industry || 'Retail',
-      businessType: b.businessType || 'Private Limited',
-      badge: b.verified ? 'Verified Seller' : (b.featured ? 'Featured Opportunity' : ''),
-      badgeType: b.verified ? 'verified' : (b.featured ? 'deal' : ''),
-      featured: b.featured || false,
-      status: b.status || 'Available',
-      image: b.image || b.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
-      valuation: b.priceDisplay || (`₹ ${b.price || b.askingPrice || 50} Lac`),
-      price: Number(b.price) || Number(b.askingPrice) || 0,
-      revenue: b.revenueMonthly || b.revenue || '',
-      margin: b.profitMonthly || '',
-      employees: b.employeesCount ? `${b.employeesCount} Staff` : '',
-      location: `${b.city || ''}${b.state ? ', ' + b.state : ''}`,
-      brokerName: b.agentName || 'NexOpp Advisor',
-      brokerRating: b.rating ? `${b.rating}${b.reviewCount ? ` (${b.reviewCount})` : ''}` : '',
-      brokerImg: '',
-      latitude: b.latitude,
-      longitude: b.longitude,
-      city: b.city,
-      locality: b.location,
-      createdAt: (b as any).createdAt || '',
-    }));
+      .map((b: any) => {
+        const assignedBroker = b.dealerId ? dealersDb.find(d => d.id === b.dealerId) : null;
+        const cleanRev = (b.revenueMonthly === '₹1 Lakh/mo' || b.revenueMonthly === '₹ 1 Lakh/mo') ? '' : (b.revenueMonthly || b.revenue || '');
+        const cleanProfit = (b.profitMonthly === '₹30,000/mo' || b.profitMonthly === '₹ 30,000/mo') ? '' : (b.profitMonthly || '');
+        const cleanEmployees = (b.employeesCount && Number(b.employeesCount) > 0) ? `${b.employeesCount} Staff` : '';
+
+        return {
+          id: b.id,
+          title: b.name || b.title || 'Business For Sale',
+          industry: b.category || b.industry || 'Retail',
+          category: b.category || b.industry || 'Retail',
+          businessType: b.businessType || 'Private Limited',
+          badge: b.featured ? 'Featured Opportunity' : (b.verified ? 'Verified Seller' : ''),
+          badgeType: b.featured ? 'deal' : (b.verified ? 'verified' : ''),
+          featured: b.featured || false,
+          status: b.status || 'Available',
+          image: b.image || b.imageUrl || (b.images && b.images[0]) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%23F1F5F9' width='600' height='400'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18'%3EBusiness%3C/text%3E%3C/svg%3E",
+          valuation: b.priceDisplay || (b.price ? `₹${b.price} Lakhs` : ''),
+          price: Number(b.price) || Number(b.askingPrice) || 0,
+          revenue: cleanRev,
+          margin: cleanProfit,
+          employees: cleanEmployees,
+          location: [b.area, b.city, b.state].filter(Boolean).join(', ') || b.location || '',
+          brokerName: b.agentName || (assignedBroker ? (assignedBroker.companyName || assignedBroker.fullName) : 'Direct Listing'),
+          brokerRating: assignedBroker ? `${assignedBroker.rating || 4.8}` : '',
+          brokerImg: assignedBroker ? (assignedBroker.photo || assignedBroker.logo || '') : '',
+          latitude: b.latitude,
+          longitude: b.longitude,
+          city: b.city,
+          locality: b.location,
+          createdAt: (b as any).createdAt || '',
+        };
+      });
 
     let filtered = list.filter((item) => {
       // Category filter
@@ -1069,13 +1076,9 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                 let badgeColor = '#16A34A';
                 let BadgeIcon = FaCheckCircle;
 
-                if (item.badgeType === 'profit') {
-                  badgeBg = '#E0E7FF';
-                  badgeColor = '#4F46E5';
-                  BadgeIcon = FaChartLine;
-                } else if (item.badgeType === 'deal') {
-                  badgeBg = '#FFEDD5';
-                  badgeColor = '#EA580C';
+                if (item.featured) {
+                  badgeBg = '#FEF3C7';
+                  badgeColor = '#D97706';
                   BadgeIcon = FaCrown;
                 }
 
@@ -1084,10 +1087,12 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                     {/* Image Banner */}
                     <div style={{ position: 'relative', height: '180px', backgroundColor: '#0F172A' }}>
                       <img src={item.image} alt={item.title} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <div style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: badgeBg, color: badgeColor, padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <BadgeIcon />
-                        <span>{item.badge}</span>
-                      </div>
+                      {item.badge && (
+                        <div style={{ position: 'absolute', top: '12px', left: '12px', backgroundColor: badgeBg, color: badgeColor, padding: '4px 10px', borderRadius: '9999px', fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <BadgeIcon />
+                          <span>{item.badge}</span>
+                        </div>
+                      )}
                       <button onClick={(e) => toggleWishlist(item.id, e)} style={{ position: 'absolute', top: '12px', right: '12px', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(0, 0, 0, 0.4)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                         {isFav ? <FaHeart style={{ color: '#EF4444', fontSize: '15px' }} /> : <FaRegHeart style={{ color: '#FFFFFF', fontSize: '15px' }} />}
                       </button>
@@ -1097,9 +1102,11 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                     <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <h4 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>{item.title}</h4>
-                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 500, marginBottom: '12px' }}>{item.industry} • {item.location}</div>
+                        <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 500, marginBottom: '12px' }}>
+                          {item.industry}{item.location ? ` • ${item.location}` : ''}
+                        </div>
 
-                        {/* Specs Row */}
+                        {/* Specs Row - Only shown when user has filled revenue or profit */}
                         {(item.revenue || item.margin) && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px', fontWeight: 600, color: '#475569', backgroundColor: '#F8FAFC', padding: '10px', borderRadius: '10px', marginBottom: '14px' }}>
                             {item.revenue && (
@@ -1110,17 +1117,17 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                             )}
                             {item.margin && (
                               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span><FaUsers style={{ color: '#16A34A', marginRight: '4px' }} /> Profit Margin:</span>
+                                <span><FaUsers style={{ color: '#16A34A', marginRight: '4px' }} /> Monthly Profit:</span>
                                 <strong style={{ color: '#16A34A' }}>{item.margin}</strong>
                               </div>
                             )}
                           </div>
                         )}
 
-                        {/* Valuation */}
+                        {/* Valuation & Employees */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0px' }}>
                           <div>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Valuation</div>
+                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Asking Price</div>
                             <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>{item.valuation}</div>
                           </div>
                           {item.employees && (

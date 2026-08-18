@@ -278,31 +278,61 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 
     const b = businessDb.find(b => b.id === propertyId);
     if (b) {
-      const index = parseInt(b.id.replace(/\D/g, '')) || 1;
-      const dealerId = index % 2 === 0 ? 'D2' : 'D1';
+      const assignedBrokerId = b.dealerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]) || '';
+      const bDealer = assignedBrokerId ? dealersDb.find(d => d.id === assignedBrokerId) : null;
+      const primaryImage = b.image || b.imageUrl || (b.images && b.images[0]) || '';
+      const imagesArr = b.images && b.images.length > 0 ? b.images : [primaryImage].filter(Boolean);
+
+      const cleanRev = (b.revenueMonthly === '₹1 Lakh/mo' || b.revenueMonthly === '₹ 1 Lakh/mo') ? '' : (b.revenueMonthly || '');
+      const cleanProfit = (b.profitMonthly === '₹30,000/mo' || b.profitMonthly === '₹ 30,000/mo') ? '' : (b.profitMonthly || '');
+      const cleanEmployees = (b.employeesCount && Number(b.employeesCount) > 0) ? `${b.employeesCount} Staff` : '';
+
+      const bSpecs: Record<string, string> = {};
+      if (b.businessType) bSpecs['Type'] = b.businessType;
+      if (b.category || b.industry) bSpecs['Category'] = b.category || b.industry || '';
+      if (cleanRev) bSpecs['Monthly Revenue'] = cleanRev;
+      if (cleanProfit) bSpecs['Monthly Profit'] = cleanProfit;
+      if (b.establishedYear && Number(b.establishedYear) > 1900) bSpecs['Established Year'] = String(b.establishedYear);
+      if (cleanEmployees) bSpecs['Employees'] = cleanEmployees;
+      if (b.status) bSpecs['Status'] = b.status;
+      if (b.reasonForSale && b.reasonForSale !== 'Retirement') bSpecs['Reason for Sale'] = b.reasonForSale;
+      if (bDealer) bSpecs['Listed By'] = bDealer.companyName || bDealer.fullName || 'Verified Broker';
+      const locDisplay = [b.subLocation || b.landmark, b.area, b.city, b.state].filter(Boolean).join(', ') || b.location || '';
+      if (locDisplay) bSpecs['Location'] = locDisplay;
+
       return {
         id: b.id,
-        dealerId: dealerId,
-        title: b.name,
-        description: `Premium running operational unit in the ${b.industry} sector. Monthly revenue averages verified against GST/tax registries. Sale includes trade license transfers, lease assignment, assets, inventory, and supplier contracts. Seller profile: ${b.sellerProfile}.`,
-        image: b.image,
+        dealerId: assignedBrokerId || undefined,
+        assignedBrokerIds: b.assignedBrokerIds || (assignedBrokerId ? [assignedBrokerId] : []),
+        agentName: b.agentName || (bDealer ? (bDealer.companyName || bDealer.fullName) : undefined),
+        agentPhone: b.agentPhone || (bDealer ? (bDealer.mobile || bDealer.phone) : undefined),
+        title: b.name || b.title || 'Business Listing',
+        description: b.description || '',
+        image: primaryImage,
+        image2: b.image2 || (imagesArr[1] || undefined),
+        image3: b.image3 || (imagesArr[2] || undefined),
+        image4: b.image4 || (imagesArr[3] || undefined),
+        image5: b.image5 || (imagesArr[4] || undefined),
+        image6: b.image6 || (imagesArr[5] || undefined),
+        images: imagesArr,
         state: b.state || 'Telangana',
-        district: 'Rangareddy',
+        district: b.district || '',
         city: b.city || 'Hyderabad',
-        area: b.location.split(',')[1]?.trim() || b.location,
-        areaSqFt: 'Operational Unit',
-        priceDisplay: b.priceDisplay,
-        category: 'Commercial',
-        specs: {
-          'Type': 'Business Acquisition',
-          'Industry': b.industry,
-          'Trust Score': `${b.trustScore}%`,
-          'Revenue': b.revenue,
-          'Status': 'Running',
-          'Seller Profile': b.sellerProfile,
-          'Listed By': 'Broker Brokerage',
-          'Headquarters': b.location
-        }
+        area: b.area || b.location || '',
+        subLocation: b.subLocation || b.sub_location || b.landmark || '',
+        landmark: b.landmark || b.subLocation || '',
+        pincode: b.pincode || b.postal_code || '',
+        postal_code: b.pincode || b.postal_code || '',
+        latitude: b.latitude || 17.4326,
+        longitude: b.longitude || 78.4071,
+        areaSqFt: b.employeesCount ? `${b.employeesCount} Employees` : 'Operational Business Unit',
+        priceDisplay: b.priceDisplay || `₹${b.price || b.askingPrice || 0} Lakhs`,
+        price: b.price || b.askingPrice || 0,
+        category: b.category || b.industry || 'Business',
+        status: b.status || 'Available',
+        verified: b.verified !== false,
+        featured: !!b.featured,
+        specs: bSpecs
       } as any;
     }
 
@@ -528,6 +558,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   // Generate dynamic gallery images based on category
   const galleryImages = useMemo(() => {
     if (!property) return [];
+    if (Array.isArray(property.images) && property.images.length > 0) {
+      return property.images.filter(Boolean);
+    }
     const imagesList = [
       property.image,
       property.image2,
@@ -539,7 +572,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     
     // Fallback if absolutely no photos were uploaded
     if (imagesList.length === 0) {
-      return ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&q=80'];
+      return ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'%3E%3Crect fill='%23F1F5F9' width='800' height='500'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20'%3ENo Photo Available%3C/text%3E%3C/svg%3E"];
     }
     return imagesList;
   }, [property]);
@@ -644,10 +677,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: property.title,
-        text: property.description,
+        title: property ? property.title : 'Property Listing',
+        text: `Check out this listing on TheNexOpp: ${property?.title}`,
         url: window.location.href,
-      }).catch(() => {});
+      }).catch(err => console.log('Share error:', err));
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert('Link copied to clipboard!');
@@ -745,7 +778,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               
               {/* Gallery Thumbnails */}
               <div className="prop-gallery-thumbs">
-                {galleryImages.map((img, idx) => (
+                {galleryImages.map((img: string, idx: number) => (
                   <div 
                     key={idx} 
                     className={`thumb-wrap ${idx === activeImageIndex ? 'active' : ''}`}
@@ -762,8 +795,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               <h3 className="section-block-title">Details</h3>
               <div className="prop-spec-table">
                 {property.specs ? (
-                  // Custom dynamic specifications for Franchise / Business
-                  Object.entries(property.specs).reduce<any[]>((acc, [key, val], idx, arr) => {
+                  // Custom dynamic specifications for Franchise / Business (only non-empty fields)
+                  Object.entries(property.specs)
+                    .filter(([_, val]) => val !== undefined && val !== null && String(val).trim() !== '')
+                    .reduce<any[]>((acc, [key, val], idx, arr) => {
                     if (idx % 2 === 0) {
                       const next = arr[idx + 1];
                       acc.push(

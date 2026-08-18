@@ -331,14 +331,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       .map(b => ({
         id: b.id,
         title: b.name || b.title || 'Business For Sale',
-        price: b.priceDisplay || (typeof b.price === 'number' ? `₹${b.price} Lac` : `${b.price || b.askingPrice || '50'} Lac`),
-        image: b.image || b.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
-        location: `${b.location ? b.location + ', ' : ''}${b.city || 'Hyderabad'}`,
+        price: b.priceDisplay || (typeof b.price === 'number' ? `₹${b.price} Lakhs` : `${b.price || b.askingPrice || '0'} Lakhs`),
+        image: b.image || (b.images && b.images[0]) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%23F1F5F9' width='600' height='400'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18'%3EBusiness%3C/text%3E%3C/svg%3E",
+        location: [b.area, b.city, b.state].filter(Boolean).join(', ') || b.location || '',
         rating: b.rating || 0,
         reviewCount: b.reviewCount || 0,
         verified: b.verified || false,
         premium: b.featured || false,
-        badge: b.category || b.industry || 'Business',
+        badge: b.category || b.industry || '',
         badgeColor: '#FFFBEB',
         badgeText: '#D97706',
       }));

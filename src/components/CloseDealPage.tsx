@@ -46,21 +46,21 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
     
     const b = businessDb.find(b => b.id === propertyId);
     if (b) {
-      const index = parseInt(b.id.replace(/\D/g, '')) || 1;
-      const dealerId = index % 2 === 0 ? 'D2' : 'D1';
+      const assignedDealerId = b.dealerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]) || '';
       return {
         id: b.id,
-        dealerId: dealerId,
-        title: b.name,
-        description: `Verified operational business acquisition of industry ${b.industry}. Annual Revenue: ${b.revenue}. Seller profile: ${b.sellerProfile}`,
-        image: b.image,
+        dealerId: assignedDealerId || undefined,
+        assignedBrokerIds: b.assignedBrokerIds || (assignedDealerId ? [assignedDealerId] : []),
+        title: b.name || b.title,
+        description: b.description || `Business acquisition opportunity in ${b.industry || b.category || 'Commercial'}.`,
+        image: b.image || (b.images && b.images[0]) || '',
         state: b.state || 'Telangana',
-        district: 'Rangareddy',
+        district: b.district || '',
         city: b.city || 'Hyderabad',
-        area: b.location.split(',')[1]?.trim() || b.location,
-        areaSqFt: 'Operational unit',
-        priceDisplay: b.priceDisplay,
-        category: 'Commercial'
+        area: b.area || b.location || '',
+        areaSqFt: b.employeesCount ? `${b.employeesCount} Staff` : 'Operational unit',
+        priceDisplay: b.priceDisplay || `₹${b.price || 0} Lakhs`,
+        category: b.category || b.industry || 'Commercial'
       } as any;
     }
     

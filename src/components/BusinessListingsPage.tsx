@@ -35,10 +35,15 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
     return 'Retail / FMCG';
   };
 
-  const getDealer = (bizId: string) => {
-    const index = parseInt(bizId.replace(/\D/g, '')) || 1;
-    const dealerId = index % 2 === 0 ? 'D2' : 'D1';
-    return dealersDb.find(d => d.id === dealerId) || dealersDb[0];
+  const getDealer = (biz: any) => {
+    if (!biz) return null;
+    const bObj = typeof biz === 'string' ? businessDb.find(b => b.id === biz) : biz;
+    const assignedId = bObj?.dealerId || (bObj?.assignedBrokerIds && bObj.assignedBrokerIds[0]);
+    if (assignedId) {
+      const found = dealersDb.find(d => d.id === assignedId);
+      if (found) return found;
+    }
+    return null;
   };
 
   const brokerListings = useMemo(() => {
@@ -135,11 +140,16 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
               <p>Check back later or contact our support team for offline inventory.</p>
             </div>
           ) : (
-            filteredListings.map(biz => (
+            filteredListings.map(biz => {
+              const assignedDealer = getDealer(biz);
+              const cleanRev = (biz.revenueMonthly === '₹1 Lakh/mo' || biz.revenueMonthly === '₹ 1 Lakh/mo') ? '' : (biz.revenueMonthly || biz.revenue || '');
+              const hasRevenue = !!cleanRev;
+              const locStr = [biz.area, biz.city, biz.state].filter(Boolean).join(', ') || biz.location || '';
+              return (
               <div key={biz.id} className="feed-card premium-card landscape-card">
                 <div className="feed-card-image-wrap">
                   <img 
-                    src={biz.image} 
+                    src={biz.image || (biz.images && biz.images[0]) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%23F1F5F9' width='600' height='400'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18'%3EBusiness%3C/text%3E%3C/svg%3E"} 
                     alt={biz.name} 
                     className="feed-card-img" 
                     style={{ cursor: 'pointer' }}
@@ -162,7 +172,7 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                 
                 <div className="feed-card-body">
                   <div className="feed-card-price-title">
-                    <h3 className="feed-prop-price">{biz.priceDisplay}</h3>
+                    <h3 className="feed-prop-price">{biz.priceDisplay || (biz.price ? `₹${biz.price} Lakhs` : '')}</h3>
                     <h4 
                       className="feed-prop-title" 
                       style={{ cursor: 'pointer' }}
@@ -173,48 +183,59 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                   </div>
                   
                   <div className="feed-card-specs">
-                    <span className="spec-item"><FaBriefcase /> {biz.industry}</span>
-                    <span className="spec-item"><FaChartLine /> {biz.trustScore}% Trust Score</span>
-                    <span className="spec-item spec-highlight">Annual Revenue: {biz.revenue}</span>
+                    {(biz.industry || biz.category) && <span className="spec-item"><FaBriefcase /> {biz.industry || biz.category}</span>}
+                    {biz.businessType && <span className="spec-item">{biz.businessType}</span>}
+                    {hasRevenue && <span className="spec-item spec-highlight">Revenue: {cleanRev}</span>}
                   </div>
 
                   <div className="feed-card-footer">
                     <div className="footer-left">
-                      <p className="feed-prop-location" style={{ marginBottom: '0.5rem' }}>
-                        <a href="#" className="location-link" onClick={(e) => e.preventDefault()}>
-                          <FaMapMarkerAlt /> {biz.location}
-                        </a>
-                      </p>
-                      <p className="feed-prop-seller">
-                        👤 Seller Profile: {biz.sellerProfile}
-                      </p>
+                      {locStr && (
+                        <p className="feed-prop-location" style={{ marginBottom: '0.5rem' }}>
+                          <a href="#" className="location-link" onClick={(e) => e.preventDefault()}>
+                            <FaMapMarkerAlt /> {locStr}
+                          </a>
+                        </p>
+                      )}
+                      {biz.sellerProfile && (
+                        <p className="feed-prop-seller">
+                          👤 Seller Profile: {biz.sellerProfile}
+                        </p>
+                      )}
                     </div>
                     <div className="footer-right">
-                      <div className="feed-seller-action-container">
-                        <div className="feed-seller-label-group">
-                          <span className="feed-seller-label">Seller</span>
-                          <span className="feed-seller-rating">⭐ {biz.rating}</span>
+                      {assignedDealer ? (
+                        <div className="feed-seller-action-container">
+                          <div className="feed-seller-label-group">
+                            <span className="feed-seller-label">Broker</span>
+                            <span className="feed-seller-rating">⭐ {assignedDealer.rating || 4.8}</span>
+                          </div>
+                          <div className="feed-seller-photo-wrap" onClick={() => setSelectedDealer(assignedDealer)}>
+                            {assignedDealer.photo || assignedDealer.logo ? (
+                              <img 
+                                src={assignedDealer.photo || assignedDealer.logo} 
+                                alt="Seller Profile" 
+                                className="feed-seller-photo-btn" 
+                                title="View Seller Details" 
+                              />
+                            ) : (
+                              <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', border: '1.5px solid #BAE6FD', cursor: 'pointer' }} title="View Seller Details">
+                                <FaUserTie />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="feed-seller-photo-wrap" onClick={() => setSelectedDealer(getDealer(biz.id))}>
-                          {getDealer(biz.id).photo || getDealer(biz.id).logo ? (
-                            <img 
-                              src={getDealer(biz.id).photo || getDealer(biz.id).logo} 
-                              alt="Seller Profile" 
-                              className="feed-seller-photo-btn" 
-                              title="View Seller Details" 
-                            />
-                          ) : (
-                            <div style={{ width: '38px', height: '38px', borderRadius: '50%', backgroundColor: '#E0F2FE', color: '#0369A1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', border: '1.5px solid #BAE6FD', cursor: 'pointer' }} title="View Seller Details">
-                              <FaUserTie />
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, padding: '4px 8px', backgroundColor: '#F1F5F9', borderRadius: '6px' }}>
+                          Direct Listing
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            ))
+            );
+            })
           )}
         </div>
       </div>

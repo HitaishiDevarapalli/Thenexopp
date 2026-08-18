@@ -3001,31 +3001,53 @@ app.get('/api/businesses', async (req, res) => {
 app.post('/api/businesses', async (req, res, next) => {
   try {
     const b = req.body;
+    const assignedIds = Array.isArray(b.assignedBrokerIds) ? b.assignedBrokerIds : (b.dealerId ? [b.dealerId] : []);
+    const imagesList = Array.isArray(b.images) ? b.images : (b.image ? [b.image] : []);
     const created = await prisma.business.create({
       data: {
         id: b.id || `biz-pg-${Date.now()}`,
         name: b.name || b.title || 'Business Listing',
+        title: b.title || b.name || 'Business Listing',
         industry: b.category || b.industry || 'Retail',
         category: b.category || b.industry || 'Retail',
         businessType: b.businessType || 'Private Limited',
-        location: b.location || b.city || 'Guntur',
-        state: b.state || 'Andhra Pradesh',
-        city: b.city || 'Guntur',
-        latitude: Number(b.latitude) || 16.3067,
-        longitude: Number(b.longitude) || 80.4363,
-        price: Number(b.price) || Number(b.askingPrice) || 50,
-        priceDisplay: b.priceDisplay || `₹${b.price || b.askingPrice || 50} Lakhs`,
-        revenueMonthly: b.revenueMonthly || '₹1 Lakh/mo',
-        profitMonthly: b.profitMonthly || '₹30,000/mo',
-        establishedYear: Number(b.establishedYear) || 2020,
-        employeesCount: Number(b.employeesCount) || 5,
-        rating: Number(b.rating) || 4.7,
+        location: b.location || b.city || 'Hyderabad',
+        state: b.state || 'Telangana',
+        district: b.district || '',
+        city: b.city || 'Hyderabad',
+        area: b.area || '',
+        subLocation: b.subLocation || b.sub_location || b.landmark || '',
+        landmark: b.landmark || b.subLocation || '',
+        pincode: b.pincode || b.postal_code || '',
+        fullAddress: b.fullAddress || '',
+        latitude: Number(b.latitude) || 17.4326,
+        longitude: Number(b.longitude) || 78.4071,
+        price: Number(b.price) || Number(b.askingPrice) || 0,
+        askingPrice: Number(b.askingPrice) || Number(b.price) || 0,
+        priceDisplay: b.priceDisplay || `₹${b.price || b.askingPrice || 0} Lakhs`,
+        revenueMonthly: b.revenueMonthly || '',
+        profitMonthly: b.profitMonthly || '',
+        establishedYear: b.establishedYear ? Number(b.establishedYear) : null,
+        employeesCount: b.employeesCount ? Number(b.employeesCount) : 0,
+        rating: Number(b.rating) || 0,
         reviewCount: Number(b.reviewCount) || 0,
         verified: b.verified !== false,
-        image: b.image || b.imageUrl || '',
+        image: b.image || b.imageUrl || (imagesList[0] || ''),
+        image2: b.image2 || (imagesList[1] || null),
+        image3: b.image3 || (imagesList[2] || null),
+        image4: b.image4 || (imagesList[3] || null),
+        image5: b.image5 || (imagesList[4] || null),
+        image6: b.image6 || (imagesList[5] || null),
+        images: imagesList,
         description: b.description || '',
-        reasonForSale: b.reasonForSale || 'Retirement',
-        trustScore: Number(b.trustScore) || 95,
+        reasonForSale: b.reasonForSale || '',
+        trustScore: Number(b.trustScore) || 0,
+        sellerProfile: b.sellerProfile || '',
+        dealerId: b.dealerId || assignedIds[0] || null,
+        brokerId: b.dealerId || assignedIds[0] || null,
+        agentName: b.agentName || null,
+        agentPhone: b.agentPhone || null,
+        assignedBrokerIds: assignedIds,
         published: b.published !== false,
         featured: b.featured === true || b.featured === 'true',
         status: b.status || 'Available',
@@ -3043,21 +3065,42 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     const b = req.body;
     const updateData = {};
     if (b.name !== undefined) updateData.name = b.name;
+    if (b.title !== undefined) updateData.title = b.title;
     if (b.industry !== undefined) updateData.industry = b.industry;
     if (b.category !== undefined) updateData.category = b.category;
     if (b.businessType !== undefined) updateData.businessType = b.businessType;
     if (b.location !== undefined) updateData.location = b.location;
     if (b.city !== undefined) updateData.city = b.city;
     if (b.state !== undefined) updateData.state = b.state;
+    if (b.district !== undefined) updateData.district = b.district;
+    if (b.area !== undefined) updateData.area = b.area;
+    if (b.subLocation !== undefined) updateData.subLocation = b.subLocation;
+    if (b.landmark !== undefined) updateData.landmark = b.landmark;
+    if (b.pincode !== undefined) updateData.pincode = b.pincode;
+    if (b.fullAddress !== undefined) updateData.fullAddress = b.fullAddress;
+    if (b.latitude !== undefined) updateData.latitude = Number(b.latitude);
+    if (b.longitude !== undefined) updateData.longitude = Number(b.longitude);
     if (b.price !== undefined) updateData.price = Number(b.price);
+    if (b.askingPrice !== undefined) updateData.askingPrice = Number(b.askingPrice);
     if (b.priceDisplay !== undefined) updateData.priceDisplay = b.priceDisplay;
     if (b.revenueMonthly !== undefined) updateData.revenueMonthly = b.revenueMonthly;
     if (b.profitMonthly !== undefined) updateData.profitMonthly = b.profitMonthly;
-    if (b.establishedYear !== undefined) updateData.establishedYear = Number(b.establishedYear);
-    if (b.employeesCount !== undefined) updateData.employeesCount = Number(b.employeesCount);
+    if (b.establishedYear !== undefined) updateData.establishedYear = b.establishedYear ? Number(b.establishedYear) : null;
+    if (b.employeesCount !== undefined) updateData.employeesCount = b.employeesCount ? Number(b.employeesCount) : 0;
     if (b.image !== undefined) updateData.image = b.image;
+    if (b.image2 !== undefined) updateData.image2 = b.image2;
+    if (b.image3 !== undefined) updateData.image3 = b.image3;
+    if (b.image4 !== undefined) updateData.image4 = b.image4;
+    if (b.image5 !== undefined) updateData.image5 = b.image5;
+    if (b.image6 !== undefined) updateData.image6 = b.image6;
+    if (b.images !== undefined) updateData.images = Array.isArray(b.images) ? b.images : [b.images];
     if (b.description !== undefined) updateData.description = b.description;
     if (b.reasonForSale !== undefined) updateData.reasonForSale = b.reasonForSale;
+    if (b.sellerProfile !== undefined) updateData.sellerProfile = b.sellerProfile;
+    if (b.dealerId !== undefined) updateData.dealerId = b.dealerId;
+    if (b.agentName !== undefined) updateData.agentName = b.agentName;
+    if (b.agentPhone !== undefined) updateData.agentPhone = b.agentPhone;
+    if (b.assignedBrokerIds !== undefined) updateData.assignedBrokerIds = Array.isArray(b.assignedBrokerIds) ? b.assignedBrokerIds : (b.assignedBrokerIds ? [b.assignedBrokerIds] : []);
     if (b.verified !== undefined) updateData.verified = b.verified === true || b.verified === 'true';
     if (b.trustScore !== undefined) updateData.trustScore = Number(b.trustScore);
     if (b.rating !== undefined) updateData.rating = Number(b.rating);
