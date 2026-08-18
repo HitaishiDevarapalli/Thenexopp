@@ -447,6 +447,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
   /* ── API helpers ── */
   const apiBase = () => (import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : '/api');
 
+  const safeFetchJson = async (url: string, options?: RequestInit) => {
+    try {
+      const res = await fetch(url, options);
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = null;
+      if (contentType.includes('application/json')) {
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = null;
+        }
+      }
+      if (!res.ok) {
+        const errorMsg = data?.error || data?.message || (res.status === 502 || res.status === 504 ? 'Server is restarting or updating. Please try again in 5 seconds.' : `Server request failed (${res.status}). Please try again.`);
+        throw new Error(errorMsg);
+      }
+      if (!data) {
+        throw new Error('Connection temporary glitch. Please click Send OTP again.');
+      }
+      return data;
+    } catch (err: any) {
+      if (err.message && !err.message.includes('Unexpected token')) {
+        throw err;
+      }
+      throw new Error('Unable to reach server. Please check your internet connection or try again in a moment.');
+    }
+  };
+
   const adoptAuthenticatedUser = useCallback((serverUser: any, fallbackPhone: string, fallbackName = 'User') => {
     const userName = serverUser?.fullName || serverUser?.name || fallbackName || 'User';
     const cleanEmail = (serverUser?.email && !serverUser.email.includes('@nexopp.in') && !serverUser.email.includes('@thenexopp')) ? serverUser.email : '';
@@ -478,16 +506,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiBase()}/auth/send-otp`, {
+      const data = await safeFetchJson(`${apiBase()}/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ mobile: clean }),
       });
-      const data = await res.json();
       setLoading(false);
 
-      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to send OTP.');
+      if (!data.success) throw new Error(data.error || 'Failed to send OTP.');
 
       localStorage.setItem('nexopp_remembered_mobile', clean);
       setOtp(Array(6).fill(''));
@@ -513,16 +540,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     setLoading(true);
     try {
       const clean = mobile.replace(/\D/g, '');
-      const res = await fetch(`${apiBase()}/auth/verify-otp`, {
+      const data = await safeFetchJson(`${apiBase()}/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ mobile: clean, otp: code, fullName: '' }),
       });
-      const data = await res.json();
       setLoading(false);
 
-      if (!res.ok || !data.success) throw new Error(data.error || 'Incorrect OTP. Please try again.');
+      if (!data.success) throw new Error(data.error || 'Incorrect OTP. Please try again.');
 
       if (data.user?.isNewCustomer || data.user?.profileCompleted === false) {
         setStep('profile');
@@ -558,7 +584,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiBase()}/auth/complete-profile`, {
+      const data = await safeFetchJson(`${apiBase()}/auth/complete-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -570,10 +596,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
           businessInterest: false,
         }),
       });
-      const data = await res.json();
       setLoading(false);
 
-      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to complete profile.');
+      if (!data.success) throw new Error(data.error || 'Failed to complete profile.');
 
       setStep('success');
       setTimeout(() => {
@@ -594,15 +619,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
     setLoading(true);
     try {
       const clean = mobile.replace(/\D/g, '');
-      const res = await fetch(`${apiBase()}/auth/resend-otp`, {
+      const data = await safeFetchJson(`${apiBase()}/auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ mobile: clean }),
       });
-      const data = await res.json();
       setLoading(false);
-      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to resend OTP.');
+      if (!data.success) throw new Error(data.error || 'Failed to resend OTP.');
       setCountdown(30);
       setSuccess('New OTP sent!');
       setTimeout(() => otpRefs.current[0]?.focus(), 200);
