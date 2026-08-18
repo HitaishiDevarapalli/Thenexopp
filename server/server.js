@@ -663,7 +663,30 @@ app.post('/api/auth/verify-email-otp', async (req, res) => {
 });
 
 // ── CUSTOM MSG91 OTP AUTHENTICATION ENDPOINTS & RATE LIMITING ────────────────
-const otpSessionsMap = new Map();
+const OTP_SESSIONS_FILE = path.join(__dirname, 'data', 'otp_sessions.json');
+
+function loadOtpSessions() {
+  try {
+    if (fs.existsSync(OTP_SESSIONS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(OTP_SESSIONS_FILE, 'utf-8') || '{}');
+      const map = new Map();
+      Object.keys(data).forEach(k => map.set(k, data[k]));
+      return map;
+    }
+  } catch (e) {}
+  return new Map();
+}
+
+function saveOtpSessions(map) {
+  try {
+    const obj = {};
+    map.forEach((val, key) => { obj[key] = val; });
+    fs.mkdirSync(path.dirname(OTP_SESSIONS_FILE), { recursive: true });
+    fs.writeFileSync(OTP_SESSIONS_FILE, JSON.stringify(obj, null, 2));
+  } catch (e) {}
+}
+
+const otpSessionsMap = loadOtpSessions();
 
 // Helper to validate and clean Indian mobile number (10 digits)
 function cleanIndianMobile(mobile) {
@@ -730,6 +753,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
     }
 
     otpSessionsMap.set(cleaned, session);
+    saveOtpSessions(otpSessionsMap);
 
     const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH || process.env.VITE_MSG91_TOKEN_AUTH || '557093Aca5G41bF6a7d8d93P1';
     const templateId = process.env.MSG91_TEMPLATE_ID || '6a7d73335c4fafe2050bbfb4';
@@ -859,10 +883,19 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     }
 
     const now = Date.now();
-    const session = otpSessionsMap.get(cleaned);
+    let session = otpSessionsMap.get(cleaned);
 
     if (!session) {
-      return res.status(400).json({ error: 'No active OTP session found. Please request a new OTP.' });
+      session = {
+        mobile: cleaned,
+        firstRequestInWindowAt: now,
+        requestCount: 1,
+        lastOtpRequestAt: now,
+        otpAttemptCount: 0,
+        blockedUntil: null
+      };
+      otpSessionsMap.set(cleaned, session);
+      saveOtpSessions(otpSessionsMap);
     }
 
     // Check block state
@@ -875,11 +908,13 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
     if (session.otpAttemptCount >= 5) {
       session.blockedUntil = now + 15 * 60 * 1000;
       otpSessionsMap.set(cleaned, session);
+      saveOtpSessions(otpSessionsMap);
       return res.status(429).json({ error: 'Too many incorrect attempts. Please try again after 15 minutes.' });
     }
 
     session.otpAttemptCount++;
     otpSessionsMap.set(cleaned, session);
+    saveOtpSessions(otpSessionsMap);
 
     const authKey = process.env.MSG91_AUTH_KEY || process.env.MSG91_TOKEN_AUTH || process.env.VITE_MSG91_TOKEN_AUTH || '557093Aca5G41bF6a7d8d93P1';
     if (!authKey) {
@@ -911,6 +946,7 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
       if (session.otpAttemptCount >= 5) {
         session.blockedUntil = now + 15 * 60 * 1000;
         otpSessionsMap.set(cleaned, session);
+        saveOtpSessions(otpSessionsMap);
         return res.status(429).json({ error: 'Too many incorrect attempts. Please try again after 15 minutes.' });
       }
       return res.status(400).json({ error: 'Invalid OTP. Please check the code and try again.' });
@@ -918,6 +954,7 @@ app.post('/api/auth/verify-otp', async (req, res, next) => {
 
     // Verification successful - clear session
     otpSessionsMap.delete(cleaned);
+    saveOtpSessions(otpSessionsMap);
 
     const verifiedMobile = cleaned;
     const timestamp = new Date().toLocaleString();
