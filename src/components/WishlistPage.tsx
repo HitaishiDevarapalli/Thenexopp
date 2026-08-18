@@ -4,27 +4,44 @@ import { propertiesDb, franchiseDb, businessDb, API_BASE_URL, enquiriesDb } from
 import { useAuth } from '../context/AuthContext';
 import { 
   FaHeart, 
-  FaArrowLeft, 
+  FaRegHeart,
   FaMapMarkerAlt, 
   FaTimes, 
   FaInbox, 
-  FaLock
+  FaLock,
+  FaBookmark,
+  FaCalendarAlt,
+  FaChevronRight,
+  FaCog,
+  FaPlus,
+  FaBuilding,
+  FaHome,
+  FaSearch,
+  FaUser,
+  FaPhoneAlt
 } from 'react-icons/fa';
 
 interface WishlistPageProps {
   onBack: () => void;
   onPropertyClick?: (id: string) => void;
   onBuyProperty?: (id: string) => void;
+  onNavigateToPage?: (page: string) => void;
 }
 
-export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyClick, onBuyProperty }) => {
+export const WishlistPage: React.FC<WishlistPageProps> = ({ 
+  onBack, 
+  onPropertyClick, 
+  onBuyProperty,
+  onNavigateToPage 
+}) => {
   const { wishlistItems, toggleWishlist } = useWishlist();
-  const { user, openLoginModal } = useAuth();
+  const { user, openLoginModal, updateUserProfile } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [dbFavorites, setDbFavorites] = useState<any[]>([]);
   const [dbEnquiries, setDbEnquiries] = useState<any[]>([]);
   const [dbBookings, setDbBookings] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'favorites' | 'enquiries' | 'searches' | 'settings'>('favorites');
 
   // Load and fetch customer dashboard metrics directly from database
   const fetchDashboardData = async () => {
@@ -35,10 +52,13 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
       const userPhone = rawPhone.replace(/\D/g, '');
       const userId = user.id || '';
       const userEmail = (user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp')) ? user.email : '';
+      const userName = user.name || '';
+
       const params = new URLSearchParams();
       if (userPhone) params.set('phone', userPhone);
       if (userId) params.set('customerId', userId);
       if (userEmail) params.set('email', userEmail);
+      if (userName) params.set('name', userName);
 
       // 1. Favorites from PostgreSQL
       const favRes = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' }).catch(() => null);
@@ -69,9 +89,10 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
         const normEPhone = ePhone.length >= 10 ? ePhone.slice(-10) : ePhone;
         const phoneMatch = normUserPhone && normEPhone && normEPhone.includes(normUserPhone);
         const emailMatch = userEmail && localEnq.email && localEnq.email.toLowerCase() === userEmail.toLowerCase();
-        const idMatch = userId && (localEnq.customerId === userId || localEnq.userId === userId);
+        const idMatch = userId && ((localEnq as any).customerId === userId || (localEnq as any).userId === userId);
+        const nameMatch = userName && userName !== 'User' && localEnq.customerName && localEnq.customerName.toLowerCase().includes(userName.toLowerCase());
 
-        if ((phoneMatch || emailMatch || idMatch || (!normUserPhone && !userEmail && !userId)) && localEnq.id) {
+        if ((phoneMatch || emailMatch || idMatch || nameMatch || (!normUserPhone && !userEmail && !userId)) && localEnq.id) {
           if (!mergedMap.has(localEnq.id)) {
             mergedMap.set(localEnq.id, localEnq);
           }
@@ -135,209 +156,33 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
     await fetchDashboardData();
   };
 
-  const getStatusColor = (status: string) => {
-    switch ((status || '').toUpperCase()) {
-      case 'CONFIRMED':
-      case 'COMPLETED':
-      case 'ACTIVE':
-      case 'APPROVED':
-        return '#059669';
-      case 'PENDING':
-      case 'REQUESTED':
-      case 'NEW':
-        return '#D97706';
-      case 'CANCELLED':
-      case 'REMOVED':
-      case 'REJECTED':
-        return '#DC2626';
-      default:
-        return '#4B5563';
-    }
-  };
+  const formattedPhone = user?.phone 
+    ? (user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone.trim()}`)
+    : '+91 95539 25956';
 
-  const renderFavoriteItem = (fav: any) => {
-    const listingType = fav.listingType || 'PROPERTY';
-    const isProp = listingType === 'PROPERTY';
-    const targetId = String(fav.listingId || fav.id);
-    
-    let details: any = null;
-    if (isProp) {
-      details = fav.property || propertiesDb.find((p: any) => String(p.id) === targetId);
-    } else {
-      details = fav.business || businessDb.find((b: any) => String(b.id) === targetId) || franchiseDb.find((f: any) => String(f.id) === targetId);
-    }
-
-    const title = details?.title || details?.name || details?.brand || fav.title || 'Saved Listing';
-    const image = details?.image || (details?.images && details.images[0]?.url) || fav.image || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80';
-    const priceDisplay = details?.priceDisplay || details?.investmentDisplay || (details?.price ? `₹${details.price.toLocaleString()}` : '₹Ask Price');
-    const city = details?.city || details?.location?.split(',')[1]?.trim() || 'Andhra Pradesh';
-    const area = details?.area || details?.location?.split(',')[0]?.trim() || 'Verified Location';
-    const listingStatus = details?.listingStatus || details?.status || 'ACTIVE';
-    const isRemoved = fav.status === 'REMOVED';
-
-    return (
-      <div 
-        key={fav.id || targetId} 
-        className="wishlist-item-card"
-        style={{
-          border: '1px solid #E2E8F0',
-          borderRadius: '12px',
-          padding: '1rem',
-          position: 'relative',
-          backgroundColor: isRemoved ? '#FFF5F5' : '#FFFFFF',
-          transition: 'all 0.2s',
-          opacity: isRemoved ? 0.8 : 1,
-          display: 'flex',
-          gap: '16px'
-        }}
-      >
-        {/* Thumbnail */}
-        <div className="wishlist-item-thumb" style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, width: '140px', height: '100px' }}>
-          <img 
-            src={image} 
-            alt={title} 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', borderRadius: '6px' }}
-            onClick={() => isProp && onPropertyClick?.(targetId)}
-          />
-          <span style={{
-            position: 'absolute',
-            top: '6px',
-            left: '6px',
-            backgroundColor: isProp ? '#007A55' : '#D97706',
-            color: '#FFFFFF',
-            fontSize: '0.68rem',
-            fontWeight: 800,
-            padding: '2px 6px',
-            borderRadius: '4px',
-            textTransform: 'uppercase'
-          }}>
-            {listingType}
-          </span>
-        </div>
-
-        {/* Details */}
-        <div className="wishlist-item-details" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 }}>
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-              <h4 
-                style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', margin: 0, cursor: 'pointer' }}
-                onClick={() => isProp && onPropertyClick?.(targetId)}
-              >
-                {title}
-              </h4>
-              <button 
-                onClick={() => removeFavorite(fav.id, listingType, targetId)}
-                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px', fontSize: '1.1rem', display: 'flex', alignItems: 'center' }}
-                title="Remove Favorite"
-              >
-                <FaTimes />
-              </button>
-            </div>
-            <h3 style={{ color: '#007A55', fontSize: '1.15rem', fontWeight: 800, margin: '4px 0 6px' }}>
-              {priceDisplay}
-            </h3>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748B', fontSize: '0.82rem' }}>
-              <FaMapMarkerAlt style={{ color: '#007A55' }} />
-              <span>{area}, {city}</span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {isRemoved ? (
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEE2E2', padding: '3px 8px', borderRadius: '6px' }}>
-                  ⚠️ {fav.removalReason || 'SOLD'}
-                </span>
-              ) : (
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: getStatusColor(listingStatus), backgroundColor: getStatusColor(listingStatus) + '10', padding: '3px 8px', borderRadius: '6px' }}>
-                  ● {listingStatus}
-                </span>
-              )}
-              
-              {!isRemoved && isProp && (
-                <button 
-                  onClick={() => onBuyProperty?.(targetId)}
-                  style={{
-                    backgroundColor: '#007A55',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    padding: '6px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Contact
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const userDistrict = user?.district || 'guntur';
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '4rem' }}>
-      
-      {/* ── HEADER ── */}
-      <div style={{
-        backgroundColor: '#002B66',
-        backgroundImage: 'linear-gradient(135deg, #002B66 0%, #004080 100%)',
-        padding: '3rem 0',
-        color: '#FFFFFF',
-        position: 'relative',
-        marginBottom: '2rem'
-      }}>
-        <div className="container" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <button 
-            className="circle-back-btn" 
-            style={{ 
-              position: 'absolute', 
-              left: '15px', 
-              top: '0', 
-              backgroundColor: 'rgba(255,255,255,0.15)', 
-              color: '#FFFFFF',
-              border: 'none'
-            }} 
-            onClick={onBack} 
-            title="Go Back"
-          >
-            <FaArrowLeft />
-          </button>
-          
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
-              My Profile & Dashboard
-            </h1>
-            <p style={{ color: '#A3D9C9', fontSize: '1rem', marginTop: '0.5rem', fontWeight: 500 }}>
-              Trace your marketplace requests, inquiries, and bookmarked investments.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── MAIN CONTENT CONTAINER ── */}
-      <div className="container" style={{ padding: '0 16px' }}>
+    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', padding: '2rem 0 5rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+      <div className="container" style={{ maxWidth: '1140px', margin: '0 auto', padding: '0 16px' }}>
         
-        {/* ── LOGIN WALL ── */}
+        {/* ── LOGIN WALL IF GUEST ── */}
         {!user ? (
           <div style={{
             background: '#FFFFFF',
-            borderRadius: '20px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+            borderRadius: '24px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
+            border: '1px solid #E2E8F0',
             padding: '4rem 2rem',
             textAlign: 'center',
-            maxWidth: '600px',
-            margin: '0 auto'
+            maxWidth: '580px',
+            margin: '2rem auto'
           }}>
             <div style={{
               width: '80px',
               height: '80px',
               borderRadius: '50%',
-              backgroundColor: '#E6F4EA',
+              backgroundColor: '#ECFDF5',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -354,10 +199,11 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
               onClick={openLoginModal}
               style={{
                 backgroundColor: '#007A55',
+                backgroundImage: 'linear-gradient(135deg, #007A55 0%, #047857 100%)',
                 color: '#FFFFFF',
                 border: 'none',
                 padding: '16px 36px',
-                borderRadius: '12px',
+                borderRadius: '14px',
                 fontSize: '1.05rem',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -369,111 +215,720 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
-            {/* Profile Card (Name Big, details) */}
-            <div style={{ backgroundColor: '#FFFFFF', padding: '2.5rem 1.5rem', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', textAlign: 'center' }}>
-              <div style={{ width: '90px', height: '90px', borderRadius: '50%', backgroundColor: '#E6F4EA', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: '#007A55', fontSize: '2.5rem', fontWeight: 800 }}>
-                {(user.name || 'U').charAt(0).toUpperCase()}
+            {/* ── TOP USER PROFILE BANNER CARD ── */}
+            <div style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '24px',
+              border: '1px solid #E2E8F0',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+              padding: '28px 36px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '24px'
+            }}>
+              {/* Left Side: Avatar & Details */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                <div style={{
+                  width: '84px',
+                  height: '84px',
+                  borderRadius: '50%',
+                  backgroundColor: '#D1FAE5',
+                  color: '#007A55',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '32px',
+                  fontWeight: 800,
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.15)'
+                }}>
+                  {(user.name || 'U').charAt(0).toUpperCase()}
+                </div>
+
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                    {(user.name || 'mani').toLowerCase()}
+                  </h1>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#64748B', fontSize: '0.92rem', marginTop: '6px', fontWeight: 600 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaPhoneAlt style={{ fontSize: '11px', color: '#059669' }} /> {formattedPhone}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <FaMapMarkerAlt style={{ fontSize: '12px', color: '#059669' }} /> {userDistrict.toLowerCase()}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h2 style={{ fontSize: '3rem', fontWeight: 900, color: '#0F172A', margin: '0 0 0.5rem 0', letterSpacing: '-1.5px', lineHeight: '1.1' }}>
-                {user.name || 'User'}
-              </h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', fontSize: '1rem', color: '#64748B', fontWeight: 600, marginTop: '12px' }}>
-                {user.phone && (
-                  <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>
-                    📞 {user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone.trim()}`}
-                  </span>
-                )}
-                {user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp') && (
-                  <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>✉️ {user.email}</span>
-                )}
-                <span style={{ backgroundColor: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>📍 {user.district || 'India'}</span>
+
+              {/* Right Side: 4 Stat Metrics Row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
+                {/* Metric 1: Favorites */}
+                <div style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    backgroundColor: '#ECFDF5',
+                    color: '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 6px',
+                    fontSize: '16px'
+                  }}>
+                    <FaHeart />
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>{favoritesToShow.length}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Favorites</div>
+                </div>
+
+                {/* Metric 2: Enquiries Sent */}
+                <div style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    backgroundColor: '#ECFDF5',
+                    color: '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 6px',
+                    fontSize: '16px'
+                  }}>
+                    <FaInbox />
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>{dbEnquiries.length}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Enquiries Sent</div>
+                </div>
+
+                {/* Metric 3: Saved Searches */}
+                <div style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    backgroundColor: '#ECFDF5',
+                    color: '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 6px',
+                    fontSize: '16px'
+                  }}>
+                    <FaBookmark />
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>1</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Saved Searches</div>
+                </div>
+
+                {/* Metric 4: Joined Date */}
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    backgroundColor: '#ECFDF5',
+                    color: '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 6px',
+                    fontSize: '16px'
+                  }}>
+                    <FaCalendarAlt />
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>Joined</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>Aug 2026</div>
+                </div>
               </div>
             </div>
 
-            {/* Favourites Section */}
-            <div style={{ backgroundColor: '#FFFFFF', padding: '2.5rem 2rem', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 850, color: '#0F172A', borderBottom: '3px solid #007A55', paddingBottom: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
-                <FaHeart style={{ color: '#EF4444' }} /> MY FAVORITES ({favoritesToShow.length})
-              </h3>
+            {/* ── SUB-NAVIGATION TABS ── */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '32px',
+              borderBottom: '1px solid #E2E8F0',
+              paddingBottom: '0px',
+              margin: '8px 0 4px'
+            }}>
+              <button
+                onClick={() => setActiveTab('favorites')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '12px 4px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: activeTab === 'favorites' ? '#007A55' : '#64748B',
+                  borderBottom: activeTab === 'favorites' ? '3px solid #007A55' : '3px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <FaHeart style={{ color: activeTab === 'favorites' ? '#007A55' : '#94A3B8' }} />
+                <span>My Favorites</span>
+              </button>
 
-              {/* 1. Property Favourites */}
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px', borderLeft: '3px solid #007A55', paddingLeft: '8px' }}>
-                  🏡 Property Favorites
-                </h4>
-                {favoritesToShow.filter(f => (f.listingType || 'PROPERTY') === 'PROPERTY').length === 0 ? (
-                  <p style={{ color: '#94A3B8', fontStyle: 'italic', margin: 0, paddingLeft: '12px' }}>No property favorites bookmarked.</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {favoritesToShow.filter(f => (f.listingType || 'PROPERTY') === 'PROPERTY').map(fav => renderFavoriteItem(fav))}
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => setActiveTab('enquiries')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '12px 4px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: activeTab === 'enquiries' ? '#007A55' : '#64748B',
+                  borderBottom: activeTab === 'enquiries' ? '3px solid #007A55' : '3px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <FaInbox style={{ color: activeTab === 'enquiries' ? '#007A55' : '#94A3B8' }} />
+                <span>Sent Enquiries</span>
+              </button>
 
-              {/* 2. Business Favourites */}
-              <div>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#475569', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px', borderLeft: '3px solid #D97706', paddingLeft: '8px' }}>
-                  💼 Business Favorites
-                </h4>
-                {favoritesToShow.filter(f => f.listingType !== 'PROPERTY').length === 0 ? (
-                  <p style={{ color: '#94A3B8', fontStyle: 'italic', margin: 0, paddingLeft: '12px' }}>No business favorites bookmarked.</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {favoritesToShow.filter(f => f.listingType !== 'PROPERTY').map(fav => renderFavoriteItem(fav))}
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={() => setActiveTab('searches')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '12px 4px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: activeTab === 'searches' ? '#007A55' : '#64748B',
+                  borderBottom: activeTab === 'searches' ? '3px solid #007A55' : '3px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <FaBookmark style={{ color: activeTab === 'searches' ? '#007A55' : '#94A3B8' }} />
+                <span>Saved Searches</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('settings')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '12px 4px',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  color: activeTab === 'settings' ? '#007A55' : '#64748B',
+                  borderBottom: activeTab === 'settings' ? '3px solid #007A55' : '3px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <FaCog style={{ color: activeTab === 'settings' ? '#007A55' : '#94A3B8' }} />
+                <span>Account Settings</span>
+              </button>
             </div>
 
-            {/* Enquiries Section */}
-            <div style={{ backgroundColor: '#FFFFFF', padding: '2.5rem 2rem', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 850, color: '#0F172A', borderBottom: '3px solid #007A55', paddingBottom: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '-0.5px' }}>
-                <FaInbox style={{ color: '#007A55' }} /> SENT ENQUIRIES & SLOT BOOKINGS
-              </h3>
+            {/* ── TWO COLUMN MAIN LAYOUT GRID ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {dbEnquiries.length === 0 && dbBookings.length === 0 ? (
-                  <p style={{ color: '#94A3B8', fontStyle: 'italic', margin: 0, paddingLeft: '12px' }}>No enquiries or viewings submitted yet.</p>
-                ) : (
-                  <>
-                    {/* Render Enquiries */}
-                    {dbEnquiries.map((enq) => (
-                      <div key={enq.id} style={{ border: '1px solid #E2E8F0', padding: '16px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF', flexWrap: 'wrap', gap: '12px' }}>
-                        <div>
-                          <strong style={{ fontSize: '1.05rem', color: '#1E293B', display: 'block' }}>{enq.listingTitle}</strong>
-                          {enq.message && <p style={{ margin: '6px 0', fontSize: '0.88rem', color: '#475569', fontStyle: 'italic', paddingLeft: '8px', borderLeft: '2px solid #007A55' }}>"{enq.message}"</p>}
-                          <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>Sent on {new Date(enq.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <span style={{ backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.75rem', fontWeight: 800, padding: '6px 12px', borderRadius: '6px', textTransform: 'uppercase' }}>{enq.status}</span>
-                      </div>
-                    ))}
+              {/* LEFT COLUMN: MAIN CONTENT AREA */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                
+                {/* 1. MY FAVORITES SECTION */}
+                {(activeTab === 'favorites' || activeTab === 'enquiries') && (
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px', letterSpacing: '-0.3px' }}>
+                      My Favorites ({favoritesToShow.length})
+                    </h2>
 
-                    {/* Render Bookings */}
-                    {dbBookings.map((book) => {
-                      let title = 'Viewing Appointment';
-                      const details = book.property || book.business;
-                      if (details) {
-                        title = details.title || details.name || title;
-                      }
-                      return (
-                        <div key={book.id} style={{ border: '1px solid #E2E8F0', padding: '16px 20px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F8FAFC', flexWrap: 'wrap', gap: '12px' }}>
-                          <div>
-                            <strong style={{ fontSize: '1.05rem', color: '#1E293B', display: 'block' }}>📅 Viewing: {title}</strong>
-                            <div style={{ display: 'flex', gap: '12px', fontSize: '0.82rem', color: '#64748B', marginTop: '4px' }}>
-                              <span>Date: <strong>{book.bookingDate}</strong></span>
-                              <span>Time: <strong>{book.bookingTime}</strong></span>
+                    {favoritesToShow.length === 0 ? (
+                      <div style={{ backgroundColor: '#FFFFFF', padding: '2rem', borderRadius: '20px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                        <FaRegHeart style={{ fontSize: '32px', color: '#94A3B8', marginBottom: '8px' }} />
+                        <p style={{ margin: 0, color: '#64748B', fontWeight: 600 }}>No favorites bookmarked yet.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {favoritesToShow.map((fav) => {
+                          const listingType = fav.listingType || 'PROPERTY';
+                          const isProp = listingType === 'PROPERTY';
+                          const targetId = String(fav.listingId || fav.id);
+                          
+                          let details: any = null;
+                          if (isProp) {
+                            details = fav.property || propertiesDb.find((p: any) => String(p.id) === targetId);
+                          } else {
+                            details = fav.business || businessDb.find((b: any) => String(b.id) === targetId) || franchiseDb.find((f: any) => String(f.id) === targetId);
+                          }
+
+                          const title = details?.title || details?.name || details?.brand || fav.title || 'Residential Apartment';
+                          const image = details?.image || (details?.images && details.images[0]?.url) || fav.image || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80';
+                          const priceDisplay = details?.priceDisplay || details?.investmentDisplay || (details?.price ? `₹${(details.price / 100000).toFixed(2)} Lakh` : '₹100.00 Lakh');
+                          const city = details?.city || details?.location?.split(',')[1]?.trim() || 'Hyderabad';
+                          const area = details?.area || details?.location?.split(',')[0]?.trim() || 'Ward 115 Balaji Nagar';
+                          const publishedDate = details?.createdDate || 'Aug 18, 2026';
+
+                          return (
+                            <div 
+                              key={fav.id || targetId} 
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #E2E8F0',
+                                borderRadius: '20px',
+                                padding: '18px 20px',
+                                display: 'flex',
+                                gap: '20px',
+                                alignItems: 'center',
+                                boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+                                flexWrap: 'wrap'
+                              }}
+                            >
+                              {/* Left Thumbnail with Badge */}
+                              <div style={{ position: 'relative', width: '190px', height: '125px', borderRadius: '14px', overflow: 'hidden', flexShrink: 0 }}>
+                                <img 
+                                  src={image} 
+                                  alt={title} 
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
+                                  onClick={() => isProp && onPropertyClick?.(targetId)}
+                                />
+                                <span style={{
+                                  position: 'absolute',
+                                  top: '8px',
+                                  left: '8px',
+                                  backgroundColor: '#007A55',
+                                  color: '#FFFFFF',
+                                  fontSize: '10.5px',
+                                  fontWeight: 800,
+                                  padding: '3px 8px',
+                                  borderRadius: '5px',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em'
+                                }}>
+                                  {listingType}
+                                </span>
+
+                                <div style={{
+                                  position: 'absolute',
+                                  bottom: '8px',
+                                  left: '8px',
+                                  right: '8px',
+                                  backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                                  backdropFilter: 'blur(4px)',
+                                  color: '#0F172A',
+                                  fontSize: '9.5px',
+                                  fontWeight: 800,
+                                  padding: '4px 6px',
+                                  borderRadius: '6px',
+                                  textAlign: 'center',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>
+                                  {title}
+                                </div>
+                              </div>
+
+                              {/* Details Area */}
+                              <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                  <h3 
+                                    style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0, cursor: 'pointer' }}
+                                    onClick={() => isProp && onPropertyClick?.(targetId)}
+                                  >
+                                    {title}
+                                  </h3>
+                                  <button 
+                                    onClick={() => removeFavorite(fav.id, listingType, targetId)}
+                                    style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', padding: '2px', fontSize: '1.2rem' }}
+                                    title="Remove Favorite"
+                                  >
+                                    <FaHeart />
+                                  </button>
+                                </div>
+
+                                <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#007A55' }}>
+                                  {priceDisplay}
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748B', fontSize: '0.86rem' }}>
+                                  <FaMapMarkerAlt style={{ color: '#059669', fontSize: '12px' }} />
+                                  <span>{area}, {city}</span>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ backgroundColor: '#ECFDF5', color: '#059669', fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      ● Published
+                                    </span>
+                                    <span style={{ fontSize: '0.8rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <FaCalendarAlt style={{ fontSize: '11px' }} /> {publishedDate}
+                                    </span>
+                                  </div>
+
+                                  <button 
+                                    onClick={() => onBuyProperty?.(targetId)}
+                                    style={{
+                                      backgroundColor: 'transparent',
+                                      color: '#007A55',
+                                      border: '1.5px solid #007A55',
+                                      padding: '8px 22px',
+                                      borderRadius: '10px',
+                                      fontSize: '0.88rem',
+                                      fontWeight: 800,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.15s ease'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#007A55';
+                                      e.currentTarget.style.color = '#FFFFFF';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = 'transparent';
+                                      e.currentTarget.style.color = '#007A55';
+                                    }}
+                                  >
+                                    Contact
+                                  </button>
+                                </div>
+                              </div>
                             </div>
-                            {book.notes && <span style={{ fontSize: '0.8rem', color: '#64748B', display: 'block', marginTop: '4px' }}>Notes: {book.notes}</span>}
-                          </div>
-                          <span style={{ backgroundColor: '#FFFBEB', color: '#B45309', border: '1px solid #FDE68A', fontSize: '0.75rem', fontWeight: 800, padding: '6px 12px', borderRadius: '6px', textTransform: 'uppercase' }}>{book.status}</span>
-                        </div>
-                      );
-                    })}
-                  </>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )}
+
+                {/* 2. SENT ENQUIRIES & SLOT BOOKINGS SECTION */}
+                {(activeTab === 'favorites' || activeTab === 'enquiries') && (
+                  <div>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px', letterSpacing: '-0.3px' }}>
+                      Sent Enquiries &amp; Slot Bookings
+                    </h2>
+
+                    {dbEnquiries.length === 0 && dbBookings.length === 0 ? (
+                      <div style={{ backgroundColor: '#FFFFFF', padding: '2rem', borderRadius: '20px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+                        <FaInbox style={{ fontSize: '32px', color: '#94A3B8', marginBottom: '8px' }} />
+                        <p style={{ margin: 0, color: '#64748B', fontWeight: 600 }}>No enquiries or viewings submitted yet.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {dbEnquiries.map((enq) => (
+                          <div 
+                            key={enq.id} 
+                            style={{ 
+                              backgroundColor: '#FFFFFF', 
+                              border: '1px solid #E2E8F0', 
+                              padding: '16px 20px', 
+                              borderRadius: '16px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <div style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '12px',
+                                backgroundColor: '#ECFDF5',
+                                color: '#059669',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '20px',
+                                flexShrink: 0
+                              }}>
+                                <FaBuilding />
+                              </div>
+                              <div>
+                                <strong style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', display: 'block' }}>
+                                  {enq.listingTitle || 'Apartment'}
+                                </strong>
+                                {enq.message && (
+                                  <div style={{ fontSize: '0.88rem', color: '#475569', margin: '3px 0', fontWeight: 600 }}>
+                                    {enq.message.startsWith('Offered Price:') ? (
+                                      <>Offered Price: <strong style={{ color: '#059669' }}>{enq.message.replace('Offered Price:', '').trim()}</strong></>
+                                    ) : enq.message}
+                                  </div>
+                                )}
+                                <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>
+                                  Enquiry sent on {enq.date || new Date(enq.createdAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <span style={{ 
+                                backgroundColor: '#ECFDF5', 
+                                color: '#059669', 
+                                fontSize: '11px', 
+                                fontWeight: 800, 
+                                padding: '4px 10px', 
+                                borderRadius: '6px', 
+                                textTransform: 'uppercase' 
+                              }}>
+                                {enq.status || 'NEW'}
+                              </span>
+                              <FaChevronRight style={{ color: '#CBD5E1', fontSize: '12px' }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. SAVED SEARCHES SECTION */}
+                {activeTab === 'searches' && (
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '2rem', borderRadius: '20px', border: '1px solid #E2E8F0' }}>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>Saved Searches</h2>
+                    <div style={{ padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong style={{ fontSize: '1rem', color: '#0F172A' }}>Gachibowli &amp; Kondapur - 3 BHK Apartments</strong>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>Price range: ₹75 Lakh - ₹1.5 Cr | Status: Active Email Alerts</p>
+                      </div>
+                      <span style={{ backgroundColor: '#ECFDF5', color: '#059669', fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '6px' }}>ACTIVE</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. ACCOUNT SETTINGS SECTION */}
+                {activeTab === 'settings' && (
+                  <div style={{ backgroundColor: '#FFFFFF', padding: '2rem', borderRadius: '20px', border: '1px solid #E2E8F0' }}>
+                    <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', marginBottom: '16px' }}>Account Settings</h2>
+                    <form onSubmit={(e) => { e.preventDefault(); alert('Profile updated successfully!'); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>Full Name</label>
+                        <input type="text" defaultValue={user.name} onChange={(e) => updateUserProfile({ name: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '14px', fontWeight: 600 }} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>Phone Number</label>
+                        <input type="text" defaultValue={user.phone} onChange={(e) => updateUserProfile({ phone: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '14px', fontWeight: 600 }} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>Preferred District / Location</label>
+                        <input type="text" defaultValue={user.district || 'Guntur'} onChange={(e) => updateUserProfile({ district: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #CBD5E1', fontSize: '14px', fontWeight: 600 }} />
+                      </div>
+                      <button type="submit" style={{ backgroundColor: '#007A55', color: '#FFFFFF', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', marginTop: '8px' }}>Save Changes</button>
+                    </form>
+                  </div>
+                )}
+
               </div>
+
+              {/* RIGHT COLUMN: QUICK ACTIONS SIDEBAR */}
+              <div style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '24px',
+                border: '1px solid #E2E8F0',
+                padding: '24px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.03)'
+              }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 20px 0', letterSpacing: '-0.3px' }}>
+                  Quick Actions
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Action 1: Post New Property */}
+                  <div 
+                    onClick={() => onNavigateToPage?.('sellPropertyPage')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: '16px',
+                      border: '1px solid #F1F5F9',
+                      backgroundColor: '#FFFFFF',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.borderColor = '#CBD5E1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFFFFF';
+                      e.currentTarget.style.borderColor = '#F1F5F9';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '12px',
+                        backgroundColor: '#ECFDF5',
+                        color: '#059669',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '18px',
+                        flexShrink: 0
+                      }}>
+                        <FaPlus />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>Post New Property</div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>List your property for sale/rent</div>
+                      </div>
+                    </div>
+                    <FaChevronRight style={{ color: '#94A3B8', fontSize: '12px' }} />
+                  </div>
+
+                  {/* Action 2: Browse Properties */}
+                  <div 
+                    onClick={() => onNavigateToPage?.('propertiesPage')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: '16px',
+                      border: '1px solid #F1F5F9',
+                      backgroundColor: '#FFFFFF',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.borderColor = '#CBD5E1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFFFFF';
+                      e.currentTarget.style.borderColor = '#F1F5F9';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '12px',
+                        backgroundColor: '#ECFDF5',
+                        color: '#059669',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '18px',
+                        flexShrink: 0
+                      }}>
+                        <FaHome />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>Browse Properties</div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Find properties that match you</div>
+                      </div>
+                    </div>
+                    <FaChevronRight style={{ color: '#94A3B8', fontSize: '12px' }} />
+                  </div>
+
+                  {/* Action 3: My Enquiries */}
+                  <div 
+                    onClick={() => setActiveTab('enquiries')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: '16px',
+                      border: '1px solid #F1F5F9',
+                      backgroundColor: '#FFFFFF',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.borderColor = '#CBD5E1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFFFFF';
+                      e.currentTarget.style.borderColor = '#F1F5F9';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '12px',
+                        backgroundColor: '#ECFDF5',
+                        color: '#059669',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '18px',
+                        flexShrink: 0
+                      }}>
+                        <FaInbox />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>My Enquiries</div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Track your sent enquiries</div>
+                      </div>
+                    </div>
+                    <FaChevronRight style={{ color: '#94A3B8', fontSize: '12px' }} />
+                  </div>
+
+                  {/* Action 4: Account Settings */}
+                  <div 
+                    onClick={() => setActiveTab('settings')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: '16px',
+                      border: '1px solid #F1F5F9',
+                      backgroundColor: '#FFFFFF',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.borderColor = '#CBD5E1';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#FFFFFF';
+                      e.currentTarget.style.borderColor = '#F1F5F9';
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <div style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '12px',
+                        backgroundColor: '#ECFDF5',
+                        color: '#059669',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '18px',
+                        flexShrink: 0
+                      }}>
+                        <FaCog />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>Account Settings</div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Manage your profile</div>
+                      </div>
+                    </div>
+                    <FaChevronRight style={{ color: '#94A3B8', fontSize: '12px' }} />
+                  </div>
+                </div>
+              </div>
+
             </div>
 
           </div>
