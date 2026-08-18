@@ -345,14 +345,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         page: String(customerPage),
         limit: String(customerLimit)
       });
-      const res = await fetch(`${API_BASE_URL}/api/admin/customers?${queryParams.toString()}`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setCustomersData(data.customers || []);
-        setCustomerTotalPages(data.totalPages || 1);
-        setCustomerTotalCount(data.total || 0);
-        if (Array.isArray(data.customers)) {
+
+      let res = await fetch(`${API_BASE_URL}/api/admin/customers?${queryParams.toString()}`, { credentials: 'include' }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`/api/admin/customers?${queryParams.toString()}`, { credentials: 'include' }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data && Array.isArray(data.customers)) {
+          setCustomersData(data.customers);
+          setCustomerTotalPages(data.totalPages || 1);
+          setCustomerTotalCount(data.total || data.customers.length);
           setRegisteredCustomers(data.customers);
+          return;
+        }
+      }
+
+      // Universal fallback to /api/customers
+      const fallbackRes = await fetch('/api/customers').catch(() => null) ||
+                          await fetch(`${API_BASE_URL}/api/customers`).catch(() => null);
+      if (fallbackRes && fallbackRes.ok) {
+        const list = await fallbackRes.json().catch(() => []);
+        if (Array.isArray(list)) {
+          setCustomersData(list);
+          setRegisteredCustomers(list);
+          setCustomerTotalCount(list.length);
+          setCustomerTotalPages(Math.ceil(list.length / customerLimit) || 1);
         }
       }
     } catch (e) {
