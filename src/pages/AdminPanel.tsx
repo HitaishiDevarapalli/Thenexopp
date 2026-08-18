@@ -4406,7 +4406,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               const rawCombined: any[] = [];
 
               (allEnquiries || []).forEach(e => rawCombined.push(e));
-              (enquiriesDb || []).forEach(e => rawCombined.push(e));
               (allBookings || []).forEach(b => {
                 const bkId = b.id || `bk-${b.createdAt}`;
                 rawCombined.push({
