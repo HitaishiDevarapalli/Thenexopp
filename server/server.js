@@ -2417,10 +2417,23 @@ app.post('/api/auth/login', async (req, res, next) => {
 // ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
 app.get('/api/customers', async (req, res) => {
   try {
-    const customers = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
-    return res.json(customers || []);
+    const dbCustomers = await prisma.customer.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    const backupCustomers = getBackupCustomers();
+
+    const customerMap = new Map();
+    backupCustomers.forEach(c => { if (c && c.id) customerMap.set(c.id, c); });
+    dbCustomers.forEach(c => { if (c && c.id) customerMap.set(c.id, c); });
+
+    const merged = Array.from(customerMap.values());
+    merged.sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.lastLoginAt || a.registeredDate || 0).getTime();
+      const timeB = new Date(b.createdAt || b.lastLoginAt || b.registeredDate || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return res.json(merged);
   } catch (err) {
-    return res.json([]);
+    return res.json(getBackupCustomers());
   }
 });
 

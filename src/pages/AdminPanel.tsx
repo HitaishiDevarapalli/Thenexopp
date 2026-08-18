@@ -402,19 +402,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   };
 
   const fetchRegisteredCustomers = async () => {
-    fetchCustomersList();
-    fetchCustomerLoginHistory();
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/customers`);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setRegisteredCustomers(data);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to fetch registered customers list:', e);
-    }
+    await fetchCustomersList();
+    await fetchCustomerLoginHistory();
   };
 
   const handleUpdateEnquiryStatus = async (id: string, newStatus: string) => {
