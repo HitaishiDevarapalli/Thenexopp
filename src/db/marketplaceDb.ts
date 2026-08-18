@@ -891,10 +891,39 @@ const loadData = async () => {
       safeFetchJson(`${API_BASE_URL}/api/customers`),
       safeFetchJson(`${API_BASE_URL}/api/bookings`),
     ]).then(([propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes, custRes, bookRes]) => {
-      if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) propertiesDb = propsRes.value;
+      if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
+        const localSaved = loadFromStorage('nexopp_properties_db', []);
+        const localMap = new Map((localSaved || []).map((p: any) => [p.id, p]));
+        propertiesDb = propsRes.value.map((p: any) => {
+          const local = localMap.get(p.id);
+          const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined) || local?.dealerId;
+          return {
+            ...p,
+            dealerId: brokerId,
+            assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
+          };
+        });
+        saveToStorage('nexopp_properties_db', propertiesDb);
+      }
       if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) franchiseDb = franRes.value;
-      if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) businessDb = bizRes.value;
-      if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value)) dealersDb = dealersRes.value;
+      if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) {
+        const localBizSaved = loadFromStorage('nexopp_business_db', []);
+        const localBizMap = new Map((localBizSaved || []).map((b: any) => [b.id, b]));
+        businessDb = bizRes.value.map((b: any) => {
+          const local = localBizMap.get(b.id);
+          const brokerId = b.dealerId || local?.dealerId;
+          return {
+            ...b,
+            dealerId: brokerId,
+            assignedBrokerIds: b.assignedBrokerIds?.length ? b.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
+          };
+        });
+        saveToStorage('nexopp_business_db', businessDb);
+      }
+      if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value) && dealersRes.value.length > 0) {
+        dealersDb = dealersRes.value;
+        saveToStorage('nexopp_dealers_db', dealersDb);
+      }
       if (empRes.status === 'fulfilled' && Array.isArray(empRes.value)) employeeUsersDb = empRes.value;
       if (rolesRes.status === 'fulfilled' && Array.isArray(rolesRes.value)) rolesDb = rolesRes.value;
       if (teamRes.status === 'fulfilled' && Array.isArray(teamRes.value)) teamMembersDb = teamRes.value;

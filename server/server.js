@@ -2675,11 +2675,20 @@ app.delete('/api/customers/:id', async (req, res) => {
 // ── PROPERTY ENDPOINTS ────────────────────────────────────────────────────────
 app.get('/api/properties', async (req, res) => {
   try {
-    const props = await prisma.property.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    const props = await prisma.property.findMany({ 
+      orderBy: { createdAt: 'desc' },
+      include: { broker: true }
+    }).catch(() => []);
     const normalized = (props || []).map(p => {
       const isSold = p.listingStatus === 'SOLD';
+      const bId = p.brokerId || (p.broker ? p.broker.id : undefined);
       return {
         ...p,
+        dealerId: bId,
+        assignedBrokerIds: bId ? [bId] : [],
+        agentName: p.agentName || (p.broker ? (p.broker.companyName || p.broker.fullName) : undefined),
+        agentRating: p.broker?.rating || p.rating || 4.8,
+        agentImage: p.broker?.photo || p.broker?.logo || undefined,
         sold: isSold,
         approvalStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
         listingStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
@@ -2705,6 +2714,25 @@ app.post('/api/properties', async (req, res, next) => {
       const upper = String(newProp.listingStatus).toUpperCase();
       if (['DRAFT', 'PENDING', 'PUBLISHED', 'HIDDEN', 'RESERVED', 'SOLD', 'EXPIRED', 'ARCHIVED'].includes(upper)) {
         listingStatus = upper;
+      }
+    }
+
+    const bId = newProp.dealerId || newProp.brokerId || null;
+    if (bId) {
+      const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
+      if (!brokerExists) {
+        await prisma.broker.create({
+          data: {
+            id: bId,
+            companyName: newProp.agentName || 'RealtyPlus Advisors',
+            rating: Number(newProp.agentRating) || 4.8,
+            phone: newProp.agentPhone || null,
+            photo: newProp.agentImage || null,
+            logo: newProp.agentImage || null,
+            city: newProp.city || 'Hyderabad',
+            state: newProp.state || 'Telangana'
+          }
+        }).catch(() => null);
       }
     }
 
@@ -2737,6 +2765,7 @@ app.post('/api/properties', async (req, res, next) => {
         premium: Boolean(newProp.premium),
         trending: Boolean(newProp.trending),
         agentName: newProp.agentName || 'NEXOPP Advisor',
+        brokerId: bId || null,
         createdDate: newProp.createdDate,
       },
     });
@@ -2777,6 +2806,31 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.trending !== undefined) updateData.trending = Boolean(d.trending);
     if (d.agentName !== undefined) updateData.agentName = d.agentName;
     if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
+    
+    // Persist broker assignment
+    if (d.dealerId !== undefined || d.brokerId !== undefined) {
+      const bId = d.dealerId || d.brokerId;
+      if (bId) {
+        const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
+        if (!brokerExists) {
+          await prisma.broker.create({
+            data: {
+              id: bId,
+              companyName: d.agentName || 'RealtyPlus Advisors',
+              rating: Number(d.agentRating) || 4.8,
+              phone: d.agentPhone || null,
+              photo: d.agentImage || null,
+              logo: d.agentImage || null,
+              city: d.city || 'Hyderabad',
+              state: d.state || 'Telangana'
+            }
+          }).catch(() => null);
+        }
+        updateData.brokerId = bId;
+      } else {
+        updateData.brokerId = null;
+      }
+    }
     
     if (d.listingStatus !== undefined) {
       const upper = String(d.listingStatus).toUpperCase();
@@ -3177,7 +3231,23 @@ app.delete('/api/sell-requests/:id', async (req, res, next) => {
 // ── DEALER / BROKER ENDPOINTS ─────────────────────────────────────────────────
 app.get('/api/dealers', async (req, res) => {
   try {
-    const dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    let dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
+    if (!dealers || dealers.length === 0) {
+      const defaultBrokers = [
+        { id: 'D1', companyName: 'RealtyPlus Advisors', fullName: 'Rajesh Sharma', rating: 4.9, reviewCount: 142, phone: '+91 98480 22338', state: 'Andhra Pradesh', city: 'Guntur', verified: true, yearsExperience: 12, specialization: 'Commercial & Luxury Residential', photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&auto=format&fit=crop&q=80' },
+        { id: 'D2', companyName: 'NexOpp Prime Realty', fullName: 'Vikram Reddy', rating: 4.8, reviewCount: 98, phone: '+91 95539 25956', state: 'Telangana', city: 'Hyderabad', verified: true, yearsExperience: 8, specialization: 'High-Value Land & Villas', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' },
+        { id: 'D3', companyName: 'Capital Asset Partners', fullName: 'Priya Narang', rating: 4.9, reviewCount: 115, phone: '+91 98765 43210', state: 'Andhra Pradesh', city: 'Vijayawada', verified: true, yearsExperience: 10, specialization: 'Business Sales & Franchises', photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80' },
+        { id: 'D4', companyName: 'Elite Estate Consultants', fullName: 'Suresh Kumar', rating: 4.7, reviewCount: 76, phone: '+91 91234 56789', state: 'Andhra Pradesh', city: 'Visakhapatnam', verified: true, yearsExperience: 6, specialization: 'Residential Flats & Plots', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80' }
+      ];
+      for (const b of defaultBrokers) {
+        await prisma.broker.upsert({
+          where: { id: b.id },
+          create: b,
+          update: b
+        }).catch(() => null);
+      }
+      dealers = await prisma.broker.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => defaultBrokers);
+    }
     return res.json(dealers || []);
   } catch (err) {
     return res.json([]);
