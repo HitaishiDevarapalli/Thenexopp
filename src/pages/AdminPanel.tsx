@@ -118,6 +118,7 @@ import {
   deleteAdminModule,
   addAdminModule,
   isModuleActive,
+  clearAllLocalEnquiries,
   API_BASE_URL
 } from '../db/marketplaceDb';
 import type { ContactDetails } from '../db/marketplaceDb';
@@ -4558,6 +4559,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           if (window.confirm('Are you sure you want to CLEAR ALL enquiries & test leads back to 0? This cannot be undone.')) {
                             setAllEnquiries([]);
                             setAllBookings([]);
+                            clearAllLocalEnquiries();
                             try {
                               await fetch(`${API_BASE_URL}/api/admin/clear-all-enquiries`, { method: 'DELETE', credentials: 'include' }).catch(() => null);
                               await fetch('/api/admin/clear-all-enquiries', { method: 'DELETE', credentials: 'include' }).catch(() => null);

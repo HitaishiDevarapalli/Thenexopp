@@ -1308,6 +1308,16 @@ export const addEnquiry = (enquiry: any) => {
   return normalized;
 };
 
+export const clearAllLocalEnquiries = () => {
+  enquiriesDb = [];
+  businessEnquiriesDb = [];
+  franchiseEnquiriesDb = [];
+  try {
+    localStorage.removeItem('nexopp_enquiries_db');
+  } catch (e) {}
+  notifyDataChanged();
+};
+
 export const deleteEnquiry = (id: string) => {
   enquiriesDb = enquiriesDb.filter(e => e.id !== id);
   saveToStorage('nexopp_enquiries_db', enquiriesDb);
