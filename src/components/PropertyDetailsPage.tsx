@@ -218,23 +218,6 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         createdAt: new Date().toISOString()
       });
     }
-    if (modalMode === 'book') {
-      fetch(`${API_BASE_URL}/api/bookings`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          listingType,
-          listingId: propertyId,
-          bookingDate,
-          bookingTime,
-          notes: `Visit Slot requested for ${bookingDate} at ${bookingTime}`,
-          customerName: contactName,
-          phone: contactPhone,
-          email: ''
-        })
-      }).catch(err => console.error('Booking API Error:', err));
-    }
 
     setContactSubmitted(true);
     setTimeout(() => {

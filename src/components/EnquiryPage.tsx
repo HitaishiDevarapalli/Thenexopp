@@ -119,47 +119,13 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
     const listingType = isProperty ? 'PROPERTY' : isBusiness ? 'BUSINESS' : 'FRANCHISE';
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          customerName: contactName.trim(),
-          phone: contactPhone.trim(),
-          email: contactEmail.trim(),
-          listingTitle: property ? property.title : 'Unknown Property',
-          brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'NEXOPP Advisor',
-          status: 'New',
-          priority: 'High',
-          source: 'Enquiry Page',
-          enquiryType: mode === 'book' ? 'SLOT_BOOKING' : 'BUY',
-          listingType,
-          listingId: propertyId,
-          message: contactMessage.trim() || (mode === 'book' 
-            ? `Requested Visit: ${bookingDate} at ${bookingTime}` 
-            : `Offered Price: ${contactPrice}`),
-          preferredMoveInDate: mode === 'book' ? bookingDate : '',
-          date: mode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-          preferredTime: mode === 'book' ? bookingTime : '',
-          mode
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        console.log('Enquiry/Booking saved to database:', data);
-      }
-    } catch (err) {
-      console.warn('Database save warning, updating local cache:', err);
-    } finally {
-      // Fallback & sync to local enquiriesDb
       addEnquiry({
         id: `ENQ-${Date.now()}`,
-        customerName: contactName,
-        phone: contactPhone,
-        email: contactEmail,
+        customerName: contactName.trim(),
+        phone: contactPhone.trim(),
+        email: contactEmail.trim(),
         listingTitle: property ? property.title : 'Unknown Property',
-        brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'Not Assigned',
+        brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'NEXOPP Advisor',
         status: 'New' as const,
         priority: 'High' as const,
         source: 'Enquiry Page',
@@ -168,11 +134,11 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
         date: mode === 'book' ? bookingDate : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         preferredTime: mode === 'book' ? bookingTime : undefined,
         preferredMoveInDate: mode === 'book' ? bookingDate : undefined,
-        name: contactName,
+        name: contactName.trim(),
         interest: mode === 'book'
           ? `Requested Visit: ${bookingDate} at ${bookingTime}`
           : `Offered Price: ${contactPrice}`,
-        message: contactMessage || (mode === 'book' ? `Visit Slot Booking for ${bookingDate} at ${bookingTime}` : `Offered Price: ${contactPrice}`)
+        message: contactMessage.trim() || (mode === 'book' ? `Visit Slot Booking for ${bookingDate} at ${bookingTime}` : `Offered Price: ${contactPrice}`)
       });
 
       if (isBusiness) {
@@ -192,6 +158,9 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
 
       setSubmitting(false);
       setSubmitted(true);
+    } catch (err) {
+      console.warn('Enquiry submission error:', err);
+      setSubmitting(false);
     }
   };
 
