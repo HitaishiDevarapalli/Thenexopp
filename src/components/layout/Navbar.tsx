@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   FaHome, FaBuilding, FaBriefcase, FaCoins, FaInfoCircle, 
@@ -45,6 +45,23 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const navContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown when tapping/clicking anywhere outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (navContainerRef.current && !navContainerRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, []);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileExpandedSection, setMobileExpandedSection] = useState<string | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -334,7 +351,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* 2. Center: Clean & Professional Desktop Navigation */}
-          <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <nav ref={navContainerRef} className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {menuItems.map((item) => {
               const isActive = currentActiveTab === item.id;
               const isDropdownOpen = openDropdown === item.id;
@@ -344,14 +361,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                   key={item.id}
                   style={{ position: 'relative' }}
                   onMouseEnter={() => {
-                    if (item.dropdown) setOpenDropdown(item.id);
+                    if (item.dropdown && window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+                      setOpenDropdown(item.id);
+                    }
                   }}
                   onMouseLeave={() => {
-                    setOpenDropdown(null);
+                    if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+                      setOpenDropdown(null);
+                    }
                   }}
                 >
                   <button
-                    onClick={() => handleNavItemClick(item.id)}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.dropdown) {
+                        setOpenDropdown(prev => prev === item.id ? null : item.id);
+                      } else {
+                        handleNavItemClick(item.id);
+                      }
+                    }}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
