@@ -65,9 +65,12 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (userPhone) params.set('phone', userPhone);
       if (userId) params.set('customerId', userId);
 
-      const res = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
+      let res = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' }).catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch(`/api/favorites?${params.toString()}`, { credentials: 'include' }).catch(() => null);
+      }
+      if (res && res.ok) {
+        const data = await res.json().catch(() => null);
         if (Array.isArray(data) && !toggleLockRef.current) {
           const ids = data
             .filter((item: any) => item.status === 'ACTIVE' || !item.status)
@@ -127,12 +130,9 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             listingType,
             listingId
           })
-        }).catch(() => {});
-        // Don't revert — the user wanted to remove, so keep it removed in UI
-      } else {
-        // ADD to favorites
-        const res = await fetch(`${API_BASE_URL}/api/favorites`, {
-          method: 'POST',
+        }).catch(() => null);
+        await fetch(`/api/favorites/${listingId}`, {
+          method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
@@ -141,28 +141,31 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
             listingType,
             listingId
           })
+        }).catch(() => null);
+      } else {
+        // ADD to favorites
+        const payload = JSON.stringify({
+          customerId: userId,
+          phone: userPhone,
+          listingType,
+          listingId
         });
-
-        let data: any = null;
-        try {
-          data = await res.clone().json();
-        } catch (_) {}
-
-        if (!res.ok || data?.success === false) {
-          store.addToWishlist(listingId);
-          saveLocalWishlistIds(user, [...loadLocalWishlistIds(user), listingId]);
-          console.warn('Favorite saved locally but database sync failed:', data?.message || res.statusText);
-          // Only revert if the server explicitly rejected (4xx)
-          // For 5xx or network errors, keep the optimistic state — 
-          // the server catch-all returns 200 anyway
-        }
-        // Don't call fetchUserFavorites here — trust the optimistic state
+        await fetch(`${API_BASE_URL}/api/favorites`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: payload
+        }).catch(() => null);
+        await fetch(`/api/favorites`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: payload
+        }).catch(() => null);
       }
     } catch (e) {
-      // Network error — keep the optimistic state, don't revert
       console.warn('Favorite toggle network error (state preserved):', e);
     } finally {
-      // Release the lock after a delay to prevent any pending fetches from overwriting
       setTimeout(() => {
         toggleLockRef.current = false;
       }, 2000);
