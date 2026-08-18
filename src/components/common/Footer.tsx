@@ -199,7 +199,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
           <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>FAQs</a>
           <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Terms &amp; Conditions</a>
           <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Privacy Policy</a>
-          <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Sitemap</a>
         </div>
 
         {/* Column 5 - FOLLOW US */}
@@ -221,10 +220,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
             <a href="https://x.com/thenexopp?s=11" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" style={socialIconStyle} title="X (Twitter)">
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#475569', fontSize: '0.85rem', fontWeight: 600, fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
-            <FaEye style={{ color: '#1E40AF' }} />
-            <span>Total Visitors: {visitorCount.toLocaleString()}</span>
           </div>
         </div>
       </div>

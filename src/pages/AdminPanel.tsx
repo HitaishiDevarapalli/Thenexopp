@@ -1733,6 +1733,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     </svg>
                   </div>
                 </div>
+
+                {/* Card 7: TOTAL VISITORS */}
+                <div
+                  style={{ backgroundColor: '#FFFFFF', padding: '18px 20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '135px', transition: 'all 0.2s ease' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+                      <FaEye />
+                    </div>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748B', letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOTAL VISITORS</span>
+                  </div>
+                  <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: '10px 0 6px 0', letterSpacing: '-0.03em', lineHeight: 1 }}>
+                    {(siteSettingsDb.analytics?.totalVisitors || adminStats?.totalVisitors || 0).toLocaleString()}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '2px' }}>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#2563EB', backgroundColor: '#EFF6FF', padding: '2px 6px', borderRadius: '4px' }}>Live Site Traffic</span>
+                    <svg width="55" height="20" viewBox="0 0 60 22" fill="none">
+                      <path d="M2 18 C 14 12, 24 18, 36 10 C 48 6, 52 14, 58 8" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* NEW ROW: Customer Access Metrics & Recent Logins Feed */}
@@ -1741,10 +1762,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   {/* Left Column: Customer Access Statistics */}
                   <div style={{ backgroundColor: '#FFFFFF', padding: '22px 24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)' }}>
                     <h4 style={{ margin: '0 0 16px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Real-Time Customer Access Metrics
+                      Real-Time Customer & Visitor Metrics
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                       {[
+                        { label: 'Total Site Visitors', val: siteSettingsDb.analytics?.totalVisitors || adminStats.totalVisitors || 0, desc: 'Live website visitors', isHighlight: true },
                         { label: 'Total Customers', val: adminStats.totalCustomers, desc: 'Registered customers' },
                         { label: 'New Today', val: adminStats.newCustomersToday, desc: 'Registered today', isNew: true },
                         { label: 'Active Status', val: adminStats.activeCustomers, desc: 'Active customer accounts' },
@@ -1752,10 +1774,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         { label: 'Logged In This Week', val: adminStats.customersLoggedInThisWeek, desc: 'Unique logins this week' },
                         { label: 'Logged In This Month', val: adminStats.customersLoggedInThisMonth, desc: 'Unique logins this month' },
                       ].map((item, idx) => (
-                        <div key={idx} style={{ padding: '14px', border: '1px solid #F1F5F9', borderRadius: '10px', backgroundColor: '#F8FAFC' }}>
-                          <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>{item.label}</span>
-                          <strong style={{ fontSize: '1.4rem', fontWeight: 800, color: item.isNew && item.val > 0 ? '#10B981' : '#0F172A', display: 'block', margin: '4px 0 2px' }}>{item.val}</strong>
-                          <span style={{ fontSize: '0.65rem', color: '#94A3B8' }}>{item.desc}</span>
+                        <div key={idx} style={{ padding: '14px', border: item.isHighlight ? '1px solid #BFDBFE' : '1px solid #F1F5F9', borderRadius: '10px', backgroundColor: item.isHighlight ? '#EFF6FF' : '#F8FAFC' }}>
+                          <span style={{ fontSize: '0.72rem', color: item.isHighlight ? '#1E40AF' : '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>{item.label}</span>
+                          <strong style={{ fontSize: '1.4rem', fontWeight: 800, color: item.isHighlight ? '#2563EB' : (item.isNew && item.val > 0 ? '#10B981' : '#0F172A'), display: 'block', margin: '4px 0 2px' }}>{item.val}</strong>
+                          <span style={{ fontSize: '0.65rem', color: item.isHighlight ? '#3B82F6' : '#94A3B8' }}>{item.desc}</span>
                         </div>
                       ))}
                     </div>
