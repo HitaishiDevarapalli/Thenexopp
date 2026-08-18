@@ -1623,23 +1623,44 @@ const getBackupCustomers = () => {
   return [];
 };
 
+function getCleanPhone(c) {
+  if (!c) return '';
+  const raw = String(c.phone || c.mobile || '').replace(/\D/g, '');
+  return raw.length >= 10 ? raw.slice(-10) : raw;
+}
+
 const saveBackupCustomer = (cust) => {
-  if (!cust || !cust.id) return;
+  if (!cust || (!cust.id && !cust.phone && !cust.mobile)) return;
   try {
     const list = getBackupCustomers();
-    const targetPhone = String(cust.phone || cust.mobile || '').replace(/\D/g, '');
+    const targetPhone = getCleanPhone(cust);
+    
+    // Remove existing entries matching same ID OR same phone number
     const filtered = list.filter(c => {
-      if (!c || !c.id) return false;
-      if (c.id === cust.id) return false;
-      const cPhone = String(c.phone || c.mobile || '').replace(/\D/g, '');
-      if (targetPhone && cPhone && (targetPhone === cPhone || cPhone.includes(targetPhone) || targetPhone.includes(cPhone))) {
-        return false;
-      }
+      if (!c) return false;
+      if (cust.id && c.id === cust.id) return false;
+      const cPhone = getCleanPhone(c);
+      if (targetPhone && cPhone && cPhone === targetPhone) return false;
       return true;
     });
-    const updated = [cust, ...filtered];
+
+    const existingOld = list.find(c => c && (c.id === cust.id || (targetPhone && getCleanPhone(c) === targetPhone)));
+    let updatedCust = { ...cust };
+    
+    if (existingOld) {
+      updatedCust = {
+        ...existingOld,
+        ...cust,
+        name: (cust.name && cust.name !== 'User') ? cust.name : (existingOld.name || cust.name || 'User'),
+        district: (cust.district && cust.district !== 'Hyderabad' && cust.district !== '') ? cust.district : (existingOld.district || cust.district || ''),
+        gender: cust.gender || existingOld.gender || 'Male',
+        profileCompleted: cust.profileCompleted || existingOld.profileCompleted || false
+      };
+    }
+
+    const updatedList = [updatedCust, ...filtered];
     fs.mkdirSync(path.dirname(CUSTOMERS_BACKUP_FILE), { recursive: true });
-    fs.writeFileSync(CUSTOMERS_BACKUP_FILE, JSON.stringify(updated, null, 2));
+    fs.writeFileSync(CUSTOMERS_BACKUP_FILE, JSON.stringify(updatedList, null, 2));
   } catch (e) {}
 };
 
@@ -2242,20 +2263,38 @@ app.get('/api/admin/customers', optionalAuthMiddleware, async (req, res) => {
 
     const backupCustomers = getBackupCustomers();
 
-    // Merge DB & Disk Backup Customers
-    const customerMap = new Map();
+    // Deduplicate DB and Backup customers by Normalized 10-digit Phone Number
+    const phoneCustomerMap = new Map();
 
-    // Add backup customers first
-    backupCustomers.forEach(c => {
-      if (c && c.id) customerMap.set(c.id, c);
-    });
+    const processCustomer = (c) => {
+      if (!c) return;
+      const phone = getCleanPhone(c);
+      const key = phone ? `phone-${phone}` : (c.id || `id-${Math.random()}`);
 
-    // Add DB customers (overwriting backup entries with official DB state)
-    dbCustomers.forEach(c => {
-      if (c && c.id) customerMap.set(c.id, c);
-    });
+      if (phoneCustomerMap.has(key)) {
+        const existing = phoneCustomerMap.get(key);
+        // Merge records, prioritizing non-'User' names and non-'Hyderabad' districts
+        const merged = {
+          ...existing,
+          ...c,
+          id: (c.id && !c.id.startsWith('cust-')) ? c.id : (existing.id || c.id),
+          name: (c.name && c.name !== 'User') ? c.name : (existing.name || 'User'),
+          district: (c.district && c.district !== 'Hyderabad' && c.district !== '') ? c.district : (existing.district || c.district || ''),
+          gender: (c.gender && c.gender !== 'Male') ? c.gender : (existing.gender || 'Male'),
+          email: cleanCustomerEmail(c.email || existing.email),
+          profileCompleted: c.profileCompleted || existing.profileCompleted || false,
+          lastLoginAt: c.lastLoginAt || existing.lastLoginAt || new Date().toLocaleString()
+        };
+        phoneCustomerMap.set(key, merged);
+      } else {
+        phoneCustomerMap.set(key, { ...c });
+      }
+    };
 
-    let mergedCustomers = Array.from(customerMap.values());
+    backupCustomers.forEach(processCustomer);
+    dbCustomers.forEach(processCustomer);
+
+    let mergedCustomers = Array.from(phoneCustomerMap.values());
 
     // Apply search filter if present
     if (search) {
