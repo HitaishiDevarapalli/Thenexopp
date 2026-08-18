@@ -922,24 +922,47 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '2px', paddingLeft: '18px' }}>{prop.city}, {prop.state}</div>
                         </td>
                         <td style={{ padding: '16px' }}>
-                          {assignedBroker ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', fontWeight: 700, fontSize: '0.78rem' }}>
-                                {assignedBroker.companyName?.substring(0, 2).toUpperCase()}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <select 
+                              style={{ 
+                                padding: '6px 10px', 
+                                borderRadius: '8px', 
+                                border: '1px solid #CBD5E1', 
+                                fontSize: '0.8rem', 
+                                fontWeight: 600, 
+                                outline: 'none', 
+                                cursor: 'pointer', 
+                                backgroundColor: assignedBroker ? '#EFF6FF' : '#F8FAFC', 
+                                color: assignedBroker ? '#1E40AF' : '#64748B', 
+                                maxWidth: '200px' 
+                              }}
+                              value={prop.dealerId || ''}
+                              onChange={(e) => {
+                                const newBId = e.target.value;
+                                const newBroker = dealersDb.find(d => d.id === newBId);
+                                updateProperty(prop.id, {
+                                  dealerId: newBId,
+                                  assignedBrokerIds: newBId ? [newBId] : [],
+                                  agentName: newBroker ? (newBroker.companyName || newBroker.fullName) : 'RealtyPlus Advisors',
+                                  agentRating: newBroker ? newBroker.rating : 4.8,
+                                  agentImage: newBroker ? (newBroker.photo || newBroker.logo) : ''
+                                });
+                                showNotification?.(`Broker ${newBroker ? (newBroker.companyName || newBroker.fullName) : 'unassigned'} updated for ${prop.title}`, "success");
+                              }}
+                            >
+                              <option value="">-- Independent / Unassigned --</option>
+                              {dealersDb.map(d => (
+                                <option key={d.id} value={d.id}>
+                                  {d.companyName || d.fullName} (⭐ {d.rating || 4.9})
+                                </option>
+                              ))}
+                            </select>
+                            {assignedBroker && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#059669', fontWeight: 600 }}>
+                                <span>⭐ {assignedBroker.rating} • 📍 {assignedBroker.city || 'Hyderabad'}</span>
                               </div>
-                              <div>
-                                <div style={{ fontWeight: 600, color: '#0F172A', fontSize: '0.85rem' }}>{assignedBroker.companyName}</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                  <span style={{ fontSize: '0.72rem', color: '#F59E0B', fontWeight: 600 }}>⭐ {assignedBroker.rating} (124)</span>
-                                  {assignedBroker.premiumPartner && (
-                                    <span style={{ padding: '1px 6px', backgroundColor: '#ECFDF5', color: '#059669', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>Premium</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <span style={{ color: '#94A3B8', fontSize: '0.82rem' }}>Independent / Unassigned</span>
-                          )}
+                            )}
+                          </div>
                         </td>
                         <td style={{ padding: '16px' }}>
                           <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>{prop.priceDisplay}</div>
