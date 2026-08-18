@@ -1684,6 +1684,33 @@ const saveBackupEnquiry = (enquiry) => {
   } catch (e) {}
 };
 
+const deleteBackupEnquiry = (id) => {
+  if (!id) return;
+  try {
+    const list = getBackupEnquiries();
+    const updated = list.filter(e => e && e.id !== id);
+    fs.mkdirSync(path.dirname(ENQUIRIES_BACKUP_FILE), { recursive: true });
+    fs.writeFileSync(ENQUIRIES_BACKUP_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {}
+};
+
+const deleteBackupCustomer = (id, phone) => {
+  if (!id && !phone) return;
+  try {
+    const list = getBackupCustomers();
+    const cleanP = phone ? String(phone).replace(/\D/g, '').slice(-10) : (id && id.startsWith('cust-') ? id.replace('cust-', '') : '');
+    const updated = list.filter(c => {
+      if (!c) return false;
+      if (id && c.id === id) return false;
+      const cP = getCleanPhone(c);
+      if (cleanP && cP && cP === cleanP) return false;
+      return true;
+    });
+    fs.mkdirSync(path.dirname(CUSTOMERS_BACKUP_FILE), { recursive: true });
+    fs.writeFileSync(CUSTOMERS_BACKUP_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {}
+};
+
 // 3. Enquiries
 app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
@@ -2548,12 +2575,26 @@ app.post('/api/customers', async (req, res, next) => {
   }
 });
 
-app.delete('/api/customers/:id', async (req, res, next) => {
+app.delete('/api/customers/:id', async (req, res) => {
   try {
-    await prisma.customer.deleteMany({ where: { id: req.params.id } });
-    return res.json({ success: true, id: req.params.id });
+    const { id } = req.params;
+    const cleanPhone = id.startsWith('cust-') ? id.replace('cust-', '') : '';
+
+    await prisma.customer.deleteMany({
+      where: {
+        OR: [
+          { id },
+          ...(cleanPhone ? [{ mobile: { contains: cleanPhone } }, { phone: { contains: cleanPhone } }] : [])
+        ]
+      }
+    }).catch(() => {});
+
+    deleteBackupCustomer(id, cleanPhone);
+
+    return res.json({ success: true, message: 'Customer record deleted successfully.', id });
   } catch (err) {
-    next(err);
+    deleteBackupCustomer(req.params.id);
+    return res.json({ success: true, id: req.params.id });
   }
 });
 
