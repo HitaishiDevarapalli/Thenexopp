@@ -1241,11 +1241,17 @@ app.post('/api/auth/widget-login', async (req, res, next) => {
 app.get('/api/auth/me', optionalAuthMiddleware, async (req, res) => {
   try {
     if (!req.user) {
-      return res.json({ success: false, user: null });
+      return res.status(401).json({ success: false, user: null });
+    }
+
+    const reqPhone = req.user.mobile || req.user.phone || '';
+    if (isUserBlacklisted(req.user.id, reqPhone)) {
+      res.clearCookie('auth_token');
+      return res.status(401).json({ success: false, user: null, revoked: true, error: 'User account has been deleted by administrator.' });
     }
 
     // Look up customer by ID or mobile/phone
-    const customer = await prisma.customer.findFirst({
+    let customer = await prisma.customer.findFirst({
       where: {
         OR: [
           { id: req.user.id },
@@ -1256,26 +1262,39 @@ app.get('/api/auth/me', optionalAuthMiddleware, async (req, res) => {
       }
     }).catch(() => null);
 
-    if (customer) {
-      const cleanEmail = (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null;
-      return res.json({
-        success: true,
-        user: {
-          id: customer.id,
-          email: cleanEmail,
-          fullName: customer.name,
-          name: customer.name,
-          mobile: customer.mobile || customer.phone || '',
-          phone: customer.mobile || customer.phone || '',
-          role: customer.role || 'User',
-          gender: customer.gender,
-          district: customer.district || '',
-          profileCompleted: customer.status === 'Active' || customer.profileCompleted,
-          status: customer.status,
-          avatar: customer.avatar
-        }
-      });
+    if (!customer) {
+      const backupList = getBackupCustomers();
+      const cleanP = getCleanPhone(req.user);
+      customer = backupList.find(c => c && (c.id === req.user.id || (cleanP && getCleanPhone(c) === cleanP)));
     }
+
+    if (!customer) {
+      res.clearCookie('auth_token');
+      return res.status(401).json({ success: false, user: null, revoked: true, error: 'User account not found or deleted.' });
+    }
+
+    const cleanEmail = (customer.email && !customer.email.includes('@nexopp.in') && !customer.email.includes('@thenexopp')) ? customer.email : null;
+    return res.json({
+      success: true,
+      user: {
+        id: customer.id,
+        email: cleanEmail,
+        fullName: customer.name,
+        name: customer.name,
+        mobile: customer.mobile || customer.phone || reqPhone,
+        phone: customer.mobile || customer.phone || reqPhone,
+        role: customer.role || 'User',
+        gender: customer.gender,
+        district: customer.district || '',
+        profileCompleted: customer.status === 'Active' || customer.profileCompleted,
+        status: customer.status,
+        avatar: customer.avatar
+      }
+    });
+  } catch (err) {
+    return res.status(401).json({ success: false, user: null });
+  }
+});
 
     const cleanUserEmail = (req.user.email && !req.user.email.includes('@nexopp.in') && !req.user.email.includes('@thenexopp')) ? req.user.email : null;
     return res.json({ 
@@ -1638,6 +1657,39 @@ app.delete('/api/favorites/:id', optionalAuthMiddleware, async (req, res) => {
 
 const ENQUIRIES_BACKUP_FILE = path.join(__dirname, 'data', 'enquiries.json');
 const CUSTOMERS_BACKUP_FILE = path.join(__dirname, 'data', 'customers.json');
+const BLACKLISTED_USERS_FILE = path.join(__dirname, 'data', 'blacklisted_users.json');
+
+const getBlacklistedUsers = () => {
+  try {
+    if (fs.existsSync(BLACKLISTED_USERS_FILE)) {
+      const content = fs.readFileSync(BLACKLISTED_USERS_FILE, 'utf-8');
+      return JSON.parse(content || '[]');
+    }
+  } catch (e) {}
+  return [];
+};
+
+const addBlacklistedUser = (id, phone) => {
+  try {
+    const list = getBlacklistedUsers();
+    const cleanP = phone ? String(phone).replace(/\D/g, '').slice(-10) : '';
+    const cleanId = id || '';
+    const updated = Array.from(new Set([...list, cleanId, cleanP].filter(Boolean)));
+    fs.mkdirSync(path.dirname(BLACKLISTED_USERS_FILE), { recursive: true });
+    fs.writeFileSync(BLACKLISTED_USERS_FILE, JSON.stringify(updated, null, 2));
+  } catch (e) {}
+};
+
+const isUserBlacklisted = (id, phone) => {
+  try {
+    const list = getBlacklistedUsers();
+    if (!list || list.length === 0) return false;
+    const cleanP = phone ? String(phone).replace(/\D/g, '').slice(-10) : '';
+    const cleanId = id || '';
+    return list.some(item => (cleanId && item === cleanId) || (cleanP && item === cleanP));
+  } catch (e) {}
+  return false;
+};
 
 const getBackupCustomers = () => {
   try {
@@ -2606,20 +2658,33 @@ app.delete('/api/customers/:id', async (req, res) => {
     const { id } = req.params;
     const cleanPhone = id.startsWith('cust-') ? id.replace('cust-', '') : '';
 
-    await prisma.customer.deleteMany({
+    const existing = await prisma.customer.findFirst({
       where: {
         OR: [
           { id },
           ...(cleanPhone ? [{ mobile: { contains: cleanPhone } }, { phone: { contains: cleanPhone } }] : [])
         ]
       }
+    }).catch(() => null);
+
+    const targetPhone = existing?.mobile || existing?.phone || cleanPhone;
+
+    await prisma.customer.deleteMany({
+      where: {
+        OR: [
+          { id },
+          ...(targetPhone ? [{ mobile: { contains: targetPhone } }, { phone: { contains: targetPhone } }] : [])
+        ]
+      }
     }).catch(() => {});
 
-    deleteBackupCustomer(id, cleanPhone);
+    deleteBackupCustomer(id, targetPhone);
+    addBlacklistedUser(id, targetPhone);
 
-    return res.json({ success: true, message: 'Customer record deleted successfully.', id });
+    return res.json({ success: true, message: 'Customer record deleted and sessions revoked across all devices.', id });
   } catch (err) {
     deleteBackupCustomer(req.params.id);
+    addBlacklistedUser(req.params.id);
     return res.json({ success: true, id: req.params.id });
   }
 });

@@ -80,7 +80,11 @@ export const useAuthStore = create<AuthState>((set) => ({
               businessInterest: data.user.businessInterest
             }
           });
+        } else {
+          useAuthStore.getState().logout();
         }
+      } else if (res.status === 401) {
+        useAuthStore.getState().logout();
       }
     } catch (e) {
       console.error('Initialize auth failed:', e);
