@@ -1296,21 +1296,6 @@ app.get('/api/auth/me', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
-    const cleanUserEmail = (req.user.email && !req.user.email.includes('@nexopp.in') && !req.user.email.includes('@thenexopp')) ? req.user.email : null;
-    return res.json({ 
-      success: true, 
-      user: {
-        ...req.user,
-        email: cleanUserEmail,
-        name: req.user.fullName || req.user.name || 'User',
-        role: req.user.role || 'User'
-      } 
-    });
-  } catch (err) {
-    return res.json({ success: false, user: null });
-  }
-});
-
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('auth_token');
   return res.json({ success: true, message: 'Logged out successfully' });
