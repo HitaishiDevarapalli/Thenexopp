@@ -360,16 +360,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div
                   key={item.id}
                   style={{ position: 'relative' }}
-                  onMouseEnter={() => {
-                    if (item.dropdown && window.matchMedia && window.matchMedia('(hover: hover)').matches) {
-                      setOpenDropdown(item.id);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
-                      setOpenDropdown(null);
-                    }
-                  }}
                 >
                   <button
                     type="button"
@@ -398,14 +388,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       whiteSpace: 'nowrap',
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive) {
+                      if (!isActive && !isDropdownOpen) {
                         e.currentTarget.style.backgroundColor = '#F8FAFC';
                         e.currentTarget.style.color = '#059669';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive) {
-                        e.currentTarget.style.backgroundColor = isDropdownOpen ? '#F8FAFC' : 'transparent';
+                      if (!isActive && !isDropdownOpen) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
                         e.currentTarget.style.color = '#1E293B';
                       }
                     }}
@@ -421,7 +411,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </button>
 
-                  {/* Modern Floating Dropdown Card (Clean Option Names, No Sub-descriptions) */}
+                  {/* Modern Floating Dropdown Card (Clean Option Names, Pure Click-to-Open) */}
                   {item.dropdown && isDropdownOpen && (
                     <div
                       style={{
@@ -689,7 +679,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}>
                     {user.name}
                   </span>
-                  <FaChevronDown style={{ fontSize: '10px', opacity: 0.8 }} />
+                  <FaChevronDown style={{ 
+                    fontSize: '10px', 
+                    opacity: 0.8,
+                    transition: 'transform 0.2s ease',
+                    transform: openDropdown === 'user' ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }} />
                 </button>
 
                 {openDropdown === 'user' && (
