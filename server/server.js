@@ -1365,12 +1365,14 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
         mobile: userMobile || '',
         phone: userMobile || '',
         gender: gender || 'Male',
-        district: area || 'Hyderabad',
+        district: area || '',
         role: 'User',
         status: 'Active',
         profileCompleted: true
       };
     }
+
+    saveBackupCustomer(customer);
 
     // Record Activity safely
     if (prisma.userActivity && typeof prisma.userActivity.create === 'function') {
