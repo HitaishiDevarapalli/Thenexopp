@@ -482,21 +482,39 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const brokerListings = useMemo(() => {
     if (!dealer) return { active: [], sold: [] };
     const bId = dealer.id;
+    const dName = (dealer.fullName || dealer.companyName || '').toLowerCase().trim();
+    const dCompany = (dealer.companyName || '').toLowerCase().trim();
     
     // Properties
-    const allProps = propertiesDb.filter(p => p.dealerId === bId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(bId)));
+    const allProps = propertiesDb.filter(p => {
+      const matchId = p.dealerId === bId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(bId));
+      const matchName = dName && p.agentName && (p.agentName.toLowerCase().includes(dName) || dName.includes(p.agentName.toLowerCase()));
+      const matchComp = dCompany && p.agentName && (p.agentName.toLowerCase().includes(dCompany) || dCompany.includes(p.agentName.toLowerCase()));
+      const isCurrent = property && p.id === property.id;
+      return matchId || matchName || matchComp || isCurrent;
+    });
     
     // Businesses
-    const allBiz = businessDb ? businessDb.filter((b: any) => b.dealerId === bId || (b as any).assignedBrokerIds?.includes(bId)) : [];
+    const allBiz = businessDb ? businessDb.filter((b: any) => {
+      const matchId = b.dealerId === bId || (b as any).assignedBrokerIds?.includes(bId);
+      const matchName = dName && (b as any).agentName && (b as any).agentName.toLowerCase().includes(dName);
+      const matchComp = dCompany && (b as any).agentName && (b as any).agentName.toLowerCase().includes(dCompany);
+      return matchId || matchName || matchComp;
+    }) : [];
     
     // Franchises
-    const allFran = franchiseDb ? franchiseDb.filter((f: any) => f.dealerId === bId || (f as any).assignedBrokerIds?.includes(bId)) : [];
+    const allFran = franchiseDb ? franchiseDb.filter((f: any) => {
+      const matchId = f.dealerId === bId || (f as any).assignedBrokerIds?.includes(bId);
+      const matchName = dName && (f as any).agentName && (f as any).agentName.toLowerCase().includes(dName);
+      const matchComp = dCompany && (f as any).agentName && (f as any).agentName.toLowerCase().includes(dCompany);
+      return matchId || matchName || matchComp;
+    }) : [];
 
     const activeProps = allProps.filter(p => !p.sold && p.listingStatus !== 'Sold' && p.status !== 'Sold' && p.approvalStatus !== 'Sold').map(p => ({ ...p, itemType: 'Property', isSold: false }));
     const soldProps = allProps.filter(p => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold' || p.approvalStatus === 'Sold').map(p => ({ ...p, itemType: 'Property', isSold: true }));
 
-    const activeBiz = allBiz.filter((b: any) => !(b as any).sold && b.status !== 'Sold' && (b as any).listingStatus !== 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: false }));
-    const soldBiz = allBiz.filter((b: any) => (b as any).sold || b.status === 'Sold' || (b as any).listingStatus === 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: true }));
+    const activeBiz = allBiz.filter((b: any) => !(b as any).sold && b.status !== 'Sold' && (b as any).listingStatus !== 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name || b.title, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: false }));
+    const soldBiz = allBiz.filter((b: any) => (b as any).sold || b.status === 'Sold' || (b as any).listingStatus === 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name || b.title, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: true }));
 
     const activeFran = allFran.filter((f: any) => !(f as any).sold && f.status !== 'Sold' && (f as any).listingStatus !== 'Sold' && (f as any).approvalStatus !== 'Closed').map((f: any) => ({ ...f, itemType: 'Franchise', title: f.brand, priceDisplay: f.investmentDisplay || `₹${f.investment || 25} Lac`, isSold: false }));
     const soldFran = allFran.filter((f: any) => (f as any).sold || f.status === 'Sold' || (f as any).listingStatus === 'Sold' || (f as any).approvalStatus === 'Closed').map((f: any) => ({ ...f, itemType: 'Franchise', title: f.brand, priceDisplay: f.investmentDisplay || `₹${f.investment || 25} Lac`, isSold: true }));
@@ -505,7 +523,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       active: [...activeProps, ...activeBiz, ...activeFran],
       sold: [...soldProps, ...soldBiz, ...soldFran]
     };
-  }, [dealer]);
+  }, [dealer, property, propertiesDb, businessDb, franchiseDb]);
 
   // Generate dynamic gallery images based on category
   const galleryImages = useMemo(() => {

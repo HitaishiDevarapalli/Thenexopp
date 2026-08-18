@@ -5,12 +5,13 @@ import {
   businessEnquiriesDb,
   masterCategoriesDb, addFilterMasterItem, updateFilterMasterItem, deleteFilterMasterItem,
   masterBusinessTypesDb,
-  type BusinessListing, type SellBusinessRequest, type BusinessEnquiry, type FilterMasterItem
+  dealersDb,
+  type BusinessListing, type SellBusinessRequest, type BusinessEnquiry, type FilterMasterItem, type Dealer
 } from '../db/marketplaceDb';
 import { 
   FaStore, FaEye, FaEyeSlash, FaStar, FaEdit, FaTrash, FaPlus, 
   FaSearch, FaCheck, FaTimes, FaInbox, FaChartBar, FaTags, FaBriefcase,
-  FaFileAlt, FaMapMarkerAlt, FaRegStar, FaEllipsisV, FaMoneyBillWave, FaCloudUploadAlt
+  FaFileAlt, FaMapMarkerAlt, FaRegStar, FaEllipsisV, FaMoneyBillWave, FaCloudUploadAlt, FaUserTie
 } from 'react-icons/fa';
 
 interface BusinessManagementSystemProps {
@@ -257,6 +258,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Business Details</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category & Type</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Assigned Broker</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Price</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'center' }}>Status</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'center' }}>Published</th>
@@ -267,10 +269,12 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
               <tbody>
                 {filteredBusinesses.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>No businesses found matching your search.</td>
+                    <td colSpan={9} style={{ padding: '48px', textAlign: 'center', color: '#64748B', fontWeight: 600 }}>No businesses found matching your search.</td>
                   </tr>
                 ) : (
-                  filteredBusinesses.map(b => (
+                  filteredBusinesses.map(b => {
+                    const assignedBroker = dealersDb.find(d => d.id === b.dealerId || (b as any).assignedBrokerIds?.includes(d.id));
+                    return (
                     <tr key={b.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
                       <td style={{ padding: '16px' }}>
                         <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
@@ -289,6 +293,30 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                         <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '2px 0 0 0' }}>{b.businessType}</p>
                       </td>
                       <td style={{ padding: '16px', color: '#475569', fontWeight: 600, fontSize: '0.88rem' }}>{b.city}</td>
+                      <td style={{ padding: '16px' }}>
+                        <select 
+                          style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem', fontWeight: 600, outline: 'none', cursor: 'pointer', backgroundColor: '#F8FAFC', color: '#1E40AF', maxWidth: '180px' }}
+                          value={b.dealerId || ''}
+                          onChange={(e) => {
+                            const newBId = e.target.value;
+                            const newBroker = dealersDb.find(d => d.id === newBId);
+                            updateBusiness(b.id, {
+                              dealerId: newBId,
+                              agentName: newBroker ? (newBroker.companyName || newBroker.fullName) : 'NEXOPP Advisor',
+                              agentPhone: newBroker ? (newBroker.mobile || newBroker.contactNumber) : '+91 9553925956',
+                              assignedBrokerIds: [newBId]
+                            } as any);
+                            showNotification(`Broker ${newBroker ? (newBroker.companyName || newBroker.fullName) : 'assigned'} updated for ${b.title}`, 'success');
+                          }}
+                        >
+                          <option value="">-- No Broker --</option>
+                          {dealersDb.map(d => (
+                            <option key={d.id} value={d.id}>
+                              {d.companyName || d.fullName}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
                       <td style={{ padding: '16px', fontWeight: 700, color: '#0F172A', fontSize: '0.9rem' }}>{b.priceDisplay || (b.askingPrice !== undefined ? `₹${b.askingPrice} L` : `₹${b.price} L`)}</td>
                       <td style={{ padding: '16px', textAlign: 'center' }}>
                         <select 
@@ -320,7 +348,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -333,10 +362,14 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   const AddBusinessForm = () => {
     const [formData, setFormData] = useState<Partial<BusinessListing>>({
       title: '', description: '', category: categories[0]?.name || 'Retail', businessType: businessTypes[0]?.name || 'Private Limited',
-      city: 'Hyderabad', state: 'Andhra Pradesh', district: 'Hyderabad', area: '', subLocation: '', pincode: '',
+      city: 'Hyderabad', state: 'Telangana', district: 'Hyderabad', area: '', subLocation: '', pincode: '',
       askingPrice: 50, priceDisplay: '', imageUrl: '', 
-      establishedYear: new Date().getFullYear(), employeesCount: '1-10', revenueMonthly: '₹ 2 L / month', profitMonthly: '25% Net Profit',
-      reasonForSale: 'Business Expansion', featured: false, published: true, status: 'Available'
+      establishedYear: new Date().getFullYear(), employeesCount: '', revenueMonthly: '', profitMonthly: '',
+      reasonForSale: 'Business Expansion', featured: false, published: true, status: 'Available',
+      dealerId: dealersDb[0]?.id || 'D1',
+      agentName: dealersDb[0]?.companyName || dealersDb[0]?.fullName || 'NEXOPP Advisor',
+      agentPhone: dealersDb[0]?.mobile || '+91 9553925956',
+      assignedBrokerIds: [dealersDb[0]?.id || 'D1']
     });
 
     const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
@@ -374,6 +407,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       e.preventDefault();
       const primaryImage = uploadedPhotos[0] || formData.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80';
       const locSummary = [formData.subLocation, formData.area, formData.city, formData.state].filter(Boolean).join(', ') || formData.city || 'Hyderabad';
+      const selectedDealer = dealersDb.find(d => d.id === formData.dealerId) || dealersDb[0];
       const payload: any = {
         ...formData,
         id: `biz-${Date.now()}`,
@@ -392,12 +426,16 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
         image: primaryImage,
         imageUrl: primaryImage,
         images: uploadedPhotos.length > 0 ? uploadedPhotos : [primaryImage],
+        dealerId: formData.dealerId || selectedDealer?.id || 'D1',
+        agentName: selectedDealer ? (selectedDealer.companyName || selectedDealer.fullName) : 'NEXOPP Advisor',
+        agentPhone: selectedDealer ? (selectedDealer.mobile || selectedDealer.contactNumber) : '+91 9553925956',
+        assignedBrokerIds: formData.dealerId ? [formData.dealerId] : [selectedDealer?.id || 'D1'],
         published: true,
         status: formData.status || 'Available',
         createdAt: new Date().toISOString(),
       };
       addBusiness(payload as BusinessListing);
-      showNotification('Business added successfully with photos & published', 'success');
+      showNotification('Business added successfully with assigned broker & photos published', 'success');
       onSubTabChange('listings');
     };
 
@@ -518,6 +556,49 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Price Display (e.g. ₹50 Lakhs)</label>
               <input type="text" style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }} value={formData.priceDisplay} onChange={e => setFormData({...formData, priceDisplay: e.target.value})} />
             </div>
+            <div style={{ gridColumn: 'span 2', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '12px', padding: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 800, color: '#1E40AF', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.04em' }}>
+                <FaUserTie /> Assign Broker / Partner
+              </label>
+              <select 
+                style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.92rem', backgroundColor: '#FFFFFF', fontWeight: 600, color: '#0F172A', cursor: 'pointer' }}
+                value={formData.dealerId || ''}
+                onChange={e => {
+                  const bId = e.target.value;
+                  const found = dealersDb.find(d => d.id === bId);
+                  setFormData({
+                    ...formData,
+                    dealerId: bId,
+                    agentName: found ? (found.companyName || found.fullName) : 'NEXOPP Advisor',
+                    agentPhone: found ? (found.mobile || found.contactNumber) : '+91 9553925956',
+                    assignedBrokerIds: [bId]
+                  });
+                }}
+              >
+                <option value="">-- Select Broker Partner --</option>
+                {dealersDb.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.companyName || d.fullName} — {d.city || 'Hyderabad'} ({d.mobile || 'No phone'})
+                  </option>
+                ))}
+              </select>
+              {formData.dealerId && (() => {
+                const curDealer = dealersDb.find(d => d.id === formData.dealerId);
+                if (!curDealer) return null;
+                return (
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', backgroundColor: '#EFF6FF', borderRadius: '8px', border: '1px solid #BFDBFE' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.85rem' }}>
+                      {(curDealer.companyName || curDealer.fullName || 'B').substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#1E40AF' }}>{curDealer.companyName || curDealer.fullName}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#475569' }}>📞 {curDealer.mobile || 'Not set'} • 📍 {curDealer.city || 'Hyderabad'} • ⭐ {curDealer.rating || 4.9}</div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>Description</label>
               <textarea rows={4} style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box', fontFamily: 'inherit' }} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />

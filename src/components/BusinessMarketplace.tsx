@@ -357,18 +357,18 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
       industry: b.category || b.industry || 'Retail',
       category: b.category || b.industry || 'Retail',
       businessType: b.businessType || 'Private Limited',
-      badge: b.verified ? 'Verified Seller' : (b.trending ? 'Profitable Now' : 'Great Deal'),
-      badgeType: b.verified ? 'verified' : (b.trending ? 'profit' : 'deal'),
+      badge: b.verified ? 'Verified Seller' : (b.featured ? 'Featured Opportunity' : ''),
+      badgeType: b.verified ? 'verified' : (b.featured ? 'deal' : ''),
       featured: b.featured || false,
       status: b.status || 'Available',
       image: b.image || b.imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80',
       valuation: b.priceDisplay || (`₹ ${b.price || b.askingPrice || 50} Lac`),
       price: Number(b.price) || Number(b.askingPrice) || 0,
-      revenue: b.revenueMonthly || b.revenue || '₹ 10 L / month',
-      margin: b.profitMonthly || '20% Net Profit',
-      employees: b.employeesCount ? `${b.employeesCount} Staff` : '10 Staff',
+      revenue: b.revenueMonthly || b.revenue || '',
+      margin: b.profitMonthly || '',
+      employees: b.employeesCount ? `${b.employeesCount} Staff` : '',
       location: `${b.city || ''}${b.state ? ', ' + b.state : ''}`,
-      brokerName: 'NexOpp Advisor',
+      brokerName: b.agentName || 'NexOpp Advisor',
       brokerRating: b.rating ? `${b.rating}${b.reviewCount ? ` (${b.reviewCount})` : ''}` : '',
       brokerImg: '',
       latitude: b.latitude,
@@ -1100,16 +1100,22 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                         <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 500, marginBottom: '12px' }}>{item.industry} • {item.location}</div>
 
                         {/* Specs Row */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px', fontWeight: 600, color: '#475569', backgroundColor: '#F8FAFC', padding: '10px', borderRadius: '10px', marginBottom: '14px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span><FaChartLine style={{ color: '#3B82F6', marginRight: '4px' }} /> Monthly Revenue:</span>
-                            <strong style={{ color: '#0F172A' }}>{item.revenue}</strong>
+                        {(item.revenue || item.margin) && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '11px', fontWeight: 600, color: '#475569', backgroundColor: '#F8FAFC', padding: '10px', borderRadius: '10px', marginBottom: '14px' }}>
+                            {item.revenue && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span><FaChartLine style={{ color: '#3B82F6', marginRight: '4px' }} /> Monthly Revenue:</span>
+                                <strong style={{ color: '#0F172A' }}>{item.revenue}</strong>
+                              </div>
+                            )}
+                            {item.margin && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span><FaUsers style={{ color: '#16A34A', marginRight: '4px' }} /> Profit Margin:</span>
+                                <strong style={{ color: '#16A34A' }}>{item.margin}</strong>
+                              </div>
+                            )}
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span><FaUsers style={{ color: '#16A34A', marginRight: '4px' }} /> Profit Margin:</span>
-                            <strong style={{ color: '#16A34A' }}>{item.margin}</strong>
-                          </div>
-                        </div>
+                        )}
 
                         {/* Valuation */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0px' }}>
@@ -1117,7 +1123,9 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
                             <div style={{ fontSize: '10px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Valuation</div>
                             <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A' }}>{item.valuation}</div>
                           </div>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB', backgroundColor: '#DBEAFE', padding: '4px 8px', borderRadius: '6px' }}>{item.employees}</span>
+                          {item.employees && (
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563EB', backgroundColor: '#DBEAFE', padding: '4px 8px', borderRadius: '6px' }}>{item.employees}</span>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -24,6 +24,8 @@ export interface Dealer {
   latitude: number;
   longitude: number;
   phone?: string;
+  mobile?: string;
+  contactNumber?: string;
   whatsapp?: string;
   email?: string;
   specialization?: string;
@@ -401,6 +403,10 @@ export interface BusinessListing {
   sellerProfile?: string;
   category?: string;
   businessType?: string;
+  dealerId?: string;
+  agentName?: string;
+  agentPhone?: string;
+  assignedBrokerIds?: string[];
   published?: boolean;
   featured?: boolean;
   status?: string;  // 'Available' | 'Sold' | 'Unavailable' | 'Under_Review'
