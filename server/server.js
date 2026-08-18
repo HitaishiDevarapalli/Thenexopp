@@ -1512,20 +1512,23 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
     const onlyMine = req.query.mine === 'true';
     const userPhone = req.query.phone || (req.user ? (req.user.mobile || req.user.phone) : null);
     const passedCustomerId = req.query.customerId || (req.user ? req.user.id : null);
-    const userEmail = req.user ? req.user.email : null;
+    const userEmail = req.query.email || (req.user ? req.user.email : null);
+    const userName = req.query.name || (req.user ? (req.user.fullName || req.user.name) : null);
 
-    if (onlyMine || req.query.phone || req.query.customerId || (req.user && req.user.role === 'User')) {
+    if (onlyMine || req.query.phone || req.query.customerId || req.query.email || req.query.name || (req.user && (req.user.role === 'User' || req.user.role === 'USER'))) {
       const customer = await resolveCustomer({
         phone: userPhone,
         id: passedCustomerId,
-        email: userEmail
+        email: userEmail,
+        name: userName
       });
 
       const rawPhone = String(userPhone || '').replace(/\D/g, '');
       const normalizedPhone = rawPhone.length >= 10 ? rawPhone.slice(-10) : rawPhone;
       const targetCustId = customer ? customer.id : passedCustomerId;
+      const cleanEmail = (userEmail && !userEmail.includes('@nexopp.in') && !userEmail.includes('@thenexopp')) ? userEmail.toLowerCase() : null;
 
-      const enquiries = await prisma.enquiry.findMany({
+      const dbEnquiries = await prisma.enquiry.findMany({
         where: {
           OR: [
             ...(targetCustId ? [{ customerId: targetCustId }] : []),
@@ -1534,7 +1537,8 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
               { phone: { contains: normalizedPhone } },
               { customer: { OR: [{ mobile: { contains: normalizedPhone } }, { phone: { contains: normalizedPhone } }] } }
             ] : []),
-            ...(userEmail ? [{ email: userEmail }] : [])
+            ...(cleanEmail ? [{ email: { equals: cleanEmail, mode: 'insensitive' } }] : []),
+            ...(userName && userName !== 'User' && userName !== 'Guest User' ? [{ customerName: { contains: userName, mode: 'insensitive' } }] : [])
           ]
         },
         orderBy: { createdAt: 'desc' }
@@ -1543,7 +1547,25 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
         return [];
       });
 
-      return res.json(enquiries || []);
+      const backupEnquiries = getBackupEnquiries();
+      const userBackup = backupEnquiries.filter(e => {
+        if (!e) return false;
+        const ePhone = String(e.phone || '').replace(/\D/g, '');
+        const normEPhone = ePhone.length >= 10 ? ePhone.slice(-10) : ePhone;
+        const phoneMatch = normalizedPhone && normEPhone && normEPhone.includes(normalizedPhone);
+        const emailMatch = cleanEmail && e.email && e.email.toLowerCase() === cleanEmail;
+        const custMatch = targetCustId && (e.customerId === targetCustId || e.userId === targetCustId);
+        const userMatch = req.user && req.user.id && (e.userId === req.user.id || e.customerId === req.user.id);
+        const nameMatch = userName && userName !== 'User' && userName !== 'Guest User' && e.customerName && e.customerName.toLowerCase().includes(userName.toLowerCase());
+        return phoneMatch || emailMatch || custMatch || userMatch || nameMatch;
+      });
+
+      const mergedMap = new Map();
+      (dbEnquiries || []).forEach(e => e && mergedMap.set(e.id, e));
+      (userBackup || []).forEach(e => e && !mergedMap.has(e.id) && mergedMap.set(e.id, e));
+      const enquiries = Array.from(mergedMap.values()).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+      return res.json(enquiries);
     }
 
     // Default for Admin Panel (all enquiries)
@@ -1566,6 +1588,33 @@ app.get('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/admin/customers/:id', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const customer = await prisma.customer.findUnique({
+      where: { id },
+      include: {
+        enquiries: { orderBy: { createdAt: 'desc' } },
+        favorites: true,
+        bookings: { orderBy: { createdAt: 'desc' } },
+        activities: { orderBy: { createdAt: 'desc' }, take: 20 }
+      }
+    }).catch(() => null);
+
+    if (!customer) {
+      const fallbackCustomer = await prisma.customer.findFirst({
+        where: { id }
+      }).catch(() => null);
+      if (!fallbackCustomer) return res.status(404).json({ error: 'Customer profile not found.' });
+      return res.json(fallbackCustomer);
+    }
+
+    return res.json(customer);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch customer profile' });
+  }
+});
+
 app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
   try {
     const customerName = req.body.customerName || req.body.name || (req.user ? (req.user.fullName || req.user.name) : 'Guest User');
@@ -1585,18 +1634,21 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
     const notes = req.body.notes || '';
     const finalMessage = notes ? (message ? `${message} (Notes: ${notes})` : notes) : message;
 
-    // Deduplicate recent submissions within 10 seconds
-    const tenSecondsAgo = new Date(Date.now() - 10000);
-    const existing = await prisma.enquiry.findFirst({
-      where: {
-        phone: String(phone || ''),
-        listingTitle: String(listingTitle || 'General Enquiry'),
-        createdAt: { gte: tenSecondsAgo }
-      }
-    }).catch(() => null);
+    // Deduplicate recent submissions within 3 seconds
+    const threeSecsAgo = new Date(Date.now() - 3000);
+    if (phone && phone.trim()) {
+      const existing = await prisma.enquiry.findFirst({
+        where: {
+          phone: String(phone).trim(),
+          listingTitle: String(listingTitle || 'General Enquiry'),
+          message: String(finalMessage || ''),
+          createdAt: { gte: threeSecsAgo }
+        }
+      }).catch(() => null);
 
-    if (existing) {
-      return res.status(200).json({ success: true, enquiry: existing });
+      if (existing) {
+        return res.status(200).json({ success: true, enquiry: existing });
+      }
     }
 
     // Resolve unified customer
@@ -1608,12 +1660,14 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
     });
 
     const linkedCustomerId = customer ? customer.id : null;
+    const linkedUserId = req.user ? req.user.id : null;
 
     // Guaranteed Direct DB insert into PostgreSQL Enquiry table
     const enquiryRecord = await prisma.enquiry.create({
       data: {
         id: `enq-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
         customerId: linkedCustomerId,
+        userId: linkedUserId,
         customerName: String(customerName || 'Guest User'),
         phone: String(phone || ''),
         email: String(email || ''),
@@ -1635,6 +1689,7 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
       return {
         id: `enq-${Date.now()}`,
         customerId: linkedCustomerId,
+        userId: linkedUserId,
         customerName,
         phone,
         email,

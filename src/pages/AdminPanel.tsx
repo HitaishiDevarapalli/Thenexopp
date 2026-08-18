@@ -4384,12 +4384,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               const baseList: any[] = [];
               for (const item of rawCombined) {
                 if (!item) continue;
-                const cleanPhone = String(item.phone || '').replace(/\D/g, '');
-                const sig = `${cleanPhone}|${String(item.customerName || '').toLowerCase().trim()}|${String(item.listingTitle || '').toLowerCase().trim()}`;
                 if (item.id && combinedMap.has(item.id)) continue;
-                if (sig.length > 5 && seenSignatures.has(sig)) continue;
                 if (item.id) combinedMap.set(item.id, item);
-                if (sig.length > 5) seenSignatures.add(sig);
                 baseList.push(item);
               }
               

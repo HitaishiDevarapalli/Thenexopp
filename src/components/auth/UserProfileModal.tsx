@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaShieldAlt, 
   FaHeart, FaPlus, FaSignOutAlt, FaTimes, FaEdit, FaCheck, 
-  FaBriefcase, FaStore, FaBuilding
+  FaBriefcase, FaStore, FaBuilding, FaInbox
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { API_BASE_URL, enquiriesDb } from '../../db/marketplaceDb';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -24,11 +25,76 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const { user, updateUserProfile, logout } = useAuth();
   const { wishlistItems } = useWishlist();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'edit'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'edit'>('overview');
   const [editName, setEditName] = useState(user?.name || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [editDistrict, setEditDistrict] = useState(user?.district || 'Guntur');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const [userEnquiries, setUserEnquiries] = useState<any[]>([]);
+  const [loadingEnquiries, setLoadingEnquiries] = useState(false);
+
+  const fetchUserEnquiries = async () => {
+    if (!user) return;
+    setLoadingEnquiries(true);
+    try {
+      const rawPhone = user.phone || (user as any).mobile || '';
+      const userPhone = rawPhone.replace(/\D/g, '');
+      const userId = user.id || '';
+      const userEmail = (user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp')) ? user.email : '';
+      const userName = user.name || '';
+
+      const params = new URLSearchParams();
+      if (userPhone) params.set('phone', userPhone);
+      if (userId) params.set('customerId', userId);
+      if (userEmail) params.set('email', userEmail);
+      if (userName) params.set('name', userName);
+
+      let serverEnqs: any[] = [];
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      if (enqRes && enqRes.ok) {
+        const enqs = await enqRes.json().catch(() => null);
+        if (Array.isArray(enqs)) {
+          serverEnqs = enqs;
+        }
+      }
+
+      const mergedMap = new Map<string, any>();
+      serverEnqs.forEach(e => { if (e && e.id) mergedMap.set(e.id, e); });
+
+      const normUserPhone = userPhone.length >= 10 ? userPhone.slice(-10) : userPhone;
+      (enquiriesDb || []).forEach(localEnq => {
+        if (!localEnq) return;
+        const ePhone = String(localEnq.phone || '').replace(/\D/g, '');
+        const normEPhone = ePhone.length >= 10 ? ePhone.slice(-10) : ePhone;
+        const phoneMatch = normUserPhone && normEPhone && normEPhone.includes(normUserPhone);
+        const emailMatch = userEmail && localEnq.email && localEnq.email.toLowerCase() === userEmail.toLowerCase();
+        const idMatch = userId && (localEnq.customerId === userId || localEnq.userId === userId);
+        const nameMatch = userName && userName !== 'User' && localEnq.customerName && localEnq.customerName.toLowerCase().includes(userName.toLowerCase());
+
+        if ((phoneMatch || emailMatch || idMatch || nameMatch || (!normUserPhone && !userEmail && !userId)) && localEnq.id) {
+          if (!mergedMap.has(localEnq.id)) {
+            mergedMap.set(localEnq.id, localEnq);
+          }
+        }
+      });
+
+      const finalEnquiries = Array.from(mergedMap.values()).sort((a, b) => 
+        new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime()
+      );
+      setUserEnquiries(finalEnquiries);
+    } catch (e) {
+      console.warn('Failed to fetch user enquiries in profile modal:', e);
+    } finally {
+      setLoadingEnquiries(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchUserEnquiries();
+    }
+  }, [isOpen, user?.id, user?.phone, user?.email]);
 
   if (!isOpen || !user) return null;
 
@@ -182,23 +248,44 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           </div>
 
           {/* Navigation Tabs */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+          <div style={{ display: 'flex', gap: '6px', marginTop: '16px' }}>
             <button
               onClick={() => setActiveTab('overview')}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '8px 6px',
                 borderRadius: '10px',
                 border: 'none',
                 backgroundColor: activeTab === 'overview' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
                 color: activeTab === 'overview' ? '#064E3B' : '#FFFFFF',
                 fontWeight: 700,
-                fontSize: '13px',
+                fontSize: '12px',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
             >
-              Account Overview
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('enquiries')}
+              style={{
+                flex: 1.2,
+                padding: '8px 6px',
+                borderRadius: '10px',
+                border: 'none',
+                backgroundColor: activeTab === 'enquiries' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
+                color: activeTab === 'enquiries' ? '#064E3B' : '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <FaInbox style={{ fontSize: '11px' }} /> Enquiries ({userEnquiries.length})
             </button>
             <button
               onClick={() => {
@@ -209,22 +296,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               }}
               style={{
                 flex: 1,
-                padding: '8px',
+                padding: '8px 6px',
                 borderRadius: '10px',
                 border: 'none',
                 backgroundColor: activeTab === 'edit' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
                 color: activeTab === 'edit' ? '#064E3B' : '#FFFFFF',
                 fontWeight: 700,
-                fontSize: '13px',
+                fontSize: '12px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6px',
+                gap: '4px',
                 transition: 'all 0.15s ease',
               }}
             >
-              <FaEdit style={{ fontSize: '11px' }} /> Edit Profile
+              <FaEdit style={{ fontSize: '11px' }} /> Edit
             </button>
           </div>
         </div>
@@ -306,6 +393,32 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     <div>
                       <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Saved Wishlist</div>
                       <div style={{ fontSize: '11.5px', color: '#64748B' }}>{wishlistItems.length} Saved</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('enquiries')}
+                    style={{
+                      padding: '14px',
+                      borderRadius: '14px',
+                      border: '1px solid #E2E8F0',
+                      backgroundColor: '#FFFFFF',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ECFDF5')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                  >
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#D1FAE5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                      <FaInbox />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>My Enquiries</div>
+                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>{userEnquiries.length} Sent</div>
                     </div>
                   </button>
 
@@ -397,6 +510,58 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </button>
                 </div>
               </div>
+            </div>
+          ) : activeTab === 'enquiries' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Sent Enquiries &amp; Bookings ({userEnquiries.length})
+                </span>
+                <button
+                  onClick={fetchUserEnquiries}
+                  style={{ background: 'none', border: 'none', color: '#059669', fontSize: '11.5px', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {loadingEnquiries ? (
+                <div style={{ textAlign: 'center', padding: '24px', color: '#64748B', fontSize: '13px' }}>Loading your enquiries...</div>
+              ) : userEnquiries.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 16px', backgroundColor: '#F8FAFC', borderRadius: '16px', border: '1px dashed #CBD5E1' }}>
+                  <FaInbox style={{ fontSize: '28px', color: '#94A3B8', marginBottom: '8px' }} />
+                  <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#475569' }}>No enquiries submitted yet</p>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#94A3B8' }}>Your sent property, business, and slot booking enquiries will appear here.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {userEnquiries.map((enq) => {
+                    const statusColor = enq.status === 'Closed' ? '#16A34A' : enq.status === 'Contacted' ? '#2563EB' : enq.status === 'Follow-up' ? '#D97706' : '#059669';
+                    const statusBg = enq.status === 'Closed' ? '#DCFCE7' : enq.status === 'Contacted' ? '#DBEAFE' : enq.status === 'Follow-up' ? '#FEF3C7' : '#ECFDF5';
+                    return (
+                      <div key={enq.id} style={{ padding: '14px', borderRadius: '14px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                          <strong style={{ fontSize: '13.5px', color: '#0F172A', fontWeight: 700, flex: 1 }}>{enq.listingTitle || 'General Enquiry'}</strong>
+                          <span style={{ backgroundColor: statusBg, color: statusColor, fontSize: '10.5px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', flexShrink: 0 }}>
+                            {enq.status || 'New'}
+                          </span>
+                        </div>
+
+                        {enq.message && (
+                          <div style={{ fontSize: '12.5px', color: '#475569', backgroundColor: '#F8FAFC', padding: '8px 10px', borderRadius: '8px', borderLeft: '3px solid #007A55', fontStyle: 'italic' }}>
+                            "{enq.message}"
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#94A3B8', marginTop: '2px' }}>
+                          <span>Type: <strong style={{ color: '#64748B' }}>{enq.enquiryType || enq.listingType || 'PROPERTY'}</strong></span>
+                          <span>{enq.date || new Date(enq.createdAt || Date.now()).toLocaleDateString('en-IN')}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

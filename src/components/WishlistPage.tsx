@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useWishlist } from '../context/WishlistContext';
-import { propertiesDb, franchiseDb, businessDb, API_BASE_URL } from '../db/marketplaceDb';
+import { propertiesDb, franchiseDb, businessDb, API_BASE_URL, enquiriesDb } from '../db/marketplaceDb';
 import { useAuth } from '../context/AuthContext';
 import { 
   FaHeart, 
@@ -34,32 +34,59 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({ onBack, onPropertyCl
       const rawPhone = user.phone || (user as any).mobile || '';
       const userPhone = rawPhone.replace(/\D/g, '');
       const userId = user.id || '';
+      const userEmail = (user.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp')) ? user.email : '';
       const params = new URLSearchParams();
       if (userPhone) params.set('phone', userPhone);
       if (userId) params.set('customerId', userId);
+      if (userEmail) params.set('email', userEmail);
 
       // 1. Favorites from PostgreSQL
-      const favRes = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' });
-      if (favRes.ok) {
-        const favs = await favRes.json();
+      const favRes = await fetch(`${API_BASE_URL}/api/favorites?${params.toString()}`, { credentials: 'include' }).catch(() => null);
+      if (favRes && favRes.ok) {
+        const favs = await favRes.json().catch(() => null);
         if (Array.isArray(favs)) {
           setDbFavorites(favs);
         }
       }
 
-      // 2. Enquiries from PostgreSQL
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' });
-      if (enqRes.ok) {
-        const enqs = await enqRes.json();
+      // 2. Enquiries from PostgreSQL merged with matching local enquiriesDb
+      let serverEnqs: any[] = [];
+      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      if (enqRes && enqRes.ok) {
+        const enqs = await enqRes.json().catch(() => null);
         if (Array.isArray(enqs)) {
-          setDbEnquiries(enqs);
+          serverEnqs = enqs;
         }
       }
 
+      const mergedMap = new Map<string, any>();
+      serverEnqs.forEach(e => { if (e && e.id) mergedMap.set(e.id, e); });
+
+      const normUserPhone = userPhone.length >= 10 ? userPhone.slice(-10) : userPhone;
+      (enquiriesDb || []).forEach(localEnq => {
+        if (!localEnq) return;
+        const ePhone = String(localEnq.phone || '').replace(/\D/g, '');
+        const normEPhone = ePhone.length >= 10 ? ePhone.slice(-10) : ePhone;
+        const phoneMatch = normUserPhone && normEPhone && normEPhone.includes(normUserPhone);
+        const emailMatch = userEmail && localEnq.email && localEnq.email.toLowerCase() === userEmail.toLowerCase();
+        const idMatch = userId && (localEnq.customerId === userId || localEnq.userId === userId);
+
+        if ((phoneMatch || emailMatch || idMatch || (!normUserPhone && !userEmail && !userId)) && localEnq.id) {
+          if (!mergedMap.has(localEnq.id)) {
+            mergedMap.set(localEnq.id, localEnq);
+          }
+        }
+      });
+
+      const finalEnquiries = Array.from(mergedMap.values()).sort((a, b) => 
+        new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime()
+      );
+      setDbEnquiries(finalEnquiries);
+
       // 3. Bookings from PostgreSQL
-      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?${params.toString()}&mine=true`, { credentials: 'include' });
-      if (bookRes.ok) {
-        const books = await bookRes.json();
+      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      if (bookRes && bookRes.ok) {
+        const books = await bookRes.json().catch(() => null);
         if (Array.isArray(books)) {
           setDbBookings(books);
         }
