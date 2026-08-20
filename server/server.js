@@ -301,11 +301,33 @@ async function resolveCustomer({ phone, email, name, id, gender, district, role,
         await mergeDuplicateCustomerData(primaryCustomer, matchingCustomers.slice(1));
       }
 
-      // Ensure normalized mobile phone saved on primary record
+      // Ensure normalized mobile phone and profile fields saved on primary record
+      const updateData = {};
       if (normalizedPhone && (primaryCustomer.mobile !== normalizedPhone || primaryCustomer.phone !== normalizedPhone)) {
+        updateData.mobile = normalizedPhone;
+        updateData.phone = normalizedPhone;
+      }
+      if (gender && gender !== primaryCustomer.gender) {
+        updateData.gender = gender;
+        primaryCustomer.gender = gender;
+      }
+      if (district && district !== primaryCustomer.district) {
+        updateData.district = district;
+        primaryCustomer.district = district;
+      }
+      if (name && name !== 'User' && name !== primaryCustomer.name) {
+        updateData.name = name;
+        primaryCustomer.name = name;
+      }
+      if (avatar && avatar !== primaryCustomer.avatar) {
+        updateData.avatar = avatar;
+        primaryCustomer.avatar = avatar;
+      }
+
+      if (Object.keys(updateData).length > 0) {
         await prisma.customer.update({
           where: { id: primaryCustomer.id },
-          data: { mobile: normalizedPhone, phone: normalizedPhone }
+          data: updateData
         }).catch(() => {});
       }
 
@@ -1311,6 +1333,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
       return res.status(400).json({ error: 'Full Name is required.' });
     }
 
+    const cleanGender = (gender && (gender === 'Female' || gender === 'Other' || gender === 'Male')) ? gender : (gender || 'Male');
     const userMobile = req.user.mobile || req.user.phone || (req.user.id && req.user.id.startsWith('cust-') ? req.user.id.replace('cust-', '') : null);
 
     let customer = null;
@@ -1330,7 +1353,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
         where: { id: customer.id },
         data: {
           name: name.trim(),
-          gender: gender || 'Male',
+          gender: cleanGender,
           district: area || '',
           email: cleanExistingEmail,
           status: 'Active',
@@ -1342,7 +1365,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
           where: { id: customer.id },
           data: {
             name: name.trim(),
-            gender: gender || 'Male',
+            gender: cleanGender,
             district: area || '',
             status: 'Active',
             profileCompleted: true
@@ -1356,7 +1379,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
           email: null,
           mobile: userMobile,
           phone: userMobile,
-          gender: gender || 'Male',
+          gender: cleanGender,
           district: area || 'Hyderabad',
           role: 'User',
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007A55&color=fff`,
@@ -1373,7 +1396,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
             name: name.trim(),
             email: null,
             phone: userMobile,
-            gender: gender || 'Male',
+            gender: cleanGender,
             district: area || 'Hyderabad',
             role: 'User',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=007A55&color=fff`,
@@ -1394,7 +1417,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
         email: null,
         mobile: userMobile || '',
         phone: userMobile || '',
-        gender: gender || 'Male',
+        gender: cleanGender,
         district: area || '',
         role: 'User',
         status: 'Active',
@@ -1402,6 +1425,7 @@ app.post('/api/auth/complete-profile', authMiddleware, async (req, res, next) =>
       };
     }
 
+    customer.gender = cleanGender;
     saveBackupCustomer(customer);
 
     // Record Activity safely
@@ -2368,7 +2392,7 @@ app.get('/api/admin/customers', optionalAuthMiddleware, async (req, res) => {
           id: (c.id && !c.id.startsWith('cust-')) ? c.id : (existing.id || c.id),
           name: (c.name && c.name !== 'User') ? c.name : (existing.name || 'User'),
           district: (c.district && c.district !== 'Hyderabad' && c.district !== '') ? c.district : (existing.district || c.district || ''),
-          gender: (c.gender && c.gender !== 'Male') ? c.gender : (existing.gender || 'Male'),
+          gender: (c.gender && c.gender !== 'Male') ? c.gender : (existing.gender && existing.gender !== 'Male' ? existing.gender : (c.gender || existing.gender || 'Male')),
           email: cleanCustomerEmail(c.email || existing.email),
           profileCompleted: c.profileCompleted || existing.profileCompleted || false,
           lastLoginAt: c.lastLoginAt || existing.lastLoginAt || new Date().toLocaleString()
@@ -2636,6 +2660,106 @@ app.post('/api/customers', async (req, res, next) => {
   }
 });
 
+app.put('/api/customers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, gender, district, role, email, phone } = req.body;
+    const cleanPhone = id.startsWith('cust-') ? id.replace('cust-', '') : (phone ? String(phone).replace(/\D/g, '').slice(-10) : '');
+
+    let updated = null;
+    const existing = await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { id },
+          ...(cleanPhone ? [{ mobile: { contains: cleanPhone } }, { phone: { contains: cleanPhone } }] : [])
+        ]
+      }
+    }).catch(() => null);
+
+    if (existing) {
+      updated = await prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          ...(name ? { name: name.trim() } : {}),
+          ...(gender ? { gender } : {}),
+          ...(district !== undefined ? { district } : {}),
+          ...(role ? { role } : {}),
+          ...(email !== undefined ? { email } : {}),
+        }
+      }).catch(() => null);
+    }
+
+    if (!updated) {
+      updated = {
+        id,
+        name: name || existing?.name || 'User',
+        gender: gender || existing?.gender || 'Male',
+        district: district !== undefined ? district : (existing?.district || ''),
+        role: role || existing?.role || 'User',
+        email: email !== undefined ? email : (existing?.email || null),
+        phone: phone || existing?.phone || cleanPhone,
+        mobile: phone || existing?.mobile || cleanPhone,
+        status: 'Active',
+      };
+    }
+
+    saveBackupCustomer(updated);
+    return res.json({ success: true, customer: updated });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update customer' });
+  }
+});
+
+app.patch('/api/customers/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, gender, district, role, email, phone } = req.body;
+    const cleanPhone = id.startsWith('cust-') ? id.replace('cust-', '') : (phone ? String(phone).replace(/\D/g, '').slice(-10) : '');
+
+    let updated = null;
+    const existing = await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { id },
+          ...(cleanPhone ? [{ mobile: { contains: cleanPhone } }, { phone: { contains: cleanPhone } }] : [])
+        ]
+      }
+    }).catch(() => null);
+
+    if (existing) {
+      updated = await prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          ...(name ? { name: name.trim() } : {}),
+          ...(gender ? { gender } : {}),
+          ...(district !== undefined ? { district } : {}),
+          ...(role ? { role } : {}),
+          ...(email !== undefined ? { email } : {}),
+        }
+      }).catch(() => null);
+    }
+
+    if (!updated) {
+      updated = {
+        id,
+        name: name || existing?.name || 'User',
+        gender: gender || existing?.gender || 'Male',
+        district: district !== undefined ? district : (existing?.district || ''),
+        role: role || existing?.role || 'User',
+        email: email !== undefined ? email : (existing?.email || null),
+        phone: phone || existing?.phone || cleanPhone,
+        mobile: phone || existing?.mobile || cleanPhone,
+        status: 'Active',
+      };
+    }
+
+    saveBackupCustomer(updated);
+    return res.json({ success: true, customer: updated });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update customer' });
+  }
+});
+
 app.delete('/api/customers/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -2764,6 +2888,7 @@ app.post('/api/properties', async (req, res, next) => {
         verified: newProp.verified !== false,
         premium: Boolean(newProp.premium),
         trending: Boolean(newProp.trending),
+        ownershipType: newProp.ownershipType || 'Individual',
         agentName: newProp.agentName || 'NEXOPP Advisor',
         brokerId: bId || null,
         createdDate: newProp.createdDate,
@@ -2806,6 +2931,7 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.trending !== undefined) updateData.trending = Boolean(d.trending);
     if (d.agentName !== undefined) updateData.agentName = d.agentName;
     if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
+    if (d.ownershipType !== undefined) updateData.ownershipType = String(d.ownershipType);
     
     // Persist broker assignment
     if (d.dealerId !== undefined || d.brokerId !== undefined) {
@@ -3943,12 +4069,18 @@ app.get('/api/showcase-settings', async (req, res) => {
 
 app.put('/api/showcase-settings', async (req, res, next) => {
   try {
+    const { maxVideoSizeMB, maxVideoDurationSec, defaultPlaybackDurationSec } = req.body;
+    const updateData = {};
+    if (maxVideoSizeMB !== undefined) updateData.maxVideoSizeMB = Number(maxVideoSizeMB);
+    if (maxVideoDurationSec !== undefined) updateData.maxVideoDurationSec = Number(maxVideoDurationSec);
+    if (defaultPlaybackDurationSec !== undefined) updateData.defaultPlaybackDurationSec = Number(defaultPlaybackDurationSec);
+
     const settings = await prisma.showcaseSettings.upsert({
       where: { id: 'default' },
-      update: req.body,
-      create: { id: 'default', ...req.body },
+      update: updateData,
+      create: { id: 'default', ...updateData },
     });
-    return res.json(settings);
+    return res.json({ ...settings, ...req.body });
   } catch (err) { next(err); }
 });
 

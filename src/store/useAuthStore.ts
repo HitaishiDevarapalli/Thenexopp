@@ -191,14 +191,38 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   updateUserProfile: (data: Partial<User>) => {
+    let updatedUser: User | null = null;
     set((state) => {
       if (!state.user) return state;
       const updated = { ...state.user, ...data };
       if (data.name) {
         updated.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=007A55&color=fff&size=128&bold=true`;
       }
+      updatedUser = updated;
+      saveStoredUser(updated);
       return { user: updated };
     });
+
+    if (updatedUser) {
+      const userToSync: User = updatedUser;
+      const customerId = userToSync.id || (userToSync.phone ? `cust-${userToSync.phone.replace(/\D/g, '').slice(-10)}` : null);
+      if (customerId) {
+        fetch(`${API_BASE_URL}/api/customers/${customerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            name: userToSync.name,
+            gender: userToSync.gender || 'Male',
+            district: userToSync.district || '',
+            phone: userToSync.phone || '',
+            email: userToSync.email || '',
+            role: userToSync.role || 'User',
+          }),
+        }).catch(() => {});
+      }
+    }
+
     window.dispatchEvent(new Event('nexopp_data_changed'));
   },
 

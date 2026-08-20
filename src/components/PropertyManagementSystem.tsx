@@ -226,7 +226,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     rating: 4.8,
     reviewCount: 12,
     verified: true,
-    premium: true,
+    premium: false,
     seoTitle: '',
     metaDescription: '',
     urlSlug: '',
@@ -403,7 +403,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       rating: 4.8,
       reviewCount: 5,
       verified: true,
-      premium: true,
+      premium: false,
       seoTitle: '',
       metaDescription: '',
       urlSlug: ''
@@ -905,9 +905,21 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             <div>
                               <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px' }}>{prop.title}</div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{prop.id}</div>
-                              <span style={{ padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
-                                {prop.category}
-                              </span>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <span style={{ padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
+                                  {prop.category}
+                                </span>
+                                {prop.premium ? (
+                                  <span style={{ padding: '2px 6px', backgroundColor: '#FEF3C7', color: '#92400E', fontSize: '0.7rem', fontWeight: 800, borderRadius: '4px', border: '1px solid #FCD34D' }}>
+                                    💎 PREMIUM
+                                  </span>
+                                ) : null}
+                                {prop.featured ? (
+                                  <span style={{ padding: '2px 6px', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontSize: '0.7rem', fontWeight: 800, borderRadius: '4px', border: '1px solid #BFDBFE' }}>
+                                    ⭐ FEATURED
+                                  </span>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -1050,6 +1062,30 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <td style={{ padding: '16px', textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                             <button
+                              onClick={() => {
+                                const nextVal = !prop.premium;
+                                updateProperty(prop.id, { premium: nextVal });
+                                showNotification?.(`Property '${prop.title}' ${nextVal ? 'marked as 💎 Premium' : 'changed to Standard listing'}.`, "success");
+                              }}
+                              title={prop.premium ? "Click to Revoke Premium (Change to Standard)" : "Click to Upgrade to 💎 Premium Listing"}
+                              style={{
+                                padding: '6px 10px',
+                                backgroundColor: prop.premium ? '#FEF3C7' : '#F8FAFC',
+                                color: prop.premium ? '#92400E' : '#64748B',
+                                border: prop.premium ? '1.5px solid #F59E0B' : '1px solid #CBD5E1',
+                                borderRadius: '8px',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              💎 {prop.premium ? 'Premium' : 'Standard'}
+                            </button>
+                            <button
                               onClick={() => setViewAnalyticsProperty(prop)}
                               title="View & Adjust Views Count"
                               style={{
@@ -1190,16 +1226,54 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: 'auto' }}>
+                  <button
+                    onClick={() => {
+                      const nextVal = !prop.premium;
+                      updateProperty(prop.id, { premium: nextVal });
+                      showNotification?.(`Property premium badge ${nextVal ? 'activated' : 'removed'} for '${prop.title}'.`, "success");
+                    }}
+                    style={{
+                      padding: '10px 8px',
+                      backgroundColor: prop.premium ? '#FEF3C7' : '#F1F5F9',
+                      color: prop.premium ? '#92400E' : '#64748B',
+                      border: prop.premium ? '1.5px solid #F59E0B' : '1px solid #CBD5E1',
+                      fontWeight: 800,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {prop.premium ? '💎 PREMIUM ACTIVE' : 'ENABLE PREMIUM'}
+                  </button>
                   <button
                     onClick={() => {
                       const nextVal = !prop.featured;
                       updateProperty(prop.id, { featured: nextVal, highlightPropertyCard: nextVal, sponsoredListing: nextVal, prioritySearchPlacement: nextVal });
-                      showNotification?.(`Property spotlight ${nextVal ? 'activated' : 'removed'} for ${prop.title}.`, "success");
+                      showNotification?.(`Property spotlight ${nextVal ? 'activated' : 'removed'} for '${prop.title}'.`, "success");
                     }}
-                    style={{ flexGrow: 1, padding: '10px', backgroundColor: prop.featured ? '#FEF2F2' : '#F59E0B', color: prop.featured ? '#DC2626' : '#0F172A', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}
+                    style={{
+                      padding: '10px 8px',
+                      backgroundColor: prop.featured ? '#ECFDF5' : '#F1F5F9',
+                      color: prop.featured ? '#065F46' : '#64748B',
+                      border: prop.featured ? '1.5px solid #059669' : '1px solid #CBD5E1',
+                      fontWeight: 800,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s'
+                    }}
                   >
-                    {prop.featured ? 'REMOVE SPOTLIGHT' : 'ENABLE FEATURED STATUS'}
+                    {prop.featured ? '⭐ SPOTLIGHT ON' : 'ENABLE SPOTLIGHT'}
                   </button>
                 </div>
               </div>
@@ -2403,6 +2477,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           <option value="North-West">North-West Facing</option>
                         </select>
                       </div>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FURNISHING STATUS *</label>
+                        <select value={formData.furnishing || ''} onChange={e => setFormData({ ...formData, furnishing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                          <option value="">Select Furnishing</option>
+                          <option value="Fully Furnished">Fully Furnished</option>
+                          <option value="Semi-Furnished">Semi-Furnished</option>
+                          <option value="Unfurnished">Unfurnished</option>
+                        </select>
+                      </div>
                     </div>
 
                     {/* Custom Specifications */}
@@ -2769,6 +2852,44 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         })}
                       </div>
                     )}
+                  </div>
+
+                  {/* Premium & Featured Badge Settings */}
+                  <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      💎 Premium & Featured Listing Badges
+                    </h4>
+                    <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '0 0 20px 0' }}>
+                      Control whether this property listing receives a <strong>💎 PREMIUM</strong> badge or <strong>⭐ FEATURED</strong> spotlight on the website. By default, listings are normal/standard until enabled here.
+                    </p>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', backgroundColor: formData.premium ? '#FEF3C7' : '#F8FAFC', border: formData.premium ? '2px solid #D97706' : '1px solid #E2E8F0', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, color: formData.premium ? '#92400E' : '#0F172A', fontSize: '0.95rem' }}>💎 Premium Badge</div>
+                          <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Display gold "PREMIUM" badge across main page and listing cards</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={!!formData.premium}
+                          onChange={e => setFormData({ ...formData, premium: e.target.checked })}
+                          style={{ width: '22px', height: '22px', accentColor: '#D97706', cursor: 'pointer' }}
+                        />
+                      </label>
+
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', backgroundColor: formData.featured ? '#ECFDF5' : '#F8FAFC', border: formData.featured ? '2px solid #059669' : '1px solid #E2E8F0', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        <div>
+                          <div style={{ fontWeight: 800, color: formData.featured ? '#065F46' : '#0F172A', fontSize: '0.95rem' }}>⭐ Featured Spotlight</div>
+                          <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Spotlight property on homepage carousels and top ranks</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={!!formData.featured}
+                          onChange={e => setFormData({ ...formData, featured: e.target.checked, highlightPropertyCard: e.target.checked })}
+                          style={{ width: '22px', height: '22px', accentColor: '#059669', cursor: 'pointer' }}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}

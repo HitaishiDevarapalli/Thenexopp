@@ -17,6 +17,7 @@ import {
   FaPlus,
   FaDesktop,
   FaVideo,
+  FaFilm,
   FaUpload,
   FaLink,
   FaChevronDown,
@@ -71,6 +72,7 @@ import {
   updateSiteSettings, 
   contactDetailsDb,
   updateContactDetails,
+  formatGoogleMapEmbedUrl,
   addTeamMember,
   deleteTeamMember,
   updateProperty,
@@ -128,6 +130,7 @@ import { PropertyManagementSystem } from '../components/PropertyManagementSystem
 import { FranchiseManagementSystem } from '../components/FranchiseManagementSystem';
 import { BusinessManagementSystem } from '../components/BusinessManagementSystem';
 import { AiAssistantAdminPanel } from '../components/AiAssistantAdminPanel';
+import { getVideoEmbedInfo } from '../components/ShowcaseVideoCarousel';
 import type {
   PropertyListing,
   FranchiseListing,
@@ -163,6 +166,339 @@ const getInitialAdminAuth = (): boolean => {
     return false;
   }
   return true;
+};
+
+interface ShowcaseAddVideoFormProps {
+  videosCount: number;
+  showNotification: (msg: string, type?: 'success' | 'warning') => void;
+  triggerRefresh: () => void;
+  PRESET_TAGS: string[];
+  tagColorMap: Record<string, { bg: string; text: string }>;
+}
+
+const ShowcaseAddVideoForm: React.FC<ShowcaseAddVideoFormProps> = ({
+  videosCount,
+  showNotification,
+  triggerRefresh,
+  PRESET_TAGS,
+  tagColorMap
+}) => {
+  const [addVideoUrl, setAddVideoUrl] = useState('');
+  const [addVideoTitle, setAddVideoTitle] = useState('');
+  const [addLinkedCategory, setAddLinkedCategory] = useState<'Property' | 'Franchise' | 'Business' | 'None'>('None');
+  const [addLinkedId, setAddLinkedId] = useState('');
+  const [addDisplayOrder, setAddDisplayOrder] = useState(videosCount + 1);
+  const [addStatusActive, setAddStatusActive] = useState(true);
+  const [addSelectedTags, setAddSelectedTags] = useState<string[]>([]);
+  const [addCustomTag, setAddCustomTag] = useState('');
+  const [addVideoInputMode, setAddVideoInputMode] = useState<'url' | 'upload'>('url');
+  const [addUploading, setAddUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleTagToggle = (tag: string) => {
+    setAddSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+  };
+  const handleAddCustomTag = () => {
+    const tag = addCustomTag.trim();
+    if (tag && !addSelectedTags.includes(tag)) {
+      setAddSelectedTags(prev => [...prev, tag]);
+      setAddCustomTag('');
+    }
+  };
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mov|mkv|m4v)$/i)) {
+      showNotification('Please select a valid video file (MP4, WebM, MOV, etc.)', 'warning');
+      return;
+    }
+    setAddUploading(true);
+    if (!addVideoTitle) {
+      setAddVideoTitle(file.name.replace(/\.[^/.]+$/, ''));
+    }
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        const base64 = dataUrl.split(',')[1];
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: file.name, fileData: base64, folder: 'property-images' }),
+          });
+          const data = await res.json();
+          if (data.url) {
+            setAddVideoUrl(data.url);
+            showNotification('Video uploaded and ready!');
+          } else {
+            setAddVideoUrl(dataUrl);
+            showNotification('Video file loaded!');
+          }
+        } catch {
+          setAddVideoUrl(dataUrl);
+          showNotification('Video file loaded!');
+        }
+        setAddUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      showNotification('File read failed', 'warning');
+      setAddUploading(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!addVideoUrl.trim() || !addVideoTitle.trim()) {
+      showNotification('Please enter Video URL/File and Title', 'warning');
+      return;
+    }
+    addShowcaseVideo({
+      videoUrl: addVideoUrl.trim(),
+      title: addVideoTitle.trim(),
+      linkedCategory: addLinkedCategory,
+      linkedId: addLinkedId.trim() || undefined,
+      displayOrder: addDisplayOrder,
+      status: addStatusActive ? 'Active' : 'Inactive',
+      tags: addSelectedTags,
+    });
+    showNotification(`Added "${addVideoTitle.trim()}" to showcase videos!`);
+    setAddVideoUrl(''); setAddVideoTitle(''); setAddLinkedCategory('None');
+    setAddLinkedId(''); setAddDisplayOrder(videosCount + 2);
+    setAddStatusActive(true); setAddSelectedTags([]);
+    triggerRefresh();
+  };
+
+  const previewEmbed = addVideoUrl.trim() ? getVideoEmbedInfo(addVideoUrl.trim(), false, true) : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      {/* Video Input Mode Toggle */}
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button type="button" onClick={() => setAddVideoInputMode('url')} style={{ padding: '9px 22px', borderRadius: '10px', border: addVideoInputMode === 'url' ? '2px solid #16A34A' : '1px solid #E2E8F0', backgroundColor: addVideoInputMode === 'url' ? '#DCFCE7' : '#FFF', color: addVideoInputMode === 'url' ? '#15803D' : '#475569', fontWeight: 800, fontSize: '0.84rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
+          <FaLink /> Paste Video URL / YouTube / Embed
+        </button>
+        <button type="button" onClick={() => setAddVideoInputMode('upload')} style={{ padding: '9px 22px', borderRadius: '10px', border: addVideoInputMode === 'upload' ? '2px solid #16A34A' : '1px solid #E2E8F0', backgroundColor: addVideoInputMode === 'upload' ? '#DCFCE7' : '#FFF', color: addVideoInputMode === 'upload' ? '#15803D' : '#475569', fontWeight: 800, fontSize: '0.84rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}>
+          <FaUpload /> Drag & Drop / Upload Video
+        </button>
+      </div>
+
+      {/* URL or Drag & Drop Upload Input */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '18px', alignItems: 'start' }}>
+        <div>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            {addVideoInputMode === 'url' ? 'Video URL / YouTube Link *' : 'Drag & Drop Video File *'}
+          </label>
+          {addVideoInputMode === 'url' ? (
+            <div>
+              <input
+                value={addVideoUrl}
+                onChange={e => setAddVideoUrl(e.target.value)}
+                type="url"
+                placeholder="https://youtube.com/watch?v=... or https://youtu.be/... or .mp4 URL"
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #CBD5E1', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#FFFFFF' }}
+              />
+              <div style={{ fontSize: '0.76rem', color: '#64748B', marginTop: '6px' }}>
+                Supports YouTube links, Shorts, Vimeo, Google Drive preview links, or direct MP4/WebM URLs.
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) handleFileUpload(f);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  border: isDragging ? '2px dashed #16A34A' : '2px dashed #94A3B8',
+                  backgroundColor: isDragging ? '#F0FDF4' : '#F8FAFC',
+                  borderRadius: '14px',
+                  padding: '28px 20px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime,video/*"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                  style={{ display: 'none' }}
+                />
+                <FaUpload style={{ fontSize: '32px', color: '#16A34A', marginBottom: '8px' }} />
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
+                  Drag & Drop video file here, or <span style={{ color: '#16A34A', textDecoration: 'underline' }}>browse</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '4px' }}>
+                  Supports MP4, WebM, MOV files
+                </div>
+                {addUploading && <div style={{ marginTop: '10px', color: '#16A34A', fontWeight: 800, fontSize: '0.85rem' }}>⏳ Processing video file...</div>}
+                {addVideoUrl && !addUploading && (
+                  <div style={{ marginTop: '10px', color: '#15803D', fontWeight: 700, fontSize: '0.85rem' }}>
+                    ✅ Video Loaded Successfully
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Title *</label>
+          <input value={addVideoTitle} onChange={e => setAddVideoTitle(e.target.value)} type="text" placeholder="e.g. Luxury 4 BHK Villa Showcase" style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #CBD5E1', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#FFFFFF' }} />
+        </div>
+      </div>
+
+      {/* Live Video Preview Box */}
+      {previewEmbed && previewEmbed.embedUrl && (
+        <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+            🎥 Live Video Player Preview
+          </label>
+          <div style={{ maxWidth: '420px', aspectRatio: '16 / 9', backgroundColor: '#000', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
+            {previewEmbed.type === 'youtube' || previewEmbed.type === 'vimeo' || previewEmbed.type === 'gdrive' || previewEmbed.type === 'iframe' ? (
+              <iframe
+                src={previewEmbed.embedUrl}
+                title="Preview"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ width: '100%', height: '100%', border: 'none' }}
+              />
+            ) : (
+              <video src={previewEmbed.embedUrl} controls playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tags Section */}
+      <div>
+        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Tags</label>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+          {PRESET_TAGS.map(tag => {
+            const isSelected = addSelectedTags.includes(tag);
+            const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
+            return (
+              <button key={tag} type="button" onClick={() => handleTagToggle(tag)} style={{
+                padding: '6px 14px', borderRadius: '20px', border: isSelected ? '2px solid ' + colors.text : '1px solid #E2E8F0',
+                backgroundColor: isSelected ? colors.bg : '#FAFBFC', color: isSelected ? colors.text : '#94A3B8',
+                fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s',
+                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+              }}>
+                {isSelected ? '✓ ' : ''}{tag}
+              </button>
+            );
+          })}
+        </div>
+        {/* Custom Tag Input */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input value={addCustomTag} onChange={e => setAddCustomTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
+            placeholder="Add custom tag..." style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', color: '#0F172A', outline: 'none', backgroundColor: '#F8FAFC', width: '200px' }} />
+          <button type="button" onClick={handleAddCustomTag} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', color: '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>+ Add</button>
+        </div>
+        {/* Selected Tags Display */}
+        {addSelectedTags.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
+            {addSelectedTags.map(tag => {
+              const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
+              return (
+                <span key={tag} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: colors.bg, color: colors.text, fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {tag}
+                  <span onClick={() => handleTagToggle(tag)} style={{ cursor: 'pointer', opacity: 0.7, fontWeight: 900 }}>×</span>
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
+        <div>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked Category</label>
+          <select value={addLinkedCategory} onChange={e => setAddLinkedCategory(e.target.value as any)} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }}>
+            <option value="None">None</option>
+            <option value="Property">Property</option>
+            <option value="Franchise">Franchise</option>
+            <option value="Business">Business</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked ID</label>
+          <input value={addLinkedId} onChange={e => setAddLinkedId(e.target.value)} type="text" placeholder="Optional ID" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Display Order</label>
+          <input value={addDisplayOrder} onChange={e => setAddDisplayOrder(Number(e.target.value) || 1)} type="number" min={1} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Status</label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', cursor: 'pointer' }}>
+            <input type="checkbox" checked={addStatusActive} onChange={e => setAddStatusActive(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#16A34A' }} />
+            <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}>Active</span>
+          </label>
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button type="button" onClick={handleSubmit} style={{ padding: '12px 28px', backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(22,163,74,0.25)', transition: 'all 0.2s' }}>
+          <FaPlus /> Add Showcase Video
+        </button>
+      </div>
+    </div>
+  );
+};
+
+interface AdminModulesCustomFormProps {
+  showNotification: (msg: string, type?: 'success' | 'warning') => void;
+  triggerRefresh: () => void;
+}
+
+const AdminModulesCustomForm: React.FC<AdminModulesCustomFormProps> = ({
+  showNotification,
+  triggerRefresh
+}) => {
+  const [newModName, setNewModName] = useState('');
+  const [newModCat, setNewModCat] = useState<'CONTENT MANAGEMENT' | 'USER MANAGEMENT' | 'SITE MANAGEMENT'>('CONTENT MANAGEMENT');
+
+  const handleAdd = () => {
+    if (!newModName.trim()) return;
+    addAdminModule(newModName.trim(), newModCat);
+    showNotification(`Module "${newModName.trim()}" added!`);
+    setNewModName('');
+    triggerRefresh();
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <input
+        type="text"
+        placeholder="e.g. Real Estate Auctions"
+        value={newModName}
+        onChange={e => setNewModName(e.target.value)}
+        style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.88rem', flexGrow: 1, minWidth: '200px' }}
+      />
+      <select
+        value={newModCat}
+        onChange={e => setNewModCat(e.target.value as any)}
+        style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}
+      >
+        <option value="CONTENT MANAGEMENT">CONTENT MANAGEMENT</option>
+        <option value="USER MANAGEMENT">USER MANAGEMENT</option>
+        <option value="SITE MANAGEMENT">SITE MANAGEMENT</option>
+      </select>
+      <button
+        type="button"
+        onClick={handleAdd}
+        style={{ padding: '10px 22px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer' }}
+      >
+        + Add Module
+      </button>
+    </div>
+  );
 };
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh }) => {
@@ -4372,26 +4708,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     </div>
                     <div>
                       <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>Google Maps Location & Live Embed</h4>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>Iframe embed URL shown on Contact page</p>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748B' }}>Iframe embed URL or location shown on Contact page</p>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Google Maps Embed Iframe URL</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>Google Maps URL, Iframe Code, or Location Address</label>
+                        {contactSettings.headquartersAddress && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const autoUrl = formatGoogleMapEmbedUrl(contactSettings.headquartersAddress);
+                              setContactSettings({ ...contactSettings, mapEmbedUrl: autoUrl });
+                            }}
+                            style={{
+                              background: '#F0FDF4',
+                              color: '#059669',
+                              border: '1px solid #BBF7D0',
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Use Headquarters Address
+                          </button>
+                        )}
+                      </div>
                       <input
                         type="text"
                         value={contactSettings.mapEmbedUrl || ''}
-                        onChange={e => setContactSettings({ ...contactSettings, mapEmbedUrl: e.target.value })}
-                        placeholder="https://www.google.com/maps/embed?pb=..."
+                        onChange={e => {
+                          const val = e.target.value;
+                          setContactSettings({ ...contactSettings, mapEmbedUrl: val });
+                        }}
+                        onBlur={e => {
+                          const formatted = formatGoogleMapEmbedUrl(e.target.value, contactSettings.headquartersAddress);
+                          setContactSettings({ ...contactSettings, mapEmbedUrl: formatted });
+                        }}
+                        placeholder="Paste Google Maps URL, Embed code (<iframe...>), or place name (e.g. Gachibowli, Hyderabad)"
                         style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem', outline: 'none', boxSizing: 'border-box' }}
                       />
+                      <p style={{ margin: '6px 0 0 0', fontSize: '0.75rem', color: '#64748B' }}>
+                        Supports: Google Maps Embed URL, full &lt;iframe&gt; code, Google Maps place / search links, or direct address text.
+                      </p>
                     </div>
 
-                    <div style={{ borderRadius: '12px', overflow: 'hidden', height: '180px', border: '1px solid #E2E8F0', marginTop: '4px' }}>
-                      {contactSettings.mapEmbedUrl ? (
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', height: '220px', border: '1px solid #E2E8F0', marginTop: '4px', backgroundColor: '#F8FAFC' }}>
+                      {contactSettings.mapEmbedUrl || contactSettings.headquartersAddress ? (
                         <iframe
-                          src={contactSettings.mapEmbedUrl}
+                          key={contactSettings.mapEmbedUrl || contactSettings.headquartersAddress}
+                          src={formatGoogleMapEmbedUrl(contactSettings.mapEmbedUrl, contactSettings.headquartersAddress)}
                           width="100%"
                           height="100%"
                           style={{ border: 0 }}
@@ -5341,7 +5711,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                 </div>
                               </td>
                               <td style={{ padding: '16px 18px', color: '#475569', fontWeight: 600 }}>+91 {customer.mobile || customer.phone || 'N/A'}</td>
-                              <td style={{ padding: '16px 18px', color: '#64748B', fontSize: '0.88rem' }}>{customer.gender || 'Male'}</td>
+                              <td style={{ padding: '16px 18px' }}>
+                                <button
+                                  type="button"
+                                  title="Click to toggle Gender (Male ↔ Female)"
+                                  onClick={async () => {
+                                    const nextGender = customer.gender === 'Female' ? 'Male' : 'Female';
+                                    setCustomersData(prev => prev.map(c => c.id === customer.id ? { ...c, gender: nextGender } : c));
+                                    setRegisteredCustomers(prev => prev.map(c => c.id === customer.id ? { ...c, gender: nextGender } : c));
+                                    try {
+                                      await fetch(`${API_BASE_URL}/api/customers/${customer.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        credentials: 'include',
+                                        body: JSON.stringify({ gender: nextGender, name: customer.name, phone: customer.phone || customer.mobile, district: customer.district || customer.area })
+                                      });
+                                      showNotification(`Updated ${customer.name}'s gender to ${nextGender}!`);
+                                    } catch (_) {}
+                                  }}
+                                  style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    backgroundColor: customer.gender === 'Female' ? '#FCE7F3' : customer.gender === 'Other' ? '#FEF3C7' : '#E0F2FE',
+                                    color: customer.gender === 'Female' ? '#DB2777' : customer.gender === 'Other' ? '#D97706' : '#0284C7',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {customer.gender === 'Female' ? '👩 Female' : customer.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                                </button>
+                              </td>
                               <td style={{ padding: '16px 18px', color: '#334155', fontSize: '0.88rem' }}>{customer.area || customer.district || 'N/A'}</td>
                               <td style={{ padding: '16px 18px', fontSize: '0.8rem' }}>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
@@ -5822,7 +6223,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             </div>
                             <div>
                               <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Gender</span>
-                              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1E293B' }}>{selectedCustomerProfile.gender || 'Male'}</span>
+                              <span style={{
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                padding: '3px 10px',
+                                borderRadius: '10px',
+                                display: 'inline-block',
+                                marginTop: '4px',
+                                backgroundColor: selectedCustomerProfile.gender === 'Female' ? '#FCE7F3' : selectedCustomerProfile.gender === 'Other' ? '#FEF3C7' : '#E0F2FE',
+                                color: selectedCustomerProfile.gender === 'Female' ? '#DB2777' : selectedCustomerProfile.gender === 'Other' ? '#D97706' : '#0284C7'
+                              }}>
+                                {selectedCustomerProfile.gender === 'Female' ? '👩 Female' : selectedCustomerProfile.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                              </span>
                             </div>
                             <div>
                               <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, display: 'block', textTransform: 'uppercase' }}>Area / Location</span>
@@ -6822,226 +7234,103 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               </div>
             </div>
 
-            {/* Settings Card */}
+            {/* Settings Card & Master Turn ON / OFF Switch */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-              <h3 style={{ margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaCog style={{ color: '#16A34A' }} /> Showcase Settings
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap', gap: '16px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaCog style={{ color: '#16A34A' }} /> Showcase Video Section Visibility
+                  </h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+                    Turn ON or OFF the video section on the website homepage
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <span style={{
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '0.82rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.04em',
+                    backgroundColor: settings.enabled !== false ? '#DCFCE7' : '#FEE2E2',
+                    color: settings.enabled !== false ? '#15803D' : '#DC2626'
+                  }}>
+                    {settings.enabled !== false ? '● ACTIVE ON WEBSITE' : '○ TURNED OFF / HIDDEN'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newStatus = settings.enabled === false ? true : false;
+                      updateShowcaseSettings({ enabled: newStatus });
+                      updateSiteSettings({ showVideoShowcase: newStatus });
+                      showNotification(`Showcase Video section is now ${newStatus ? 'ENABLED' : 'DISABLED'} on website!`);
+                      triggerRefresh();
+                    }}
+                    style={{
+                      padding: '10px 22px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      backgroundColor: settings.enabled !== false ? '#EF4444' : '#16A34A',
+                      color: '#FFFFFF',
+                      fontWeight: 800,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {settings.enabled !== false ? '🔴 TURN OFF SECTION' : '🟢 TURN ON SECTION'}
+                  </button>
+                </div>
+              </div>
+
+              {settings.enabled === false && (
+                <div style={{ padding: '14px 18px', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: '12px', color: '#991B1B', fontSize: '0.88rem', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>⚠️</span>
+                  <span><strong>Section is currently Turned OFF:</strong> The showcase video carousel is completely hidden from the website homepage until turned back ON.</span>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                 {/* Default Playback Duration */}
                 <div style={{ padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Default Playback Duration (sec)</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <button onClick={() => { const val = Math.max(3, settings.defaultPlaybackDurationSec - 1); updateShowcaseSettings({ defaultPlaybackDurationSec: val }); triggerRefresh(); }} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', fontWeight: 800, fontSize: '1.1rem', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', minWidth: '40px', textAlign: 'center' }}>{settings.defaultPlaybackDurationSec}</span>
-                    <button onClick={() => { const val = settings.defaultPlaybackDurationSec + 1; updateShowcaseSettings({ defaultPlaybackDurationSec: val }); triggerRefresh(); }} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', fontWeight: 800, fontSize: '1.1rem', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                    <button onClick={() => { const val = Math.max(3, (settings.defaultPlaybackDurationSec || 10) - 1); updateShowcaseSettings({ defaultPlaybackDurationSec: val }); triggerRefresh(); }} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', fontWeight: 800, fontSize: '1.1rem', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                    <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', minWidth: '40px', textAlign: 'center' }}>{settings.defaultPlaybackDurationSec || 10}</span>
+                    <button onClick={() => { const val = (settings.defaultPlaybackDurationSec || 10) + 1; updateShowcaseSettings({ defaultPlaybackDurationSec: val }); triggerRefresh(); }} style={{ width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', fontWeight: 800, fontSize: '1.1rem', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                   </div>
                 </div>
                 {/* Max Video Size */}
                 <div style={{ padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Max Video Size (MB)</label>
-                  <input type="number" value={settings.maxVideoSizeMB} onChange={e => { updateShowcaseSettings({ maxVideoSizeMB: Number(e.target.value) || 200 }); triggerRefresh(); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '1rem', fontWeight: 700, color: '#0F172A', boxSizing: 'border-box', outline: 'none' }} />
+                  <input type="number" value={settings.maxVideoSizeMB || 200} onChange={e => { updateShowcaseSettings({ maxVideoSizeMB: Number(e.target.value) || 200 }); triggerRefresh(); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '1rem', fontWeight: 700, color: '#0F172A', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
                 {/* Max Video Duration */}
                 <div style={{ padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Max Video Duration (sec)</label>
-                  <input type="number" value={settings.maxVideoDurationSec} onChange={e => { updateShowcaseSettings({ maxVideoDurationSec: Number(e.target.value) || 60 }); triggerRefresh(); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '1rem', fontWeight: 700, color: '#0F172A', boxSizing: 'border-box', outline: 'none' }} />
+                  <input type="number" value={settings.maxVideoDurationSec || 60} onChange={e => { updateShowcaseSettings({ maxVideoDurationSec: Number(e.target.value) || 60 }); triggerRefresh(); }} style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '1rem', fontWeight: 700, color: '#0F172A', boxSizing: 'border-box', outline: 'none' }} />
                 </div>
               </div>
             </div>
 
-            {/* Add New Video Form — Enhanced with Upload & Tags */}
+            {/* Add New Video Form — Enhanced with Drag & Drop, URL Support & Live Preview */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FaPlus style={{ color: '#16A34A' }} /> Add New Video
               </h3>
-              {(() => {
-                const [addVideoUrl, setAddVideoUrl] = React.useState('');
-                const [addVideoTitle, setAddVideoTitle] = React.useState('');
-                const [addLinkedCategory, setAddLinkedCategory] = React.useState<'Property' | 'Franchise' | 'Business' | 'None'>('None');
-                const [addLinkedId, setAddLinkedId] = React.useState('');
-                const [addDisplayOrder, setAddDisplayOrder] = React.useState(videos.length + 1);
-                const [addStatusActive, setAddStatusActive] = React.useState(true);
-                const [addSelectedTags, setAddSelectedTags] = React.useState<string[]>([]);
-                const [addCustomTag, setAddCustomTag] = React.useState('');
-                const [addVideoInputMode, setAddVideoInputMode] = React.useState<'url' | 'upload'>('url');
-                const [addUploading, setAddUploading] = React.useState(false);
-
-                const handleTagToggle = (tag: string) => {
-                  setAddSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
-                };
-                const handleAddCustomTag = () => {
-                  const tag = addCustomTag.trim();
-                  if (tag && !addSelectedTags.includes(tag)) {
-                    setAddSelectedTags(prev => [...prev, tag]);
-                    setAddCustomTag('');
-                  }
-                };
-                const handleFileUpload = async (file: File) => {
-                  setAddUploading(true);
-                  try {
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                      const base64 = (reader.result as string).split(',')[1];
-                      const res = await fetch('/api/upload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fileName: file.name, fileData: base64, folder: 'property-images' }),
-                      });
-                      const data = await res.json();
-                      if (data.url) {
-                        setAddVideoUrl(data.url);
-                        showNotification('Video uploaded successfully!');
-                      } else {
-                        showNotification('Upload failed', 'warning');
-                      }
-                      setAddUploading(false);
-                    };
-                    reader.readAsDataURL(file);
-                  } catch {
-                    showNotification('Upload failed', 'warning');
-                    setAddUploading(false);
-                  }
-                };
-
-                const handleSubmit = () => {
-                  if (!addVideoUrl.trim() || !addVideoTitle.trim()) {
-                    showNotification('Please enter Video URL and Title', 'warning');
-                    return;
-                  }
-                  addShowcaseVideo({
-                    videoUrl: addVideoUrl.trim(),
-                    title: addVideoTitle.trim(),
-                    linkedCategory: addLinkedCategory,
-                    linkedId: addLinkedId.trim() || undefined,
-                    displayOrder: addDisplayOrder,
-                    status: addStatusActive ? 'Active' : 'Inactive',
-                    tags: addSelectedTags,
-                  });
-                  showNotification(`Added "${addVideoTitle.trim()}" to showcase videos!`);
-                  setAddVideoUrl(''); setAddVideoTitle(''); setAddLinkedCategory('None');
-                  setAddLinkedId(''); setAddDisplayOrder(videos.length + 2);
-                  setAddStatusActive(true); setAddSelectedTags([]);
-                  triggerRefresh();
-                };
-
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {/* Video Input Mode Toggle */}
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '4px' }}>
-                      <button onClick={() => setAddVideoInputMode('url')} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: addVideoInputMode === 'url' ? '#16A34A' : '#FFF', color: addVideoInputMode === 'url' ? '#FFF' : '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
-                        <FaLink /> Paste URL
-                      </button>
-                      <button onClick={() => setAddVideoInputMode('upload')} style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: addVideoInputMode === 'upload' ? '#16A34A' : '#FFF', color: addVideoInputMode === 'upload' ? '#FFF' : '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}>
-                        <FaUpload /> Upload Video
-                      </button>
-                    </div>
-
-                    {/* URL or Upload Input */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                          {addVideoInputMode === 'url' ? 'Video URL *' : 'Upload Video File *'}
-                        </label>
-                        {addVideoInputMode === 'url' ? (
-                          <input value={addVideoUrl} onChange={e => setAddVideoUrl(e.target.value)} type="url" placeholder="https://example.com/video.mp4 or YouTube URL" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                        ) : (
-                          <div style={{ position: 'relative' }}>
-                            <input
-                              type="file"
-                              accept="video/mp4,video/webm,video/*"
-                              onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
-                              style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }}
-                            />
-                            {addUploading && <span style={{ position: 'absolute', right: '12px', top: '12px', fontSize: '0.8rem', color: '#16A34A', fontWeight: 700 }}>Uploading...</span>}
-                            {addVideoUrl && !addUploading && <div style={{ marginTop: '6px', fontSize: '0.78rem', color: '#16A34A', fontWeight: 600 }}>✅ Uploaded: {addVideoUrl.split('/').pop()}</div>}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Title *</label>
-                        <input value={addVideoTitle} onChange={e => setAddVideoTitle(e.target.value)} type="text" placeholder="e.g. Luxury Villa Showcase" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                      </div>
-                    </div>
-
-                    {/* Tags Section */}
-                    <div>
-                      <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Tags</label>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                        {PRESET_TAGS.map(tag => {
-                          const isSelected = addSelectedTags.includes(tag);
-                          const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
-                          return (
-                            <button key={tag} onClick={() => handleTagToggle(tag)} style={{
-                              padding: '6px 14px', borderRadius: '20px', border: isSelected ? '2px solid ' + colors.text : '1px solid #E2E8F0',
-                              backgroundColor: isSelected ? colors.bg : '#FAFBFC', color: isSelected ? colors.text : '#94A3B8',
-                              fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s',
-                              transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                            }}>
-                              {isSelected ? '✓ ' : ''}{tag}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {/* Custom Tag Input */}
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input value={addCustomTag} onChange={e => setAddCustomTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
-                          placeholder="Add custom tag..." style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem', color: '#0F172A', outline: 'none', backgroundColor: '#F8FAFC', width: '200px' }} />
-                        <button onClick={handleAddCustomTag} style={{ padding: '8px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', color: '#475569', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>+ Add</button>
-                      </div>
-                      {/* Selected Tags Display */}
-                      {addSelectedTags.length > 0 && (
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
-                          {addSelectedTags.map(tag => {
-                            const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
-                            return (
-                              <span key={tag} style={{ padding: '4px 10px', borderRadius: '6px', backgroundColor: colors.bg, color: colors.text, fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                {tag}
-                                <span onClick={() => handleTagToggle(tag)} style={{ cursor: 'pointer', opacity: 0.7, fontWeight: 900 }}>×</span>
-                              </span>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px' }}>
-                      <div>
-                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked Category</label>
-                        <select value={addLinkedCategory} onChange={e => setAddLinkedCategory(e.target.value as any)} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }}>
-                          <option value="None">None</option>
-                          <option value="Property">Property</option>
-                          <option value="Franchise">Franchise</option>
-                          <option value="Business">Business</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Linked ID</label>
-                        <input value={addLinkedId} onChange={e => setAddLinkedId(e.target.value)} type="text" placeholder="Optional ID" style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Display Order</label>
-                        <input value={addDisplayOrder} onChange={e => setAddDisplayOrder(Number(e.target.value) || 1)} type="number" min={1} style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.9rem', color: '#0F172A', boxSizing: 'border-box', outline: 'none', backgroundColor: '#F8FAFC' }} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>Status</label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', borderRadius: '10px', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={addStatusActive} onChange={e => setAddStatusActive(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#16A34A' }} />
-                          <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}>Active</span>
-                        </label>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <button onClick={handleSubmit} style={{ padding: '12px 28px', backgroundColor: '#16A34A', color: '#FFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(22,163,74,0.25)', transition: 'all 0.2s' }}>
-                        <FaPlus /> Add Showcase Video
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
+              <ShowcaseAddVideoForm
+                videosCount={videos.length}
+                showNotification={showNotification}
+                triggerRefresh={triggerRefresh}
+                PRESET_TAGS={PRESET_TAGS}
+                tagColorMap={tagColorMap}
+              />
             </div>
 
-            {/* Video List — Enhanced with Tags */}
+            {/* Video List — Enhanced with Tags & Universal Thumbnails */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
               <h3 style={{ margin: '0 0 20px 0', fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FaListAlt style={{ color: '#16A34A' }} /> All Showcase Videos ({videos.length})
@@ -7054,71 +7343,85 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {[...videos].sort((a, b) => a.displayOrder - b.displayOrder).map((video) => (
-                    <div key={video.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 18px', borderRadius: '12px', border: '1px solid #F1F5F9', backgroundColor: '#FAFBFC', transition: 'all 0.15s' }}>
-                      {/* Order Badge */}
-                      <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9rem', flexShrink: 0 }}>
-                        #{video.displayOrder}
-                      </div>
-                      {/* Video Thumbnail */}
-                      <div style={{ width: '100px', height: '60px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#0F172A', flexShrink: 0 }}>
-                        <video src={video.videoUrl} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} preload="metadata" />
-                      </div>
-                      {/* Info */}
-                      <div style={{ flexGrow: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', backgroundColor: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{video.linkedCategory}</span>
-                          {video.linkedId && <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>ID: {video.linkedId}</span>}
-                          <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{video.createdDate}</span>
-                          {/* Tag Chips */}
-                          {(video as any).tags && (video as any).tags.length > 0 && (video as any).tags.map((tag: string, ti: number) => {
-                            const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
-                            return <span key={ti} style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: colors.bg, color: colors.text }}>{tag}</span>;
-                          })}
+                  {[...videos].sort((a, b) => a.displayOrder - b.displayOrder).map((video) => {
+                    const videoInfo = getVideoEmbedInfo(video.videoUrl, false, true);
+                    const ytMatch = video.videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+                    const ytThumb = ytMatch ? `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg` : null;
+
+                    return (
+                      <div key={video.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px 18px', borderRadius: '12px', border: '1px solid #F1F5F9', backgroundColor: '#FAFBFC', transition: 'all 0.15s' }}>
+                        {/* Order Badge */}
+                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.9rem', flexShrink: 0 }}>
+                          #{video.displayOrder}
                         </div>
-                      </div>
-                      {/* Status Badge */}
-                      <span style={{ padding: '5px 14px', borderRadius: '20px', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.03em', backgroundColor: video.status === 'Active' ? '#DCFCE7' : '#F1F5F9', color: video.status === 'Active' ? '#16A34A' : '#94A3B8', flexShrink: 0 }}>
-                        {video.status === 'Active' ? '● Active' : '○ Inactive'}
-                      </span>
-                      {/* Actions */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        <button onClick={() => {
-                          const newTitle = window.prompt('Edit video title:', video.title);
-                          if (newTitle !== null && newTitle.trim()) {
-                            const newUrl = window.prompt('Edit video URL:', video.videoUrl);
-                            if (newUrl !== null && newUrl.trim()) {
-                              const newOrder = window.prompt('Edit display order:', String(video.displayOrder));
-                              const tagsInput = window.prompt('Edit tags (comma-separated):', ((video as any).tags || []).join(', '));
-                              const newTags = tagsInput !== null ? tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : (video as any).tags || [];
-                              updateShowcaseVideo(video.id, { title: newTitle.trim(), videoUrl: newUrl.trim(), displayOrder: Number(newOrder) || video.displayOrder, tags: newTags } as any);
-                              showNotification(`Updated "${newTitle.trim()}"`);
+                        {/* Video Thumbnail */}
+                        <div style={{ width: '100px', height: '60px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#0F172A', flexShrink: 0, position: 'relative' }}>
+                          {ytThumb ? (
+                            <img src={ytThumb} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : videoInfo.type === 'video' ? (
+                            <video src={video.videoUrl} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} preload="metadata" />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', fontSize: '1.2rem' }}>
+                              <FaFilm />
+                            </div>
+                          )}
+                        </div>
+                        {/* Info */}
+                        <div style={{ flexGrow: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{video.title}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B', backgroundColor: '#F1F5F9', padding: '2px 8px', borderRadius: '6px' }}>{video.linkedCategory}</span>
+                            {video.linkedId && <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>ID: {video.linkedId}</span>}
+                            <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>{video.createdDate}</span>
+                            {/* Tag Chips */}
+                            {(video as any).tags && (video as any).tags.length > 0 && (video as any).tags.map((tag: string, ti: number) => {
+                              const colors = tagColorMap[tag] || { bg: '#F1F5F9', text: '#475569' };
+                              return <span key={ti} style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: colors.bg, color: colors.text }}>{tag}</span>;
+                            })}
+                          </div>
+                        </div>
+                        {/* Status Badge */}
+                        <span style={{ padding: '5px 14px', borderRadius: '20px', fontWeight: 700, fontSize: '0.75rem', letterSpacing: '0.03em', backgroundColor: video.status === 'Active' ? '#DCFCE7' : '#F1F5F9', color: video.status === 'Active' ? '#16A34A' : '#94A3B8', flexShrink: 0 }}>
+                          {video.status === 'Active' ? '● Active' : '○ Inactive'}
+                        </span>
+                        {/* Actions */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          <button onClick={() => {
+                            const newTitle = window.prompt('Edit video title:', video.title);
+                            if (newTitle !== null && newTitle.trim()) {
+                              const newUrl = window.prompt('Edit video URL:', video.videoUrl);
+                              if (newUrl !== null && newUrl.trim()) {
+                                const newOrder = window.prompt('Edit display order:', String(video.displayOrder));
+                                const tagsInput = window.prompt('Edit tags (comma-separated):', ((video as any).tags || []).join(', '));
+                                const newTags = tagsInput !== null ? tagsInput.split(',').map((t: string) => t.trim()).filter(Boolean) : (video as any).tags || [];
+                                updateShowcaseVideo(video.id, { title: newTitle.trim(), videoUrl: newUrl.trim(), displayOrder: Number(newOrder) || video.displayOrder, tags: newTags } as any);
+                                showNotification(`Updated "${newTitle.trim()}"`);
+                                triggerRefresh();
+                              }
+                            }
+                          }} title="Edit" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB', fontSize: '0.8rem', transition: 'all 0.15s' }}>
+                            <FaEdit />
+                          </button>
+                          <button onClick={() => {
+                            updateShowcaseVideo(video.id, { status: video.status === 'Active' ? 'Inactive' : 'Active' });
+                            showNotification(`${video.title} is now ${video.status === 'Active' ? 'Inactive' : 'Active'}`);
+                            triggerRefresh();
+                          }} title="Toggle Status" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: video.status === 'Active' ? '#16A34A' : '#94A3B8', fontSize: '0.8rem', transition: 'all 0.15s' }}>
+                            <FaEye />
+                          </button>
+                          <button onClick={() => {
+                            if (window.confirm(`Delete "${video.title}"? This cannot be undone.`)) {
+                              deleteShowcaseVideo(video.id);
+                              showNotification(`Deleted "${video.title}"`, 'warning');
                               triggerRefresh();
                             }
-                          }
-                        }} title="Edit" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB', fontSize: '0.8rem', transition: 'all 0.15s' }}>
-                          <FaEdit />
-                        </button>
-                        <button onClick={() => {
-                          updateShowcaseVideo(video.id, { status: video.status === 'Active' ? 'Inactive' : 'Active' });
-                          showNotification(`${video.title} is now ${video.status === 'Active' ? 'Inactive' : 'Active'}`);
-                          triggerRefresh();
-                        }} title="Toggle Status" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: video.status === 'Active' ? '#16A34A' : '#94A3B8', fontSize: '0.8rem', transition: 'all 0.15s' }}>
-                          <FaEye />
-                        </button>
-                        <button onClick={() => {
-                          if (window.confirm(`Delete "${video.title}"? This cannot be undone.`)) {
-                            deleteShowcaseVideo(video.id);
-                            showNotification(`Deleted "${video.title}"`, 'warning');
-                            triggerRefresh();
-                          }
-                        }} title="Delete" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #FEE2E2', backgroundColor: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', fontSize: '0.8rem', transition: 'all 0.15s' }}>
-                          <FaTrash />
-                        </button>
+                          }} title="Delete" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #FEE2E2', backgroundColor: '#FFF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#EF4444', fontSize: '0.8rem', transition: 'all 0.15s' }}>
+                            <FaTrash />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -7196,45 +7499,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               {/* Add New Module Form */}
               <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px dashed #CBD5E1' }}>
                 <h4 style={{ margin: '0 0 12px 0', fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>➕ Add Custom Side Heading / Module</h4>
-                {(() => {
-                  const [newModName, setNewModName] = React.useState('');
-                  const [newModCat, setNewModCat] = React.useState<'CONTENT MANAGEMENT' | 'USER MANAGEMENT' | 'SITE MANAGEMENT'>('CONTENT MANAGEMENT');
-
-                  const handleAdd = () => {
-                    if (!newModName.trim()) return;
-                    addAdminModule(newModName.trim(), newModCat);
-                    showNotification(`Module "${newModName.trim()}" added!`);
-                    setNewModName('');
-                    triggerRefresh();
-                  };
-
-                  return (
-                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <input
-                        type="text"
-                        placeholder="e.g. Real Estate Auctions"
-                        value={newModName}
-                        onChange={e => setNewModName(e.target.value)}
-                        style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.88rem', flexGrow: 1, minWidth: '200px' }}
-                      />
-                      <select
-                        value={newModCat}
-                        onChange={e => setNewModCat(e.target.value as any)}
-                        style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 600, color: '#0F172A' }}
-                      >
-                        <option value="CONTENT MANAGEMENT">CONTENT MANAGEMENT</option>
-                        <option value="USER MANAGEMENT">USER MANAGEMENT</option>
-                        <option value="SITE MANAGEMENT">SITE MANAGEMENT</option>
-                      </select>
-                      <button
-                        onClick={handleAdd}
-                        style={{ padding: '10px 22px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer' }}
-                      >
-                        + Add Module
-                      </button>
-                    </div>
-                  );
-                })()}
+                <AdminModulesCustomForm
+                  showNotification={showNotification}
+                  triggerRefresh={triggerRefresh}
+                />
               </div>
             </div>
 
@@ -7356,9 +7624,41 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         <td style={{ padding: '16px 20px', fontWeight: 700, color: '#0F172A' }}>{cust.phone || 'N/A'}</td>
                         <td style={{ padding: '16px 20px', color: '#475569' }}>{cust.email}</td>
                         <td style={{ padding: '16px 20px' }}>
-                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, backgroundColor: cust.gender === 'Female' ? '#FCE7F3' : '#E0F2FE', color: cust.gender === 'Female' ? '#DB2777' : '#0284C7' }}>
-                            {cust.gender || 'Male'}
-                          </span>
+                          <button
+                            type="button"
+                            title="Click to toggle Gender (Male ↔ Female)"
+                            onClick={async () => {
+                              const nextGender = cust.gender === 'Female' ? 'Male' : 'Female';
+                              setRegisteredCustomers(prev => prev.map(c => c.id === cust.id ? { ...c, gender: nextGender } : c));
+                              setCustomersData(prev => prev.map(c => c.id === cust.id ? { ...c, gender: nextGender } : c));
+                              try {
+                                await fetch(`${API_BASE_URL}/api/customers/${cust.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  credentials: 'include',
+                                  body: JSON.stringify({ gender: nextGender, name: cust.name, phone: cust.phone, district: cust.district })
+                                });
+                                showNotification(`Updated ${cust.name}'s gender to ${nextGender}!`);
+                              } catch (_) {
+                                showNotification('Failed to update gender', 'warning');
+                              }
+                            }}
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '12px',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              backgroundColor: cust.gender === 'Female' ? '#FCE7F3' : cust.gender === 'Other' ? '#FEF3C7' : '#E0F2FE',
+                              color: cust.gender === 'Female' ? '#DB2777' : cust.gender === 'Other' ? '#D97706' : '#0284C7',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px'
+                            }}
+                          >
+                            {cust.gender === 'Female' ? '👩 Female' : cust.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                          </button>
                         </td>
                         <td style={{ padding: '16px 20px', fontWeight: 700, color: '#047857' }}>{cust.district || 'Guntur'}</td>
                         <td style={{ padding: '16px 20px' }}>

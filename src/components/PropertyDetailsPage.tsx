@@ -700,6 +700,14 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const titleLower = (property.title || '').toLowerCase();
   const isPlot = catLower.includes('plot') || catLower.includes('land') || titleLower.includes('plot') || titleLower.includes('land') || titleLower.includes('farm');
   const isCommercial = catLower.includes('commercial') || catLower.includes('office') || catLower.includes('shop') || titleLower.includes('commercial') || titleLower.includes('office') || titleLower.includes('shop');
+  const formatArea = (areaVal?: string | number, fallback?: string) => {
+    if (!areaVal && !fallback) return 'N/A';
+    let str = String(areaVal || fallback || '').trim();
+    if (!str || str === 'N/A') return 'N/A';
+    str = str.replace(/(?:\s*(?:sq\.?\s*ft|sqft))+$/i, '').trim();
+    return `${str} sqft`;
+  };
+
   const carpetArea = isPlot ? 'N/A' : `${Math.round(parseInt(superArea) * 0.85) || 1200} sqft`;
   const typeDisplay = isPlot ? 'Plots & Land' : isCommercial ? 'Commercial Property' : (catLower.includes('villa') || catLower.includes('house')) ? 'House & Villa' : 'Flats & Apartments';
 
@@ -880,14 +888,14 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Super Built-up Area</span>
-                        <span className="spec-val">{property.superBuiltUpArea || `${superArea} sqft`}</span>
+                        <span className="spec-val">{formatArea(property.superBuiltUpArea, superArea)}</span>
                       </div>
                     </div>
 
                     <div className="prop-spec-row">
                       <div className="spec-col">
                         <span className="spec-lbl">Carpet Area</span>
-                        <span className="spec-val">{property.carpetArea || `${carpetArea} sqft`}</span>
+                        <span className="spec-val">{formatArea(property.carpetArea, carpetArea)}</span>
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Washrooms</span>
@@ -934,7 +942,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                     <div className="prop-spec-row">
                       <div className="spec-col">
                         <span className="spec-lbl">Super Built-up Area</span>
-                        <span className="spec-val">{property.superBuiltUpArea || `${superArea} sqft`}</span>
+                        <span className="spec-val">{formatArea(property.superBuiltUpArea, superArea)}</span>
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Bathrooms</span>
@@ -960,7 +968,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Carpet Area</span>
-                        <span className="spec-val">{property.carpetArea || `${carpetArea} sqft`}</span>
+                        <span className="spec-val">{formatArea(property.carpetArea, carpetArea)}</span>
                       </div>
                     </div>
 
@@ -971,7 +979,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       </div>
                       <div className="spec-col">
                         <span className="spec-lbl">Furnishing</span>
-                        <span className="spec-val">{property.furnishing || 'Semi-Furnished'}</span>
+                        <span className="spec-val">{property.furnishing || 'Unfurnished'}</span>
                       </div>
                     </div>
                   </>

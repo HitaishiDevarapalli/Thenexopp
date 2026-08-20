@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaClock, FaCheckCircle, FaBuilding, FaShieldAlt, FaBriefcase, FaCoins, FaWhatsapp } from 'react-icons/fa';
+import { 
+  API_BASE_URL, 
+  enquiriesDb, 
+  addEnquiry, 
+  contactDetailsDb, 
+  notifyDataChanged, 
+  formatGoogleMapEmbedUrl,
+  isModuleActive,
+  franchiseDb,
+  propertiesDb,
+  businessDb,
+  siteSettingsDb
+} from '../db/marketplaceDb';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL, enquiriesDb, addEnquiry, contactDetailsDb, notifyDataChanged } from '../db/marketplaceDb';
 
 export const ContactUs: React.FC = () => {
   const { user, openLoginModal } = useAuth();
@@ -19,6 +31,27 @@ export const ContactUs: React.FC = () => {
     return () => window.removeEventListener('nexopp_data_changed', handler);
   }, []);
 
+  const portfolioOptions = React.useMemo(() => {
+    const list: { value: string; label: string }[] = [];
+    if (isModuleActive('properties') && propertiesDb.length > 0) {
+      list.push({ value: 'Properties', label: 'Properties (Buy, Sell, Rent)' });
+    }
+    if (isModuleActive('franchises') && siteSettingsDb.showFranchiseSection !== false && franchiseDb.length > 0) {
+      list.push({ value: 'Franchise', label: 'Franchise Opportunities' });
+    }
+    if (isModuleActive('business') && businessDb.length > 0) {
+      list.push({ value: 'Business', label: 'Business Acquisition / Sale' });
+    }
+    if (isModuleActive('finance') || isModuleActive('loans')) {
+      list.push({ value: 'Loans', label: 'Loans (Real Estate & Business)' });
+    }
+    if (isModuleActive('finance') || isModuleActive('insurance')) {
+      list.push({ value: 'Insurance', label: 'Insurance & Asset Protection' });
+    }
+    list.push({ value: 'Services', label: 'Professional Advisory Desk' });
+    return list;
+  }, [propertiesDb, franchiseDb, businessDb, siteSettingsDb]);
+
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -26,6 +59,12 @@ export const ContactUs: React.FC = () => {
     category: 'Properties',
     message: ''
   });
+
+  useEffect(() => {
+    if (portfolioOptions.length > 0 && !portfolioOptions.some(p => p.value === formData.category)) {
+      setFormData(prev => ({ ...prev, category: portfolioOptions[0].value }));
+    }
+  }, [portfolioOptions]);
 
   useEffect(() => {
     if (user) {
@@ -352,12 +391,11 @@ export const ContactUs: React.FC = () => {
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
                       style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', fontSize: '0.98rem', outline: 'none', backgroundColor: '#FFFFFF', boxSizing: 'border-box' }}
                     >
-                      <option value="Properties">Properties (Buy, Sell, Rent)</option>
-                      <option value="Franchise">Franchise Opportunities</option>
-                      <option value="Business">Business Acquisition / Sale</option>
-                      <option value="Loans">Loans (Real Estate & Business)</option>
-                      <option value="Insurance">Insurance & Asset Protection</option>
-                      <option value="Services">Professional Advisory Desk</option>
+                      {portfolioOptions.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -406,17 +444,45 @@ export const ContactUs: React.FC = () => {
           {/* Location Map & HQ Banner Card */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div className="contact-card hq-map-card">
-              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
-                Visit Our Headquarters
-              </h3>
-              <p style={{ fontSize: '0.92rem', color: '#64748B', margin: '0 0 20px 0', lineHeight: 1.5 }}>
-                Located in the heart of Gachibowli Financial District, accessible via Outer Ring Road.
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+                    {details.headquartersTitle || 'Visit Our Headquarters'}
+                  </h3>
+                  <p style={{ fontSize: '0.92rem', color: '#64748B', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                    {details.headquartersAddress ? `Located at ${details.headquartersAddress}` : 'Located in the heart of Gachibowli Financial District, accessible via Outer Ring Road.'}
+                  </p>
+                </div>
+                {details.headquartersAddress && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(details.headquartersAddress)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: '#2563EB',
+                      backgroundColor: '#EFF6FF',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0
+                    }}
+                  >
+                    <FaMapMarkerAlt /> Open in Google Maps
+                  </a>
+                )}
+              </div>
               
-              <div data-lenis-prevent="true" style={{ borderRadius: '18px', overflow: 'hidden', height: '280px', border: '1px solid #CBD5E1', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+              <div data-lenis-prevent="true" style={{ borderRadius: '18px', overflow: 'hidden', height: '280px', border: '1px solid #CBD5E1', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', backgroundColor: '#F1F5F9' }}>
                 <iframe 
+                  key={details.mapEmbedUrl || details.headquartersAddress}
                   data-lenis-prevent="true"
-                  src={details.mapEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"} 
+                  src={formatGoogleMapEmbedUrl(details.mapEmbedUrl, details.headquartersAddress)} 
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 

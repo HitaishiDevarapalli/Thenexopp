@@ -372,6 +372,7 @@ export const App: React.FC = () => {
             ) : currentPage === 'wishlist' ? (
               <WishlistPage 
                 onBack={navigateBack} 
+                onNavigateToPage={(page) => navigateTo(page as PageType)}
                 onPropertyClick={(id) => {
                   setSelectedPropertyId(id);
                   navigateTo('propertyDetails', { propertyId: id });

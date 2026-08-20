@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive, showcaseVideosDb, showcaseSettingsDb } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { useWishlist } from '../context/WishlistContext';
 const ShowcaseVideoCarousel = React.lazy(() =>
@@ -178,7 +178,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     { title: 'Business', subtitle: 'Buy Profitable Business', icon: FaBriefcase, bg: '#EFF6FF', color: '#002B66', page: 'businessPage', mod: 'business' },
     { title: 'Finance & Insurance', subtitle: 'Secure your Future', icon: FaShieldAlt, bg: '#ECFDF5', color: '#059669', page: 'financePage' },
   ];
-  const popularCategories = rawPopularCategories.filter(c => !c.mod || isModuleActive(c.mod));
+  const popularCategories = rawPopularCategories.filter(c => {
+    if (!c.mod) return true;
+    if (!isModuleActive(c.mod)) return false;
+    if (c.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
+    if (c.mod === 'business' && businessDb.length === 0) return false;
+    if (c.mod === 'properties' && propertiesDb.length === 0) return false;
+    return true;
+  });
 
   const isPropertySold = (p: any) => {
     if (!p) return false;
@@ -605,7 +612,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
               { id: 'Business', label: 'Business', icon: FaBriefcase, color: '#002B66', bg: '#EFF6FF', mod: 'business' },
               { id: 'Plots/Land', label: 'Plots/Land', icon: FaMapMarkerAlt, color: '#059669', bg: '#ECFDF5', mod: 'properties' },
               { id: 'Commercial', label: 'Commercial', icon: FaBuilding, color: '#D97706', bg: '#FEF3C7', mod: 'properties' },
-            ].filter(tab => isModuleActive(tab.mod)).map((tab) => {
+            ].filter(tab => {
+              if (!isModuleActive(tab.mod)) return false;
+              if (tab.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
+              if (tab.mod === 'business' && businessDb.length === 0) return false;
+              if (tab.mod === 'properties' && propertiesDb.length === 0) return false;
+              return true;
+            }).map((tab) => {
               const TabIcon = tab.icon;
               const isActive = activeSearchTab === tab.id;
               return (
@@ -855,7 +868,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                 { tag: 'Commercial', mod: 'properties', page: 'propertiesPage' },
                 { tag: 'Franchise', mod: 'franchises', page: 'franchisePage' },
                 { tag: 'Farm Land', mod: 'properties', page: 'landPage' },
-              ].filter(item => !item.mod || isModuleActive(item.mod)).map(({ tag, page }) => (
+              ].filter(item => {
+                if (!item.mod) return true;
+                if (!isModuleActive(item.mod)) return false;
+                if (item.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
+                if (item.mod === 'properties' && propertiesDb.length === 0) return false;
+                return true;
+              }).map(({ tag, page }) => (
                 <button
                   key={tag}
                   onClick={() => {
@@ -1575,11 +1594,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       )}
 
       {/* 4. SHOWCASE & FEATURED PROPERTIES */}
-      <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
-        <React.Suspense fallback={<div style={{ minHeight: '260px' }} />}>
-          <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
-        </React.Suspense>
-      </div>
+      {isModuleActive('showcase_videos') && showcaseSettingsDb.enabled !== false && siteSettingsDb.showVideoShowcase !== false && showcaseVideosDb.some(v => v.status === 'Active') && (
+        <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 24px' }}>
+          <React.Suspense fallback={null}>
+            <ShowcaseVideoCarousel onNavigate={onNavigate} onPropertyClick={onPropertyClick} />
+          </React.Suspense>
+        </div>
+      )}
 
       {/* 6. WHAT IS THENEXOPP & MARKETPLACE OVERVIEW SECTION */}
       <div style={{ maxWidth: '1360px', margin: '0 auto 48px auto', padding: '0 24px' }}>

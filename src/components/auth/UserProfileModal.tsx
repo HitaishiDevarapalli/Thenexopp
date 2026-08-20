@@ -7,7 +7,7 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { API_BASE_URL, enquiriesDb } from '../../db/marketplaceDb';
+import { API_BASE_URL, enquiriesDb, isModuleActive, franchiseDb, businessDb, siteSettingsDb } from '../../db/marketplaceDb';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -29,7 +29,17 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [editName, setEditName] = useState(user?.name || '');
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [editDistrict, setEditDistrict] = useState(user?.district || 'Guntur');
+  const [editGender, setEditGender] = useState<'Male' | 'Female' | 'Other'>((user?.gender as any) || 'Male');
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setEditName(user.name || '');
+      setEditPhone(user.phone || '');
+      setEditDistrict(user.district || 'Guntur');
+      setEditGender((user.gender as any) || 'Male');
+    }
+  }, [user]);
 
   const [userEnquiries, setUserEnquiries] = useState<any[]>([]);
   const [loadingEnquiries, setLoadingEnquiries] = useState(false);
@@ -106,6 +116,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     updateUserProfile({
       name: editName.trim() || user.name,
       phone: editPhone.trim() || user.phone,
+      gender: editGender,
       district: editDistrict.trim() || user.district,
       role: 'User',
     });
@@ -352,6 +363,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
                     <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FaUser style={{ color: '#94A3B8', fontSize: '12px' }} /> Gender:
+                    </span>
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      backgroundColor: user.gender === 'Female' ? '#FCE7F3' : user.gender === 'Other' ? '#FEF3C7' : '#E0F2FE',
+                      color: user.gender === 'Female' ? '#DB2777' : user.gender === 'Other' ? '#D97706' : '#0284C7'
+                    }}>
+                      {user.gender === 'Female' ? '👩 Female' : user.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13.5px' }}>
+                    <span style={{ color: '#64748B', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <FaMapMarkerAlt style={{ color: '#94A3B8', fontSize: '12px' }} /> Location / District:
                     </span>
                     <strong style={{ color: '#0F172A' }}>{user.district || 'Andhra Pradesh & Telangana'}</strong>
@@ -391,8 +418,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       <FaHeart />
                     </div>
                     <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Saved Wishlist</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>{wishlistItems.length} Saved</div>
+                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Favourites</div>
+                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>{wishlistItems.length} Favourites</div>
                     </div>
                   </button>
 
@@ -422,92 +449,98 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     </div>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      onClose();
-                      if (onNavigateToPage) onNavigateToPage('sellPropertyPage');
-                    }}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '14px',
-                      border: '1px solid #E2E8F0',
-                      backgroundColor: '#FFFFFF',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-                  >
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                      <FaPlus />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Post Property</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>List For Sale/Rent</div>
-                    </div>
-                  </button>
+                  {isModuleActive('properties') && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        if (onNavigateToPage) onNavigateToPage('sellPropertyPage');
+                      }}
+                      style={{
+                        padding: '14px',
+                        borderRadius: '14px',
+                        border: '1px solid #E2E8F0',
+                        backgroundColor: '#FFFFFF',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    >
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                        <FaPlus />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Post Property</div>
+                        <div style={{ fontSize: '11.5px', color: '#64748B' }}>List For Sale/Rent</div>
+                      </div>
+                    </button>
+                  )}
 
-                  <button
-                    onClick={() => {
-                      onClose();
-                      if (onNavigateToPage) onNavigateToPage('franchisePage');
-                    }}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '14px',
-                      border: '1px solid #E2E8F0',
-                      backgroundColor: '#FFFFFF',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-                  >
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                      <FaStore />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Franchises</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>Brand Setups</div>
-                    </div>
-                  </button>
+                  {isModuleActive('franchises') && siteSettingsDb.showFranchiseSection !== false && franchiseDb.length > 0 && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        if (onNavigateToPage) onNavigateToPage('franchisePage');
+                      }}
+                      style={{
+                        padding: '14px',
+                        borderRadius: '14px',
+                        border: '1px solid #E2E8F0',
+                        backgroundColor: '#FFFFFF',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    >
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                        <FaStore />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Franchises</div>
+                        <div style={{ fontSize: '11.5px', color: '#64748B' }}>Brand Setups</div>
+                      </div>
+                    </button>
+                  )}
 
-                  <button
-                    onClick={() => {
-                      onClose();
-                      if (onNavigateToPage) onNavigateToPage('businessPage');
-                    }}
-                    style={{
-                      padding: '14px',
-                      borderRadius: '14px',
-                      border: '1px solid #E2E8F0',
-                      backgroundColor: '#FFFFFF',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-                  >
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#DBEAFE', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
-                      <FaBriefcase />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Businesses</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748B' }}>Operational Units</div>
-                    </div>
-                  </button>
+                  {isModuleActive('business') && businessDb.length > 0 && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        if (onNavigateToPage) onNavigateToPage('businessPage');
+                      }}
+                      style={{
+                        padding: '14px',
+                        borderRadius: '14px',
+                        border: '1px solid #E2E8F0',
+                        backgroundColor: '#FFFFFF',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
+                    >
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#DBEAFE', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>
+                        <FaBriefcase />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A' }}>Businesses</div>
+                        <div style={{ fontSize: '11.5px', color: '#64748B' }}>Operational Units</div>
+                      </div>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -609,6 +642,35 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     boxSizing: 'border-box',
                   }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '6px' }}>
+                  Gender
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['Male', 'Female', 'Other'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setEditGender(g)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: editGender === g ? '2px solid #059669' : '1px solid #CBD5E1',
+                        backgroundColor: editGender === g ? '#ECFDF5' : '#FFFFFF',
+                        color: editGender === g ? '#047857' : '#475569',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {g === 'Female' ? '👩 Female' : g === 'Other' ? '⚧ Other' : '👨 Male'}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

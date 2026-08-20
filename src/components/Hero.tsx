@@ -21,7 +21,7 @@ import {
   FaSmile,
   FaCrosshairs,
 } from 'react-icons/fa';
-import { siteSettingsDb, selectedCity, isModuleActive } from '../db/marketplaceDb';
+import { siteSettingsDb, selectedCity, isModuleActive, franchiseDb, propertiesDb, businessDb } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 
 interface HeroProps {
@@ -98,7 +98,13 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
     { id: 'Plots/Land' as const, label: 'Plots/Land', icon: FaMapMarkerAlt, mod: 'properties' },
     { id: 'Commercial' as const, label: 'Commercial', icon: FaBuilding, mod: 'properties' },
   ];
-  const tabs = rawTabs.filter(t => isModuleActive(t.mod));
+  const tabs = rawTabs.filter(t => {
+    if (!isModuleActive(t.mod)) return false;
+    if (t.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
+    if (t.mod === 'business' && businessDb.length === 0) return false;
+    if (t.mod === 'properties' && propertiesDb.length === 0) return false;
+    return true;
+  });
 
   const s = siteSettingsDb.mainPageStats || {
     propertiesListed: '18,500+',
@@ -117,7 +123,13 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
     { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
     { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
   ];
-  const stats = rawStats.filter(st => !st.mod || isModuleActive(st.mod));
+  const stats = rawStats.filter(st => {
+    if (!st.mod) return true;
+    if (!isModuleActive(st.mod)) return false;
+    if (st.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
+    if (st.mod === 'properties' && propertiesDb.length === 0) return false;
+    return true;
+  });
 
   return (
     <section

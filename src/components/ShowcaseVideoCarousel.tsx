@@ -5,6 +5,8 @@ import {
   propertiesDb,
   franchiseDb,
   businessDb,
+  siteSettingsDb,
+  isModuleActive,
   notifyDataChanged,
   addShowcaseVideo,
 } from '../db/marketplaceDb';
@@ -59,16 +61,62 @@ const getPrice = (video: ShowcaseVideo): string | null => {
   return null;
 };
 
-// YouTube Link Parser & Embed Helper
-const getYouTubeEmbedUrl = (url: string, autoplay = true, muted = true): string | null => {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    const videoId = match[2];
-    return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&enablejsapi=1&rel=0`;
+export interface VideoEmbedInfo {
+  type: 'youtube' | 'vimeo' | 'gdrive' | 'iframe' | 'video';
+  embedUrl: string;
+}
+
+// Universal Video Parser & Embed Helper
+export const getVideoEmbedInfo = (rawUrl: string, autoplay = true, muted = true): VideoEmbedInfo => {
+  if (!rawUrl) return { type: 'video', embedUrl: '' };
+  const trimmed = rawUrl.trim();
+
+  // 1. Raw <iframe> code
+  if (trimmed.includes('<iframe')) {
+    const match = trimmed.match(/src=["']([^"']+)["']/i);
+    if (match && match[1]) {
+      let src = match[1];
+      if (src.includes('youtube.com') || src.includes('youtu.be')) {
+        if (!src.includes('autoplay=')) src += `${src.includes('?') ? '&' : '?'}autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1`;
+        return { type: 'youtube', embedUrl: src };
+      }
+      return { type: 'iframe', embedUrl: src };
+    }
   }
-  return null;
+
+  // 2. YouTube URLs (standard watch, shorts, embed, short links)
+  const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    const videoId = ytMatch[1];
+    return {
+      type: 'youtube',
+      embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&mute=${muted ? 1 : 0}&loop=1&playlist=${videoId}&controls=1&enablejsapi=1&rel=0`
+    };
+  }
+
+  // 3. Vimeo URLs
+  const vimeoMatch = trimmed.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|video\/|)(\d+)/i);
+  if (vimeoMatch && vimeoMatch[3]) {
+    return {
+      type: 'vimeo',
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[3]}?autoplay=${autoplay ? 1 : 0}&muted=${muted ? 1 : 0}&loop=1`
+    };
+  }
+
+  // 4. Google Drive share links
+  const gdriveMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i);
+  if (gdriveMatch && gdriveMatch[1]) {
+    return {
+      type: 'gdrive',
+      embedUrl: `https://drive.google.com/file/d/${gdriveMatch[1]}/preview`
+    };
+  }
+
+  // 5. Standard Direct Video (MP4 / WebM / MOV / Blob URL)
+  return {
+    type: 'video',
+    embedUrl: trimmed
+  };
 };
 
 const categoryColors: Record<string, { bg: string; text: string }> = {
@@ -230,7 +278,12 @@ export const ShowcaseVideoCarousel: React.FC<{
   const location = currentVideo ? getLocation(currentVideo) : null;
   const price = currentVideo ? getPrice(currentVideo) : null;
   const catColor = currentVideo ? (categoryColors[currentVideo.linkedCategory] || categoryColors.None) : categoryColors.None;
-  const ytEmbed = currentVideo ? getYouTubeEmbedUrl(currentVideo.videoUrl, isPlaying, isMuted) : null;
+  const embedInfo = currentVideo ? getVideoEmbedInfo(currentVideo.videoUrl, isPlaying, isMuted) : null;
+
+  // Turn off check: If disabled in admin or if 0 videos exist, do not render section on website
+  if (showcaseSettingsDb.enabled === false || siteSettingsDb.showVideoShowcase === false || !isModuleActive('showcase_videos') || activeVideos.length === 0) {
+    return null;
+  }
 
   return (
     <section
@@ -259,14 +312,14 @@ export const ShowcaseVideoCarousel: React.FC<{
             border: '1px solid #E2E8F0'
           }}
         >
-          {activeVideos.length > 0 && currentVideo ? (
-            ytEmbed ? (
-              // 1. YouTube 16:9 IFrame Player
+          {activeVideos.length > 0 && currentVideo && embedInfo ? (
+            embedInfo.type === 'youtube' || embedInfo.type === 'vimeo' || embedInfo.type === 'gdrive' || embedInfo.type === 'iframe' ? (
+              // 1. IFrame Video Player (YouTube / Vimeo / Google Drive / IFrame)
               <iframe
-                key={currentVideo.id}
-                src={ytEmbed}
+                key={currentVideo.id + '-' + embedInfo.type}
+                src={embedInfo.embedUrl}
                 title={currentVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 style={{
                   width: '100%',
@@ -279,11 +332,11 @@ export const ShowcaseVideoCarousel: React.FC<{
                 }}
               />
             ) : (
-              // 2. HTML5 Video Player (MP4 / WebM / Blob)
+              // 2. HTML5 Video Player (MP4 / WebM / MOV / Blob / Direct Link)
               <video
                 key={currentVideo.id}
                 ref={(el) => { videoRefs.current[currentIndex] = el; }}
-                src={currentVideo.videoUrl}
+                src={embedInfo.embedUrl}
                 poster={currentVideo.thumbnailUrl || undefined}
                 autoPlay={isPlaying}
                 muted={isMuted}
@@ -301,18 +354,11 @@ export const ShowcaseVideoCarousel: React.FC<{
                   backgroundColor: '#000000'
                 }}
                 onError={() => {
-                  // Video source failed - do nothing, show poster image
+                  // Video source failed
                 }}
               />
             )
-          ) : (
-            // 3. Empty State - No Videos Available
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0F172A, #1E293B)', color: '#94A3B8' }}>
-              <FaFilm style={{ fontSize: '48px', marginBottom: '16px', color: '#10B981', opacity: 0.6 }} />
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>No Showcase Videos</div>
-              <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>Videos will appear here once added from the admin panel</div>
-            </div>
-          )}
+          ) : null}
 
           {/* Tag Badges Overlay */}
           {activeVideos.length > 0 && currentVideo && (currentVideo as any).tags && (currentVideo as any).tags.length > 0 && (

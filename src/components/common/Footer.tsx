@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaWhatsapp, FaEye } from 'react-icons/fa';
 import { Logo } from './Logo';
-import { siteSettingsDb, isModuleActive } from '../../db/marketplaceDb';
+import { siteSettingsDb, isModuleActive, franchiseDb, propertiesDb, businessDb } from '../../db/marketplaceDb';
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -170,13 +170,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
         {/* Column 2 - EXPLORE */}
         <div>
           <h4 style={columnHeaderStyle}>EXPLORE</h4>
-          {isModuleActive('properties') && (
+          {isModuleActive('properties') && propertiesDb.length > 0 && (
             <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('propertiesPage'))} style={linkStyle}>Property</a>
           )}
-          {isModuleActive('franchises') && siteSettingsDb.showFranchiseSection !== false && (
+          {isModuleActive('franchises') && siteSettingsDb.showFranchiseSection !== false && franchiseDb.length > 0 && (
             <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('franchisePage'))} style={linkStyle}>Franchise</a>
           )}
-          {isModuleActive('business') && (
+          {isModuleActive('business') && businessDb.length > 0 && (
             <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('businessPage'))} style={linkStyle}>Business</a>
           )}
           <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('financePage'))} style={linkStyle}>Finance</a>

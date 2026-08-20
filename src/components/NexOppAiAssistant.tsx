@@ -149,12 +149,16 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'welcome',
       options: [
-        { label: '🏠 Buy Property', value: 'I want to buy a property', action: 'start_buy' },
-        { label: '🔑 Rent Property', value: 'I want to rent a property', action: 'start_rent' },
-        { label: '📈 Investment', value: 'Looking for investment opportunities', action: 'start_invest' },
-        { label: '💼 Commercial', value: 'Commercial spaces & Offices', action: 'start_commercial' },
-        { label: '🚜 Plots & Land', value: 'Plots and Land properties', action: 'start_plot' },
-        { label: '🏢 Franchise', value: 'Explore Franchise Business', action: 'nav_franchise' },
+        ...(isModuleActive('properties') && propertiesDb.length > 0 ? [
+          { label: '🏠 Buy Property', value: 'I want to buy a property', action: 'start_buy' },
+          { label: '🔑 Rent Property', value: 'I want to rent a property', action: 'start_rent' },
+          { label: '📈 Investment', value: 'Looking for investment opportunities', action: 'start_invest' },
+          { label: '💼 Commercial', value: 'Commercial spaces & Offices', action: 'start_commercial' },
+          { label: '🚜 Plots & Land', value: 'Plots and Land properties', action: 'start_plot' },
+        ] : []),
+        ...(isModuleActive('franchises') && siteSettingsDb.showFranchiseSection !== false && franchiseDb.length > 0 ? [
+          { label: '🏢 Franchise', value: 'Explore Franchise Business', action: 'nav_franchise' },
+        ] : []),
         { label: '💰 EMI Calculator', value: 'Calculate loan EMI', action: 'open_emi' },
         { label: '⚖️ Compare Properties', value: 'Compare saved properties', action: 'open_compare' }
       ]

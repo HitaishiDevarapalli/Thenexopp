@@ -541,6 +541,7 @@ export interface SiteSettings {
   promotionalVideoUrl?: string;
   mainPageStats?: MainPageStats;
   showFranchiseSection?: boolean;
+  showVideoShowcase?: boolean;
 }
 
 export interface DemandRegion {
@@ -592,6 +593,7 @@ const defaultSettings: SiteSettings = {
   defaultCity: '',
   promotionalVideoUrl: '',
   showFranchiseSection: true,
+  showVideoShowcase: true,
   mainPageStats: {
     propertiesListed: '0',
     franchisesCount: '0',
@@ -689,10 +691,104 @@ export const defaultContactDetails: ContactDetails = {
   contactSubtitle: 'Whether you are acquiring premium real estate, seeking loan assistance, exploring business opportunities, or protecting assets, our dedicated portfolio team is here to assist you.'
 };
 
+export const formatGoogleMapEmbedUrl = (rawInput?: string | null, fallbackAddress?: string): string => {
+  if (!rawInput || typeof rawInput !== 'string' || !rawInput.trim()) {
+    if (fallbackAddress && fallbackAddress.trim()) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(fallbackAddress.trim())}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+    return 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3806.8272225611135!2d78.3415!3d17.4262!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93f21132711d%3A0x6b772be425e24b45!2sGachibowli%2C%20Hyderabad%2C%20Telangana!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin';
+  }
+
+  let input = rawInput.trim();
+
+  // 1. If user pasted an <iframe> code snippet, extract the src URL
+  if (input.includes('<iframe') || input.includes('src=')) {
+    const srcMatch = input.match(/src=["']([^"']+)["']/i);
+    if (srcMatch && srcMatch[1]) {
+      input = srcMatch[1].trim();
+    }
+  }
+
+  // Remove any surrounding quotes or backticks
+  input = input.replace(/^['"`]|['"`]$/g, '').trim();
+
+  // 2. Already a valid Google Maps embed URL
+  if (
+    (input.includes('google.com/maps/embed') || input.includes('maps.google.com/maps/embed')) &&
+    (input.startsWith('http://') || input.startsWith('https://'))
+  ) {
+    return input;
+  }
+
+  // 3. Already contains output=embed
+  if (input.includes('output=embed') && (input.startsWith('http://') || input.startsWith('https://'))) {
+    return input;
+  }
+
+  // 4. Google Maps Place URL: e.g. https://www.google.com/maps/place/Place+Name/@17.44,78.34,14z/...
+  if (input.includes('/maps/place/') || input.includes('/place/')) {
+    const placeMatch = input.match(/\/place\/([^/@?]+)/);
+    if (placeMatch && placeMatch[1]) {
+      const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+      return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+
+    const coordMatch = input.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (coordMatch && coordMatch[1] && coordMatch[2]) {
+      return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+  }
+
+  // 5. Google Maps Search / Query URL: e.g. https://www.google.com/maps/search/Query
+  if (input.includes('/maps/search/') || input.includes('/search/')) {
+    const searchMatch = input.match(/\/search\/([^/?]+)/);
+    if (searchMatch && searchMatch[1]) {
+      const query = decodeURIComponent(searchMatch[1].replace(/\+/g, ' '));
+      return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+  }
+
+  // 6. Generic maps.google or google.com/maps query parameters
+  if (input.includes('maps.google.') || input.includes('google.com/maps')) {
+    try {
+      const urlObj = new URL(input.startsWith('http') ? input : `https://${input}`);
+      const q = urlObj.searchParams.get('q') || urlObj.searchParams.get('query') || urlObj.searchParams.get('destination');
+      if (q) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      }
+      const coordMatch = urlObj.pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordMatch && coordMatch[1] && coordMatch[2]) {
+        return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      }
+    } catch (_) {}
+  }
+
+  // 7. Google short links (maps.app.goo.gl or goo.gl/maps)
+  if (input.includes('maps.app.goo.gl') || input.includes('goo.gl/maps')) {
+    if (fallbackAddress && fallbackAddress.trim()) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(fallbackAddress.trim())}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    }
+    return `https://maps.google.com/maps?q=${encodeURIComponent(input)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+
+  // 8. Plain lat/long numbers e.g. "17.4262, 78.3415" or "17.4262,78.3415"
+  const latLngMatch = input.match(/^(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)$/);
+  if (latLngMatch && latLngMatch[1] && latLngMatch[2]) {
+    return `https://maps.google.com/maps?q=${latLngMatch[1]},${latLngMatch[2]}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+
+  // 9. Plain address or location name string (e.g. "Gachibowli, Hyderabad")
+  return `https://maps.google.com/maps?q=${encodeURIComponent(input)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+};
+
 export let contactDetailsDb: ContactDetails = loadFromStorage('nexopp_contact_details', defaultContactDetails);
 
 export const updateContactDetails = (newDetails: Partial<ContactDetails>) => {
-  contactDetailsDb = { ...contactDetailsDb, ...newDetails };
+  const processed = { ...newDetails };
+  if (processed.mapEmbedUrl !== undefined) {
+    processed.mapEmbedUrl = formatGoogleMapEmbedUrl(processed.mapEmbedUrl, processed.headquartersAddress || contactDetailsDb.headquartersAddress);
+  }
+  contactDetailsDb = { ...contactDetailsDb, ...processed };
   saveToStorage('nexopp_contact_details', contactDetailsDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/contact-settings`, {
@@ -724,17 +820,21 @@ export interface ShowcaseVideo {
 }
 
 export interface ShowcaseSettings {
+  enabled?: boolean;
   maxVideoSizeMB: number;
   maxVideoDurationSec: number;
   defaultPlaybackDurationSec: number;
 }
 
-export let showcaseVideosDb: ShowcaseVideo[] = [];
-export let showcaseSettingsDb: ShowcaseSettings = {
+export const defaultShowcaseSettings: ShowcaseSettings = {
+  enabled: true,
   maxVideoSizeMB: 200,
   maxVideoDurationSec: 60,
   defaultPlaybackDurationSec: 10
 };
+
+export let showcaseVideosDb: ShowcaseVideo[] = [];
+export let showcaseSettingsDb: ShowcaseSettings = loadFromStorage('nexopp_showcase_settings_db', defaultShowcaseSettings);
 
 const defaultShowcaseVideos: ShowcaseVideo[] = [];
 const defaultDemandRegions: DemandRegion[] = [];
@@ -756,7 +856,9 @@ export const isModuleActive = (moduleId: string): boolean => {
     (moduleId === 'property' && m.id === 'properties') ||
     (moduleId === 'properties' && m.id === 'properties') ||
     (moduleId === 'business' && m.id === 'business') ||
-    (moduleId === 'businesses' && m.id === 'business')
+    (moduleId === 'businesses' && m.id === 'business') ||
+    (moduleId === 'showcase_videos' && (m.id === 'main_page_settings' || m.id === 'showcase_videos')) ||
+    (moduleId === 'main_page_settings' && m.id === 'main_page_settings')
   );
   if (item) {
     if (item.isActive === false) return false;
@@ -764,6 +866,10 @@ export const isModuleActive = (moduleId: string): boolean => {
   // Cross check with siteSettings for franchise
   if (moduleId === 'franchise' || moduleId === 'franchises') {
     if (siteSettingsDb.showFranchiseSection === false) return false;
+  }
+  if (moduleId === 'showcase_videos' || moduleId === 'main_page_settings') {
+    if (showcaseSettingsDb.enabled === false) return false;
+    if (siteSettingsDb.showVideoShowcase === false) return false;
   }
   return item ? item.isActive !== false : true;
 };
@@ -844,6 +950,7 @@ export const persistAllToStorage = () => {
   saveToStorage('nexopp_roles_db', rolesDb);
   saveToStorage('nexopp_demand_regions_db', demandRegionsDb);
   saveToStorage('nexopp_showcase_videos_db', showcaseVideosDb);
+  saveToStorage('nexopp_showcase_settings_db', showcaseSettingsDb);
 };
 
 // PostgreSQL Data Sync Loader & LocalStorage Fallback Persistence
@@ -867,6 +974,7 @@ const loadData = async () => {
     rolesDb = loadFromStorage('nexopp_roles_db', []);
     demandRegionsDb = loadFromStorage('nexopp_demand_regions_db', []);
     showcaseVideosDb = loadFromStorage('nexopp_showcase_videos_db', []);
+    showcaseSettingsDb = loadFromStorage('nexopp_showcase_settings_db', defaultShowcaseSettings);
     
     adminModulesDb = [...defaultAdminModules];
     sellPropertyRequestsDb = [];
@@ -914,7 +1022,14 @@ const loadData = async () => {
           const local = localMap.get(p.id);
           const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined) || local?.dealerId;
           return {
+            ...local,
             ...p,
+            furnishing: p.furnishing || local?.furnishing || '',
+            carpetArea: p.carpetArea || local?.carpetArea || '',
+            superBuiltUpArea: p.superBuiltUpArea || local?.superBuiltUpArea || '',
+            ownershipType: p.ownershipType || local?.ownershipType || '',
+            facing: p.facing || local?.facing || '',
+            parkingSlots: p.parkingSlots !== undefined ? p.parkingSlots : local?.parkingSlots,
             dealerId: brokerId,
             assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
           };
@@ -1095,9 +1210,14 @@ export const updatePropertyVerification = (id: string, verified: boolean) => {
   updateProperty(id, { verified });
 };
 
-export const togglePropertyFeatured = (id: string) => {
+export const togglePropertyPremium = (id: string) => {
   const item = propertiesDb.find(p => p.id === id);
   if (item) updateProperty(id, { premium: !item.premium });
+};
+
+export const togglePropertyFeatured = (id: string) => {
+  const item = propertiesDb.find(p => p.id === id);
+  if (item) updateProperty(id, { featured: !item.featured });
 };
 
 export const togglePropertyTrending = (id: string) => {
@@ -1336,6 +1456,7 @@ export const deleteShowcaseVideo = (id: string) => {
 
 export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
   showcaseSettingsDb = { ...showcaseSettingsDb, ...updated };
+  saveToStorage('nexopp_showcase_settings_db', showcaseSettingsDb);
   notifyDataChanged();
   fetch(`${API_BASE_URL}/api/showcase-settings`, {
     method: 'PUT',

@@ -5,9 +5,9 @@ import {
   FaChevronDown, FaMapMarkerAlt, FaStore, FaHandHoldingUsd, 
   FaChartLine, FaShieldAlt, FaEnvelope, FaRegHeart, FaHeart, 
   FaUser, FaBars, FaShoppingBag, FaPlus, FaTimes, FaLayerGroup,
-  FaSignOutAlt
+  FaSignOutAlt, FaKey
 } from 'react-icons/fa';
-import { selectedCity, setSelectedCity, siteSettingsDb, isModuleActive } from '../../db/marketplaceDb';
+import { selectedCity, setSelectedCity, siteSettingsDb, isModuleActive, franchiseDb, propertiesDb, businessDb } from '../../db/marketplaceDb';
 import { Logo } from '../common/Logo';
 import { useAuth } from '../../context/AuthContext';
 import { useLocationStore } from '../../context/LocationContext';
@@ -187,6 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       icon: <FaBuilding />, 
       dropdown: [
         { name: 'Buy Property', desc: 'Browse verified real estate & property listings', link: 'propertiesPage', subIcon: <FaBuilding />, color: '#059669' },
+        { name: 'Rent Property', desc: 'Explore verified residential & commercial rentals', link: 'rentPage', subIcon: <FaKey />, color: '#2563EB' },
         { name: 'Sell / Post Property', desc: 'List your property to thousands of buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#D97706', isCta: true },
       ]
     },
@@ -224,7 +225,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'contact', label: 'Contact Us', icon: <FaEnvelope /> },
   ];
 
-  const menuItems = rawMenuItems.filter(item => item.id === 'hero' || item.id === 'about' || item.id === 'contact' || isModuleActive(item.id));
+  const menuItems = rawMenuItems.filter(item => {
+    if (item.id === 'hero' || item.id === 'about' || item.id === 'contact') return true;
+    if (!isModuleActive(item.id)) return false;
+    if ((item.id === 'franchise' || item.id === 'franchises') && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
+    if ((item.id === 'business' || item.id === 'businesses') && businessDb.length === 0) return false;
+    if ((item.id === 'properties' || item.id === 'property') && propertiesDb.length === 0) return false;
+    return true;
+  });
 
   const handleNavItemClick = (itemId: string) => {
     if (itemId === 'hero') {
@@ -552,7 +560,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenWishlist}
               className="desktop-only"
-              title="Saved Properties & Wishlist"
+              title="Favourites"
               style={{
                 width: '42px',
                 height: '42px',
@@ -754,7 +762,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8FAFC'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <FaHeart style={{ color: '#EF4444' }} /> Saved Listings ({wishlistItems.length})
+                      <FaHeart style={{ color: '#EF4444' }} /> Favourites ({wishlistItems.length})
                     </button>
                     {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') && (
                       <button
@@ -1036,7 +1044,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
                 <div>
                   <div style={{ fontSize: '14px', fontWeight: 800, color: '#064E3B' }}>Sign In to Your Account</div>
-                  <div style={{ fontSize: '12px', color: '#059669' }}>Access saved listings &amp; profile</div>
+                  <div style={{ fontSize: '12px', color: '#059669' }}>Access favourites &amp; profile</div>
                 </div>
               </div>
               <span style={{
