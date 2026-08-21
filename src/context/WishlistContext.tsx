@@ -1,7 +1,34 @@
 import React, { createContext, useContext, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { useWishlistStore } from '../store/useWishlistStore';
 import { useAuth } from './AuthContext';
-import { API_BASE_URL } from '../db/marketplaceDb';
+import { API_BASE_URL, propertiesDb, businessDb, franchiseDb } from '../db/marketplaceDb';
+
+export const isListingActiveOnSite = (id: string) => {
+  const strId = String(id);
+  const prop = propertiesDb.find((p: any) => String(p.id) === strId);
+  if (prop) {
+    const pStatus = (prop as any).status;
+    const pListingStatus = (prop as any).listingStatus;
+    return pStatus !== 'REMOVED' && pStatus !== 'DELETED' && pListingStatus !== 'Archived' && pListingStatus !== 'Hidden';
+  }
+  const biz = businessDb.find((b: any) => String(b.id) === strId);
+  if (biz) {
+    const bStatus = (biz as any).status;
+    return bStatus !== 'REMOVED' && bStatus !== 'DELETED' && bStatus !== 'Archived';
+  }
+  const fran = franchiseDb.find((f: any) => String(f.id) === strId);
+  if (fran) {
+    const fStatus = (fran as any).status;
+    const fApprovalStatus = (fran as any).approvalStatus;
+    return fStatus !== 'REMOVED' && fStatus !== 'DELETED' && fApprovalStatus !== 'Archived';
+  }
+
+  // If memory DB collections have loaded and item is not found in any of them, it has been removed from the site!
+  if (propertiesDb.length > 0 || businessDb.length > 0 || franchiseDb.length > 0) {
+    return false;
+  }
+  return true;
+};
 
 interface WishlistContextType {
   wishlistItems: string[];
@@ -172,10 +199,12 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [user, openLoginModal, store]);
 
+  const activeWishlistItems = store.wishlistIds.filter(isListingActiveOnSite);
+
   return (
     <WishlistContext.Provider
       value={{
-        wishlistItems: store.wishlistIds,
+        wishlistItems: activeWishlistItems,
         toggleWishlist,
         isWishlisted: store.isWishlisted,
         refreshWishlist: fetchUserFavorites

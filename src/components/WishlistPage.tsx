@@ -130,7 +130,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
   // Add DB items
   dbFavorites.forEach(f => {
     const key = String(f.listingId || f.id);
-    if (key && f.status !== 'REMOVED') {
+    if (key && f.status !== 'REMOVED' && f.status !== 'DELETED') {
       mergedFavoritesMap.set(key, f);
     }
   });
@@ -148,7 +148,33 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
     }
   });
 
-  const favoritesToShow = Array.from(mergedFavoritesMap.values());
+  // Filter out any favorites that have been removed/deleted from the site
+  const favoritesToShow = Array.from(mergedFavoritesMap.values()).filter((fav) => {
+    const listingType = fav.listingType || 'PROPERTY';
+    const targetId = String(fav.listingId || fav.id);
+
+    let details: any = null;
+    if (listingType === 'PROPERTY') {
+      details = fav.property || propertiesDb.find((p: any) => String(p.id) === targetId);
+    } else {
+      details = fav.business || businessDb.find((b: any) => String(b.id) === targetId) || franchiseDb.find((f: any) => String(f.id) === targetId);
+    }
+
+    // Must exist in site database and not be marked removed/deleted
+    if (!details) return false;
+    if (
+      details.status === 'REMOVED' ||
+      details.status === 'DELETED' ||
+      details.status === 'Archived' ||
+      details.listingStatus === 'Archived' ||
+      details.listingStatus === 'Hidden' ||
+      details.isDeleted
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
   const removeFavorite = async (favIdOrListingId: string, listingType?: string, listingId?: string) => {
     const idToToggle = listingId || favIdOrListingId;
@@ -163,7 +189,194 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
   const userDistrict = user?.district || 'guntur';
 
   return (
-    <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', padding: '6.5rem 0 5rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+    <div className="wishlist-page-container" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', padding: '6.5rem 0 5rem', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
+      <style>{`
+        .wishlist-page-container {
+          padding: 6.5rem 0 5rem;
+        }
+        .wishlist-user-banner {
+          background-color: #FFFFFF;
+          border-radius: 24px;
+          border: 1px solid #E2E8F0;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+          padding: 28px 36px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 24px;
+        }
+        .wishlist-user-info {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        .wishlist-user-name {
+          margin: 0;
+          font-size: 2.2rem;
+          font-weight: 900;
+          color: #0F172A;
+          letter-spacing: -0.5px;
+        }
+        .wishlist-stats-group {
+          display: flex;
+          align-items: center;
+          gap: 28px;
+          flex-wrap: wrap;
+        }
+        .wishlist-stat-item {
+          text-align: center;
+          padding-right: 28px;
+          border-right: 1px solid #F1F5F9;
+        }
+        .wishlist-stat-item-last {
+          text-align: center;
+        }
+        .wishlist-tabs-container {
+          display: flex;
+          align-items: center;
+          gap: 32px;
+          border-bottom: 1px solid #E2E8F0;
+          padding-bottom: 0px;
+          margin: 8px 0 4px;
+          overflow-x: auto;
+          white-space: nowrap;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .wishlist-tabs-container::-webkit-scrollbar {
+          display: none;
+        }
+        .wishlist-tab-btn {
+          background: none;
+          border: none;
+          padding: 12px 4px;
+          font-size: 1rem;
+          font-weight: 700;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+        .wishlist-main-grid {
+          display: grid;
+          grid-template-columns: 1fr 340px;
+          gap: 24px;
+          align-items: start;
+        }
+        .wishlist-card-item {
+          background-color: #FFFFFF;
+          border: 1px solid #E2E8F0;
+          border-radius: 20px;
+          padding: 18px 20px;
+          display: flex;
+          gap: 20px;
+          align-items: center;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .wishlist-card-thumb {
+          position: relative;
+          width: 190px;
+          height: 125px;
+          border-radius: 14px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        .wishlist-card-details {
+          flex: 1;
+          min-width: 240px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 100%;
+          gap: 8px;
+        }
+        .wishlist-card-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 4px;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        @media (max-width: 900px) {
+          .wishlist-page-container {
+            padding: 5rem 0 3rem !important;
+          }
+          .wishlist-main-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .wishlist-user-banner {
+            padding: 20px 16px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+          }
+          .wishlist-user-info {
+            gap: 14px !important;
+            width: 100% !important;
+          }
+          .wishlist-user-name {
+            font-size: 1.5rem !important;
+          }
+          .wishlist-stats-group {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+            padding-top: 16px !important;
+            border-top: 1px solid #F1F5F9 !important;
+          }
+          .wishlist-stat-item {
+            padding-right: 0 !important;
+            border-right: none !important;
+            background-color: #F8FAFC !important;
+            padding: 10px 8px !important;
+            border-radius: 12px !important;
+            border: 1px solid #E2E8F0 !important;
+          }
+          .wishlist-stat-item-last {
+            background-color: #F8FAFC !important;
+            padding: 10px 8px !important;
+            border-radius: 12px !important;
+            border: 1px solid #E2E8F0 !important;
+          }
+          .wishlist-tabs-container {
+            gap: 16px !important;
+          }
+          .wishlist-tab-btn {
+            font-size: 0.92rem !important;
+            padding: 10px 2px !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .wishlist-card-item {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            padding: 14px !important;
+          }
+          .wishlist-card-thumb {
+            width: 100% !important;
+            height: 180px !important;
+          }
+          .wishlist-card-details {
+            min-width: 0 !important;
+            width: 100% !important;
+          }
+          .wishlist-card-footer {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+          .wishlist-card-footer button {
+            width: 100% !important;
+            text-align: center !important;
+          }
+        }
+      `}</style>
       <div className="container" style={{ maxWidth: '1140px', margin: '0 auto', padding: '0 16px' }}>
         
         {/* ── LOGIN WALL IF GUEST ── */}
@@ -218,7 +431,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             {/* ── TOP USER PROFILE BANNER CARD ── */}
-            <div style={{
+            <div className="wishlist-user-banner" style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '24px',
               border: '1px solid #E2E8F0',
@@ -231,7 +444,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
               gap: '24px'
             }}>
               {/* Left Side: Avatar & Details */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div className="wishlist-user-info" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 <div style={{
                   width: '84px',
                   height: '84px',
@@ -250,7 +463,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                 </div>
 
                 <div>
-                  <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
+                  <h1 className="wishlist-user-name" style={{ margin: 0, fontSize: '2.2rem', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px' }}>
                     {(user.name || 'mani').toLowerCase()}
                   </h1>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#64748B', fontSize: '0.92rem', marginTop: '6px', fontWeight: 600 }}>
@@ -265,9 +478,9 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
               </div>
 
               {/* Right Side: 4 Stat Metrics Row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
+              <div className="wishlist-stats-group" style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
                 {/* Metric 1: Favorites */}
-                <div style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
+                <div className="wishlist-stat-item" style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
@@ -287,7 +500,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                 </div>
 
                 {/* Metric 2: Enquiries Sent */}
-                <div style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
+                <div className="wishlist-stat-item" style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
@@ -307,7 +520,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                 </div>
 
                 {/* Metric 3: Saved Searches */}
-                <div style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
+                <div className="wishlist-stat-item" style={{ textAlign: 'center', paddingRight: '28px', borderRight: '1px solid #F1F5F9' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
@@ -327,7 +540,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                 </div>
 
                 {/* Metric 4: Joined Date */}
-                <div style={{ textAlign: 'center' }}>
+                <div className="wishlist-stat-item-last" style={{ textAlign: 'center' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
@@ -349,7 +562,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
             </div>
 
             {/* ── SUB-NAVIGATION TABS ── */}
-            <div style={{
+            <div className="wishlist-tabs-container" style={{
               display: 'flex',
               alignItems: 'center',
               gap: '32px',
@@ -358,6 +571,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
               margin: '8px 0 4px'
             }}>
               <button
+                className="wishlist-tab-btn"
                 onClick={() => setActiveTab('favorites')}
                 style={{
                   background: 'none',
@@ -379,6 +593,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
               </button>
 
               <button
+                className="wishlist-tab-btn"
                 onClick={() => setActiveTab('enquiries')}
                 style={{
                   background: 'none',
@@ -400,6 +615,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
               </button>
 
               <button
+                className="wishlist-tab-btn"
                 onClick={() => setActiveTab('searches')}
                 style={{
                   background: 'none',
@@ -421,6 +637,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
               </button>
 
               <button
+                className="wishlist-tab-btn"
                 onClick={() => setActiveTab('settings')}
                 style={{
                   background: 'none',
@@ -443,7 +660,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
             </div>
 
             {/* ── TWO COLUMN MAIN LAYOUT GRID ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
+            <div className="wishlist-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
               
               {/* LEFT COLUMN: MAIN CONTENT AREA */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -484,6 +701,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                           return (
                             <div 
                               key={fav.id || targetId} 
+                              className="wishlist-card-item"
                               style={{
                                 backgroundColor: '#FFFFFF',
                                 border: '1px solid #E2E8F0',
@@ -497,7 +715,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                               }}
                             >
                               {/* Left Thumbnail with Badge */}
-                              <div style={{ position: 'relative', width: '190px', height: '125px', borderRadius: '14px', overflow: 'hidden', flexShrink: 0 }}>
+                              <div className="wishlist-card-thumb" style={{ position: 'relative', width: '190px', height: '125px', borderRadius: '14px', overflow: 'hidden', flexShrink: 0 }}>
                                 <img 
                                   src={image} 
                                   alt={title} 
@@ -541,7 +759,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                               </div>
 
                               {/* Details Area */}
-                              <div style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', gap: '8px' }}>
+                              <div className="wishlist-card-details" style={{ flex: 1, minWidth: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', gap: '8px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                   <h3 
                                     style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0, cursor: 'pointer' }}
@@ -567,7 +785,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
                                   <span>{area}, {city}</span>
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                                <div className="wishlist-card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <span style={{ backgroundColor: '#ECFDF5', color: '#059669', fontSize: '11px', fontWeight: 800, padding: '4px 10px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                       ● Published
