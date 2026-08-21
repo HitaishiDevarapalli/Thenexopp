@@ -45,12 +45,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const navContainerRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   // Close dropdown when tapping/clicking anywhere outside
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
-      if (navContainerRef.current && !navContainerRef.current.contains(e.target as Node)) {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setOpenDropdown(null);
       }
     };
@@ -284,7 +284,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="navbar" style={{
+      <header ref={headerRef} className="navbar" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -359,7 +359,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* 2. Center: Clean & Professional Desktop Navigation */}
-          <nav ref={navContainerRef} className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {menuItems.map((item) => {
               const isActive = currentActiveTab === item.id;
               const isDropdownOpen = openDropdown === item.id;
@@ -717,6 +717,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                     </div>
                     <button
+                      type="button"
                       onClick={() => {
                         setOpenDropdown(null);
                         setIsProfileModalOpen(true);
@@ -741,6 +742,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <FaUser style={{ color: '#059669' }} /> My Profile &amp; Account
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setOpenDropdown(null);
                         onOpenWishlist();
@@ -766,6 +768,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                     {(user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') && (
                       <button
+                        type="button"
                         onClick={() => {
                           setOpenDropdown(null);
                           if (onNavigateToPage) onNavigateToPage('adminPortal');
@@ -792,6 +795,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </button>
                     )}
                     <button
+                      type="button"
                       onClick={() => { logout(); setOpenDropdown(null); }}
                       style={{
                         width: '100%',
