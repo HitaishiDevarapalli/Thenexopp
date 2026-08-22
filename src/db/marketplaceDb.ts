@@ -697,8 +697,12 @@ export const syncWithBackend = async () => {
     const [propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes, custRes, bookRes] = results;
 
     // SERVER DATA = TRUTH. Replace local arrays completely.
+    // SERVER DATA = TRUTH. Merge with unsynced local creations so items never vanish.
     if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
-      propertiesDb = propsRes.value.map((p: any) => {
+      const serverPropMap = new Map(propsRes.value.map((p: any) => [String(p.id), p]));
+      const unsyncedProps = (propertiesDb || []).filter(p => p && p.id && !serverPropMap.has(String(p.id)));
+
+      const serverMappedProps = propsRes.value.map((p: any) => {
         const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined);
         return {
           ...p,
@@ -706,12 +710,16 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
+      propertiesDb = [...serverMappedProps, ...unsyncedProps];
     }
     if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) {
       franchiseDb = franRes.value;
     }
     if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) {
-      businessDb = bizRes.value.map((b: any) => {
+      const serverBizMap = new Map(bizRes.value.map((b: any) => [String(b.id), b]));
+      const unsyncedBiz = (businessDb || []).filter(b => b && b.id && !serverBizMap.has(String(b.id)));
+
+      const serverMappedBiz = bizRes.value.map((b: any) => {
         const brokerId = b.dealerId || b.brokerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]);
         return {
           ...b,
@@ -720,6 +728,7 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: b.assignedBrokerIds?.length ? b.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
+      businessDb = [...serverMappedBiz, ...unsyncedBiz];
     }
     if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value) && dealersRes.value.length > 0) {
       dealersDb = dealersRes.value;
@@ -819,7 +828,6 @@ syncWithBackend();
 
 const sanitizeImgStr = (s: any) => {
   if (!s || typeof s !== 'string') return '';
-  if (s.startsWith('data:image/') && s.length > 500000) return s.slice(0, 400000);
   return s;
 };
 
