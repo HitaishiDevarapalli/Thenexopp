@@ -5,7 +5,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 
 interface BusinessListingsPageProps {
-  industry: 'Food' | 'Healthcare' | 'Retail & Stores' | 'All';
+  industry?: string;
   onBack: () => void;
   onPropertyClick?: (id: string) => void;
   onBuyProperty?: (id: string) => void;
@@ -83,18 +83,32 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
     };
   }, [showSellerPortfolio, selectedDealer]);
 
-  const dbIndustry = getDbIndustryName();
+  const matchesIndustryFilter = (bizIndustry?: string, bizCategory?: string) => {
+    if (!industry || industry === 'All' || industry === 'all') return true;
+    const target = industry.toLowerCase().trim();
+    const currentInd = (bizIndustry || '').toLowerCase().trim();
+    const currentCat = (bizCategory || '').toLowerCase().trim();
+
+    if (currentInd.includes(target) || currentCat.includes(target) || target.includes(currentInd) || target.includes(currentCat)) return true;
+    if (target.includes('food') && (currentInd.includes('food') || currentInd.includes('restaurant') || currentInd.includes('caf') || currentCat.includes('food'))) return true;
+    if (target.includes('retail') && (currentInd.includes('retail') || currentInd.includes('store') || currentInd.includes('fmcg') || currentCat.includes('retail'))) return true;
+    if (target.includes('health') && (currentInd.includes('health') || currentInd.includes('pharmacy') || currentInd.includes('med') || currentCat.includes('health'))) return true;
+    
+    return false;
+  };
+
   const filteredListings = businessDb.filter(biz => {
     if (biz.published === false || biz.sold === true || biz.status === 'Sold') return false;
-    if (dbIndustry !== 'All' && biz.industry !== dbIndustry) {
-      // If active search query is present, check if it matches regardless of industry
+    
+    if (!matchesIndustryFilter(biz.industry, biz.category)) {
       if (!searchQuery || searchQuery.trim() === '') return false;
     }
+
     if (searchQuery && searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase().trim();
-      const matchesName = biz.name.toLowerCase().includes(q);
-      const matchesInd = biz.industry.toLowerCase().includes(q);
-      const matchesLoc = biz.location.toLowerCase().includes(q) || biz.city.toLowerCase().includes(q) || biz.state.toLowerCase().includes(q);
+      const matchesName = (biz.name || biz.title || '').toLowerCase().includes(q);
+      const matchesInd = (biz.industry || biz.category || '').toLowerCase().includes(q);
+      const matchesLoc = (biz.location || '').toLowerCase().includes(q) || (biz.city || '').toLowerCase().includes(q) || (biz.state || '').toLowerCase().includes(q);
       if (!matchesName && !matchesInd && !matchesLoc) return false;
     }
     return true;

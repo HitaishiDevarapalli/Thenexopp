@@ -126,6 +126,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [imageFitMode, setImageFitMode] = useState<'cover' | 'contain'>('cover');
   const [showPhone, setShowPhone] = useState(false);
   const [message, setMessage] = useState('');
   const [showSellerPortfolio, setShowSellerPortfolio] = useState(false);
@@ -749,14 +750,59 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             
             {/* Gallery Slider */}
             <div className="prop-gallery-container">
-              <div className="prop-gallery-main">
-                <button className="gallery-arrow arrow-left" onClick={handlePrevImage}>
+              <div className="prop-gallery-main" style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px' }}>
+                <div 
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: `url(${galleryImages[activeImageIndex]})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(24px) brightness(0.7)',
+                    transform: 'scale(1.15)',
+                    zIndex: 1,
+                    display: imageFitMode === 'contain' ? 'block' : 'none'
+                  }}
+                />
+                <button className="gallery-arrow arrow-left" onClick={handlePrevImage} style={{ zIndex: 10 }}>
                   <FaChevronLeft />
                 </button>
+                <button className="gallery-arrow arrow-right" onClick={handleNextImage} style={{ zIndex: 10 }}>
+                  <FaChevronRight />
+                </button>
+
+                {/* View Mode Toggle Button: Fit vs Fill */}
+                <button
+                  onClick={() => setImageFitMode(prev => prev === 'cover' ? 'contain' : 'cover')}
+                  title={imageFitMode === 'cover' ? 'Click to view full uncropped photo' : 'Click to fill container'}
+                  style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    zIndex: 12,
+                    backgroundColor: 'rgba(15, 23, 42, 0.78)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  {imageFitMode === 'cover' ? '🔍 View Full Uncropped Photo' : '🖼️ Fill Gallery Container'}
+                </button>
+
                 <img 
                   src={galleryImages[activeImageIndex]} 
                   alt={`${property.title} - View ${activeImageIndex + 1}`} 
                   className="prop-gallery-img" 
+                  style={{ position: 'relative', zIndex: 2, width: '100%', height: '100%', objectFit: imageFitMode }}
                 />
                 {(property.sold || property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') && (
                   <div
@@ -802,23 +848,128 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             <div className="prop-section-block">
               <h3 className="section-block-title">Details</h3>
               <div className="prop-spec-table">
-                {property.specs ? (
-                  // Custom dynamic specifications for Franchise / Business (only non-empty fields)
-                  Object.entries(property.specs)
-                    .filter(([_, val]) => val !== undefined && val !== null && String(val).trim() !== '')
-                    .reduce<any[]>((acc, [key, val], idx, arr) => {
+                {(() => {
+                  const activeSpecsList: { label: string; value: string }[] = [];
+
+                  if (property.specs && typeof property.specs === 'object' && Object.keys(property.specs).length > 0) {
+                    Object.entries(property.specs).forEach(([k, v]) => {
+                      if (v !== undefined && v !== null && String(v).trim() !== '') {
+                        activeSpecsList.push({ label: k, value: String(v) });
+                      }
+                    });
+                  } else {
+                    const rawType = property.propertySubtype || property.category || property.type || property.propertyType;
+                    if (rawType && String(rawType).trim() !== '') {
+                      activeSpecsList.push({
+                        label: isCommercial ? 'Commercial Type' : (isPlot ? 'Property Category' : 'Property Type'),
+                        value: String(rawType)
+                      });
+                    }
+
+                    if (property.superBuiltUpArea || property.areaSqFt) {
+                      activeSpecsList.push({
+                        label: isPlot ? 'Plot Area' : 'Super Built-up Area',
+                        value: String(property.superBuiltUpArea || property.areaSqFt)
+                      });
+                    }
+
+                    if (property.carpetArea && String(property.carpetArea).trim() !== '') {
+                      activeSpecsList.push({
+                        label: 'Carpet Area',
+                        value: String(property.carpetArea)
+                      });
+                    }
+
+                    if (property.plotArea && !property.superBuiltUpArea && !property.areaSqFt) {
+                      activeSpecsList.push({
+                        label: 'Plot Area',
+                        value: String(property.plotArea)
+                      });
+                    }
+
+                    if (property.bedrooms !== undefined && property.bedrooms !== null && String(property.bedrooms).trim() !== '' && Number(property.bedrooms) > 0) {
+                      activeSpecsList.push({
+                        label: 'Bedrooms / BHK',
+                        value: `${property.bedrooms} BHK`
+                      });
+                    }
+
+                    if (property.bathrooms !== undefined && property.bathrooms !== null && String(property.bathrooms).trim() !== '' && Number(property.bathrooms) > 0) {
+                      activeSpecsList.push({
+                        label: isCommercial ? 'Washrooms' : 'Bathrooms',
+                        value: `${property.bathrooms} ${isCommercial ? 'Washrooms' : 'Bathrooms'}`
+                      });
+                    }
+
+                    if (property.parkingSlots !== undefined && property.parkingSlots !== null && String(property.parkingSlots).trim() !== '' && Number(property.parkingSlots) > 0) {
+                      activeSpecsList.push({
+                        label: 'Parking Slots',
+                        value: `${property.parkingSlots} Reserved`
+                      });
+                    }
+
+                    if (property.ownershipType && String(property.ownershipType).trim() !== '') {
+                      activeSpecsList.push({
+                        label: 'Ownership Type',
+                        value: String(property.ownershipType)
+                      });
+                    }
+
+                    if (property.facing && String(property.facing).trim() !== '') {
+                      activeSpecsList.push({
+                        label: 'Facing Direction',
+                        value: String(property.facing).includes('Facing') ? String(property.facing) : `${property.facing} Facing`
+                      });
+                    }
+
+                    if (property.furnishing && String(property.furnishing).trim() !== '') {
+                      activeSpecsList.push({
+                        label: 'Furnishing Status',
+                        value: String(property.furnishing)
+                      });
+                    }
+
+                    if (property.reraNumber && String(property.reraNumber).trim() !== '') {
+                      activeSpecsList.push({
+                        label: 'RERA Registration',
+                        value: String(property.reraNumber)
+                      });
+                    }
+
+                    if (property.listingStatus || property.status) {
+                      activeSpecsList.push({
+                        label: 'Status',
+                        value: String(property.listingStatus || property.status)
+                      });
+                    }
+
+                    if (Array.isArray(property.customFields)) {
+                      property.customFields.forEach((cf: any) => {
+                        if (cf && cf.label && cf.value && String(cf.value).trim() !== '') {
+                          activeSpecsList.push({ label: String(cf.label), value: String(cf.value) });
+                        }
+                      });
+                    }
+                  }
+
+                  if (activeSpecsList.length === 0) {
+                    activeSpecsList.push({ label: 'Category', value: property.category || 'Property' });
+                    activeSpecsList.push({ label: 'Location', value: property.city || property.area || 'Available' });
+                  }
+
+                  return activeSpecsList.reduce<any[]>((acc, item, idx, arr) => {
                     if (idx % 2 === 0) {
                       const next = arr[idx + 1];
                       acc.push(
                         <div key={idx} className="prop-spec-row">
                           <div className="spec-col">
-                            <span className="spec-lbl">{key}</span>
-                            <span className="spec-val" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{val as string}</span>
+                            <span className="spec-lbl">{item.label}</span>
+                            <span className="spec-val" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{item.value}</span>
                           </div>
                           {next ? (
                             <div className="spec-col">
-                              <span className="spec-lbl">{next[0]}</span>
-                              <span className="spec-val" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{next[1] as string}</span>
+                              <span className="spec-lbl">{next.label}</span>
+                              <span className="spec-val" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{next.value}</span>
                             </div>
                           ) : (
                             <div className="spec-col">
@@ -830,167 +981,32 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                       );
                     }
                     return acc;
-                  }, [])
-                ) : isPlot ? (
-                  // Category-Specific: Plot / Land Specifications
-                  <>
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Property Category</span>
-                        <span className="spec-val">Plot / Land</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Plot Area</span>
-                        <span className="spec-val">{property.plotArea || property.areaSqFt || `${superArea} Sq. Yards`}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Approval Authority</span>
-                        <span className="spec-val">{property.reraNumber ? `RERA (${property.reraNumber})` : 'RERA & DTCP Approved'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Facing Direction</span>
-                        <span className="spec-val">{property.facing || 'East Facing'}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Ownership Type</span>
-                        <span className="spec-val">{property.ownershipType || 'Freehold Clear Title'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Possession Status</span>
-                        <span className="spec-val">{property.listingStatus || 'Immediate Registration'}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Road Width</span>
-                        <span className="spec-val">40 Ft Wide CC Road</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Boundary / Gated</span>
-                        <span className="spec-val">Gated Compound Wall</span>
-                      </div>
-                    </div>
-                  </>
-                ) : isCommercial ? (
-                  // Category-Specific: Commercial Property Specifications
-                  <>
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Commercial Type</span>
-                        <span className="spec-val">{property.propertySubtype || typeDisplay || 'Office Space'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Super Built-up Area</span>
-                        <span className="spec-val">{formatArea(property.superBuiltUpArea, superArea)}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Carpet Area</span>
-                        <span className="spec-val">{formatArea(property.carpetArea, carpetArea)}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Washrooms</span>
-                        <span className="spec-val">{property.bathrooms ? `${property.bathrooms} Washrooms` : 'Private Executive Washroom'}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Parking Slots</span>
-                        <span className="spec-val">{property.parkingSlots ? `${property.parkingSlots} Reserved` : 'Reserved Parking'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Power Backup</span>
-                        <span className="spec-val">100% DG Backup</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Ownership Type</span>
-                        <span className="spec-val">{property.ownershipType || 'Freehold Commercial'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Suitable For</span>
-                        <span className="spec-val">IT Office / Corporate / Retail / Clinic</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  // Category-Specific: Residential Property Specifications
-                  <>
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Property Type</span>
-                        <span className="spec-val">{property.propertySubtype || typeDisplay}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Bedrooms / BHK</span>
-                        <span className="spec-val">{property.bedrooms ? `${property.bedrooms} BHK` : '3 BHK'}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Super Built-up Area</span>
-                        <span className="spec-val">{formatArea(property.superBuiltUpArea, superArea)}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Bathrooms</span>
-                        <span className="spec-val">{property.bathrooms ? `${property.bathrooms} Bathrooms` : '2 Bathrooms'}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Project Status</span>
-                        <span className="spec-val">{property.listingStatus || 'Ready to Move'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Ownership Type</span>
-                        <span className="spec-val">{property.ownershipType || 'Freehold'}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Facing Direction</span>
-                        <span className="spec-val">{property.facing || 'East Facing'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Carpet Area</span>
-                        <span className="spec-val">{formatArea(property.carpetArea, carpetArea)}</span>
-                      </div>
-                    </div>
-
-                    <div className="prop-spec-row">
-                      <div className="spec-col">
-                        <span className="spec-lbl">Parking Slots</span>
-                        <span className="spec-val">{property.parkingSlots ? `${property.parkingSlots} Covered` : '1 Covered'}</span>
-                      </div>
-                      <div className="spec-col">
-                        <span className="spec-lbl">Furnishing</span>
-                        <span className="spec-val">{property.furnishing || 'Unfurnished'}</span>
-                      </div>
-                    </div>
-                  </>
-                )}
+                  }, []);
+                })()}
               </div>
             </div>
 
             {/* Description Section */}
             <div className="prop-section-block" style={{ marginTop: '2rem' }}>
               <h3 className="section-block-title">Description</h3>
-              <p className="prop-desc-text">{property.description}</p>
+              <div 
+                className="prop-desc-text"
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  lineHeight: '1.85',
+                  fontSize: '1rem',
+                  color: '#334155',
+                  backgroundColor: '#FFFFFF',
+                  padding: '24px',
+                  borderRadius: '16px',
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+                }}
+              >
+                {property.description || 'No description provided.'}
+              </div>
             </div>
 
             {/* Amenities Section */}

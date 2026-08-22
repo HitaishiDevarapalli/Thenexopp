@@ -136,6 +136,7 @@ model Property {
   featured      Boolean        @default(false)
   ownershipType String         @default("Individual")
   propertyType  String         @default("Residential")
+  furnishing    String?        @default("Unfurnished")
   areaSqFt      String
   bedrooms      Int            @default(0)
   bathrooms     Int            @default(0)

@@ -2882,6 +2882,7 @@ app.post('/api/properties', async (req, res, next) => {
         category: newProp.category || 'Flats',
         status: newProp.status || 'Buy',
         listingStatus: listingStatus,
+        furnishing: newProp.furnishing || newProp.furnishingStatus || 'Unfurnished',
         areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
         bedrooms: Number(newProp.bedrooms) || 0,
         bathrooms: Number(newProp.bathrooms) || 0,
@@ -2923,6 +2924,7 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.priceDisplay !== undefined) updateData.priceDisplay = String(d.priceDisplay);
     if (d.category !== undefined) updateData.category = String(d.category);
     if (d.status !== undefined) updateData.status = String(d.status);
+    if (d.furnishing !== undefined || d.furnishingStatus !== undefined) updateData.furnishing = String(d.furnishing || d.furnishingStatus);
     if (d.areaSqFt !== undefined) updateData.areaSqFt = String(d.areaSqFt);
     if (d.bedrooms !== undefined) updateData.bedrooms = Number(d.bedrooms);
     if (d.bathrooms !== undefined) updateData.bathrooms = Number(d.bathrooms);
@@ -3157,6 +3159,11 @@ app.post('/api/businesses', async (req, res, next) => {
       }
     }
 
+    const estYearParsed = b.establishedYear ? parseInt(String(b.establishedYear).replace(/\D/g, ''), 10) : NaN;
+    const empCountParsed = b.employeesCount ? parseInt(String(b.employeesCount).replace(/\D/g, ''), 10) : NaN;
+    const priceParsed = !isNaN(Number(b.price)) ? Number(b.price) : (!isNaN(Number(b.askingPrice)) ? Number(b.askingPrice) : 0);
+    const askingPriceParsed = !isNaN(Number(b.askingPrice)) ? Number(b.askingPrice) : priceParsed;
+
     const businessData = {
       name: b.name || b.title || 'Business Listing',
       title: b.title || b.name || 'Business Listing',
@@ -3172,17 +3179,17 @@ app.post('/api/businesses', async (req, res, next) => {
       landmark: b.landmark || b.subLocation || '',
       pincode: b.pincode || b.postal_code || '',
       fullAddress: b.fullAddress || '',
-      latitude: Number(b.latitude) || 17.4326,
-      longitude: Number(b.longitude) || 78.4071,
-      price: Number(b.price) || Number(b.askingPrice) || 0,
-      askingPrice: Number(b.askingPrice) || Number(b.price) || 0,
-      priceDisplay: b.priceDisplay || `₹${b.price || b.askingPrice || 0} Lakhs`,
+      latitude: !isNaN(Number(b.latitude)) && Number(b.latitude) !== 0 ? Number(b.latitude) : 17.4326,
+      longitude: !isNaN(Number(b.longitude)) && Number(b.longitude) !== 0 ? Number(b.longitude) : 78.4071,
+      price: priceParsed,
+      askingPrice: askingPriceParsed,
+      priceDisplay: b.priceDisplay || `₹${priceParsed} Lakhs`,
       revenueMonthly: b.revenueMonthly || '',
       profitMonthly: b.profitMonthly || '',
-      establishedYear: b.establishedYear ? Number(b.establishedYear) : null,
-      employeesCount: b.employeesCount ? Number(b.employeesCount) : 0,
-      rating: Number(b.rating) || 0,
-      reviewCount: Number(b.reviewCount) || 0,
+      establishedYear: (!isNaN(estYearParsed) && estYearParsed > 1800) ? estYearParsed : 2020,
+      employeesCount: (!isNaN(empCountParsed) && empCountParsed >= 0) ? empCountParsed : 10,
+      rating: !isNaN(Number(b.rating)) ? Number(b.rating) : 4.7,
+      reviewCount: !isNaN(Number(b.reviewCount)) ? Number(b.reviewCount) : 0,
       verified: b.verified !== false,
       image: b.image || b.imageUrl || (imagesList[0] || ''),
       image2: b.image2 || (imagesList[1] || null),
@@ -3193,7 +3200,7 @@ app.post('/api/businesses', async (req, res, next) => {
       images: imagesList,
       description: b.description || '',
       reasonForSale: b.reasonForSale || '',
-      trustScore: Number(b.trustScore) || 0,
+      trustScore: !isNaN(Number(b.trustScore)) ? Number(b.trustScore) : 95,
       sellerProfile: b.sellerProfile || '',
       dealerId: bId,
       brokerId: safeBrokerId,
@@ -3250,8 +3257,14 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.priceDisplay !== undefined) updateData.priceDisplay = b.priceDisplay;
     if (b.revenueMonthly !== undefined) updateData.revenueMonthly = b.revenueMonthly;
     if (b.profitMonthly !== undefined) updateData.profitMonthly = b.profitMonthly;
-    if (b.establishedYear !== undefined) updateData.establishedYear = b.establishedYear ? Number(b.establishedYear) : null;
-    if (b.employeesCount !== undefined) updateData.employeesCount = b.employeesCount ? Number(b.employeesCount) : 0;
+    if (b.establishedYear !== undefined) {
+      const parsedEstYear = parseInt(String(b.establishedYear).replace(/\D/g, ''), 10);
+      if (!isNaN(parsedEstYear) && parsedEstYear > 1800) updateData.establishedYear = parsedEstYear;
+    }
+    if (b.employeesCount !== undefined) {
+      const parsedEmpCount = parseInt(String(b.employeesCount).replace(/\D/g, ''), 10);
+      if (!isNaN(parsedEmpCount) && parsedEmpCount >= 0) updateData.employeesCount = parsedEmpCount;
+    }
     if (b.image !== undefined) updateData.image = b.image;
     if (b.image2 !== undefined) updateData.image2 = b.image2;
     if (b.image3 !== undefined) updateData.image3 = b.image3;
@@ -4116,8 +4129,175 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error({ reason, promise }, 'CRITICAL: Caught unhandledRejection to prevent process crash');
 });
 
+const ensureInitialBusinessData = async () => {
+  try {
+    const count = await prisma.business.count().catch(() => 0);
+    if (count === 0) {
+      const initialSeedBusinesses = [
+        {
+          id: 'biz-seed-1',
+          name: 'Premium Multi-Cuisine Fine Dining Restaurant & Bar',
+          title: 'Premium Multi-Cuisine Fine Dining Restaurant & Bar',
+          industry: 'Restaurants & Cafés',
+          category: 'Restaurants & Cafés',
+          businessType: 'Private Limited Company (Pvt Ltd)',
+          location: 'Gachibowli, Hyderabad',
+          state: 'Telangana',
+          district: 'Hyderabad',
+          city: 'Hyderabad',
+          area: 'Gachibowli',
+          latitude: 17.4401,
+          longitude: 78.3489,
+          price: 85,
+          askingPrice: 85,
+          priceDisplay: '₹85 Lakhs',
+          revenueMonthly: '₹18 Lakhs/mo',
+          profitMonthly: '₹4.5 Lakhs/mo',
+          establishedYear: 2019,
+          employeesCount: 18,
+          rating: 4.9,
+          reviewCount: 34,
+          verified: true,
+          published: true,
+          featured: true,
+          status: 'Available',
+          image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
+            'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80'
+          ],
+          description: 'Fully equipped 4200 sq ft fine dining restaurant with liquor license, commercial kitchen, seating capacity of 120, and steady corporate clientele in Financial District.',
+          reasonForSale: 'Partner relocation abroad',
+          trustScore: 98,
+          agentName: 'Vikram Reddy (NexOpp Business Desk)',
+        },
+        {
+          id: 'biz-seed-2',
+          name: 'Established Supermarket & Grocery Store Outlet',
+          title: 'Established Supermarket & Grocery Store Outlet',
+          industry: 'Retail & Stores',
+          category: 'Retail & Stores',
+          businessType: 'Partnership Firm',
+          location: 'Hitec City, Hyderabad',
+          state: 'Telangana',
+          district: 'Hyderabad',
+          city: 'Hyderabad',
+          area: 'Hitec City',
+          latitude: 17.4435,
+          longitude: 78.3772,
+          price: 45,
+          askingPrice: 45,
+          priceDisplay: '₹45 Lakhs',
+          revenueMonthly: '₹12 Lakhs/mo',
+          profitMonthly: '₹2.8 Lakhs/mo',
+          establishedYear: 2021,
+          employeesCount: 8,
+          rating: 4.8,
+          reviewCount: 22,
+          verified: true,
+          published: true,
+          featured: true,
+          status: 'Available',
+          image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1000&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1000&q=80'
+          ],
+          description: 'Profitable 2200 sq ft supermarket in high-density gated township. POS software, POS billers, refrigeration units, and inventory worth ₹18 Lakhs included.',
+          reasonForSale: 'Owner focusing on manufacturing expansion',
+          trustScore: 96,
+          agentName: 'Rajesh Sharma',
+        },
+        {
+          id: 'biz-seed-3',
+          name: 'Luxury Unisex Beauty Salon & Wellness Spa',
+          title: 'Luxury Unisex Beauty Salon & Wellness Spa',
+          industry: 'Beauty & Wellness',
+          category: 'Beauty & Wellness',
+          businessType: 'Sole Proprietorship',
+          location: 'Jubilee Hills, Hyderabad',
+          state: 'Telangana',
+          district: 'Hyderabad',
+          city: 'Hyderabad',
+          area: 'Jubilee Hills',
+          latitude: 17.4319,
+          longitude: 78.4072,
+          price: 35,
+          askingPrice: 35,
+          priceDisplay: '₹35 Lakhs',
+          revenueMonthly: '₹8 Lakhs/mo',
+          profitMonthly: '₹2.2 Lakhs/mo',
+          establishedYear: 2020,
+          employeesCount: 12,
+          rating: 4.9,
+          reviewCount: 45,
+          verified: true,
+          published: true,
+          featured: true,
+          status: 'Available',
+          image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1000&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1000&q=80'
+          ],
+          description: 'Premium salon & spa equipped with 10 styling stations, 3 massage rooms, manicure/pedicure section, and celebrity client portfolio.',
+          reasonForSale: 'Owner retiring',
+          trustScore: 97,
+          agentName: 'Priya Narang',
+        },
+        {
+          id: 'biz-seed-4',
+          name: 'Automobile Authorized Service Center & Garage',
+          title: 'Automobile Authorized Service Center & Garage',
+          industry: 'Automobile & Garage',
+          category: 'Automobile & Garage',
+          businessType: 'Private Limited Company (Pvt Ltd)',
+          location: 'Banjara Hills, Hyderabad',
+          state: 'Telangana',
+          district: 'Hyderabad',
+          city: 'Hyderabad',
+          area: 'Banjara Hills',
+          latitude: 17.4156,
+          longitude: 78.4347,
+          price: 120,
+          askingPrice: 120,
+          priceDisplay: '₹1.2 Cr',
+          revenueMonthly: '₹25 Lakhs/mo',
+          profitMonthly: '₹6 Lakhs/mo',
+          establishedYear: 2018,
+          employeesCount: 22,
+          rating: 4.8,
+          reviewCount: 68,
+          verified: true,
+          published: true,
+          featured: true,
+          status: 'Available',
+          image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=80'
+          ],
+          description: 'Multi-brand multi-bay car service workstation with hydraulic lifts, automated paint booth, OBD scanner tools, and annual corporate AMC contracts.',
+          reasonForSale: 'Business consolidation',
+          trustScore: 99,
+          agentName: 'Suresh Kumar',
+        }
+      ];
+
+      for (const b of initialSeedBusinesses) {
+        await prisma.business.upsert({
+          where: { id: b.id },
+          update: b,
+          create: b,
+        }).catch(err => console.warn('Seed business error:', err.message));
+      }
+      logger.info('Auto-seeded initial Business listings into PostgreSQL database');
+    }
+  } catch (e) {
+    logger.warn('Seed business count check error:', e.message);
+  }
+};
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`[NEXOPP Enterprise API] Server running on http://0.0.0.0:${PORT} and http://127.0.0.1:${PORT} (${process.env.NODE_ENV || 'production'})`);
+  ensureInitialBusinessData().catch(() => {});
 });
 
 server.on('error', (err) => {

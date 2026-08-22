@@ -107,10 +107,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [bhkOpen, setBhkOpen] = useState(true);
   const [typeOpen, setTypeOpen] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [isFurnishingOpen, setIsFurnishingOpen] = useState(true);
 
   const [selectedBhks, setSelectedBhks] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedMoreFilters, setSelectedMoreFilters] = useState<string[]>([]);
+  const [selectedFurnishingsFilter, setSelectedFurnishingsFilter] = useState<string[]>([]);
   const [availabilityFilter, setAvailabilityFilter] = useState<'All' | 'Available' | 'Sold'>('All');
 
   useEffect(() => {
@@ -645,10 +647,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     );
   };
 
+  const toggleFurnishingFilter = (val: string) => {
+    setSelectedFurnishingsFilter((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
+    );
+  };
+
   const clearAllFilters = () => {
     setSelectedPropertyTypesFilter([]);
     setSelectedPropertyStatusesFilter([]);
     setSelectedPropertyOwnershipsFilter([]);
+    setSelectedFurnishingsFilter([]);
     setSelectedBhks([]);
     setSelectedTypes([]);
     setSelectedMoreFilters([]);
@@ -707,6 +716,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         bath: String(p.bathrooms || 3),
         parking: String(p.parking || 1),
         price: p.priceDisplay || (`₹ ${p.price || 1} L`),
+        priceDisplay: p.priceDisplay || (`₹ ${p.price || 1} L`),
         dist: '1.2 KM away',
         brokerName,
         brokerRating,
@@ -714,11 +724,23 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         dealerId: assignedBroker?.id || p.dealerId,
         type: p.category || 'Apartment',
         facing: p.facing || 'East',
+        furnishing: p.furnishing || (p as any).furnishingStatus || 'Unfurnished',
         latitude: p.latitude,
         longitude: p.longitude,
         city: p.city,
         rawPrice: (p.price && p.price < 10) ? p.price * 100 : (p.price || 0),
-        status: p.status || 'Buy',
+        propertyPurpose: p.propertyPurpose || (String(p.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
+        status: (
+          String(p.status || '').toLowerCase().includes('rent') ||
+          String(p.status || '').toLowerCase().includes('lease') ||
+          String(p.propertyPurpose || '').toLowerCase().includes('rent') ||
+          String(p.propertyPurpose || '').toLowerCase().includes('lease') ||
+          String(p.title || '').toLowerCase().includes('for rent') ||
+          String(p.title || '').toLowerCase().includes('for lease') ||
+          String(p.title || '').toLowerCase().includes('rent/lease') ||
+          String(p.priceDisplay || '').toLowerCase().includes('/mo') ||
+          String(p.priceDisplay || '').toLowerCase().includes('/month')
+        ) ? 'Rent' : (p.status || 'Buy'),
         availabilityCount: p.availabilityCount || 0,
         trending: p.trending || false,
         approvalStatus: p.approvalStatus,
@@ -871,10 +893,19 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       (item as any).distanceTier = distanceTier;
 
       // 3. Tab Categorization
+      const isItemRent = item.status.toLowerCase() === 'rent' ||
+                         String((item as any).propertyPurpose || '').toLowerCase().includes('rent') ||
+                         String((item as any).propertyPurpose || '').toLowerCase().includes('lease') ||
+                         item.title.toLowerCase().includes('for rent') ||
+                         item.title.toLowerCase().includes('for lease') ||
+                         item.title.toLowerCase().includes('rent/lease') ||
+                         (item.price || '').toLowerCase().includes('/mo') ||
+                         (item.price || '').toLowerCase().includes('/month');
+
       if (activeTab === 'Buy') {
-        if (item.status.toLowerCase() !== 'buy' && item.status.toLowerCase() !== 'sell') return false;
+        if (isItemRent) return false;
       } else if (activeTab === 'Rent') {
-        if (item.status.toLowerCase() !== 'rent') return false;
+        if (!isItemRent) return false;
         if (rentCategoryFilter !== 'All') {
           const itemType = (item.type || '').toLowerCase();
           const itemTitle = (item.title || '').toLowerCase();
@@ -997,6 +1028,19 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           return true;
         });
         if (!matchOwner) return false;
+      }
+
+      // SPECIFIED FILTER 6: Furnishing Status (Furnished, Semi-Furnished, Unfurnished)
+      if (selectedFurnishingsFilter.length > 0) {
+        const itemFurn = ((item as any).furnishing || (item as any).furnishingStatus || '').toLowerCase();
+        const matchFurn = selectedFurnishingsFilter.some((f) => {
+          const norm = f.toLowerCase();
+          if (norm === 'furnished') return itemFurn.includes('furnished') && !itemFurn.includes('semi');
+          if (norm === 'semi-furnished') return itemFurn.includes('semi');
+          if (norm === 'unfurnished') return itemFurn.includes('unfurnished') || (!itemFurn.includes('furnished') && !itemFurn.includes('semi'));
+          return itemFurn.includes(norm);
+        });
+        if (!matchFurn) return false;
       }
 
       // 6. Budget Slider Min / Max
@@ -1680,6 +1724,36 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 )}
               </div>
             )}
+
+            {/* 6. Furnishing Status Filter Section */}
+            <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
+              <div 
+                onClick={() => setIsFurnishingOpen(!isFurnishingOpen)}
+                style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isFurnishingOpen ? '10px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+              >
+                <span>■ Furnishing Status</span>
+                {isFurnishingOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
+              </div>
+
+              {isFurnishingOpen && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {['Furnished', 'Semi-Furnished', 'Unfurnished'].map((f) => {
+                    const isSelected = selectedFurnishingsFilter.includes(f);
+                    return (
+                      <label key={f} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleFurnishingFilter(f)}
+                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>{f}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* RIGHT RESULTS AREA */}
@@ -2089,6 +2163,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <FaCar style={{ color: '#3B82F6' }} /> {prop.parking}
                               </span>
+                              {prop.furnishing && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                                  🛋️ {prop.furnishing}
+                                </span>
+                              )}
                             </div>
                           );
                         })()}

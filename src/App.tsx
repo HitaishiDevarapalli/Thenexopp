@@ -33,6 +33,7 @@ const SellBusinessPage = lazy(() => import('./components/forms/SellBusinessPage'
 const SellPropertyPage = lazy(() => import('./components/forms/SellPropertyPage').then(m => ({ default: m.SellPropertyPage })));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const NexOppAiAssistant = lazy(() => import('./components/NexOppAiAssistant'));
+const RentPropertyPage = lazy(() => import('./components/RentPropertyPage').then(m => ({ default: m.RentPropertyPage })));
 
 type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
 
@@ -459,23 +460,34 @@ export const App: React.FC = () => {
                 }}
               />
               )
-            ) : (currentPage === 'rentPage' || currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
+            ) : currentPage === 'rentPage' ? (
+              <RentPropertyPage 
+                onBack={navigateBack}
+                searchQuery={globalSearchQuery}
+                onClearSearch={() => setGlobalSearchQuery('')}
+                onPropertyClick={(id) => {
+                  setSelectedPropertyId(id);
+                  navigateTo('propertyDetails', { propertyId: id });
+                }} 
+                onBuyProperty={(id) => {
+                  setSelectedBuyPropertyId(id);
+                  navigateTo('closeDeal', { propertyId: id });
+                }}
+              />
+            ) : (currentPage === 'flatsPage' || currentPage === 'villasPage' || currentPage === 'housesPage' || currentPage === 'landPage') ? (
               <PropertyCategories 
                 title={
-                  currentPage === 'rentPage' ? 'Rental Properties Marketplace' :
                   currentPage === 'flatsPage' ? 'Flats & Apartments' :
                   currentPage === 'villasPage' ? 'Villas' :
                   currentPage === 'housesPage' ? 'Individual Houses' : 'Lands & Plots'
                 }
                 subtitle={
-                  currentPage === 'rentPage' ? 'Explore verified residential & commercial properties for rent' :
                   currentPage === 'flatsPage' ? 'Explore 1, 2, 3 & 4+ BHK luxury apartments and gated societies' :
                   currentPage === 'villasPage' ? 'Discover premium luxury villas and row houses' :
                   currentPage === 'housesPage' ? 'Discover independent houses, villas and bungalows for sale & rent' : 'Verified residential plots, commercial lands and agricultural layouts'
                 }
                 onBack={navigateBack}
                 initialCategory={
-                  currentPage === 'rentPage' ? 'Rent' :
                   currentPage === 'flatsPage' ? 'BuyApartment' :
                   currentPage === 'villasPage' ? 'BuyVilla' :
                   currentPage === 'housesPage' ? 'BuyHouse' : 'BuyLand'

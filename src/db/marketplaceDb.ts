@@ -1356,46 +1356,76 @@ export const deleteDealer = (id: string) => {
   }).catch(err => console.error('API Sync Error:', err));
 };
 
-export const addBusiness = (item: BusinessListing) => {
+export const addBusiness = async (item: BusinessListing) => {
   const primaryImg = item.image || item.imageUrl || (item.images && item.images[0]) || '';
   const allImages = item.images && item.images.length > 0 ? item.images : (primaryImg ? [primaryImg] : []);
   const effectiveDealerId = item.dealerId || item.brokerId || (item.assignedBrokerIds && item.assignedBrokerIds[0]) || undefined;
+
+  const estYearParsed = item.establishedYear ? parseInt(String(item.establishedYear).replace(/\D/g, ''), 10) : NaN;
+  const empCountParsed = item.employeesCount ? parseInt(String(item.employeesCount).replace(/\D/g, ''), 10) : NaN;
+  const numPrice = typeof item.price === 'number' ? item.price : (parseFloat(String(item.price || item.askingPrice || 0).replace(/[^0-9.]/g, '')) || 0);
+
   const norm: BusinessListing = {
     ...item,
     id: item.id || `biz-${Date.now()}`,
     name: item.name || item.title || 'Business Listing',
     title: item.title || item.name || 'Business Listing',
-    price: item.price !== undefined ? item.price : (item.askingPrice || 0),
-    askingPrice: item.askingPrice !== undefined ? item.askingPrice : (item.price || 0),
-    priceDisplay: item.priceDisplay || `₹${item.askingPrice || item.price || 0} Lakhs`,
+    price: numPrice,
+    askingPrice: numPrice,
+    priceDisplay: item.priceDisplay || `₹${numPrice} Lakhs`,
     image: primaryImg,
     images: allImages,
+    establishedYear: !isNaN(estYearParsed) && estYearParsed > 1800 ? estYearParsed : 2020,
+    employeesCount: !isNaN(empCountParsed) && empCountParsed >= 0 ? empCountParsed : 10,
     published: item.published !== false,
     status: item.status || 'Available',
     dealerId: effectiveDealerId,
     brokerId: effectiveDealerId,
     assignedBrokerIds: effectiveDealerId ? [effectiveDealerId] : (item.assignedBrokerIds || []),
   };
+
   businessDb = [norm, ...businessDb.filter(b => b.id !== norm.id)];
   saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
-  fetch(`${API_BASE_URL}/api/businesses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(norm)
-  }).catch(err => console.error('API Sync Error:', err));
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/businesses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(norm)
+    });
+    if (res && res.ok) {
+      const serverCreated = await res.json().catch(() => null);
+      if (serverCreated && serverCreated.id) {
+        businessDb = businessDb.map(b => b.id === norm.id ? { ...b, ...serverCreated } : b);
+        saveToStorage('nexopp_business_db', businessDb);
+        notifyDataChanged();
+      }
+    }
+  } catch (err) {
+    console.error('API Business Sync Error:', err);
+  }
 };
 
-export const updateBusiness = (id: string, updated: Partial<BusinessListing>) => {
+export const updateBusiness = async (id: string, updated: Partial<BusinessListing>) => {
+  const estYearParsed = updated.establishedYear ? parseInt(String(updated.establishedYear).replace(/\D/g, ''), 10) : undefined;
+  const empCountParsed = updated.employeesCount ? parseInt(String(updated.employeesCount).replace(/\D/g, ''), 10) : undefined;
+
+  const cleanUpdated = {
+    ...updated,
+    ...(estYearParsed !== undefined && !isNaN(estYearParsed) ? { establishedYear: estYearParsed } : {}),
+    ...(empCountParsed !== undefined && !isNaN(empCountParsed) ? { employeesCount: empCountParsed } : {}),
+  };
+
   businessDb = businessDb.map(b => {
     if (b.id === id) {
-      const merged = { ...b, ...updated };
-      if (updated.images && updated.images.length > 0 && !updated.image) {
-        merged.image = updated.images[0];
+      const merged = { ...b, ...cleanUpdated };
+      if (cleanUpdated.images && cleanUpdated.images.length > 0 && !cleanUpdated.image) {
+        merged.image = cleanUpdated.images[0];
       }
-      if (updated.dealerId !== undefined) {
-        merged.brokerId = updated.dealerId;
-        merged.assignedBrokerIds = updated.dealerId ? [updated.dealerId] : [];
+      if (cleanUpdated.dealerId !== undefined) {
+        merged.brokerId = cleanUpdated.dealerId;
+        merged.assignedBrokerIds = cleanUpdated.dealerId ? [cleanUpdated.dealerId] : [];
       }
       return merged;
     }
@@ -1403,21 +1433,31 @@ export const updateBusiness = (id: string, updated: Partial<BusinessListing>) =>
   });
   saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
-  fetch(`${API_BASE_URL}/api/businesses/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updated)
-  }).catch(err => console.error('API Sync Error:', err));
+
+  try {
+    await fetch(`${API_BASE_URL}/api/businesses/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cleanUpdated)
+    });
+  } catch (err) {
+    console.error('API Sync Error:', err);
+  }
 };
 
-export const deleteBusiness = (id: string) => {
+export const deleteBusiness = async (id: string) => {
   businessDb = businessDb.filter(b => b.id !== id);
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Business' && v.linkedId === id));
   saveToStorage('nexopp_business_db', businessDb);
   notifyDataChanged();
-  fetch(`${API_BASE_URL}/api/businesses/${id}`, {
-    method: 'DELETE'
-  }).catch(err => console.error('API Sync Error:', err));
+
+  try {
+    await fetch(`${API_BASE_URL}/api/businesses/${id}`, {
+      method: 'DELETE'
+    });
+  } catch (err) {
+    console.error('API Sync Error:', err);
+  }
 };
 
 // Showcase Video Mutations
