@@ -3260,16 +3260,11 @@ app.post('/api/businesses', async (req, res, next) => {
       reasonForSale: b.reasonForSale || '',
       trustScore: !isNaN(Number(b.trustScore)) ? Number(b.trustScore) : 95,
       sellerProfile: b.sellerProfile || '',
-      dealerId: bId,
-      brokerId: safeBrokerId,
-      assignedBrokerIds: assignedIds,
       published: b.published !== false,
       featured: b.featured === true || b.featured === 'true',
       status: b.status || (b.sold ? 'Sold' : 'Available'),
-      sold: b.sold === true || b.status === 'Sold',
-      recentlySold: b.recentlySold === true,
-      soldDate: b.soldDate || (b.sold || b.status === 'Sold' ? new Date().toISOString().slice(0, 10) : null),
-      badge: b.badge || (b.recentlySold ? 'RECENTLY ACQUIRED' : (b.sold ? 'SOLD' : null)),
+      dealerId: bId,
+      brokerId: safeBrokerId,
     };
 
     const created = await prisma.business.upsert({
