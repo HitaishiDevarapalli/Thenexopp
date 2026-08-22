@@ -4490,10 +4490,129 @@ const ensureInitialPropertyData = async () => {
   }
 };
 
+const ensureInitialCustomerData = async () => {
+  try {
+    const count = await prisma.customer.count().catch(() => 0);
+    if (count === 0) {
+      const initialSeedCustomers = [
+        {
+          id: 'cust-9848011223',
+          name: 'Rajeshwar Reddy',
+          email: 'rajeshwar.reddy@gmail.com',
+          mobile: '9848011223',
+          phone: '9848011223',
+          gender: 'Male',
+          district: 'Guntur',
+          area: 'Brodipet',
+          role: 'Franchise Partner',
+          status: 'Active',
+          loginCount: 12,
+          profileCompleted: true,
+          registeredDate: '10/01/2026',
+          lastLoginAt: new Date().toLocaleString()
+        },
+        {
+          id: 'cust-9440122334',
+          name: 'Srinivas Rao',
+          email: 'srinivas.rao@yahoo.com',
+          mobile: '9440122334',
+          phone: '9440122334',
+          gender: 'Male',
+          district: 'Vijayawada',
+          area: 'Benz Circle',
+          role: 'Business Buyer',
+          status: 'Active',
+          loginCount: 8,
+          profileCompleted: true,
+          registeredDate: '12/01/2026',
+          lastLoginAt: new Date().toLocaleString()
+        },
+        {
+          id: 'cust-9866123456',
+          name: 'Priya Sharma',
+          email: 'priya.sharma@outlook.com',
+          mobile: '9866123456',
+          phone: '9866123456',
+          gender: 'Female',
+          district: 'Hyderabad',
+          area: 'Gachibowli',
+          role: 'User',
+          status: 'Active',
+          loginCount: 15,
+          profileCompleted: true,
+          registeredDate: '15/01/2026',
+          lastLoginAt: new Date().toLocaleString()
+        },
+        {
+          id: 'cust-9988776655',
+          name: 'Anitha Kumari',
+          email: 'anitha.k@gmail.com',
+          mobile: '9988776655',
+          phone: '9988776655',
+          gender: 'Female',
+          district: 'Visakhapatnam',
+          area: 'MVP Colony',
+          role: 'User',
+          status: 'Active',
+          loginCount: 6,
+          profileCompleted: true,
+          registeredDate: '18/01/2026',
+          lastLoginAt: new Date().toLocaleString()
+        },
+        {
+          id: 'cust-9123456789',
+          name: 'Kiran Kumar',
+          email: 'kiran.k@gmail.com',
+          mobile: '9123456789',
+          phone: '9123456789',
+          gender: 'Male',
+          district: 'Guntur',
+          area: 'Arundelpet',
+          role: 'User',
+          status: 'Active',
+          loginCount: 4,
+          profileCompleted: true,
+          registeredDate: '22/01/2026',
+          lastLoginAt: new Date().toLocaleString()
+        },
+        {
+          id: 'cust-9876543210',
+          name: 'Aditya Varma',
+          email: 'aditya.v@gmail.com',
+          mobile: '9876543210',
+          phone: '9876543210',
+          gender: 'Male',
+          district: 'Hyderabad',
+          area: 'Jubilee Hills',
+          role: 'Business Buyer',
+          status: 'Active',
+          loginCount: 9,
+          profileCompleted: true,
+          registeredDate: '25/01/2026',
+          lastLoginAt: new Date().toLocaleString()
+        }
+      ];
+
+      for (const c of initialSeedCustomers) {
+        await prisma.customer.upsert({
+          where: { id: c.id },
+          update: c,
+          create: c,
+        }).catch(err => console.warn('Seed customer error:', err.message));
+        saveBackupCustomer(c);
+      }
+      logger.info('Auto-seeded initial Registered Customers into PostgreSQL database');
+    }
+  } catch (e) {
+    logger.warn('Seed customer count check error:', e.message);
+  }
+};
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`[NEXOPP Enterprise API] Server running on http://0.0.0.0:${PORT} and http://127.0.0.1:${PORT} (${process.env.NODE_ENV || 'production'})`);
   ensureInitialBusinessData().catch(() => {});
   ensureInitialPropertyData().catch(() => {});
+  ensureInitialCustomerData().catch(() => {});
 });
 
 server.on('error', (err) => {

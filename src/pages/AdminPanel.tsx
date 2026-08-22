@@ -796,6 +796,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchRegisteredCustomers = async () => {
     await fetchCustomersList();
+    try {
+      let res = await fetch(`${API_BASE_URL}/api/customers`).catch(() => null) ||
+                await fetch(`/api/customers`).catch(() => null);
+      if (res && res.ok) {
+        const list = await res.json().catch(() => null);
+        if (Array.isArray(list) && list.length > 0) {
+          setRegisteredCustomers(list);
+          setCustomerTotalCount(prev => Math.max(prev, list.length));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch full customer list:', e);
+    }
     await fetchCustomerLoginHistory();
   };
 
