@@ -954,7 +954,7 @@ export const persistAllToStorage = () => {
 };
 
 // PostgreSQL Data Sync Loader & LocalStorage Fallback Persistence
-const loadData = async () => {
+export const syncWithBackend = async () => {
   try {
     // 1. Restore from permanent local storage immediately on startup
     propertiesDb = loadFromStorage('nexopp_properties_db', []);
@@ -1185,7 +1185,7 @@ export const notifyDataChanged = () => {
 };
 
 // Initialize immediately on module load
-loadData();
+syncWithBackend();
 
 const sanitizeImgStr = (s: any) => {
   if (!s || typeof s !== 'string') return '';

@@ -64,6 +64,7 @@ import {
   franchiseDb, 
   businessDb,
   dealersDb, 
+  syncWithBackend,
   enquiriesDb, 
   siteSettingsDb, 
   teamMembersDb,
@@ -863,20 +864,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   }, [activeTab, isAuthenticated]);
 
   useEffect(() => {
-    fetchAllEnquiriesAndBookings();
-  }, [tick, isAuthenticated]);
-
-  useEffect(() => {
     if (!isAuthenticated) return;
+    syncWithBackend();
+    fetchAllEnquiriesAndBookings();
     fetchRegisteredCustomers();
+
+    const interval = setInterval(() => {
+      syncWithBackend();
+    }, 12000);
+
     const handler = () => {
       setTick(t => t + 1);
       fetchAllEnquiriesAndBookings();
       fetchRegisteredCustomers();
     };
     window.addEventListener('nexopp_data_changed', handler);
-    return () => window.removeEventListener('nexopp_data_changed', handler);
-  }, [isAuthenticated]);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('nexopp_data_changed', handler);
+    };
+  }, [isAuthenticated, activeTab]);
 
   useEffect(() => {
     const lenis = (window as any).lenis;
