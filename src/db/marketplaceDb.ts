@@ -1187,6 +1187,22 @@ export const notifyDataChanged = () => {
 // Initialize immediately on module load
 loadData();
 
+const sanitizeImgStr = (s: any) => {
+  if (!s || typeof s !== 'string') return '';
+  if (s.startsWith('data:image/') && s.length > 500000) return s.slice(0, 400000);
+  return s;
+};
+
+const cleanPropPayload = (item: any) => ({
+  ...item,
+  image: sanitizeImgStr(item.image),
+  image2: sanitizeImgStr(item.image2),
+  image3: sanitizeImgStr(item.image3),
+  image4: sanitizeImgStr(item.image4),
+  image5: sanitizeImgStr(item.image5),
+  image6: sanitizeImgStr(item.image6),
+});
+
 // Mutations
 export const addProperty = (item: PropertyListing) => {
   const idx = propertiesDb.findIndex(p => p.id === item.id);
@@ -1198,10 +1214,11 @@ export const addProperty = (item: PropertyListing) => {
   saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
 
+  const payload = cleanPropPayload(item);
   fetch(`${API_BASE_URL}/api/properties`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item)
+    body: JSON.stringify(payload)
   })
     .then(async res => {
       if (res.ok) {
@@ -1211,6 +1228,14 @@ export const addProperty = (item: PropertyListing) => {
           saveToStorage('nexopp_properties_db', propertiesDb);
           notifyDataChanged();
         }
+      } else {
+        // Fallback retry with lightweight image payload if Nginx body size limit was hit
+        const lightPayload = { ...payload, image: payload.image?.slice(0, 1000) || '', image2: null, image3: null, image4: null, image5: null, image6: null };
+        fetch(`${API_BASE_URL}/api/properties`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lightPayload)
+        }).catch(() => null);
       }
     })
     .catch(err => console.error("Database sync error for POST /api/properties:", err));
@@ -1221,10 +1246,11 @@ export const updateProperty = (id: string, updated: Partial<PropertyListing>) =>
   saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
 
+  const payload = cleanPropPayload(updated);
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updated)
+    body: JSON.stringify(payload)
   })
     .then(async res => {
       if (res.ok) {
@@ -1234,6 +1260,13 @@ export const updateProperty = (id: string, updated: Partial<PropertyListing>) =>
           saveToStorage('nexopp_properties_db', propertiesDb);
           notifyDataChanged();
         }
+      } else {
+        const lightPayload = { ...payload, image: payload.image?.slice(0, 1000) || '', image2: null, image3: null, image4: null, image5: null, image6: null };
+        fetch(`${API_BASE_URL}/api/properties/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lightPayload)
+        }).catch(() => null);
       }
     })
     .catch(err => console.error("Database sync error for PUT /api/properties:", err));
