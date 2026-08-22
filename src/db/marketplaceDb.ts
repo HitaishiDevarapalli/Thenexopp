@@ -833,8 +833,18 @@ const cleanPropPayload = (item: any) => ({
   image6: sanitizeImgStr(item.image6),
 });
 
-// Mutations — ALL write to VPS database FIRST, then refresh from server
+// Mutations — Immediate UI response + VPS server persistence
 export const addProperty = async (item: PropertyListing) => {
+  // 1. Instant optimistic update so UI shows added property immediately
+  const existingIdx = propertiesDb.findIndex(p => p.id === item.id);
+  if (existingIdx >= 0) {
+    propertiesDb[existingIdx] = { ...propertiesDb[existingIdx], ...item };
+  } else {
+    propertiesDb = [item, ...propertiesDb];
+  }
+  notifyDataChanged();
+
+  // 2. Server persistence & sync
   const payload = cleanPropPayload(item);
   try {
     const res = await fetch(`${API_BASE_URL}/api/properties`, {
@@ -845,7 +855,7 @@ export const addProperty = async (item: PropertyListing) => {
     if (res.ok) {
       await syncWithBackend();
     } else {
-      // Retry with lighter payload
+      // Retry with lighter payload if payload size issue
       await fetch(`${API_BASE_URL}/api/properties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -859,6 +869,9 @@ export const addProperty = async (item: PropertyListing) => {
 };
 
 export const updateProperty = async (id: string, updated: Partial<PropertyListing>) => {
+  propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...updated } : p);
+  notifyDataChanged();
+
   const payload = cleanPropPayload(updated);
   try {
     const res = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
@@ -880,6 +893,9 @@ export const updateProperty = async (id: string, updated: Partial<PropertyListin
 };
 
 export const deleteProperty = async (id: string) => {
+  propertiesDb = propertiesDb.filter(p => p.id !== id);
+  notifyDataChanged();
+
   try {
     await fetch(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' });
     await syncWithBackend();
@@ -1371,6 +1387,10 @@ export const addBusiness = async (item: BusinessListing) => {
     assignedBrokerIds: effectiveDealerId ? [effectiveDealerId] : (item.assignedBrokerIds || []),
   };
 
+  // Immediate optimistic update
+  businessDb = [norm, ...businessDb.filter(b => b.id !== norm.id)];
+  notifyDataChanged();
+
   try {
     await fetch(`${API_BASE_URL}/api/businesses`, {
       method: 'POST',
@@ -1393,6 +1413,9 @@ export const updateBusiness = async (id: string, updated: Partial<BusinessListin
     ...(empCountParsed !== undefined && !isNaN(empCountParsed) ? { employeesCount: empCountParsed } : {}),
   };
 
+  businessDb = businessDb.map(b => b.id === id ? { ...b, ...cleanUpdated } : b);
+  notifyDataChanged();
+
   try {
     await fetch(`${API_BASE_URL}/api/businesses/${id}`, {
       method: 'PUT',
@@ -1406,6 +1429,9 @@ export const updateBusiness = async (id: string, updated: Partial<BusinessListin
 };
 
 export const deleteBusiness = async (id: string) => {
+  businessDb = businessDb.filter(b => b.id !== id);
+  notifyDataChanged();
+
   try {
     await fetch(`${API_BASE_URL}/api/businesses/${id}`, { method: 'DELETE' });
     await syncWithBackend();
