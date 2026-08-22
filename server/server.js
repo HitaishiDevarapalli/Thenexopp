@@ -3234,17 +3234,10 @@ app.post('/api/businesses', async (req, res, next) => {
       businessType: b.businessType || 'Private Limited',
       location: b.location || b.city || 'Hyderabad',
       state: b.state || 'Telangana',
-      district: b.district || '',
       city: b.city || 'Hyderabad',
-      area: b.area || '',
-      subLocation: b.subLocation || b.sub_location || b.landmark || '',
-      landmark: b.landmark || b.subLocation || '',
-      pincode: b.pincode || b.postal_code || '',
-      fullAddress: b.fullAddress || '',
       latitude: !isNaN(Number(b.latitude)) && Number(b.latitude) !== 0 ? Number(b.latitude) : 17.4326,
       longitude: !isNaN(Number(b.longitude)) && Number(b.longitude) !== 0 ? Number(b.longitude) : 78.4071,
       price: priceParsed,
-      askingPrice: askingPriceParsed,
       priceDisplay: b.priceDisplay || `₹${priceParsed} Lakhs`,
       revenueMonthly: b.revenueMonthly || '',
       profitMonthly: b.profitMonthly || '',
@@ -3307,17 +3300,9 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.businessType !== undefined) updateData.businessType = b.businessType;
     if (b.location !== undefined) updateData.location = b.location;
     if (b.city !== undefined) updateData.city = b.city;
-    if (b.state !== undefined) updateData.state = b.state;
-    if (b.district !== undefined) updateData.district = b.district;
-    if (b.area !== undefined) updateData.area = b.area;
-    if (b.subLocation !== undefined) updateData.subLocation = b.subLocation;
-    if (b.landmark !== undefined) updateData.landmark = b.landmark;
-    if (b.pincode !== undefined) updateData.pincode = b.pincode;
-    if (b.fullAddress !== undefined) updateData.fullAddress = b.fullAddress;
     if (b.latitude !== undefined) updateData.latitude = Number(b.latitude);
     if (b.longitude !== undefined) updateData.longitude = Number(b.longitude);
     if (b.price !== undefined) updateData.price = Number(b.price);
-    if (b.askingPrice !== undefined) updateData.askingPrice = Number(b.askingPrice);
     if (b.priceDisplay !== undefined) updateData.priceDisplay = b.priceDisplay;
     if (b.revenueMonthly !== undefined) updateData.revenueMonthly = b.revenueMonthly;
     if (b.profitMonthly !== undefined) updateData.profitMonthly = b.profitMonthly;
@@ -4212,7 +4197,6 @@ const ensureInitialBusinessData = async () => {
         latitude: 17.4401,
         longitude: 78.3489,
         price: 85,
-        askingPrice: 85,
         priceDisplay: '₹85 Lakhs',
         revenueMonthly: '₹18 Lakhs/mo',
         profitMonthly: '₹4.5 Lakhs/mo',
@@ -4246,7 +4230,6 @@ const ensureInitialBusinessData = async () => {
         latitude: 17.4435,
         longitude: 78.3772,
         price: 45,
-        askingPrice: 45,
         priceDisplay: '₹45 Lakhs',
         revenueMonthly: '₹12 Lakhs/mo',
         profitMonthly: '₹2.8 Lakhs/mo',
@@ -4279,7 +4262,6 @@ const ensureInitialBusinessData = async () => {
         latitude: 17.4319,
         longitude: 78.4072,
         price: 35,
-        askingPrice: 35,
         priceDisplay: '₹35 Lakhs',
         revenueMonthly: '₹8 Lakhs/mo',
         profitMonthly: '₹2.2 Lakhs/mo',
@@ -4312,7 +4294,6 @@ const ensureInitialBusinessData = async () => {
         latitude: 17.4156,
         longitude: 78.4347,
         price: 120,
-        askingPrice: 120,
         priceDisplay: '₹1.2 Cr',
         revenueMonthly: '₹25 Lakhs/mo',
         profitMonthly: '₹6 Lakhs/mo',
@@ -4345,7 +4326,6 @@ const ensureInitialBusinessData = async () => {
         latitude: 16.3067,
         longitude: 80.4365,
         price: 65,
-        askingPrice: 65,
         priceDisplay: '₹65 Lakhs',
         revenueMonthly: '₹14 Lakhs/mo',
         profitMonthly: '₹3.5 Lakhs/mo',
