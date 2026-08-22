@@ -2427,64 +2427,169 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               {modalSubTab === 'specs' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 20px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>3. Technical Specifications & Dimensions</h4>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>SUPER BUILT-UP AREA / PLOT AREA</label>
-                        <input type="text" value={formData.superBuiltUpArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>CARPET AREA</label>
-                        <input type="text" value={formData.carpetArea || ''} onChange={e => setFormData({ ...formData, carpetArea: e.target.value })} placeholder="e.g. 2,100 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>BEDROOMS (BHK) <span style={{ color: '#64748B', fontWeight: 500 }}>(Optional for Commercial/Plot)</span></label>
-                        <input type="number" value={formData.bedrooms ?? ''} onChange={e => setFormData({ ...formData, bedrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 3 (Leave empty for Commercial)" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>BATHROOMS / WASHROOMS</label>
-                        <input type="number" value={formData.bathrooms ?? ''} onChange={e => setFormData({ ...formData, bathrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 2" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PARKING SLOTS</label>
-                        <input type="number" value={formData.parkingSlots ?? ''} onChange={e => setFormData({ ...formData, parkingSlots: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 2" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>OWNERSHIP TYPE</label>
-                        <select value={formData.ownershipType || ''} onChange={e => setFormData({ ...formData, ownershipType: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
-                          <option value="">Select Ownership Type</option>
-                          <option value="Freehold">Freehold</option>
-                          <option value="Leasehold">Leasehold</option>
-                          <option value="Co-operative Society">Co-operative Society</option>
-                          <option value="Power of Attorney">Power of Attorney</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FACING DIRECTION</label>
-                        <select value={formData.facing || ''} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
-                          <option value="">Select Facing Direction</option>
-                          <option value="East">East Facing</option>
-                          <option value="North-East">North-East Facing</option>
-                          <option value="North">North Facing</option>
-                          <option value="West">West Facing</option>
-                          <option value="South">South Facing</option>
-                          <option value="South-East">South-East Facing</option>
-                          <option value="South-West">South-West Facing</option>
-                          <option value="North-West">North-West Facing</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FURNISHING STATUS</label>
-                        <select value={formData.furnishing || ''} onChange={e => setFormData({ ...formData, furnishing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
-                          <option value="">Select Furnishing</option>
-                          <option value="Fully Furnished">Fully Furnished</option>
-                          <option value="Semi-Furnished">Semi-Furnished</option>
-                          <option value="Unfurnished">Unfurnished</option>
-                          <option value="Bare Shell / Commercial">Bare Shell / Commercial</option>
-                        </select>
-                      </div>
-                    </div>
+                    {(() => {
+                      const catLow = (formData.category || '').toLowerCase();
+                      const isPlotCategory = catLow.includes('land') || catLow.includes('plot');
+                      const isCommCategory = catLow.includes('commercial') || catLow.includes('office') || catLow.includes('shop') || catLow.includes('showroom') || catLow.includes('warehouse') || catLow.includes('industrial');
+
+                      return (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
+                            <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>
+                              3. Technical Specifications & Dimensions
+                            </h4>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', backgroundColor: isPlotCategory ? '#EFF6FF' : isCommCategory ? '#FEF3C7' : '#F1F5F9', color: isPlotCategory ? '#1D4ED8' : isCommCategory ? '#D97706' : '#475569' }}>
+                              Category: {formData.category || 'Residential'}
+                            </span>
+                          </div>
+
+                          {isPlotCategory ? (
+                            /* LAND / PLOT SPECIFICATIONS */
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PLOT AREA (SQ. YARDS / SQ. FT)</label>
+                                <input type="text" value={formData.superBuiltUpArea || formData.plotArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value, plotArea: e.target.value })} placeholder="e.g. 200 Sq.Yards or 1,800 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FACING DIRECTION</label>
+                                <select value={formData.facing || ''} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Facing Direction</option>
+                                  <option value="East">East Facing</option>
+                                  <option value="North-East">North-East Facing</option>
+                                  <option value="North">North Facing</option>
+                                  <option value="West">West Facing</option>
+                                  <option value="South">South Facing</option>
+                                  <option value="South-East">South-East Facing</option>
+                                  <option value="South-West">South-West Facing</option>
+                                  <option value="North-West">North-West Facing</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>OWNERSHIP TYPE</label>
+                                <select value={formData.ownershipType || ''} onChange={e => setFormData({ ...formData, ownershipType: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Ownership Type</option>
+                                  <option value="Freehold">Freehold Clear Title</option>
+                                  <option value="Leasehold">Leasehold</option>
+                                  <option value="Patta Land">Patta Land</option>
+                                  <option value="Power of Attorney">Power of Attorney</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>APPROVAL AUTHORITY / RERA</label>
+                                <input type="text" value={formData.reraNumber || ''} onChange={e => setFormData({ ...formData, reraNumber: e.target.value })} placeholder="e.g. RERA & DTCP / HMDA Approved" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                            </div>
+                          ) : isCommCategory ? (
+                            /* COMMERCIAL SPECIFICATIONS */
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>SUPER BUILT-UP AREA</label>
+                                <input type="text" value={formData.superBuiltUpArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>CARPET AREA</label>
+                                <input type="text" value={formData.carpetArea || ''} onChange={e => setFormData({ ...formData, carpetArea: e.target.value })} placeholder="e.g. 2,100 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>WASHROOMS</label>
+                                <input type="number" value={formData.bathrooms ?? ''} onChange={e => setFormData({ ...formData, bathrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 2 Washrooms" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PARKING SLOTS</label>
+                                <input type="number" value={formData.parkingSlots ?? ''} onChange={e => setFormData({ ...formData, parkingSlots: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 4 Reserved Slots" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>OWNERSHIP TYPE</label>
+                                <select value={formData.ownershipType || ''} onChange={e => setFormData({ ...formData, ownershipType: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Ownership Type</option>
+                                  <option value="Freehold">Freehold Commercial</option>
+                                  <option value="Leasehold">Leasehold</option>
+                                  <option value="Co-operative Society">Co-operative Society</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FURNISHING / FIT-OUT STATUS</label>
+                                <select value={formData.furnishing || ''} onChange={e => setFormData({ ...formData, furnishing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Furnishing / Fit-out</option>
+                                  <option value="Bare Shell / Commercial">Bare Shell / Unfurnished</option>
+                                  <option value="Semi-Furnished">Semi-Furnished Office</option>
+                                  <option value="Fully Furnished">Fully Furnished Executive</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FACING DIRECTION</label>
+                                <select value={formData.facing || ''} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Facing Direction</option>
+                                  <option value="East">East Facing</option>
+                                  <option value="North-East">North-East Facing</option>
+                                  <option value="North">North Facing</option>
+                                  <option value="West">West Facing</option>
+                                  <option value="South">South Facing</option>
+                                  <option value="South-East">South-East Facing</option>
+                                </select>
+                              </div>
+                            </div>
+                          ) : (
+                            /* RESIDENTIAL SPECIFICATIONS (Villa, Apartment, Individual House) */
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>SUPER BUILT-UP AREA</label>
+                                <input type="text" value={formData.superBuiltUpArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>CARPET AREA</label>
+                                <input type="text" value={formData.carpetArea || ''} onChange={e => setFormData({ ...formData, carpetArea: e.target.value })} placeholder="e.g. 2,100 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>BEDROOMS (BHK)</label>
+                                <input type="number" value={formData.bedrooms ?? ''} onChange={e => setFormData({ ...formData, bedrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 3" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>BATHROOMS</label>
+                                <input type="number" value={formData.bathrooms ?? ''} onChange={e => setFormData({ ...formData, bathrooms: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 2" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PARKING SLOTS</label>
+                                <input type="number" value={formData.parkingSlots ?? ''} onChange={e => setFormData({ ...formData, parkingSlots: e.target.value === '' ? undefined : parseInt(e.target.value) || undefined })} placeholder="e.g. 2" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>OWNERSHIP TYPE</label>
+                                <select value={formData.ownershipType || ''} onChange={e => setFormData({ ...formData, ownershipType: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Ownership Type</option>
+                                  <option value="Freehold">Freehold</option>
+                                  <option value="Leasehold">Leasehold</option>
+                                  <option value="Co-operative Society">Co-operative Society</option>
+                                  <option value="Power of Attorney">Power of Attorney</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FACING DIRECTION</label>
+                                <select value={formData.facing || ''} onChange={e => setFormData({ ...formData, facing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Facing Direction</option>
+                                  <option value="East">East Facing</option>
+                                  <option value="North-East">North-East Facing</option>
+                                  <option value="North">North Facing</option>
+                                  <option value="West">West Facing</option>
+                                  <option value="South">South Facing</option>
+                                  <option value="South-East">South-East Facing</option>
+                                  <option value="South-West">South-West Facing</option>
+                                  <option value="North-West">North-West Facing</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>FURNISHING STATUS</label>
+                                <select value={formData.furnishing || ''} onChange={e => setFormData({ ...formData, furnishing: e.target.value })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                                  <option value="">Select Furnishing</option>
+                                  <option value="Fully Furnished">Fully Furnished</option>
+                                  <option value="Semi-Furnished">Semi-Furnished</option>
+                                  <option value="Unfurnished">Unfurnished</option>
+                                </select>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     {/* Custom Specifications */}
                     <div style={{ marginTop: '24px' }}>
