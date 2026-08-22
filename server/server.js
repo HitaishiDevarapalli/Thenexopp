@@ -79,12 +79,13 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate Limiting
+// Rate Limiting — Allow unlimited GET reads & high throughput for real-time admin sync
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Limit each IP to 500 requests per window
+  max: 100000, // Very high limit for real-time admin dashboard syncs
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'GET', // Never block GET data syncs with 429 Too Many Requests
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api/', apiLimiter);
