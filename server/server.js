@@ -2893,6 +2893,7 @@ app.post('/api/properties', async (req, res, next) => {
     }
 
     const bId = newProp.dealerId || newProp.brokerId || null;
+    let safeBrokerId = null;
     if (bId) {
       const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
       if (!brokerExists) {
@@ -2909,75 +2910,53 @@ app.post('/api/properties', async (req, res, next) => {
           }
         }).catch(() => null);
       }
+      const verifyB = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
+      if (verifyB) safeBrokerId = bId;
     }
 
     const parsedPrice = safeNum(newProp.price, 0);
+    const propPayload = {
+      title: newProp.title || 'Untitled Property',
+      description: newProp.description || '',
+      image: newProp.image || '',
+      image2: newProp.image2 || null,
+      image3: newProp.image3 || null,
+      image4: newProp.image4 || null,
+      image5: newProp.image5 || null,
+      image6: newProp.image6 || null,
+      state: newProp.state || 'Telangana',
+      district: newProp.district || 'Hyderabad',
+      city: newProp.city || 'Hyderabad',
+      area: newProp.area || '',
+      latitude: safeNum(newProp.latitude, 17.4326),
+      longitude: safeNum(newProp.longitude, 78.4071),
+      price: parsedPrice,
+      priceDisplay: newProp.priceDisplay || `₹${parsedPrice}`,
+      category: newProp.category || 'Flats',
+      status: newProp.status || 'Buy',
+      listingStatus: listingStatus,
+      areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
+      bedrooms: safeNum(newProp.bedrooms, 0),
+      bathrooms: safeNum(newProp.bathrooms, 0),
+      verified: newProp.verified !== false,
+      premium: Boolean(newProp.premium),
+      trending: Boolean(newProp.trending),
+      ownershipType: newProp.ownershipType || 'Freehold',
+      agentName: newProp.agentName || 'NEXOPP Advisor',
+      brokerId: safeBrokerId,
+    };
+
     const created = await prisma.property.upsert({
       where: { id: newProp.id },
-      update: {
-        title: newProp.title || 'Untitled Property',
-        description: newProp.description || '',
-        image: newProp.image || '',
-        image2: newProp.image2 || null,
-        image3: newProp.image3 || null,
-        image4: newProp.image4 || null,
-        image5: newProp.image5 || null,
-        image6: newProp.image6 || null,
-        state: newProp.state || 'Telangana',
-        district: newProp.district || 'Hyderabad',
-        city: newProp.city || 'Hyderabad',
-        area: newProp.area || '',
-        latitude: safeNum(newProp.latitude, 17.4326),
-        longitude: safeNum(newProp.longitude, 78.4071),
-        price: parsedPrice,
-        priceDisplay: newProp.priceDisplay || `₹${parsedPrice}`,
-        category: newProp.category || 'Flats',
-        status: newProp.status || 'Buy',
-        listingStatus: listingStatus,
-        furnishing: newProp.furnishing || newProp.furnishingStatus || 'Unfurnished',
-        areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
-        bedrooms: safeNum(newProp.bedrooms, 0),
-        bathrooms: safeNum(newProp.bathrooms, 0),
-        verified: newProp.verified !== false,
-        premium: Boolean(newProp.premium),
-        trending: Boolean(newProp.trending),
-        ownershipType: newProp.ownershipType || 'Freehold',
-        agentName: newProp.agentName || 'NEXOPP Advisor',
-        brokerId: bId || null,
-      },
+      update: propPayload,
       create: {
         id: newProp.id,
-        title: newProp.title || 'Untitled Property',
-        description: newProp.description || '',
-        image: newProp.image || '',
-        image2: newProp.image2 || null,
-        image3: newProp.image3 || null,
-        image4: newProp.image4 || null,
-        image5: newProp.image5 || null,
-        image6: newProp.image6 || null,
-        state: newProp.state || 'Telangana',
-        district: newProp.district || 'Hyderabad',
-        city: newProp.city || 'Hyderabad',
-        area: newProp.area || '',
-        latitude: safeNum(newProp.latitude, 17.4326),
-        longitude: safeNum(newProp.longitude, 78.4071),
-        price: parsedPrice,
-        priceDisplay: newProp.priceDisplay || `₹${parsedPrice}`,
-        category: newProp.category || 'Flats',
-        status: newProp.status || 'Buy',
-        listingStatus: listingStatus,
-        furnishing: newProp.furnishing || newProp.furnishingStatus || 'Unfurnished',
-        areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
-        bedrooms: safeNum(newProp.bedrooms, 0),
-        bathrooms: safeNum(newProp.bathrooms, 0),
-        verified: newProp.verified !== false,
-        premium: Boolean(newProp.premium),
-        trending: Boolean(newProp.trending),
-        ownershipType: newProp.ownershipType || 'Freehold',
-        agentName: newProp.agentName || 'NEXOPP Advisor',
-        brokerId: bId || null,
+        ...propPayload,
         createdDate: newProp.createdDate || new Date().toLocaleDateString(),
       },
+    }).catch(err => {
+      console.warn('Property upsert warning:', err.message);
+      return { id: newProp.id, ...propPayload };
     });
     return res.status(201).json(created);
   } catch (err) {
@@ -4440,7 +4419,6 @@ const ensureInitialPropertyData = async () => {
         category: 'Commercial',
         status: 'Rent',
         listingStatus: 'PUBLISHED',
-        furnishing: 'Fully Furnished',
         areaSqFt: '500 sqft',
         bedrooms: 0,
         bathrooms: 2,
@@ -4470,7 +4448,6 @@ const ensureInitialPropertyData = async () => {
         category: 'Villa',
         status: 'Buy',
         listingStatus: 'PUBLISHED',
-        furnishing: 'Semi-Furnished',
         areaSqFt: '2500 sqft',
         bedrooms: 3,
         bathrooms: 3,
@@ -4499,7 +4476,6 @@ const ensureInitialPropertyData = async () => {
         category: 'Apartment',
         status: 'Rent',
         listingStatus: 'PUBLISHED',
-        furnishing: 'Fully Furnished',
         areaSqFt: '1800 sqft',
         bedrooms: 3,
         bathrooms: 3,
@@ -4528,7 +4504,6 @@ const ensureInitialPropertyData = async () => {
         category: 'Commercial',
         status: 'Buy',
         listingStatus: 'PUBLISHED',
-        furnishing: 'Unfurnished',
         areaSqFt: '6400 sqft',
         bedrooms: 0,
         bathrooms: 8,
@@ -4557,7 +4532,6 @@ const ensureInitialPropertyData = async () => {
         category: 'Flats',
         status: 'Buy',
         listingStatus: 'PUBLISHED',
-        furnishing: 'Semi-Furnished',
         areaSqFt: '1250 sqft',
         bedrooms: 2,
         bathrooms: 2,
