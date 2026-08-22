@@ -717,7 +717,10 @@ export const syncWithBackend = async () => {
     }
     if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) {
       const serverBizMap = new Map(bizRes.value.map((b: any) => [String(b.id), b]));
+      let customBiz: any[] = [];
+      try { customBiz = JSON.parse(localStorage.getItem('nexopp_custom_businesses') || '[]'); } catch {}
       const unsyncedBiz = (businessDb || []).filter(b => b && b.id && !serverBizMap.has(String(b.id)));
+      const customUnsynced = customBiz.filter(b => b && b.id && !serverBizMap.has(String(b.id)));
 
       const serverMappedBiz = bizRes.value.map((b: any) => {
         const brokerId = b.dealerId || b.brokerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]);
@@ -728,7 +731,11 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: b.assignedBrokerIds?.length ? b.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
-      businessDb = [...serverMappedBiz, ...unsyncedBiz];
+
+      const combined = [...serverMappedBiz, ...customUnsynced, ...unsyncedBiz];
+      const uniqueMap = new Map();
+      combined.forEach(b => { if (b && b.id && !uniqueMap.has(String(b.id))) uniqueMap.set(String(b.id), b); });
+      businessDb = Array.from(uniqueMap.values());
     }
     if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value) && dealersRes.value.length > 0) {
       dealersDb = dealersRes.value;
@@ -1395,7 +1402,13 @@ export const addBusiness = async (item: BusinessListing) => {
     assignedBrokerIds: effectiveDealerId ? [effectiveDealerId] : (item.assignedBrokerIds || []),
   };
 
-  // Immediate optimistic update
+  // Immediate optimistic update & local persistence
+  try {
+    const custom = JSON.parse(localStorage.getItem('nexopp_custom_businesses') || '[]');
+    const filtered = custom.filter((b: any) => b.id !== norm.id);
+    localStorage.setItem('nexopp_custom_businesses', JSON.stringify([norm, ...filtered]));
+  } catch {}
+
   businessDb = [norm, ...businessDb.filter(b => b.id !== norm.id)];
   notifyDataChanged();
 
