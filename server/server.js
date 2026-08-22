@@ -3252,7 +3252,6 @@ app.post('/api/businesses', async (req, res, next) => {
       image4: b.image4 || (imagesList[3] || null),
       image5: b.image5 || (imagesList[4] || null),
       image6: b.image6 || (imagesList[5] || null),
-      images: imagesList,
       description: b.description || '',
       reasonForSale: b.reasonForSale || '',
       trustScore: !isNaN(Number(b.trustScore)) ? Number(b.trustScore) : 95,
@@ -3320,7 +3319,6 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.image4 !== undefined) updateData.image4 = b.image4;
     if (b.image5 !== undefined) updateData.image5 = b.image5;
     if (b.image6 !== undefined) updateData.image6 = b.image6;
-    if (b.images !== undefined) updateData.images = Array.isArray(b.images) ? b.images : [b.images];
     if (b.description !== undefined) updateData.description = b.description;
     if (b.reasonForSale !== undefined) updateData.reasonForSale = b.reasonForSale;
     if (b.sellerProfile !== undefined) updateData.sellerProfile = b.sellerProfile;
@@ -4209,10 +4207,6 @@ const ensureInitialBusinessData = async () => {
         featured: true,
         status: 'Available',
         image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80'
-        ],
         description: 'Fully equipped 4200 sq ft fine dining restaurant with liquor license, commercial kitchen, seating capacity of 120, and steady corporate clientele in Financial District.',
         reasonForSale: 'Partner relocation abroad',
         trustScore: 98,
@@ -4242,9 +4236,6 @@ const ensureInitialBusinessData = async () => {
         featured: true,
         status: 'Available',
         image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1000&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1000&q=80'
-        ],
         description: 'Profitable 2200 sq ft supermarket in high-density gated township. POS software, POS billers, refrigeration units, and inventory worth ₹18 Lakhs included.',
         reasonForSale: 'Owner focusing on manufacturing expansion',
         trustScore: 96,
@@ -4274,9 +4265,6 @@ const ensureInitialBusinessData = async () => {
         featured: true,
         status: 'Available',
         image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1000&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1000&q=80'
-        ],
         description: 'Premium salon & spa equipped with 10 styling stations, 3 massage rooms, manicure/pedicure section, and celebrity client portfolio.',
         reasonForSale: 'Owner retiring',
         trustScore: 97,
@@ -4306,9 +4294,6 @@ const ensureInitialBusinessData = async () => {
         featured: true,
         status: 'Available',
         image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=80'
-        ],
         description: 'Multi-brand multi-bay car service workstation with hydraulic lifts, automated paint booth, OBD scanner tools, and annual corporate AMC contracts.',
         reasonForSale: 'Business consolidation',
         trustScore: 99,
@@ -4338,9 +4323,6 @@ const ensureInitialBusinessData = async () => {
         featured: true,
         status: 'Available',
         image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80',
-        images: [
-          'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80'
-        ],
         description: 'NABL accredited diagnostic center with fully automated analyzer machines, digital X-ray, ECG, ultrasound, and network of 15 tie-up clinics.',
         reasonForSale: 'Doctor expanding hospital chain',
         trustScore: 98,
