@@ -1189,25 +1189,54 @@ loadData();
 
 // Mutations
 export const addProperty = (item: PropertyListing) => {
-  propertiesDb = [item, ...propertiesDb];
+  const idx = propertiesDb.findIndex(p => p.id === item.id);
+  if (idx >= 0) {
+    propertiesDb[idx] = { ...propertiesDb[idx], ...item };
+  } else {
+    propertiesDb = [item, ...propertiesDb];
+  }
   saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
+
   fetch(`${API_BASE_URL}/api/properties`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(item)
-  }).catch(err => console.error("Sync failed:", err));
+  })
+    .then(async res => {
+      if (res.ok) {
+        const savedData = await res.json().catch(() => null);
+        if (savedData && savedData.id) {
+          propertiesDb = propertiesDb.map(p => p.id === item.id ? { ...p, ...savedData } : p);
+          saveToStorage('nexopp_properties_db', propertiesDb);
+          notifyDataChanged();
+        }
+      }
+    })
+    .catch(err => console.error("Database sync error for POST /api/properties:", err));
 };
 
 export const updateProperty = (id: string, updated: Partial<PropertyListing>) => {
   propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...updated } : p);
   saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
+
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updated)
-  }).catch(err => console.error("Sync failed:", err));
+  })
+    .then(async res => {
+      if (res.ok) {
+        const savedData = await res.json().catch(() => null);
+        if (savedData && savedData.id) {
+          propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...savedData } : p);
+          saveToStorage('nexopp_properties_db', propertiesDb);
+          notifyDataChanged();
+        }
+      }
+    })
+    .catch(err => console.error("Database sync error for PUT /api/properties:", err));
 };
 
 export const deleteProperty = (id: string) => {
@@ -1215,9 +1244,10 @@ export const deleteProperty = (id: string) => {
   showcaseVideosDb = showcaseVideosDb.filter(v => !(v.linkedCategory === 'Property' && v.linkedId === id));
   saveToStorage('nexopp_properties_db', propertiesDb);
   notifyDataChanged();
+
   fetch(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'DELETE'
-  }).catch(err => console.error("Sync failed:", err));
+  }).catch(err => console.error("Database sync error for DELETE /api/properties:", err));
 };
 
 export const updatePropertyVerification = (id: string, verified: boolean) => {
