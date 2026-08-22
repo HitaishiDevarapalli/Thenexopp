@@ -3262,8 +3262,6 @@ app.post('/api/businesses', async (req, res, next) => {
       sellerProfile: b.sellerProfile || '',
       dealerId: bId,
       brokerId: safeBrokerId,
-      agentName: b.agentName || null,
-      agentPhone: b.agentPhone || null,
       assignedBrokerIds: assignedIds,
       published: b.published !== false,
       featured: b.featured === true || b.featured === 'true',
@@ -4214,7 +4212,6 @@ const ensureInitialBusinessData = async () => {
         description: 'Fully equipped 4200 sq ft fine dining restaurant with liquor license, commercial kitchen, seating capacity of 120, and steady corporate clientele in Financial District.',
         reasonForSale: 'Partner relocation abroad',
         trustScore: 98,
-        agentName: 'Vikram Reddy (NexOpp Business Desk)',
       },
       {
         id: 'biz-seed-2',
@@ -4243,7 +4240,6 @@ const ensureInitialBusinessData = async () => {
         description: 'Profitable 2200 sq ft supermarket in high-density gated township. POS software, POS billers, refrigeration units, and inventory worth ₹18 Lakhs included.',
         reasonForSale: 'Owner focusing on manufacturing expansion',
         trustScore: 96,
-        agentName: 'Rajesh Sharma',
       },
       {
         id: 'biz-seed-3',
@@ -4272,7 +4268,6 @@ const ensureInitialBusinessData = async () => {
         description: 'Premium salon & spa equipped with 10 styling stations, 3 massage rooms, manicure/pedicure section, and celebrity client portfolio.',
         reasonForSale: 'Owner retiring',
         trustScore: 97,
-        agentName: 'Priya Narang',
       },
       {
         id: 'biz-seed-4',
@@ -4301,7 +4296,6 @@ const ensureInitialBusinessData = async () => {
         description: 'Multi-brand multi-bay car service workstation with hydraulic lifts, automated paint booth, OBD scanner tools, and annual corporate AMC contracts.',
         reasonForSale: 'Business consolidation',
         trustScore: 99,
-        agentName: 'Suresh Kumar',
       },
       {
         id: 'biz-seed-5',
@@ -4330,7 +4324,6 @@ const ensureInitialBusinessData = async () => {
         description: 'NABL accredited diagnostic center with fully automated analyzer machines, digital X-ray, ECG, ultrasound, and network of 15 tie-up clinics.',
         reasonForSale: 'Doctor expanding hospital chain',
         trustScore: 98,
-        agentName: 'Rajeshwar Reddy',
       }
     ];
 
