@@ -44,6 +44,47 @@ const CATEGORY_SUBTYPES: Record<string, string[]> = {
 
 const GOOGLE_PLACES_SUGGESTIONS = COMPREHENSIVE_INDIA_PLACES_DB;
 
+const compressImageFile = (file: File, maxWidth = 1920, maxHeight = 1080, quality = 0.82): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const src = e.target?.result as string;
+      if (!src) return resolve('');
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve(src);
+        }
+      };
+      img.onerror = () => resolve(src);
+      img.src = src;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+};
+
 export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange }) => {
   // Main Navigation Tabs
   const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'sellRequests'>('listings');
@@ -2748,21 +2789,17 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     {/* Single Optional Drag & Drop Zone */}
                     <div
                       onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
+                      onDrop={async (e) => {
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (ev) => {
-                            const base64 = ev.target?.result as string;
-                            if (!formData.image) setFormData({ ...formData, image: base64 });
-                            else if (!formData.image2) setFormData({ ...formData, image2: base64 });
-                            else if (!formData.image3) setFormData({ ...formData, image3: base64 });
-                            else if (!formData.image4) setFormData({ ...formData, image4: base64 });
-                            else if (!formData.image5) setFormData({ ...formData, image5: base64 });
-                            else if (!formData.image6) setFormData({ ...formData, image6: base64 });
-                          };
-                          reader.readAsDataURL(file);
+                          const base64 = await compressImageFile(file);
+                          if (!formData.image) setFormData({ ...formData, image: base64 });
+                          else if (!formData.image2) setFormData({ ...formData, image2: base64 });
+                          else if (!formData.image3) setFormData({ ...formData, image3: base64 });
+                          else if (!formData.image4) setFormData({ ...formData, image4: base64 });
+                          else if (!formData.image5) setFormData({ ...formData, image5: base64 });
+                          else if (!formData.image6) setFormData({ ...formData, image6: base64 });
                         }
                       }}
                       onClick={() => {
@@ -2787,54 +2824,48 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     >
                       <FaCamera style={{ fontSize: '2.5rem', color: '#059669', marginBottom: '12px' }} />
                       <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#059669' }}>Drag & Drop or Click to Upload Image</div>
-                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>PNG, JPG, or WEBP (Max 6 showcase images)</div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>Supports any photo size (PNG, JPG, WEBP - Auto optimized)</div>
                       <div style={{ display: 'none' }}>
-                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImageFile(file);
+                            setFormData({ ...formData, image: compressed });
                           }
                         }} />
-                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image2: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImageFile(file);
+                            setFormData({ ...formData, image2: compressed });
                           }
                         }} />
-                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image3: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImageFile(file);
+                            setFormData({ ...formData, image3: compressed });
                           }
                         }} />
-                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image4: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImageFile(file);
+                            setFormData({ ...formData, image4: compressed });
                           }
                         }} />
-                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image5: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImageFile(file);
+                            setFormData({ ...formData, image5: compressed });
                           }
                         }} />
-                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={(e) => {
+                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setFormData({ ...formData, image6: ev.target?.result as string });
-                            reader.readAsDataURL(file);
+                            const compressed = await compressImageFile(file);
+                            setFormData({ ...formData, image6: compressed });
                           }
                         }} />
                       </div>
