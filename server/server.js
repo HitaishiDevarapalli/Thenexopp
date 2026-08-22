@@ -3229,7 +3229,6 @@ app.post('/api/businesses', async (req, res, next) => {
 
     const businessData = {
       name: b.name || b.title || 'Business Listing',
-      title: b.title || b.name || 'Business Listing',
       industry: b.category || b.industry || 'Retail',
       category: b.category || b.industry || 'Retail',
       businessType: b.businessType || 'Private Limited',
@@ -3303,7 +3302,6 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     const b = req.body;
     const updateData = {};
     if (b.name !== undefined) updateData.name = b.name;
-    if (b.title !== undefined) updateData.title = b.title;
     if (b.industry !== undefined) updateData.industry = b.industry;
     if (b.category !== undefined) updateData.category = b.category;
     if (b.businessType !== undefined) updateData.businessType = b.businessType;
@@ -4205,7 +4203,6 @@ const ensureInitialBusinessData = async () => {
       {
         id: 'biz-seed-1',
         name: 'Premium Multi-Cuisine Fine Dining Restaurant & Bar',
-        title: 'Premium Multi-Cuisine Fine Dining Restaurant & Bar',
         industry: 'Restaurants & Cafés',
         category: 'Restaurants & Cafés',
         businessType: 'Private Limited Company (Pvt Ltd)',
@@ -4242,7 +4239,6 @@ const ensureInitialBusinessData = async () => {
       {
         id: 'biz-seed-2',
         name: 'Established Supermarket & Grocery Store Outlet',
-        title: 'Established Supermarket & Grocery Store Outlet',
         industry: 'Retail & Stores',
         category: 'Retail & Stores',
         businessType: 'Partnership Firm',
@@ -4278,7 +4274,6 @@ const ensureInitialBusinessData = async () => {
       {
         id: 'biz-seed-3',
         name: 'Luxury Unisex Beauty Salon & Wellness Spa',
-        title: 'Luxury Unisex Beauty Salon & Wellness Spa',
         industry: 'Beauty & Wellness',
         category: 'Beauty & Wellness',
         businessType: 'Sole Proprietorship',
@@ -4314,7 +4309,6 @@ const ensureInitialBusinessData = async () => {
       {
         id: 'biz-seed-4',
         name: 'Automobile Authorized Service Center & Garage',
-        title: 'Automobile Authorized Service Center & Garage',
         industry: 'Automobile & Garage',
         category: 'Automobile & Garage',
         businessType: 'Private Limited Company (Pvt Ltd)',
@@ -4350,7 +4344,6 @@ const ensureInitialBusinessData = async () => {
       {
         id: 'biz-seed-5',
         name: 'Modern Diagnostic Center & Pathology Lab',
-        title: 'Modern Diagnostic Center & Pathology Lab',
         industry: 'Healthcare & Pharma',
         category: 'Healthcare & Pharma',
         businessType: 'Private Limited Company (Pvt Ltd)',
