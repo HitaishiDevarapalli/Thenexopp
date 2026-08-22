@@ -4369,6 +4369,42 @@ const ensureInitialBusinessData = async () => {
           reasonForSale: 'Business consolidation',
           trustScore: 99,
           agentName: 'Suresh Kumar',
+        },
+        {
+          id: 'biz-seed-5',
+          name: 'Modern Diagnostic Center & Pathology Lab',
+          title: 'Modern Diagnostic Center & Pathology Lab',
+          industry: 'Healthcare & Pharma',
+          category: 'Healthcare & Pharma',
+          businessType: 'Private Limited Company (Pvt Ltd)',
+          location: 'Brodipet, Guntur',
+          state: 'Andhra Pradesh',
+          district: 'Guntur',
+          city: 'Guntur',
+          area: 'Brodipet',
+          latitude: 16.3067,
+          longitude: 80.4365,
+          price: 65,
+          askingPrice: 65,
+          priceDisplay: '₹65 Lakhs',
+          revenueMonthly: '₹14 Lakhs/mo',
+          profitMonthly: '₹3.5 Lakhs/mo',
+          establishedYear: 2019,
+          employeesCount: 14,
+          rating: 4.9,
+          reviewCount: 52,
+          verified: true,
+          published: true,
+          featured: true,
+          status: 'Available',
+          image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80'
+          ],
+          description: 'NABL accredited diagnostic center with fully automated analyzer machines, digital X-ray, ECG, ultrasound, and network of 15 tie-up clinics.',
+          reasonForSale: 'Doctor expanding hospital chain',
+          trustScore: 98,
+          agentName: 'Rajeshwar Reddy',
         }
       ];
 
@@ -4379,7 +4415,7 @@ const ensureInitialBusinessData = async () => {
           create: b,
         }).catch(err => console.warn('Seed business error:', err.message));
       }
-      logger.info('Auto-seeded initial Business listings into PostgreSQL database');
+      logger.info('Auto-seeded 5 initial Business listings into PostgreSQL database');
     }
   } catch (e) {
     logger.warn('Seed business count check error:', e.message);
@@ -4388,12 +4424,12 @@ const ensureInitialBusinessData = async () => {
 
 const ensureInitialPropertyData = async () => {
   try {
-    const count = await prisma.property.count();
+    const count = await prisma.property.count().catch(() => 0);
     if (count === 0) {
       const initialSeedProperties = [
         {
           id: 'prop-pg-101',
-          title: 'Commercial Property for Rent/Lease',
+          title: 'Commercial Office Space for Lease',
           description: 'Well-maintained 500 sq. ft. fully commercial office space located in prime Serilingampally, Hyderabad. Features 10 workstations, executive director cabin, private washroom, 100% power backup, and reserved parking. Ideal for IT/Software, corporate office, retail, or clinic.',
           image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
           image2: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1200&auto=format&fit=crop&q=80',
@@ -4412,6 +4448,7 @@ const ensureInitialPropertyData = async () => {
           furnishing: 'Fully Furnished',
           superBuiltUpArea: '500 sqft',
           carpetArea: '500 sqft',
+          areaSqFt: '500 sqft',
           bathrooms: 2,
           bedrooms: 0,
           parkingSlots: 1,
@@ -4419,12 +4456,12 @@ const ensureInitialPropertyData = async () => {
           premium: true,
           trending: true,
           ownershipType: 'Leasehold',
-          agentName: 'Genrush',
+          agentName: 'NEXOPP Commercial Desk',
           createdDate: '2026-08-22'
         },
         {
           id: 'prop-pg-102',
-          title: 'Luxury 3 BHK Villa for Sale',
+          title: 'Luxury 3 BHK Gated Villa for Sale',
           description: 'Spacious 2500 sq. ft. 3 BHK Villa in Gachibowli, Hyderabad with East facing entrance, private garden, modular kitchen, covered parking, and 24/7 security.',
           image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80',
           image2: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
@@ -4442,6 +4479,7 @@ const ensureInitialPropertyData = async () => {
           furnishing: 'Semi-Furnished',
           superBuiltUpArea: '2500 sqft',
           carpetArea: '2100 sqft',
+          areaSqFt: '2500 sqft',
           bathrooms: 3,
           bedrooms: 3,
           parkingSlots: 2,
@@ -4471,6 +4509,7 @@ const ensureInitialPropertyData = async () => {
           furnishing: 'Fully Furnished',
           superBuiltUpArea: '1800 sqft',
           carpetArea: '1500 sqft',
+          areaSqFt: '1800 sqft',
           bathrooms: 3,
           bedrooms: 3,
           parkingSlots: 2,
@@ -4480,6 +4519,66 @@ const ensureInitialPropertyData = async () => {
           ownershipType: 'Freehold',
           agentName: 'NEXOPP Verified Advisor',
           createdDate: '2026-08-21'
+        },
+        {
+          id: 'prop-pg-104',
+          title: 'Prime Independent Commercial Building',
+          description: 'Independent 4-story commercial building (6,400 sq. ft.) in Brodipet, Guntur. Excellent road frontage, elevator, generator backup, and high rental yield.',
+          image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80',
+          state: 'Andhra Pradesh',
+          district: 'Guntur',
+          city: 'Guntur',
+          area: 'Brodipet',
+          latitude: 16.3067,
+          longitude: 80.4365,
+          price: 32000000,
+          priceDisplay: '₹3.2 Cr',
+          category: 'Commercial',
+          status: 'Buy',
+          listingStatus: 'PUBLISHED',
+          furnishing: 'Unfurnished',
+          superBuiltUpArea: '6400 sqft',
+          carpetArea: '5800 sqft',
+          areaSqFt: '6400 sqft',
+          bathrooms: 8,
+          bedrooms: 0,
+          parkingSlots: 6,
+          verified: true,
+          premium: true,
+          trending: true,
+          ownershipType: 'Freehold',
+          agentName: 'Rajeshwar Reddy',
+          createdDate: '2026-08-22'
+        },
+        {
+          id: 'prop-pg-105',
+          title: 'Gated Community 2 BHK Flat for Sale',
+          description: 'East facing 1250 sq. ft. 2 BHK Flat near Benz Circle, Vijayawada. Children play area, solar hot water, 24-hr municipal water supply, and low maintenance fees.',
+          image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop&q=80',
+          state: 'Andhra Pradesh',
+          district: 'NTR (Vijayawada)',
+          city: 'Vijayawada',
+          area: 'Benz Circle',
+          latitude: 16.5062,
+          longitude: 80.6480,
+          price: 6200000,
+          priceDisplay: '₹62 Lakhs',
+          category: 'Flats',
+          status: 'Buy',
+          listingStatus: 'PUBLISHED',
+          furnishing: 'Semi-Furnished',
+          superBuiltUpArea: '1250 sqft',
+          carpetArea: '1050 sqft',
+          areaSqFt: '1250 sqft',
+          bathrooms: 2,
+          bedrooms: 2,
+          parkingSlots: 1,
+          verified: true,
+          premium: false,
+          trending: true,
+          ownershipType: 'Freehold',
+          agentName: 'Srinivas Rao',
+          createdDate: '2026-08-22'
         }
       ];
 
@@ -4490,7 +4589,7 @@ const ensureInitialPropertyData = async () => {
           create: p,
         }).catch(err => console.warn('Seed property error:', err.message));
       }
-      logger.info('Auto-seeded initial Property listings into PostgreSQL database');
+      logger.info('Auto-seeded 5 initial Property listings into PostgreSQL database');
     }
   } catch (e) {
     logger.warn('Seed property count check error:', e.message);
