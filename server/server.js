@@ -3183,7 +3183,11 @@ app.get('/api/businesses', async (req, res) => {
     else if (sort === 'price_desc') orderBy = { price: 'desc' };
     else if (sort === 'rating_desc') orderBy = { rating: 'desc' };
 
-    const businesses = await prisma.business.findMany({ where, orderBy }).catch(() => []);
+    let businesses = await prisma.business.findMany({ where, orderBy }).catch(() => []);
+    if (!businesses || businesses.length === 0) {
+      await ensureInitialBusinessData().catch(() => {});
+      businesses = await prisma.business.findMany({ where, orderBy }).catch(() => []);
+    }
     return res.json(businesses || []);
   } catch (err) {
     return res.json([]);
