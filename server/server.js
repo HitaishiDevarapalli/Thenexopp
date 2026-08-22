@@ -4336,9 +4336,121 @@ const ensureInitialBusinessData = async () => {
   }
 };
 
+const ensureInitialPropertyData = async () => {
+  try {
+    const count = await prisma.property.count();
+    if (count === 0) {
+      const initialSeedProperties = [
+        {
+          id: 'prop-pg-101',
+          title: 'Commercial Property for Rent/Lease',
+          description: 'Well-maintained 500 sq. ft. fully commercial office space located in prime Serilingampally, Hyderabad. Features 10 workstations, executive director cabin, private washroom, 100% power backup, and reserved parking. Ideal for IT/Software, corporate office, retail, or clinic.',
+          image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
+          image2: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1200&auto=format&fit=crop&q=80',
+          image3: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&auto=format&fit=crop&q=80',
+          state: 'Telangana',
+          district: 'Rangareddy',
+          city: 'Hyderabad',
+          area: 'Serilingampally',
+          latitude: 17.4834,
+          longitude: 78.3158,
+          price: 32000,
+          priceDisplay: '₹32,000 /mo',
+          category: 'Commercial',
+          status: 'Rent',
+          listingStatus: 'PUBLISHED',
+          furnishing: 'Fully Furnished',
+          superBuiltUpArea: '500 sqft',
+          carpetArea: '500 sqft',
+          bathrooms: 2,
+          bedrooms: 0,
+          parkingSlots: 1,
+          verified: true,
+          premium: true,
+          trending: true,
+          ownershipType: 'Leasehold',
+          agentName: 'Genrush',
+          createdDate: '2026-08-22'
+        },
+        {
+          id: 'prop-pg-102',
+          title: 'Luxury 3 BHK Villa for Sale',
+          description: 'Spacious 2500 sq. ft. 3 BHK Villa in Gachibowli, Hyderabad with East facing entrance, private garden, modular kitchen, covered parking, and 24/7 security.',
+          image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80',
+          image2: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
+          state: 'Telangana',
+          district: 'Rangareddy',
+          city: 'Hyderabad',
+          area: 'Gachibowli',
+          latitude: 17.4401,
+          longitude: 78.3489,
+          price: 15000000,
+          priceDisplay: '₹1.5 Cr',
+          category: 'Villa',
+          status: 'Buy',
+          listingStatus: 'PUBLISHED',
+          furnishing: 'Semi-Furnished',
+          superBuiltUpArea: '2500 sqft',
+          carpetArea: '2100 sqft',
+          bathrooms: 3,
+          bedrooms: 3,
+          parkingSlots: 2,
+          verified: true,
+          premium: true,
+          trending: true,
+          ownershipType: 'Freehold',
+          agentName: 'NEXOPP Verified Advisor',
+          createdDate: '2026-08-20'
+        },
+        {
+          id: 'prop-pg-103',
+          title: 'Premium Residential Apartment for Rent',
+          description: 'Modern 1800 sq. ft. 3 BHK Apartment in HITEC City with swimming pool, gym, clubhouse, and full power backup.',
+          image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80',
+          state: 'Telangana',
+          district: 'Rangareddy',
+          city: 'Hyderabad',
+          area: 'HITEC City',
+          latitude: 17.4435,
+          longitude: 78.3772,
+          price: 45000,
+          priceDisplay: '₹45,000 /mo',
+          category: 'Apartment',
+          status: 'Rent',
+          listingStatus: 'PUBLISHED',
+          furnishing: 'Fully Furnished',
+          superBuiltUpArea: '1800 sqft',
+          carpetArea: '1500 sqft',
+          bathrooms: 3,
+          bedrooms: 3,
+          parkingSlots: 2,
+          verified: true,
+          premium: false,
+          trending: true,
+          ownershipType: 'Freehold',
+          agentName: 'NEXOPP Verified Advisor',
+          createdDate: '2026-08-21'
+        }
+      ];
+
+      for (const p of initialSeedProperties) {
+        await prisma.property.upsert({
+          where: { id: p.id },
+          update: p,
+          create: p,
+        }).catch(err => console.warn('Seed property error:', err.message));
+      }
+      logger.info('Auto-seeded initial Property listings into PostgreSQL database');
+    }
+  } catch (e) {
+    logger.warn('Seed property count check error:', e.message);
+  }
+};
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`[NEXOPP Enterprise API] Server running on http://0.0.0.0:${PORT} and http://127.0.0.1:${PORT} (${process.env.NODE_ENV || 'production'})`);
   ensureInitialBusinessData().catch(() => {});
+  ensureInitialPropertyData().catch(() => {});
 });
 
 server.on('error', (err) => {
