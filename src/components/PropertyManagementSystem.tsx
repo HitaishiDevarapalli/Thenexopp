@@ -2476,7 +2476,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               </div>
                               <div>
                                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>APPROVAL AUTHORITY / RERA</label>
-                                <input type="text" value={formData.reraNumber || ''} onChange={e => setFormData({ ...formData, reraNumber: e.target.value })} placeholder="e.g. RERA & DTCP / HMDA Approved" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                                <input type="text" value={(formData as any).reraNumber || ''} onChange={e => setFormData({ ...formData, reraNumber: e.target.value } as any)} placeholder="e.g. RERA & DTCP / HMDA Approved" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                               </div>
                             </div>
                           ) : isCommCategory ? (

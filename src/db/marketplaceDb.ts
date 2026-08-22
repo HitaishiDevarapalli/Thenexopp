@@ -1016,24 +1016,38 @@ const loadData = async () => {
       safeFetchJson(`${API_BASE_URL}/api/bookings`),
     ]).then(([propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes, custRes, bookRes]) => {
       if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
-        const localSaved = loadFromStorage('nexopp_properties_db', []);
-        const localMap = new Map((localSaved || []).map((p: any) => [p.id, p]));
-        propertiesDb = propsRes.value.map((p: any) => {
-          const local = localMap.get(p.id);
-          const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined) || local?.dealerId;
-          return {
-            ...local,
-            ...p,
-            furnishing: p.furnishing || local?.furnishing || '',
-            carpetArea: p.carpetArea || local?.carpetArea || '',
-            superBuiltUpArea: p.superBuiltUpArea || local?.superBuiltUpArea || '',
-            ownershipType: p.ownershipType || local?.ownershipType || '',
-            facing: p.facing || local?.facing || '',
-            parkingSlots: p.parkingSlots !== undefined ? p.parkingSlots : local?.parkingSlots,
-            dealerId: brokerId,
-            assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
-          };
+        const localSaved = loadFromStorage('nexopp_properties_db', propertiesDb || []);
+        const mergedMap = new Map<string, any>();
+
+        // 1. First populate with all local properties so newly created properties are never lost
+        (localSaved || []).forEach((p: any) => {
+          if (p && p.id) mergedMap.set(p.id, p);
         });
+        (propertiesDb || []).forEach((p: any) => {
+          if (p && p.id) mergedMap.set(p.id, p);
+        });
+
+        // 2. Overwrite / update with server properties
+        propsRes.value.forEach((p: any) => {
+          if (p && p.id) {
+            const local = mergedMap.get(p.id);
+            const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined) || local?.dealerId;
+            mergedMap.set(p.id, {
+              ...local,
+              ...p,
+              furnishing: p.furnishing || local?.furnishing || '',
+              carpetArea: p.carpetArea || local?.carpetArea || '',
+              superBuiltUpArea: p.superBuiltUpArea || local?.superBuiltUpArea || '',
+              ownershipType: p.ownershipType || local?.ownershipType || '',
+              facing: p.facing || local?.facing || '',
+              parkingSlots: p.parkingSlots !== undefined ? p.parkingSlots : local?.parkingSlots,
+              dealerId: brokerId,
+              assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : (local?.assignedBrokerIds || []))
+            });
+          }
+        });
+
+        propertiesDb = Array.from(mergedMap.values());
         saveToStorage('nexopp_properties_db', propertiesDb);
       }
       if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) franchiseDb = franRes.value;
