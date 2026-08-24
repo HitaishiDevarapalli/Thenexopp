@@ -697,13 +697,10 @@ export const syncWithBackend = async () => {
     const [propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes, custRes, bookRes] = results;
 
     // SERVER DATA = TRUTH. Replace local arrays completely.
-    // SERVER DATA = TRUTH. Merge with unsynced local creations so items never vanish.
+    // SERVER DATA = TRUTH. Update local arrays with official PostgreSQL database listings.
     if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
       const serverPropMap = new Map(propsRes.value.map((p: any) => [String(p.id), p]));
-      let customProps: any[] = [];
-      try { customProps = JSON.parse(localStorage.getItem('nexopp_custom_properties') || '[]'); } catch {}
       const unsyncedProps = (propertiesDb || []).filter(p => p && p.id && !serverPropMap.has(String(p.id)));
-      const customUnsynced = customProps.filter(p => p && p.id && !serverPropMap.has(String(p.id)));
 
       const serverMappedProps = propsRes.value.map((p: any) => {
         const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined);
@@ -713,20 +710,14 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
-      const combinedProps = [...serverMappedProps, ...customUnsynced, ...unsyncedProps];
-      const uniquePropMap = new Map();
-      combinedProps.forEach(p => { if (p && p.id && !uniquePropMap.has(String(p.id))) uniquePropMap.set(String(p.id), p); });
-      propertiesDb = Array.from(uniquePropMap.values());
+      propertiesDb = [...serverMappedProps, ...unsyncedProps];
     }
     if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) {
       franchiseDb = franRes.value;
     }
     if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) {
       const serverBizMap = new Map(bizRes.value.map((b: any) => [String(b.id), b]));
-      let customBiz: any[] = [];
-      try { customBiz = JSON.parse(localStorage.getItem('nexopp_custom_businesses') || '[]'); } catch {}
       const unsyncedBiz = (businessDb || []).filter(b => b && b.id && !serverBizMap.has(String(b.id)));
-      const customUnsynced = customBiz.filter(b => b && b.id && !serverBizMap.has(String(b.id)));
 
       const serverMappedBiz = bizRes.value.map((b: any) => {
         const brokerId = b.dealerId || b.brokerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]);
@@ -738,7 +729,7 @@ export const syncWithBackend = async () => {
         };
       });
 
-      const combined = [...serverMappedBiz, ...customUnsynced, ...unsyncedBiz];
+      const combined = [...serverMappedBiz, ...unsyncedBiz];
       const uniqueMap = new Map();
       combined.forEach(b => { if (b && b.id && !uniqueMap.has(String(b.id))) uniqueMap.set(String(b.id), b); });
       businessDb = Array.from(uniqueMap.values());
