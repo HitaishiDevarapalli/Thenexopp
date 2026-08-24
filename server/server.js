@@ -3077,9 +3077,6 @@ app.put('/api/properties/:id', async (req, res, next) => {
     const updated = await prisma.property.update({
       where: { id },
       data: updateData,
-    }).catch(err => {
-      logger.warn({ error: err.message }, 'Property DB update warning');
-      return { id, ...updateData };
     });
 
     if (updateData.listingStatus && ['SOLD', 'ARCHIVED', 'EXPIRED', 'HIDDEN', 'RESERVED'].includes(updateData.listingStatus)) {
@@ -3436,7 +3433,7 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     } catch (err) {
       console.warn('Business update warning (retrying without broker constraint):', err.message);
       const fallbackData = { ...updateData, brokerId: null };
-      updated = await prisma.business.update({ where: { id }, data: fallbackData }).catch(() => ({ id, ...fallbackData }));
+      updated = await prisma.business.update({ where: { id }, data: fallbackData });
     }
 
     if (updateData.status && ['SOLD', 'CLOSED', 'UNAVAILABLE', 'INACTIVE'].includes(updateData.status)) {
@@ -3457,7 +3454,7 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     return res.json(updated);
   } catch (err) {
     console.error('Error updating business:', err);
-    return res.json({ id: req.params.id, ...req.body });
+    return res.status(500).json({ error: 'Failed to update business on database' });
   }
 });
 

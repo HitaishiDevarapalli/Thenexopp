@@ -110,6 +110,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   const [modalSubTab, setModalSubTab] = useState<'location' | 'basic' | 'specs' | 'pricing' | 'media' | 'review'>('location');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewAnalyticsProperty, setViewAnalyticsProperty] = useState<PropertyListing | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Location Intelligence Picker State & Helpers
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
@@ -487,8 +488,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     setIsModalOpen(true);
   };
 
-  const handleSaveDraft = (e: React.MouseEvent) => {
+  const handleSaveDraft = async (e: React.MouseEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     const finalBrokerId = (formData.assignedBrokerIds && formData.assignedBrokerIds.length > 0)
       ? formData.assignedBrokerIds[0]
       : (formData.dealerId || undefined);
@@ -512,14 +514,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       listingStatus: 'Draft'
     };
 
-    if (modalMode === 'edit' && editingId) {
-      updateProperty(editingId, preparedProperty);
-      showNotification?.(`Property '${preparedProperty.title}' saved as Draft!`, "success");
-    } else {
-      addProperty(preparedProperty);
-      showNotification?.(`Property '${preparedProperty.title}' saved as Draft!`, "success");
+    try {
+      setIsSaving(true);
+      if (modalMode === 'edit' && editingId) {
+        await updateProperty(editingId, preparedProperty);
+      } else {
+        await addProperty(preparedProperty);
+      }
+      showNotification?.(`Property '${preparedProperty.title}' saved as Draft in database!`, "success");
+      setIsModalOpen(false);
+    } catch (err: any) {
+      showNotification?.(`Property draft was not saved: ${err?.message || 'database request failed'}`, "error");
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   // Step Validation
@@ -560,8 +568,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   };
 
   // Save Modal
-  const handleSaveProperty = (e: React.FormEvent) => {
+  const handleSaveProperty = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     if (!formData.title) {
       showNotification?.("Please provide a valid property title in Step 2 (Basic Details).", "error");
       setModalSubTab('basic');
@@ -605,14 +614,21 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       preparedProperty.approvalStatus = 'Sold';
     }
 
-    if (modalMode === 'edit' && editingId) {
-      updateProperty(editingId, preparedProperty);
-      showNotification?.(`Property '${preparedProperty.title}' updated successfully!`, "success");
-    } else {
-      addProperty(preparedProperty);
-      showNotification?.(`Property '${preparedProperty.title}' created and published successfully!`, "success");
+    try {
+      setIsSaving(true);
+      if (modalMode === 'edit' && editingId) {
+        await updateProperty(editingId, preparedProperty);
+        showNotification?.(`Property '${preparedProperty.title}' updated in database!`, "success");
+      } else {
+        await addProperty(preparedProperty);
+        showNotification?.(`Property '${preparedProperty.title}' created in database!`, "success");
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      showNotification?.(`Property was not saved: ${err?.message || 'database request failed'}`, "error");
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   // Bulk Status Change
@@ -3084,9 +3100,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <button
                   type="button"
                   onClick={handleSaveDraft}
-                  style={{ padding: '12px 28px', backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#059669', cursor: 'pointer', transition: 'all 0.2s' }}
+                  disabled={isSaving}
+                  style={{ padding: '12px 28px', backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#059669', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.65 : 1, transition: 'all 0.2s' }}
                 >
-                  Save as Draft
+                  {isSaving ? 'Saving...' : 'Save as Draft'}
                 </button>
                 <button
                   type="button"
@@ -3099,10 +3116,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     else if (modalSubTab === 'media') setModalSubTab('review');
                     else handleSaveProperty(e as any);
                   }}
-                  style={{ padding: '12px 32px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
+                  disabled={isSaving}
+                  style={{ padding: '12px 32px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
                 >
                   {modalSubTab === 'review' ? (
-                    <>✓ Save & Publish</>
+                    <>{isSaving ? 'Saving...' : '✓ Save & Publish'}</>
                   ) : (
                     <>Save & Continue <FaArrowRight style={{ fontSize: '0.8rem' }} /></>
                   )}

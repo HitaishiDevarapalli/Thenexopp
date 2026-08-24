@@ -124,6 +124,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   const [modalSubTab, setModalSubTab] = useState<'location' | 'basic' | 'specs' | 'pricing' | 'media' | 'review'>('location');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [priceUnit, setPriceUnit] = useState<'Thousands' | 'Lakhs' | 'Crores'>('Lakhs');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form State (100% Zero-Default, Pure User Entry)
   const [formData, setFormData] = useState<Partial<BusinessListing>>({
@@ -364,7 +365,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   };
 
   // Duplicate Business
-  const handleDuplicateBusiness = (b: BusinessListing) => {
+  const handleDuplicateBusiness = async (b: BusinessListing) => {
+    if (isSaving) return;
     const primaryImg = b.image || (b.images && b.images[0]) || '';
     const cloned: BusinessListing = {
       ...b,
@@ -378,8 +380,15 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       sold: false,
       recentlySold: false,
     };
-    addBusiness(cloned);
-    showNotification(`Cloned "${b.name || b.title}" successfully as draft`, 'success');
+    try {
+      setIsSaving(true);
+      await addBusiness(cloned);
+      showNotification(`Cloned "${b.name || b.title}" successfully in database`, 'success');
+    } catch (err: any) {
+      showNotification(`Business clone was not saved: ${err?.message || 'database request failed'}`, 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Step Validation
@@ -402,8 +411,9 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   };
 
   // Save Business Form Handler
-  const handleSaveBusiness = (e: React.FormEvent) => {
+  const handleSaveBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     if (!formData.title?.trim()) {
       showNotification('Please enter a business title.', 'error');
       setModalSubTab('basic');
@@ -488,15 +498,22 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
       description: formData.description?.trim() || '',
     };
 
-    if (modalMode === 'edit' && editingId) {
-      updateBusiness(editingId, payload);
-      showNotification(`Business "${payload.title}" updated successfully`, 'success');
-    } else {
-      addBusiness(payload);
-      showNotification(`Business "${payload.title}" added successfully`, 'success');
-    }
+    try {
+      setIsSaving(true);
+      if (modalMode === 'edit' && editingId) {
+        await updateBusiness(editingId, payload);
+        showNotification(`Business "${payload.title}" updated in database`, 'success');
+      } else {
+        await addBusiness(payload);
+        showNotification(`Business "${payload.title}" added to database`, 'success');
+      }
 
-    setIsModalOpen(false);
+      setIsModalOpen(false);
+    } catch (err: any) {
+      showNotification(`Business was not saved: ${err?.message || 'database request failed'}`, 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Image Upload Handlers
@@ -1982,9 +1999,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                       {formData.title?.trim() && (
                         <button
                           type="submit"
-                          style={{ padding: '10px 20px', backgroundColor: '#FFFFFF', color: '#059669', border: '1.5px solid #059669', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer' }}
+                          disabled={isSaving}
+                          style={{ padding: '10px 20px', backgroundColor: '#FFFFFF', color: '#059669', border: '1.5px solid #059669', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.65 : 1 }}
                         >
-                          Save Business Now
+                          {isSaving ? 'Saving...' : 'Save Business Now'}
                         </button>
                       )}
                       <button
@@ -1998,9 +2016,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                   ) : (
                     <button
                       type="submit"
-                      style={{ padding: '10px 28px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.92rem', cursor: 'pointer', boxShadow: '0 2px 8px rgba(5,150,105,0.3)' }}
+                      disabled={isSaving}
+                      style={{ padding: '10px 28px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.92rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1, boxShadow: '0 2px 8px rgba(5,150,105,0.3)' }}
                     >
-                      {modalMode === 'add' ? 'Save & Publish Business' : 'Update Business'}
+                      {isSaving ? 'Saving...' : (modalMode === 'add' ? 'Save & Publish Business' : 'Update Business')}
                     </button>
                   )}
                 </div>

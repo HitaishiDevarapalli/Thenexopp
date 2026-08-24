@@ -633,20 +633,12 @@ export const defaultAdminModules: AdminModuleItem[] = [
 
 // Storage helpers for permanent persistence across reloads
 const saveToStorage = (key: string, data: any) => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem(key, JSON.stringify(data));
-    }
-  } catch (e) {}
+  void key;
+  void data;
 };
 
 const loadFromStorage = <T>(key: string, fallback: T): T => {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = window.localStorage.getItem(key);
-      if (saved) return JSON.parse(saved);
-    }
-  } catch (e) {}
+  void key;
   return fallback;
 };
 
@@ -697,12 +689,8 @@ export const syncWithBackend = async () => {
     const [propsRes, franRes, bizRes, dealersRes, empRes, rolesRes, teamRes, demandRes, enqRes, franEnqRes, settingsRes, contactRes, custRes, bookRes] = results;
 
     // SERVER DATA = TRUTH. Replace local arrays completely.
-    // SERVER DATA = TRUTH. Update local arrays with official PostgreSQL database listings.
     if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
-      const serverPropMap = new Map(propsRes.value.map((p: any) => [String(p.id), p]));
-      const unsyncedProps = (propertiesDb || []).filter(p => p && p.id && !serverPropMap.has(String(p.id)));
-
-      const serverMappedProps = propsRes.value.map((p: any) => {
+      propertiesDb = propsRes.value.map((p: any) => {
         const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined);
         return {
           ...p,
@@ -710,16 +698,12 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
-      propertiesDb = [...serverMappedProps, ...unsyncedProps];
     }
     if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) {
       franchiseDb = franRes.value;
     }
     if (bizRes.status === 'fulfilled' && Array.isArray(bizRes.value)) {
-      const serverBizMap = new Map(bizRes.value.map((b: any) => [String(b.id), b]));
-      const unsyncedBiz = (businessDb || []).filter(b => b && b.id && !serverBizMap.has(String(b.id)));
-
-      const serverMappedBiz = bizRes.value.map((b: any) => {
+      businessDb = bizRes.value.map((b: any) => {
         const brokerId = b.dealerId || b.brokerId || (b.assignedBrokerIds && b.assignedBrokerIds[0]);
         return {
           ...b,
@@ -728,11 +712,6 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: b.assignedBrokerIds?.length ? b.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
-
-      const combined = [...serverMappedBiz, ...unsyncedBiz];
-      const uniqueMap = new Map();
-      combined.forEach(b => { if (b && b.id && !uniqueMap.has(String(b.id))) uniqueMap.set(String(b.id), b); });
-      businessDb = Array.from(uniqueMap.values());
     }
     if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value) && dealersRes.value.length > 0) {
       dealersDb = dealersRes.value;
@@ -835,91 +814,92 @@ const sanitizeImgStr = (s: any) => {
   return s;
 };
 
-const cleanPropPayload = (item: any) => ({
-  ...item,
-  image: sanitizeImgStr(item.image),
-  image2: sanitizeImgStr(item.image2),
-  image3: sanitizeImgStr(item.image3),
-  image4: sanitizeImgStr(item.image4),
-  image5: sanitizeImgStr(item.image5),
-  image6: sanitizeImgStr(item.image6),
-});
+const imageFields = ['image', 'image2', 'image3', 'image4', 'image5', 'image6'];
+const mediaFields = [...imageFields, 'photo', 'logo'];
 
-// Mutations — Immediate UI response + VPS server persistence
-export const addProperty = async (item: PropertyListing) => {
-  // 1. Instant optimistic update & localStorage persistence
-  try {
-    const custom = JSON.parse(localStorage.getItem('nexopp_custom_properties') || '[]');
-    const filtered = custom.filter((p: any) => p.id !== item.id);
-    localStorage.setItem('nexopp_custom_properties', JSON.stringify([item, ...filtered]));
-  } catch {}
+const isDataImage = (value: any) => typeof value === 'string' && value.startsWith('data:image/');
 
-  const existingIdx = propertiesDb.findIndex(p => p.id === item.id);
-  if (existingIdx >= 0) {
-    propertiesDb[existingIdx] = { ...propertiesDb[existingIdx], ...item };
-  } else {
-    propertiesDb = [item, ...propertiesDb];
+const fetchWithApiFallback = async (url: string, init?: RequestInit) => {
+  const relativePath = url.includes('/api/') ? '/api/' + url.split('/api/')[1] : null;
+  let res = await fetch(url, init).catch(() => null);
+  if ((!res || !res.ok) && relativePath && relativePath !== url) {
+    res = await fetch(relativePath, init).catch(() => null);
   }
-  notifyDataChanged();
+  if (!res) throw new Error('Database API is unreachable');
+  return res;
+};
 
-  // 2. Server persistence & sync
-  const payload = cleanPropPayload(item);
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/properties`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      await syncWithBackend();
-    } else {
-      // Retry with lighter payload if payload size issue
-      await fetch(`${API_BASE_URL}/api/properties`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, image: '', image2: null, image3: null, image4: null, image5: null, image6: null })
-      }).catch(() => null);
-      await syncWithBackend();
+const apiJson = async <T = any>(url: string, init?: RequestInit): Promise<T> => {
+  const res = await fetchWithApiFallback(url, init);
+  const contentType = res.headers.get('content-type') || '';
+  const body = contentType.includes('application/json') ? await res.json().catch(() => null) : null;
+  if (!res.ok) {
+    const message = body?.error || body?.message || `API request failed (${res.status})`;
+    throw new Error(message);
+  }
+  return body as T;
+};
+
+const uploadDataImage = async (dataUrl: string, folder: string, fileName: string) => {
+  const uploaded = await apiJson<{ url?: string }>(`${API_BASE_URL}/api/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileName, fileData: dataUrl, folder })
+  });
+  if (!uploaded?.url) throw new Error('Image upload failed: no URL returned');
+  return uploaded.url;
+};
+
+const persistListingImages = async <T extends Record<string, any>>(item: T, folder: string, prefix: string): Promise<T> => {
+  const payload: Record<string, any> = { ...item };
+
+  for (const field of mediaFields) {
+    if (isDataImage(payload[field])) {
+      payload[field] = await uploadDataImage(payload[field], folder, `${prefix}-${field}-${Date.now()}.jpg`);
+    } else if (field in payload) {
+      payload[field] = sanitizeImgStr(payload[field]) || null;
     }
-  } catch (err) {
-    console.error("addProperty server error:", err);
   }
+
+  if (Array.isArray(payload.images)) {
+    payload.images = await Promise.all(payload.images.map((img: any, idx: number) => (
+      isDataImage(img) ? uploadDataImage(img, folder, `${prefix}-gallery-${idx + 1}-${Date.now()}.jpg`) : sanitizeImgStr(img)
+    )));
+    payload.images = payload.images.filter(Boolean);
+  }
+
+  return payload as T;
+};
+
+const cleanPropPayload = async (item: any) => persistListingImages(item, 'property-images', String(item.id || 'property'));
+
+// Mutations — PostgreSQL-backed persistence only. UI updates after confirmed database save.
+export const addProperty = async (item: PropertyListing) => {
+  const payload = await cleanPropPayload(item);
+  const created = await apiJson<PropertyListing>(`${API_BASE_URL}/api/properties`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  await syncWithBackend();
+  return created;
 };
 
 export const updateProperty = async (id: string, updated: Partial<PropertyListing>) => {
-  propertiesDb = propertiesDb.map(p => p.id === id ? { ...p, ...updated } : p);
-  notifyDataChanged();
-
-  const payload = cleanPropPayload(updated);
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) {
-      await fetch(`${API_BASE_URL}/api/properties/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, image: undefined, image2: undefined, image3: undefined, image4: undefined, image5: undefined, image6: undefined })
-      }).catch(() => null);
-    }
-    await syncWithBackend();
-  } catch (err) {
-    console.error("updateProperty server error:", err);
-  }
+  const payload = await cleanPropPayload({ ...updated, id });
+  const saved = await apiJson<PropertyListing>(`${API_BASE_URL}/api/properties/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  await syncWithBackend();
+  return saved;
 };
 
 export const deleteProperty = async (id: string) => {
-  propertiesDb = propertiesDb.filter(p => p.id !== id);
-  notifyDataChanged();
-
-  try {
-    await fetch(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' });
-    await syncWithBackend();
-  } catch (err) {
-    console.error("deleteProperty server error:", err);
-  }
+  const deleted = await apiJson(`${API_BASE_URL}/api/properties/${id}`, { method: 'DELETE' });
+  await syncWithBackend();
+  return deleted;
 };
 export let insuranceDb: InsuranceProvider[] = [];
 export let servicesDb: ServiceProvider[] = [];
@@ -1288,19 +1268,8 @@ export const incrementPropertyViewCount = (id: string) => {
   const currentViews = prop.viewsCount || 0;
   const currentUniques = prop.uniqueVisitorsCount || Math.max(1, Math.floor(currentViews * 0.75));
   
-  let isNewVisitor = false;
-  try {
-    const sessionKey = `viewed_prop_${id}`;
-    isNewVisitor = !sessionStorage.getItem(sessionKey);
-    if (isNewVisitor) {
-      sessionStorage.setItem(sessionKey, 'true');
-    }
-  } catch (_err) {
-    // ignore storage errors
-  }
-
   const updatedViews = currentViews + 1;
-  const updatedUniques = isNewVisitor ? currentUniques + 1 : currentUniques;
+  const updatedUniques = currentUniques + 1;
   const nowFormatted = new Date().toLocaleString('en-IN', {
     dateStyle: 'medium',
     timeStyle: 'short'
@@ -1343,38 +1312,31 @@ export const deleteFranchise = (id: string) => {
 };
 
 export const addDealer = async (item: Dealer) => {
-  try {
-    await fetch(`${API_BASE_URL}/api/dealers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(item)
-    });
-    await syncWithBackend();
-  } catch (err) {
-    console.error('API Sync Error:', err);
-  }
+  const payload = await persistListingImages(item as any, 'broker-images', String(item.id || 'broker'));
+  const created = await apiJson<Dealer>(`${API_BASE_URL}/api/dealers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  await syncWithBackend();
+  return created;
 };
 
 export const updateDealer = async (id: string, updated: Partial<Dealer>) => {
-  try {
-    await fetch(`${API_BASE_URL}/api/dealers/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    });
-    await syncWithBackend();
-  } catch (err) {
-    console.error('API Sync Error:', err);
-  }
+  const payload = await persistListingImages({ ...updated, id } as any, 'broker-images', id);
+  const saved = await apiJson<Dealer>(`${API_BASE_URL}/api/dealers/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  await syncWithBackend();
+  return saved;
 };
 
 export const deleteDealer = async (id: string) => {
-  try {
-    await fetch(`${API_BASE_URL}/api/dealers/${id}`, { method: 'DELETE' });
-    await syncWithBackend();
-  } catch (err) {
-    console.error('API Sync Error:', err);
-  }
+  const deleted = await apiJson(`${API_BASE_URL}/api/dealers/${id}`, { method: 'DELETE' });
+  await syncWithBackend();
+  return deleted;
 };
 
 export const addBusiness = async (item: BusinessListing) => {
@@ -1405,26 +1367,14 @@ export const addBusiness = async (item: BusinessListing) => {
     assignedBrokerIds: effectiveDealerId ? [effectiveDealerId] : (item.assignedBrokerIds || []),
   };
 
-  // Immediate optimistic update & local persistence
-  try {
-    const custom = JSON.parse(localStorage.getItem('nexopp_custom_businesses') || '[]');
-    const filtered = custom.filter((b: any) => b.id !== norm.id);
-    localStorage.setItem('nexopp_custom_businesses', JSON.stringify([norm, ...filtered]));
-  } catch {}
-
-  businessDb = [norm, ...businessDb.filter(b => b.id !== norm.id)];
-  notifyDataChanged();
-
-  try {
-    await fetch(`${API_BASE_URL}/api/businesses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(norm)
-    });
-    await syncWithBackend();
-  } catch (err) {
-    console.error('API Business Sync Error:', err);
-  }
+  const payload = await persistListingImages(norm, 'property-images', String(norm.id || 'business'));
+  const created = await apiJson<BusinessListing>(`${API_BASE_URL}/api/businesses`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  await syncWithBackend();
+  return created;
 };
 
 export const updateBusiness = async (id: string, updated: Partial<BusinessListing>) => {
@@ -1437,31 +1387,20 @@ export const updateBusiness = async (id: string, updated: Partial<BusinessListin
     ...(empCountParsed !== undefined && !isNaN(empCountParsed) ? { employeesCount: empCountParsed } : {}),
   };
 
-  businessDb = businessDb.map(b => b.id === id ? { ...b, ...cleanUpdated } : b);
-  notifyDataChanged();
-
-  try {
-    await fetch(`${API_BASE_URL}/api/businesses/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(cleanUpdated)
-    });
-    await syncWithBackend();
-  } catch (err) {
-    console.error('API Sync Error:', err);
-  }
+  const payload = await persistListingImages({ ...cleanUpdated, id }, 'property-images', id);
+  const saved = await apiJson<BusinessListing>(`${API_BASE_URL}/api/businesses/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  await syncWithBackend();
+  return saved;
 };
 
 export const deleteBusiness = async (id: string) => {
-  businessDb = businessDb.filter(b => b.id !== id);
-  notifyDataChanged();
-
-  try {
-    await fetch(`${API_BASE_URL}/api/businesses/${id}`, { method: 'DELETE' });
-    await syncWithBackend();
-  } catch (err) {
-    console.error('API Sync Error:', err);
-  }
+  const deleted = await apiJson(`${API_BASE_URL}/api/businesses/${id}`, { method: 'DELETE' });
+  await syncWithBackend();
+  return deleted;
 };
 
 // Showcase Video Mutations
@@ -1565,9 +1504,6 @@ export const clearAllLocalEnquiries = () => {
   enquiriesDb = [];
   businessEnquiriesDb = [];
   franchiseEnquiriesDb = [];
-  try {
-    localStorage.removeItem('nexopp_enquiries_db');
-  } catch (e) {}
   notifyDataChanged();
 };
 
@@ -2024,10 +1960,7 @@ const defaultMasterBusinessTypes: FilterMasterItem[] = [
 ];
 
 const loadFilterMasterItems = (key: string, defaults: FilterMasterItem[]): FilterMasterItem[] => {
-  try {
-    const stored = localStorage.getItem(key);
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
+  void key;
   return defaults;
 };
 
@@ -2039,10 +1972,8 @@ export let masterPropertyOwnershipsDb: FilterMasterItem[] = loadFilterMasterItem
 export let masterBusinessTypesDb: FilterMasterItem[] = loadFilterMasterItems('nexopp_master_business_types', defaultMasterBusinessTypes);
 
 const saveFilterMasterItems = (key: string, items: FilterMasterItem[]) => {
-  try {
-    localStorage.getItem(key);
-    localStorage.setItem(key, JSON.stringify(items));
-  } catch (e) {}
+  void key;
+  void items;
   notifyDataChanged();
 };
 
@@ -2219,18 +2150,10 @@ const defaultMasterLocalities: LocalityMasterItem[] = [
 ];
 
 const loadAreas = (): AreaMasterItem[] => {
-  try {
-    const stored = localStorage.getItem('nexopp_master_areas');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
   return defaultMasterAreas;
 };
 
 const loadLocalities = (): LocalityMasterItem[] => {
-  try {
-    const stored = localStorage.getItem('nexopp_master_localities');
-    if (stored) return JSON.parse(stored);
-  } catch (e) {}
   return defaultMasterLocalities;
 };
 
@@ -2238,16 +2161,10 @@ export let masterAreasDb: AreaMasterItem[] = loadAreas();
 export let masterLocalitiesDb: LocalityMasterItem[] = loadLocalities();
 
 const saveAreas = () => {
-  try {
-    localStorage.setItem('nexopp_master_areas', JSON.stringify(masterAreasDb));
-  } catch (e) {}
   notifyDataChanged();
 };
 
 const saveLocalities = () => {
-  try {
-    localStorage.setItem('nexopp_master_localities', JSON.stringify(masterLocalitiesDb));
-  } catch (e) {}
   notifyDataChanged();
 };
 

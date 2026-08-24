@@ -47,6 +47,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<'personal' | 'professional' | 'categories' | 'service_areas' | 'contact' | 'performance'>('personal');
   const [editingBrokerId, setEditingBrokerId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form State for Add / Edit
   const [formData, setFormData] = useState<Partial<Dealer>>({
@@ -160,8 +161,9 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     setIsModalOpen(true);
   };
 
-  const handleSaveBroker = (e: React.FormEvent) => {
+  const handleSaveBroker = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     const fullName = (formData.fullName || formData.companyName || '').trim();
     const companyName = (formData.companyName || formData.fullName || '').trim();
 
@@ -180,19 +182,26 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       verified: formData.verified !== false
     };
 
-    if (editingBrokerId) {
-      updateDealer(editingBrokerId, finalBrokerData);
-      showNotification(`Broker '${finalBrokerData.companyName}' updated successfully!`);
-    } else {
-      const newBroker: Dealer = {
-        ...finalBrokerData as Dealer,
-        id: formData.id || `D${Date.now()}`,
-        inventoryCount: propertiesDb.filter(p => p.dealerId === formData.id).length
-      };
-      addDealer(newBroker);
-      showNotification(`New Broker '${newBroker.companyName}' registered successfully!`);
+    try {
+      setIsSaving(true);
+      if (editingBrokerId) {
+        await updateDealer(editingBrokerId, finalBrokerData);
+        showNotification(`Broker '${finalBrokerData.companyName}' updated in database!`);
+      } else {
+        const newBroker: Dealer = {
+          ...finalBrokerData as Dealer,
+          id: formData.id || `D${Date.now()}`,
+          inventoryCount: propertiesDb.filter(p => p.dealerId === formData.id).length
+        };
+        await addDealer(newBroker);
+        showNotification(`New Broker '${newBroker.companyName}' registered in database!`);
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      showNotification(`Broker was not saved: ${err?.message || 'database request failed'}`, 'error');
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   // CSV Export
@@ -1316,7 +1325,13 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                     NEXT &rarr;
                   </button>
                 ) : (
-                  <button type="submit" style={{ padding: '12px 30px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>SAVE BROKER PROFILE</button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    style={{ padding: '12px 30px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1 }}
+                  >
+                    {isSaving ? 'SAVING...' : 'SAVE BROKER PROFILE'}
+                  </button>
                 )}
               </div>
             </form>
