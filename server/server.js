@@ -2920,22 +2920,9 @@ app.post('/api/properties', async (req, res, next) => {
     let safeBrokerId = null;
     if (bId) {
       const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-      if (!brokerExists) {
-        await prisma.broker.create({
-          data: {
-            id: bId,
-            companyName: newProp.agentName || 'RealtyPlus Advisors',
-            rating: safeNum(newProp.agentRating, 4.8),
-            phone: newProp.agentPhone || null,
-            photo: newProp.agentImage || null,
-            logo: newProp.agentImage || null,
-            city: newProp.city || 'Hyderabad',
-            state: newProp.state || 'Telangana'
-          }
-        }).catch(() => null);
+      if (brokerExists) {
+        safeBrokerId = bId;
       }
-      const verifyB = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-      if (verifyB) safeBrokerId = bId;
     }
 
     const parsedPrice = safeNum(newProp.price, 0);
@@ -3265,20 +3252,7 @@ app.post('/api/businesses', async (req, res, next) => {
     if (bId) {
       try {
         const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-        if (!brokerExists) {
-          await prisma.broker.create({
-            data: {
-              id: bId,
-              companyName: b.agentName || 'RealtyPlus Advisors',
-              rating: Number(b.agentRating) || 4.8,
-              phone: b.agentPhone || '+91 95539 25956',
-              city: b.city || 'Hyderabad',
-              state: b.state || 'Telangana'
-            }
-          }).catch(() => null);
-        }
-        const verifyBroker = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-        if (verifyBroker) safeBrokerId = bId;
+        if (brokerExists) safeBrokerId = bId;
       } catch (e) {
         console.warn('Broker resolution warning:', e.message);
         safeBrokerId = null;

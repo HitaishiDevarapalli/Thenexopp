@@ -491,15 +491,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     e.preventDefault();
     const finalBrokerId = (formData.assignedBrokerIds && formData.assignedBrokerIds.length > 0)
       ? formData.assignedBrokerIds[0]
-      : formData.dealerId || dealersDb[0]?.id || 'D1';
-    const assignedBroker = dealersDb.find(d => d.id === finalBrokerId);
+      : (formData.dealerId || undefined);
+    const assignedBroker = finalBrokerId ? dealersDb.find(d => d.id === finalBrokerId) : undefined;
 
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
       id: formData.id || `P-${Date.now()}`,
-      dealerId: finalBrokerId,
-      assignedBrokerIds: formData.assignedBrokerIds || [finalBrokerId],
-      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
+      dealerId: finalBrokerId || '',
+      assignedBrokerIds: formData.assignedBrokerIds || (finalBrokerId ? [finalBrokerId] : []),
+      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || '',
       agentRating: assignedBroker?.rating || formData.agentRating || 4.8,
       agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || '',
       createdDate: formData.createdDate || new Date().toISOString().split('T')[0],
@@ -570,10 +570,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
     const assignedIds = (formData.assignedBrokerIds && formData.assignedBrokerIds.length > 0)
       ? formData.assignedBrokerIds
-      : [formData.dealerId || dealersDb[0]?.id || 'd1'];
+      : (formData.dealerId ? [formData.dealerId] : []);
 
-    const finalBrokerId = assignedIds[0];
-    const assignedBroker = dealersDb.find(d => d.id === finalBrokerId);
+    const finalBrokerId = assignedIds[0] || undefined;
+    const assignedBroker = finalBrokerId ? dealersDb.find(d => d.id === finalBrokerId) : undefined;
 
     const fallbackLat = formData.latitude || 17.4474;
     const fallbackLng = formData.longitude || 78.3762;
@@ -586,9 +586,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       longitude: fallbackLng,
       formatted_address: fallbackAddress,
       fullAddress: fallbackAddress,
-      dealerId: finalBrokerId,
+      dealerId: finalBrokerId || '',
       assignedBrokerIds: assignedIds,
-      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
+      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || '',
       agentRating: assignedBroker?.rating || formData.agentRating || 4.8,
       agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || '',
       createdDate: formData.createdDate || new Date().toISOString().split('T')[0],
