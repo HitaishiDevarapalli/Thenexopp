@@ -2843,7 +2843,9 @@ app.get('/api/properties', async (req, res) => {
         agentName: p.agentName || (p.broker ? (p.broker.companyName || p.broker.fullName) : undefined),
         agentRating: p.broker?.rating || p.rating || 4.8,
         agentImage: p.broker?.photo || p.broker?.logo || undefined,
-        sold: isSold,
+        sold: Boolean(p.sold) || isSold,
+        recentlySold: Boolean(p.recentlySold) || (p.badge === 'RECENTLY SOLD'),
+        soldDate: p.soldDate || undefined,
         propertyPurpose: p.propertyPurpose || (String(p.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
         priceDisplay: p.priceDisplay || (p.price ? `₹${p.price}` : ''),
         areaSqFt: p.areaSqFt || p.superBuiltUpArea || '',
@@ -2862,8 +2864,7 @@ app.get('/api/properties', async (req, res) => {
         customFields: p.customFields || [],
         approvalStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
         listingStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
-        recentlySold: isSold,
-        badge: isSold ? 'RECENTLY SOLD' : (p.verified !== false ? 'Verified' : undefined)
+        badge: p.badge || (p.recentlySold || isSold ? 'RECENTLY SOLD' : (p.verified !== false ? 'Verified' : undefined))
       };
     });
     return res.json(normalized);
@@ -2882,7 +2883,7 @@ app.get('/api/properties/:id', async (req, res) => {
     }).catch(() => null);
     if (!prop) return res.status(404).json({ error: 'Property not found' });
     
-    const isSold = prop.listingStatus === 'SOLD' || prop.status === 'Sold';
+    const isSold = prop.listingStatus === 'SOLD' || prop.status === 'Sold' || Boolean(prop.sold);
     const bId = prop.brokerId || (prop.broker ? prop.broker.id : undefined);
     return res.json({
       ...prop,
@@ -2892,7 +2893,9 @@ app.get('/api/properties/:id', async (req, res) => {
       agentName: prop.agentName || (prop.broker ? (prop.broker.companyName || prop.broker.fullName) : undefined),
       agentRating: prop.broker?.rating || prop.rating || 4.8,
       agentImage: prop.broker?.photo || prop.broker?.logo || undefined,
-      sold: isSold,
+      sold: Boolean(prop.sold) || isSold,
+      recentlySold: Boolean(prop.recentlySold) || (prop.badge === 'RECENTLY SOLD'),
+      soldDate: prop.soldDate || undefined,
       propertyPurpose: prop.propertyPurpose || (String(prop.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
       priceDisplay: prop.priceDisplay || (prop.price ? `₹${prop.price}` : ''),
       areaSqFt: prop.areaSqFt || prop.superBuiltUpArea || '',
@@ -2911,8 +2914,7 @@ app.get('/api/properties/:id', async (req, res) => {
       customFields: prop.customFields || [],
       approvalStatus: isSold ? 'Sold' : (prop.listingStatus === 'DRAFT' ? 'Draft' : prop.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
       listingStatus: isSold ? 'Sold' : (prop.listingStatus === 'DRAFT' ? 'Draft' : prop.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
-      recentlySold: isSold,
-      badge: isSold ? 'RECENTLY SOLD' : (prop.verified !== false ? 'Verified' : undefined)
+      badge: prop.badge || (prop.recentlySold || isSold ? 'RECENTLY SOLD' : (prop.verified !== false ? 'Verified' : undefined))
     });
   } catch (err) {
     return res.status(404).json({ error: 'Property not found' });
@@ -2997,6 +2999,10 @@ app.post('/api/properties', async (req, res, next) => {
       verified: newProp.verified !== false,
       premium: Boolean(newProp.premium),
       trending: Boolean(newProp.trending),
+      sold: Boolean(newProp.sold) || listingStatus === 'SOLD',
+      recentlySold: Boolean(newProp.recentlySold) || newProp.badge === 'RECENTLY SOLD',
+      soldDate: newProp.soldDate || (newProp.sold || listingStatus === 'SOLD' ? (newProp.soldDate || new Date().toISOString().slice(0, 10)) : null),
+      badge: newProp.badge || (newProp.recentlySold || listingStatus === 'SOLD' ? 'RECENTLY SOLD' : null),
       agentName: newProp.agentName || null,
       brokerId: safeBrokerId,
     };
@@ -3090,6 +3096,10 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.premium !== undefined) updateData.premium = Boolean(d.premium);
     if (d.trending !== undefined) updateData.trending = Boolean(d.trending);
     if (d.featured !== undefined) updateData.featured = Boolean(d.featured);
+    if (d.sold !== undefined) updateData.sold = d.sold === true || d.sold === 'true';
+    if (d.recentlySold !== undefined) updateData.recentlySold = d.recentlySold === true || d.recentlySold === 'true';
+    if (d.soldDate !== undefined) updateData.soldDate = d.soldDate;
+    if (d.badge !== undefined) updateData.badge = d.badge;
     if (d.rating !== undefined) updateData.rating = Number(d.rating);
     if (d.reviewCount !== undefined) updateData.reviewCount = Number(d.reviewCount);
     if (d.createdDate !== undefined) updateData.createdDate = String(d.createdDate);

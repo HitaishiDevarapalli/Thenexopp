@@ -157,6 +157,10 @@ model Property {
   verified      Boolean        @default(true)
   premium       Boolean        @default(false)
   trending      Boolean        @default(false)
+  sold          Boolean        @default(false)
+  recentlySold  Boolean        @default(false)
+  soldDate      String?
+  badge         String?
   agentName     String?
   viewsCount    Int            @default(0)
   createdDate   String?
