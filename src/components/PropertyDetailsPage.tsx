@@ -367,7 +367,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       const ogTitle = document.querySelector('meta[property="og:title"]');
       if (ogTitle) ogTitle.setAttribute('content', `${property.title} - ${property.priceDisplay}`);
       const ogImg = document.querySelector('meta[property="og:image"]');
-      if (ogImg) ogImg.setAttribute('content', property.image || property.images?.[0] || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80');
+      if (ogImg) ogImg.setAttribute('content', property.image || property.images?.[0] || '/assets/luxury_apartment.png');
 
       // Schema.org RealEstateListing Structured Data Injection
       let schemaScript = document.getElementById('property-schema-ld');
@@ -1586,7 +1586,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                   >
                     <div className="feed-card-image-wrap" style={{ position: 'relative' }}>
                       <img 
-                        src={item.image || item.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80'} 
+                        src={item.image || item.imageUrl || '/assets/luxury_apartment.png'} 
                         alt={item.title || item.name} 
                         className="feed-card-img" 
                       />

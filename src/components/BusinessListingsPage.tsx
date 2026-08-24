@@ -616,7 +616,7 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                   >
                     <div className="feed-card-image-wrap" style={{ position: 'relative' }}>
                       <img 
-                        src={item.image || item.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80'} 
+                        src={item.image || item.imageUrl || '/assets/business_restaurant.png'} 
                         alt={item.title || item.name} 
                         className="feed-card-img" 
                       />

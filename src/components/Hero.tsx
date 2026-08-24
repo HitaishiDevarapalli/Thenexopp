@@ -598,7 +598,7 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
             >
               {/* Image */}
               <img
-                src={sliderIndex === 0 ? "/assets/hero_villa.jpg" : "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80"}
+                src={sliderIndex === 0 ? "/assets/hero_villa.jpg" : "/assets/hero_skyline.png"}
                 alt="Skyline Heights Villa"
                 style={{
                   width: '100%',

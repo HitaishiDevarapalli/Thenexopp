@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node --env-file=.env server/server.js",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/generate-seo-pages.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

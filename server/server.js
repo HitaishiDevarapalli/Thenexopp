@@ -2935,33 +2935,52 @@ app.post('/api/properties', async (req, res, next) => {
       category: newProp.category || 'Flats',
       status: newProp.status || 'Buy',
       listingStatus: listingStatus,
+      published: newProp.published !== false,
+      featured: Boolean(newProp.featured),
       areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
       bedrooms: safeNum(newProp.bedrooms, 0),
       bathrooms: safeNum(newProp.bathrooms, 0),
+      furnishing: newProp.furnishing || newProp.furnishingStatus || 'Unfurnished',
+      propertyType: newProp.propertyType || 'Residential',
+      ownershipType: newProp.ownershipType || 'Freehold',
+      rating: safeNum(newProp.rating, 4.5),
+      reviewCount: safeNum(newProp.reviewCount, 0),
       verified: newProp.verified !== false,
       premium: Boolean(newProp.premium),
       trending: Boolean(newProp.trending),
-      ownershipType: newProp.ownershipType || 'Freehold',
       agentName: newProp.agentName || 'NEXOPP Advisor',
       brokerId: safeBrokerId,
     };
 
-    const created = await prisma.property.upsert({
-      where: { id: newProp.id },
-      update: propPayload,
-      create: {
-        id: newProp.id,
-        ...propPayload,
-        createdDate: newProp.createdDate || new Date().toLocaleDateString(),
-      },
-    }).catch(err => {
-      console.warn('Property upsert warning:', err.message);
-      return { id: newProp.id, ...propPayload };
-    });
+    let created;
+    try {
+      created = await prisma.property.upsert({
+        where: { id: newProp.id },
+        update: propPayload,
+        create: {
+          id: newProp.id,
+          ...propPayload,
+          createdDate: newProp.createdDate || new Date().toLocaleDateString(),
+        },
+      });
+    } catch (err) {
+      console.warn('Property upsert warning (retrying without broker constraint):', err.message);
+      const fallbackPayload = { ...propPayload, brokerId: null };
+      created = await prisma.property.upsert({
+        where: { id: newProp.id },
+        update: fallbackPayload,
+        create: {
+          id: newProp.id,
+          ...fallbackPayload,
+          createdDate: newProp.createdDate || new Date().toLocaleDateString(),
+        },
+      }).catch(() => ({ id: newProp.id, ...fallbackPayload }));
+    }
+
     return res.status(201).json(created);
   } catch (err) {
     logger.error('POST /api/properties error:', err.message);
-    return res.status(200).json({ status: 'ok', fallback: true });
+    return res.status(500).json({ error: 'Failed to create property' });
   }
 });
 
@@ -3233,15 +3252,23 @@ app.post('/api/businesses', async (req, res, next) => {
 
     const businessData = {
       name: b.name || b.title || 'Business Listing',
+      title: b.title || b.name || 'Business Listing',
       industry: b.category || b.industry || 'Retail',
       category: b.category || b.industry || 'Retail',
       businessType: b.businessType || 'Private Limited',
-      location: b.location || b.city || 'Hyderabad',
+      location: b.location || [b.area, b.city, b.state].filter(Boolean).join(', ') || 'Hyderabad',
       state: b.state || 'Telangana',
+      district: b.district || '',
       city: b.city || 'Hyderabad',
+      area: b.area || '',
+      subLocation: b.subLocation || '',
+      landmark: b.landmark || '',
+      pincode: b.pincode || b.postal_code || '',
+      fullAddress: b.fullAddress || '',
       latitude: !isNaN(Number(b.latitude)) && Number(b.latitude) !== 0 ? Number(b.latitude) : 17.4326,
       longitude: !isNaN(Number(b.longitude)) && Number(b.longitude) !== 0 ? Number(b.longitude) : 78.4071,
       price: priceParsed,
+      askingPrice: askingPriceParsed,
       priceDisplay: b.priceDisplay || `₹${priceParsed} Lakhs`,
       revenueMonthly: b.revenueMonthly || '',
       profitMonthly: b.profitMonthly || '',
@@ -3250,38 +3277,58 @@ app.post('/api/businesses', async (req, res, next) => {
       rating: !isNaN(Number(b.rating)) ? Number(b.rating) : 4.7,
       reviewCount: !isNaN(Number(b.reviewCount)) ? Number(b.reviewCount) : 0,
       verified: b.verified !== false,
+      published: b.published !== false,
+      featured: b.featured === true || b.featured === 'true',
+      status: b.status || (b.sold ? 'Sold' : 'Available'),
+      sold: b.sold === true || b.status === 'Sold',
+      recentlySold: b.recentlySold === true,
+      soldDate: b.soldDate || null,
+      badge: b.badge || null,
       image: b.image || b.imageUrl || (imagesList[0] || ''),
       image2: b.image2 || (imagesList[1] || null),
       image3: b.image3 || (imagesList[2] || null),
       image4: b.image4 || (imagesList[3] || null),
       image5: b.image5 || (imagesList[4] || null),
       image6: b.image6 || (imagesList[5] || null),
+      images: imagesList,
       description: b.description || '',
       reasonForSale: b.reasonForSale || '',
       trustScore: !isNaN(Number(b.trustScore)) ? Number(b.trustScore) : 95,
       sellerProfile: b.sellerProfile || '',
-      published: b.published !== false,
-      featured: b.featured === true || b.featured === 'true',
-      status: b.status || (b.sold ? 'Sold' : 'Available'),
-      dealerId: bId,
+      agentName: b.agentName || '',
+      agentPhone: b.agentPhone || '',
+      assignedBrokerIds: assignedIds,
+      dealerId: bId || null,
       brokerId: safeBrokerId,
     };
 
-    const created = await prisma.business.upsert({
-      where: { id: businessId },
-      update: businessData,
-      create: {
-        id: businessId,
-        ...businessData,
-      }
-    }).catch(err => {
-      console.warn('Business upsert warning:', err.message);
-      return { id: businessId, ...businessData };
-    });
+    let created;
+    try {
+      created = await prisma.business.upsert({
+        where: { id: businessId },
+        update: businessData,
+        create: {
+          id: businessId,
+          ...businessData,
+        }
+      });
+    } catch (err) {
+      console.warn('Business upsert warning (retrying without broker constraint):', err.message);
+      const fallbackData = { ...businessData, brokerId: null };
+      created = await prisma.business.upsert({
+        where: { id: businessId },
+        update: fallbackData,
+        create: {
+          id: businessId,
+          ...fallbackData,
+        }
+      }).catch(() => ({ id: businessId, ...fallbackData }));
+    }
+
     return res.status(201).json(created);
   } catch (err) {
     console.error('Error creating business:', err);
-    return res.status(200).json({ status: 'ok', fallback: true, id: req.body.id || `biz-${Date.now()}` });
+    return res.status(500).json({ error: 'Failed to save business on database' });
   }
 });
 
@@ -3291,14 +3338,23 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     const b = req.body;
     const updateData = {};
     if (b.name !== undefined) updateData.name = b.name;
+    if (b.title !== undefined) updateData.title = b.title;
     if (b.industry !== undefined) updateData.industry = b.industry;
     if (b.category !== undefined) updateData.category = b.category;
     if (b.businessType !== undefined) updateData.businessType = b.businessType;
     if (b.location !== undefined) updateData.location = b.location;
+    if (b.state !== undefined) updateData.state = b.state;
+    if (b.district !== undefined) updateData.district = b.district;
     if (b.city !== undefined) updateData.city = b.city;
+    if (b.area !== undefined) updateData.area = b.area;
+    if (b.subLocation !== undefined) updateData.subLocation = b.subLocation;
+    if (b.landmark !== undefined) updateData.landmark = b.landmark;
+    if (b.pincode !== undefined) updateData.pincode = b.pincode;
+    if (b.fullAddress !== undefined) updateData.fullAddress = b.fullAddress;
     if (b.latitude !== undefined) updateData.latitude = Number(b.latitude);
     if (b.longitude !== undefined) updateData.longitude = Number(b.longitude);
     if (b.price !== undefined) updateData.price = Number(b.price);
+    if (b.askingPrice !== undefined) updateData.askingPrice = Number(b.askingPrice);
     if (b.priceDisplay !== undefined) updateData.priceDisplay = b.priceDisplay;
     if (b.revenueMonthly !== undefined) updateData.revenueMonthly = b.revenueMonthly;
     if (b.profitMonthly !== undefined) updateData.profitMonthly = b.profitMonthly;
@@ -3316,12 +3372,14 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.image4 !== undefined) updateData.image4 = b.image4;
     if (b.image5 !== undefined) updateData.image5 = b.image5;
     if (b.image6 !== undefined) updateData.image6 = b.image6;
+    if (Array.isArray(b.images)) updateData.images = b.images;
     if (b.description !== undefined) updateData.description = b.description;
     if (b.reasonForSale !== undefined) updateData.reasonForSale = b.reasonForSale;
     if (b.sellerProfile !== undefined) updateData.sellerProfile = b.sellerProfile;
     
     if (b.dealerId !== undefined || b.brokerId !== undefined) {
       const bId = b.dealerId || b.brokerId || null;
+      let safeBrokerId = null;
       if (bId) {
         const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
         if (!brokerExists) {
@@ -3336,8 +3394,10 @@ app.put('/api/businesses/:id', async (req, res, next) => {
             }
           }).catch(() => null);
         }
+        const verifyBroker = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
+        if (verifyBroker) safeBrokerId = bId;
         updateData.dealerId = bId;
-        updateData.brokerId = bId;
+        updateData.brokerId = safeBrokerId;
         updateData.assignedBrokerIds = [bId];
       } else {
         updateData.dealerId = null;
@@ -3362,10 +3422,14 @@ app.put('/api/businesses/:id', async (req, res, next) => {
     if (b.soldDate !== undefined) updateData.soldDate = b.soldDate;
     if (b.badge !== undefined) updateData.badge = b.badge;
 
-    const updated = await prisma.business.update({ where: { id }, data: updateData }).catch(err => {
-      console.warn('Business update warning:', err.message);
-      return { id, ...updateData };
-    });
+    let updated;
+    try {
+      updated = await prisma.business.update({ where: { id }, data: updateData });
+    } catch (err) {
+      console.warn('Business update warning (retrying without broker constraint):', err.message);
+      const fallbackData = { ...updateData, brokerId: null };
+      updated = await prisma.business.update({ where: { id }, data: fallbackData }).catch(() => ({ id, ...fallbackData }));
+    }
 
     if (updateData.status && ['SOLD', 'CLOSED', 'UNAVAILABLE', 'INACTIVE'].includes(updateData.status)) {
       try {
@@ -4177,322 +4241,22 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error({ reason, promise }, 'CRITICAL: Caught unhandledRejection to prevent process crash');
 });
 
-const ensureInitialBusinessData = async () => {
+const purgeSeedData = async () => {
   try {
-    const initialSeedBusinesses = [
-      {
-        id: 'biz-seed-1',
-        name: 'Premium Multi-Cuisine Fine Dining Restaurant & Bar',
-        industry: 'Restaurants & Cafés',
-        category: 'Restaurants & Cafés',
-        businessType: 'Private Limited Company (Pvt Ltd)',
-        location: 'Gachibowli, Hyderabad',
-        state: 'Telangana',
-        city: 'Hyderabad',
-        latitude: 17.4401,
-        longitude: 78.3489,
-        price: 85,
-        priceDisplay: '₹85 Lakhs',
-        revenueMonthly: '₹18 Lakhs/mo',
-        profitMonthly: '₹4.5 Lakhs/mo',
-        establishedYear: 2019,
-        employeesCount: 18,
-        rating: 4.9,
-        reviewCount: 34,
-        verified: true,
-        published: true,
-        featured: true,
-        status: 'Available',
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
-        description: 'Fully equipped 4200 sq ft fine dining restaurant with liquor license, commercial kitchen, seating capacity of 120, and steady corporate clientele in Financial District.',
-        reasonForSale: 'Partner relocation abroad',
-        trustScore: 98,
-      },
-      {
-        id: 'biz-seed-2',
-        name: 'Established Supermarket & Grocery Store Outlet',
-        industry: 'Retail & Stores',
-        category: 'Retail & Stores',
-        businessType: 'Partnership Firm',
-        location: 'Hitec City, Hyderabad',
-        state: 'Telangana',
-        city: 'Hyderabad',
-        latitude: 17.4435,
-        longitude: 78.3772,
-        price: 45,
-        priceDisplay: '₹45 Lakhs',
-        revenueMonthly: '₹12 Lakhs/mo',
-        profitMonthly: '₹2.8 Lakhs/mo',
-        establishedYear: 2021,
-        employeesCount: 8,
-        rating: 4.8,
-        reviewCount: 22,
-        verified: true,
-        published: true,
-        featured: true,
-        status: 'Available',
-        image: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1000&q=80',
-        description: 'Profitable 2200 sq ft supermarket in high-density gated township. POS software, POS billers, refrigeration units, and inventory worth ₹18 Lakhs included.',
-        reasonForSale: 'Owner focusing on manufacturing expansion',
-        trustScore: 96,
-      },
-      {
-        id: 'biz-seed-3',
-        name: 'Luxury Unisex Beauty Salon & Wellness Spa',
-        industry: 'Beauty & Wellness',
-        category: 'Beauty & Wellness',
-        businessType: 'Sole Proprietorship',
-        location: 'Jubilee Hills, Hyderabad',
-        state: 'Telangana',
-        city: 'Hyderabad',
-        latitude: 17.4319,
-        longitude: 78.4072,
-        price: 35,
-        priceDisplay: '₹35 Lakhs',
-        revenueMonthly: '₹8 Lakhs/mo',
-        profitMonthly: '₹2.2 Lakhs/mo',
-        establishedYear: 2020,
-        employeesCount: 12,
-        rating: 4.9,
-        reviewCount: 45,
-        verified: true,
-        published: true,
-        featured: true,
-        status: 'Available',
-        image: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1000&q=80',
-        description: 'Premium salon & spa equipped with 10 styling stations, 3 massage rooms, manicure/pedicure section, and celebrity client portfolio.',
-        reasonForSale: 'Owner retiring',
-        trustScore: 97,
-      },
-      {
-        id: 'biz-seed-4',
-        name: 'Automobile Authorized Service Center & Garage',
-        industry: 'Automobile & Garage',
-        category: 'Automobile & Garage',
-        businessType: 'Private Limited Company (Pvt Ltd)',
-        location: 'Banjara Hills, Hyderabad',
-        state: 'Telangana',
-        city: 'Hyderabad',
-        latitude: 17.4156,
-        longitude: 78.4347,
-        price: 120,
-        priceDisplay: '₹1.2 Cr',
-        revenueMonthly: '₹25 Lakhs/mo',
-        profitMonthly: '₹6 Lakhs/mo',
-        establishedYear: 2018,
-        employeesCount: 22,
-        rating: 4.8,
-        reviewCount: 68,
-        verified: true,
-        published: true,
-        featured: true,
-        status: 'Available',
-        image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1000&q=80',
-        description: 'Multi-brand multi-bay car service workstation with hydraulic lifts, automated paint booth, OBD scanner tools, and annual corporate AMC contracts.',
-        reasonForSale: 'Business consolidation',
-        trustScore: 99,
-      },
-      {
-        id: 'biz-seed-5',
-        name: 'Modern Diagnostic Center & Pathology Lab',
-        industry: 'Healthcare & Pharma',
-        category: 'Healthcare & Pharma',
-        businessType: 'Private Limited Company (Pvt Ltd)',
-        location: 'Brodipet, Guntur',
-        state: 'Andhra Pradesh',
-        city: 'Guntur',
-        latitude: 16.3067,
-        longitude: 80.4365,
-        price: 65,
-        priceDisplay: '₹65 Lakhs',
-        revenueMonthly: '₹14 Lakhs/mo',
-        profitMonthly: '₹3.5 Lakhs/mo',
-        establishedYear: 2019,
-        employeesCount: 14,
-        rating: 4.9,
-        reviewCount: 52,
-        verified: true,
-        published: true,
-        featured: true,
-        status: 'Available',
-        image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1000&q=80',
-        description: 'NABL accredited diagnostic center with fully automated analyzer machines, digital X-ray, ECG, ultrasound, and network of 15 tie-up clinics.',
-        reasonForSale: 'Doctor expanding hospital chain',
-        trustScore: 98,
+    await prisma.business.deleteMany({
+      where: {
+        id: { in: ['biz-seed-1', 'biz-seed-2', 'biz-seed-3', 'biz-seed-4', 'biz-seed-5'] }
       }
-    ];
+    }).catch(() => null);
 
-    for (const b of initialSeedBusinesses) {
-      await prisma.business.upsert({
-        where: { id: b.id },
-        update: b,
-        create: b,
-      }).catch(err => console.warn('Seed business error:', err.message));
-    }
-    logger.info('Auto-seeded 5 initial Business listings into PostgreSQL database');
-  } catch (e) {
-    logger.warn('Seed business error:', e.message);
-  }
-};
-
-const ensureInitialPropertyData = async () => {
-  try {
-    const initialSeedProperties = [
-      {
-        id: 'prop-pg-101',
-        title: 'Commercial Office Space for Lease',
-        description: 'Well-maintained 500 sq. ft. fully commercial office space located in prime Serilingampally, Hyderabad. Features 10 workstations, executive director cabin, private washroom, 100% power backup, and reserved parking.',
-        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&auto=format&fit=crop&q=80',
-        image2: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1200&auto=format&fit=crop&q=80',
-        image3: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200&auto=format&fit=crop&q=80',
-        state: 'Telangana',
-        district: 'Rangareddy',
-        city: 'Hyderabad',
-        area: 'Serilingampally',
-        latitude: 17.4834,
-        longitude: 78.3158,
-        price: 32000,
-        priceDisplay: '₹32,000 /mo',
-        category: 'Commercial',
-        status: 'Rent',
-        listingStatus: 'PUBLISHED',
-        areaSqFt: '500 sqft',
-        bedrooms: 0,
-        bathrooms: 2,
-        rating: 4.8,
-        reviewCount: 15,
-        verified: true,
-        premium: true,
-        trending: true,
-        ownershipType: 'Leasehold',
-        agentName: 'NEXOPP Commercial Desk',
-        createdDate: '2026-08-22'
-      },
-      {
-        id: 'prop-pg-102',
-        title: 'Luxury 3 BHK Gated Villa for Sale',
-        description: 'Spacious 2500 sq. ft. 3 BHK Villa in Gachibowli, Hyderabad with East facing entrance, private garden, modular kitchen, covered parking, and 24/7 security.',
-        image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&auto=format&fit=crop&q=80',
-        image2: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80',
-        state: 'Telangana',
-        district: 'Rangareddy',
-        city: 'Hyderabad',
-        area: 'Gachibowli',
-        latitude: 17.4401,
-        longitude: 78.3489,
-        price: 15000000,
-        priceDisplay: '₹1.5 Cr',
-        category: 'Villa',
-        status: 'Buy',
-        listingStatus: 'PUBLISHED',
-        areaSqFt: '2500 sqft',
-        bedrooms: 3,
-        bathrooms: 3,
-        rating: 4.9,
-        reviewCount: 28,
-        verified: true,
-        premium: true,
-        trending: true,
-        ownershipType: 'Freehold',
-        agentName: 'NEXOPP Verified Advisor',
-        createdDate: '2026-08-20'
-      },
-      {
-        id: 'prop-pg-103',
-        title: 'Premium Residential Apartment for Rent',
-        description: 'Modern 1800 sq. ft. 3 BHK Apartment in HITEC City with swimming pool, gym, clubhouse, and full power backup.',
-        image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&auto=format&fit=crop&q=80',
-        state: 'Telangana',
-        district: 'Rangareddy',
-        city: 'Hyderabad',
-        area: 'HITEC City',
-        latitude: 17.4435,
-        longitude: 78.3772,
-        price: 45000,
-        priceDisplay: '₹45,000 /mo',
-        category: 'Apartment',
-        status: 'Rent',
-        listingStatus: 'PUBLISHED',
-        areaSqFt: '1800 sqft',
-        bedrooms: 3,
-        bathrooms: 3,
-        rating: 4.7,
-        reviewCount: 19,
-        verified: true,
-        premium: false,
-        trending: true,
-        ownershipType: 'Freehold',
-        agentName: 'NEXOPP Verified Advisor',
-        createdDate: '2026-08-21'
-      },
-      {
-        id: 'prop-pg-104',
-        title: 'Prime Independent Commercial Building',
-        description: 'Independent 4-story commercial building (6,400 sq. ft.) in Brodipet, Guntur. Excellent road frontage, elevator, generator backup, and high rental yield.',
-        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80',
-        state: 'Andhra Pradesh',
-        district: 'Guntur',
-        city: 'Guntur',
-        area: 'Brodipet',
-        latitude: 16.3067,
-        longitude: 80.4365,
-        price: 32000000,
-        priceDisplay: '₹3.2 Cr',
-        category: 'Commercial',
-        status: 'Buy',
-        listingStatus: 'PUBLISHED',
-        areaSqFt: '6400 sqft',
-        bedrooms: 0,
-        bathrooms: 8,
-        rating: 4.9,
-        reviewCount: 32,
-        verified: true,
-        premium: true,
-        trending: true,
-        ownershipType: 'Freehold',
-        agentName: 'Rajeshwar Reddy',
-        createdDate: '2026-08-22'
-      },
-      {
-        id: 'prop-pg-105',
-        title: 'Gated Community 2 BHK Flat for Sale',
-        description: 'East facing 1250 sq. ft. 2 BHK Flat near Benz Circle, Vijayawada. Children play area, solar hot water, 24-hr municipal water supply, and low maintenance fees.',
-        image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop&q=80',
-        state: 'Andhra Pradesh',
-        district: 'NTR (Vijayawada)',
-        city: 'Vijayawada',
-        area: 'Benz Circle',
-        latitude: 16.5062,
-        longitude: 80.6480,
-        price: 6200000,
-        priceDisplay: '₹62 Lakhs',
-        category: 'Flats',
-        status: 'Buy',
-        listingStatus: 'PUBLISHED',
-        areaSqFt: '1250 sqft',
-        bedrooms: 2,
-        bathrooms: 2,
-        rating: 4.8,
-        reviewCount: 24,
-        verified: true,
-        premium: false,
-        trending: true,
-        ownershipType: 'Freehold',
-        agentName: 'Srinivas Rao',
-        createdDate: '2026-08-22'
+    await prisma.property.deleteMany({
+      where: {
+        id: { in: ['prop-pg-101', 'prop-pg-102', 'prop-pg-103', 'prop-pg-104', 'prop-pg-105', 'rent_res_1', 'rent_res_2', 'rent_res_3', 'rent_res_4'] }
       }
-    ];
-
-    for (const p of initialSeedProperties) {
-      await prisma.property.upsert({
-        where: { id: p.id },
-        update: p,
-        create: p,
-      }).catch(err => console.warn('Seed property error:', err.message));
-    }
-    logger.info('Auto-seeded 5 initial Property listings into PostgreSQL database');
+    }).catch(() => null);
+    logger.info('Cleaned up fake seed property and business records from database.');
   } catch (e) {
-    logger.warn('Seed property error:', e.message);
+    logger.warn('Seed purge notice:', e.message);
   }
 };
 
@@ -4614,10 +4378,24 @@ const ensureInitialCustomerData = async () => {
   }
 };
 
+// ── FRONTEND STATIC ASSET SERVING & ROUTE-SPECIFIC SEO FALLBACK ──────────────
+const distDir = path.join(__dirname, '../dist');
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    const cleanPath = req.path.replace(/\/$/, '');
+    const routeHtmlPath = path.join(distDir, cleanPath, 'index.html');
+    if (fs.existsSync(routeHtmlPath)) {
+      return res.sendFile(routeHtmlPath);
+    }
+    return res.sendFile(path.join(distDir, 'index.html'));
+  });
+}
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`[NEXOPP Enterprise API] Server running on http://0.0.0.0:${PORT} and http://127.0.0.1:${PORT} (${process.env.NODE_ENV || 'production'})`);
-  ensureInitialBusinessData().catch(() => {});
-  ensureInitialPropertyData().catch(() => {});
+  purgeSeedData().catch(() => {});
   ensureInitialCustomerData().catch(() => {});
 });
 

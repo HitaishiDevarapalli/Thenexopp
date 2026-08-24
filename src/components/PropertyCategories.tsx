@@ -710,7 +710,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         location: `${p.area ? p.area + ', ' : ''}${p.city || ''}`,
         badge: p.verified ? 'Verified' : (p.premium ? 'Premium' : 'New'),
         badgeType: p.verified ? 'verified' : (p.premium ? 'premium' : 'new'),
-        image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&auto=format&fit=crop&q=80',
+        image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
         area: p.sqft ? `${p.sqft} sq ft` : (p.builtUpArea ? `${p.builtUpArea} sq ft` : '1500 sq ft'),
         bhk: String(p.bedrooms || 3),
         bath: String(p.bathrooms || 3),

@@ -57,7 +57,7 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
             <div key={prop.id} className="property-card premium-card landscape-card" style={{ width: '100%' }}>
               <div className="property-image-container">
                 <img 
-                  src={prop.image || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80'} 
+                  src={prop.image || '/assets/luxury_apartment.png'} 
                   alt={prop.title} 
                   loading="lazy"
                   decoding="async"
