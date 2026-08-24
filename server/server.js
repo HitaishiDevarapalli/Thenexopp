@@ -3045,26 +3045,16 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
     if (d.ownershipType !== undefined) updateData.ownershipType = String(d.ownershipType);
     
-    // Persist broker assignment
+    // Persist broker assignment strictly from existing brokers
     if (d.dealerId !== undefined || d.brokerId !== undefined) {
       const bId = d.dealerId || d.brokerId;
       if (bId) {
         const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-        if (!brokerExists) {
-          await prisma.broker.create({
-            data: {
-              id: bId,
-              companyName: d.agentName || 'RealtyPlus Advisors',
-              rating: Number(d.agentRating) || 4.8,
-              phone: d.agentPhone || null,
-              photo: d.agentImage || null,
-              logo: d.agentImage || null,
-              city: d.city || 'Hyderabad',
-              state: d.state || 'Telangana'
-            }
-          }).catch(() => null);
+        if (brokerExists) {
+          updateData.brokerId = bId;
+        } else {
+          updateData.brokerId = null;
         }
-        updateData.brokerId = bId;
       } else {
         updateData.brokerId = null;
       }
@@ -3413,23 +3403,10 @@ app.put('/api/businesses/:id', async (req, res, next) => {
       let safeBrokerId = null;
       if (bId) {
         const brokerExists = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-        if (!brokerExists) {
-          await prisma.broker.create({
-            data: {
-              id: bId,
-              companyName: b.agentName || 'RealtyPlus Advisors',
-              rating: Number(b.agentRating) || 4.8,
-              phone: b.agentPhone || null,
-              city: b.city || 'Hyderabad',
-              state: b.state || 'Telangana'
-            }
-          }).catch(() => null);
-        }
-        const verifyBroker = await prisma.broker.findUnique({ where: { id: bId } }).catch(() => null);
-        if (verifyBroker) safeBrokerId = bId;
+        if (brokerExists) safeBrokerId = bId;
         updateData.dealerId = bId;
         updateData.brokerId = safeBrokerId;
-        updateData.assignedBrokerIds = [bId];
+        updateData.assignedBrokerIds = safeBrokerId ? [safeBrokerId] : [];
       } else {
         updateData.dealerId = null;
         updateData.brokerId = null;
