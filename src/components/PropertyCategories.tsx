@@ -728,7 +728,27 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         latitude: p.latitude,
         longitude: p.longitude,
         city: p.city,
-        rawPrice: (p.price && p.price < 10) ? p.price * 100 : (p.price || 0),
+        rawPrice: (() => {
+          let calcPrice = p.price || 0;
+          if (p.priceDisplay) {
+            const lowerDisplay = p.priceDisplay.toLowerCase();
+            const numValue = parseFloat(lowerDisplay.replace(/[^0-9.]/g, '')) || 0;
+            if (lowerDisplay.includes('cr')) {
+              calcPrice = numValue * 100;
+            } else if (lowerDisplay.includes('lakh') || lowerDisplay.includes('lac')) {
+              calcPrice = numValue;
+            } else if (lowerDisplay.includes('k') || lowerDisplay.includes('thousand')) {
+              calcPrice = numValue / 100;
+            } else if (numValue > 1000) {
+              calcPrice = numValue / 100000;
+            } else if (numValue > 0) {
+              calcPrice = numValue; // if they just entered a small number and no unit
+            }
+          } else if (calcPrice > 10000) {
+            calcPrice = calcPrice / 100000;
+          }
+          return calcPrice;
+        })(),
         propertyPurpose: p.propertyPurpose || (String(p.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
         status: (
           String(p.status || '').toLowerCase().includes('rent') ||
@@ -903,8 +923,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       const isItemRent = item.status.toLowerCase() === 'rent' ||
                          String((item as any).propertyPurpose || '').toLowerCase() === 'rent' ||
                          item.title.toLowerCase().includes('for rent') ||
-                         (item.price || '').toLowerCase().includes('/mo') ||
-                         (item.price || '').toLowerCase().includes('/month');
+                         String(item.priceDisplay || '').toLowerCase().includes('/mo') ||
+                         String(item.priceDisplay || '').toLowerCase().includes('/month');
 
       if (activeTab === 'Buy') {
         if (isItemRent) return false;
