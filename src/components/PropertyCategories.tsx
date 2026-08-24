@@ -1081,6 +1081,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       if ((a as any).exactLocationMatch && !(b as any).exactLocationMatch) return -1;
       if (!(a as any).exactLocationMatch && (b as any).exactLocationMatch) return 1;
 
+      const aTier = (a as any).distanceTier || 0;
+      const bTier = (b as any).distanceTier || 0;
+      if (aTier !== bTier) {
+         return aTier - bTier;
+      }
+
       if (sortBy === 'Price: Low to High') {
         return a.rawPrice - b.rawPrice;
       } else if (sortBy === 'Price: High to Low') {
