@@ -700,7 +700,10 @@ export const syncWithBackend = async () => {
     // SERVER DATA = TRUTH. Merge with unsynced local creations so items never vanish.
     if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
       const serverPropMap = new Map(propsRes.value.map((p: any) => [String(p.id), p]));
+      let customProps: any[] = [];
+      try { customProps = JSON.parse(localStorage.getItem('nexopp_custom_properties') || '[]'); } catch {}
       const unsyncedProps = (propertiesDb || []).filter(p => p && p.id && !serverPropMap.has(String(p.id)));
+      const customUnsynced = customProps.filter(p => p && p.id && !serverPropMap.has(String(p.id)));
 
       const serverMappedProps = propsRes.value.map((p: any) => {
         const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined);
@@ -710,7 +713,10 @@ export const syncWithBackend = async () => {
           assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
       });
-      propertiesDb = [...serverMappedProps, ...unsyncedProps];
+      const combinedProps = [...serverMappedProps, ...customUnsynced, ...unsyncedProps];
+      const uniquePropMap = new Map();
+      combinedProps.forEach(p => { if (p && p.id && !uniquePropMap.has(String(p.id))) uniquePropMap.set(String(p.id), p); });
+      propertiesDb = Array.from(uniquePropMap.values());
     }
     if (franRes.status === 'fulfilled' && Array.isArray(franRes.value)) {
       franchiseDb = franRes.value;
@@ -850,7 +856,13 @@ const cleanPropPayload = (item: any) => ({
 
 // Mutations — Immediate UI response + VPS server persistence
 export const addProperty = async (item: PropertyListing) => {
-  // 1. Instant optimistic update so UI shows added property immediately
+  // 1. Instant optimistic update & localStorage persistence
+  try {
+    const custom = JSON.parse(localStorage.getItem('nexopp_custom_properties') || '[]');
+    const filtered = custom.filter((p: any) => p.id !== item.id);
+    localStorage.setItem('nexopp_custom_properties', JSON.stringify([item, ...filtered]));
+  } catch {}
+
   const existingIdx = propertiesDb.findIndex(p => p.id === item.id);
   if (existingIdx >= 0) {
     propertiesDb[existingIdx] = { ...propertiesDb[existingIdx], ...item };
