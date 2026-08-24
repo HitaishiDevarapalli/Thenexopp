@@ -3118,10 +3118,61 @@ app.put('/api/properties/:id', async (req, res, next) => {
       updateData.listingStatus = 'SOLD';
     }
 
-    const updated = await prisma.property.update({
-      where: { id },
-      data: updateData,
-    });
+    let updated;
+    try {
+      updated = await prisma.property.upsert({
+        where: { id },
+        update: updateData,
+        create: {
+          id,
+          title: d.title || 'Untitled Property',
+          description: d.description || '',
+          image: d.image || '',
+          area: d.area || '',
+          areaSqFt: d.areaSqFt || '1000 Sq.ft',
+          price: Number(d.price) || 0,
+          priceDisplay: d.priceDisplay || `₹${d.price || 0}`,
+          category: d.category || 'Flats',
+          status: d.status || 'Buy',
+          ...updateData
+        }
+      });
+    } catch (dbErr) {
+      logger.warn('Property PUT upsert initial attempt warning:', dbErr.message);
+      // Fallback in case newly added columns aren't pushed in DB yet
+      const essentialFields = {
+        title: updateData.title || 'Untitled Property',
+        description: updateData.description || '',
+        image: updateData.image || '',
+        state: updateData.state || 'Telangana',
+        district: updateData.district || 'Hyderabad',
+        city: updateData.city || 'Hyderabad',
+        area: updateData.area || '',
+        latitude: updateData.latitude || 17.4326,
+        longitude: updateData.longitude || 78.4071,
+        price: updateData.price || 0,
+        priceDisplay: updateData.priceDisplay || `₹${updateData.price || 0}`,
+        category: updateData.category || 'Flats',
+        status: updateData.status || 'Buy',
+        areaSqFt: updateData.areaSqFt || '1000 Sq.ft',
+        bedrooms: updateData.bedrooms || 0,
+        bathrooms: updateData.bathrooms || 0,
+        ownershipType: updateData.ownershipType || 'Individual',
+        propertyType: updateData.propertyType || 'Residential',
+        furnishing: updateData.furnishing || 'Unfurnished',
+        verified: updateData.verified !== false,
+        published: updateData.published !== false,
+        listingStatus: updateData.listingStatus || 'PUBLISHED'
+      };
+      updated = await prisma.property.upsert({
+        where: { id },
+        update: essentialFields,
+        create: {
+          id,
+          ...essentialFields
+        }
+      });
+    }
 
     if (updateData.listingStatus && ['SOLD', 'ARCHIVED', 'EXPIRED', 'HIDDEN', 'RESERVED'].includes(updateData.listingStatus)) {
       try {
@@ -3138,7 +3189,8 @@ app.put('/api/properties/:id', async (req, res, next) => {
 
     return res.json(updated);
   } catch (err) {
-    next(err);
+    logger.error('PUT /api/properties/:id error:', err.message);
+    return res.status(500).json({ error: `Failed to update property: ${err.message}` });
   }
 });
 
@@ -3214,10 +3266,27 @@ app.put('/api/franchises/:id', async (req, res, next) => {
     if (f.logo !== undefined) updateData.logo = f.logo;
     if (f.status !== undefined) updateData.status = f.status;
 
-    const updated = await prisma.franchise.update({ where: { id }, data: updateData });
+    const updated = await prisma.franchise.upsert({
+      where: { id },
+      update: updateData,
+      create: {
+        id,
+        brand: f.brand || 'Franchise Brand',
+        type: f.type || 'Franchise',
+        investment: Number(f.investment) || 0,
+        investmentDisplay: f.investmentDisplay || `₹${f.investment || 0}`,
+        location: f.location || 'Pan India',
+        state: f.state || 'Telangana',
+        city: f.city || 'Hyderabad',
+        image: f.image || '',
+        logo: f.logo || '',
+        ...updateData
+      }
+    });
     return res.json(updated);
   } catch (err) {
-    next(err);
+    logger.error('PUT /api/franchises/:id error:', err.message);
+    return res.status(500).json({ error: `Failed to update franchise: ${err.message}` });
   }
 });
 
@@ -3459,11 +3528,43 @@ app.put('/api/businesses/:id', async (req, res, next) => {
 
     let updated;
     try {
-      updated = await prisma.business.update({ where: { id }, data: updateData });
+      updated = await prisma.business.upsert({
+        where: { id },
+        update: updateData,
+        create: {
+          id,
+          name: b.name || 'Business Name',
+          industry: b.industry || 'Retail',
+          location: b.location || 'Hyderabad',
+          state: b.state || 'Telangana',
+          city: b.city || 'Hyderabad',
+          price: Number(b.price) || 0,
+          priceDisplay: b.priceDisplay || `₹${b.price || 0}`,
+          image: b.image || '',
+          description: b.description || '',
+          ...updateData
+        }
+      });
     } catch (err) {
       console.warn('Business update warning (retrying without broker constraint):', err.message);
       const fallbackData = { ...updateData, brokerId: null };
-      updated = await prisma.business.update({ where: { id }, data: fallbackData });
+      updated = await prisma.business.upsert({
+        where: { id },
+        update: fallbackData,
+        create: {
+          id,
+          name: b.name || 'Business Name',
+          industry: b.industry || 'Retail',
+          location: b.location || 'Hyderabad',
+          state: b.state || 'Telangana',
+          city: b.city || 'Hyderabad',
+          price: Number(b.price) || 0,
+          priceDisplay: b.priceDisplay || `₹${b.price || 0}`,
+          image: b.image || '',
+          description: b.description || '',
+          ...fallbackData
+        }
+      });
     }
 
     if (updateData.status && ['SOLD', 'CLOSED', 'UNAVAILABLE', 'INACTIVE'].includes(updateData.status)) {
