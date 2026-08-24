@@ -10,6 +10,7 @@ async function main() {
       id: `test-prop-1-${Date.now()}`,
       title: 'Luxury 3 BHK Sky Villa in Jubilee Hills',
       description: 'Ultra-luxurious 3 BHK villa with private pool and panoramic skyline views.',
+      image: '/assets/premium_villa.png',
       category: 'Villas',
       status: 'Buy',
       listingStatus: 'PUBLISHED',
@@ -29,6 +30,7 @@ async function main() {
       id: `test-prop-2-${Date.now()}`,
       title: 'Premium 2 BHK Apartment in Gachibowli',
       description: 'Modern 2 BHK gated community flat near Financial District IT Hub.',
+      image: '/assets/luxury_apartment.png',
       category: 'Flats',
       status: 'Rent',
       listingStatus: 'PUBLISHED',
@@ -48,6 +50,7 @@ async function main() {
       id: `test-prop-3-${Date.now()}`,
       title: 'Commercial Office Space in Hitech City',
       description: 'Fully furnished 80-seater IT office space ready for immediate occupancy.',
+      image: '/assets/business_restaurant.png',
       category: 'Commercial',
       status: 'Rent',
       listingStatus: 'PUBLISHED',
@@ -67,6 +70,7 @@ async function main() {
       id: `test-prop-4-${Date.now()}`,
       title: 'Independent 4 BHK House in Banjara Hills',
       description: 'Spacious independent house with private lawn and 2 car parkings.',
+      image: '/assets/premium_villa.png',
       category: 'Houses',
       status: 'Buy',
       listingStatus: 'PUBLISHED',
@@ -86,6 +90,7 @@ async function main() {
       id: `test-prop-5-${Date.now()}`,
       title: 'Residential Plot in Guntur Ring Road',
       description: 'East-facing 300 sq.yards corner plot with 40ft wide road access.',
+      image: '/assets/luxury_apartment.png',
       category: 'Lands',
       status: 'Buy',
       listingStatus: 'PUBLISHED',
@@ -132,6 +137,7 @@ async function main() {
       published: true,
       featured: true,
       status: 'Available',
+      image: '/assets/business_restaurant.png',
       description: 'Fully running organic grocery store with 1200+ monthly active regular customers.'
     },
     {
@@ -155,6 +161,7 @@ async function main() {
       published: true,
       featured: true,
       status: 'Available',
+      image: '/assets/business_restaurant.png',
       description: 'Prime main-road location restaurant with liquor license and Swiggy/Zomato top ratings.'
     },
     {
@@ -178,6 +185,7 @@ async function main() {
       published: true,
       featured: true,
       status: 'Available',
+      image: '/assets/business_restaurant.png',
       description: 'Tech company with 24 enterprise SaaS client retainers and solid IP assets.'
     },
     {
@@ -201,6 +209,7 @@ async function main() {
       published: true,
       featured: false,
       status: 'Available',
+      image: '/assets/business_restaurant.png',
       description: 'Established salon brand with imported styling stations and loyal customer base.'
     },
     {
@@ -224,6 +233,7 @@ async function main() {
       published: true,
       featured: true,
       status: 'Available',
+      image: '/assets/business_restaurant.png',
       description: 'Distribution network across 4 districts supplying 180+ hospitals and pharmacies.'
     }
   ];
@@ -249,6 +259,6 @@ async function main() {
 
 main().catch(err => {
   console.error('❌ Database Test Failed:', err);
-  prisma.$disconnect();
+  prisma.$disconnect().catch(() => {});
   process.exit(1);
 });
