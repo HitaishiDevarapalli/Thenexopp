@@ -130,6 +130,7 @@ model Property {
   priceDisplay  String
   category      String
   status        String         @default("Buy")
+  propertyPurpose String?      @default("Sale")
   listingStatus PropertyStatus @default(PUBLISHED)
   published     Boolean        @default(true)
   featured      Boolean        @default(false)

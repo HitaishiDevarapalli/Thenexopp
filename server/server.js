@@ -2844,6 +2844,7 @@ app.get('/api/properties', async (req, res) => {
         agentRating: p.broker?.rating || p.rating || 4.8,
         agentImage: p.broker?.photo || p.broker?.logo || undefined,
         sold: isSold,
+        propertyPurpose: p.propertyPurpose || (String(p.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
         priceDisplay: p.priceDisplay || (p.price ? `₹${p.price}` : ''),
         areaSqFt: p.areaSqFt || p.superBuiltUpArea || '',
         superBuiltUpArea: p.superBuiltUpArea || p.areaSqFt || '',
@@ -2892,6 +2893,7 @@ app.get('/api/properties/:id', async (req, res) => {
       agentRating: prop.broker?.rating || prop.rating || 4.8,
       agentImage: prop.broker?.photo || prop.broker?.logo || undefined,
       sold: isSold,
+      propertyPurpose: prop.propertyPurpose || (String(prop.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
       priceDisplay: prop.priceDisplay || (prop.price ? `₹${prop.price}` : ''),
       areaSqFt: prop.areaSqFt || prop.superBuiltUpArea || '',
       superBuiltUpArea: prop.superBuiltUpArea || prop.areaSqFt || '',
@@ -2968,6 +2970,7 @@ app.post('/api/properties', async (req, res, next) => {
       priceDisplay: newProp.priceDisplay || `₹${parsedPrice}`,
       category: newProp.category || 'Flats',
       status: newProp.status || 'Buy',
+      propertyPurpose: newProp.propertyPurpose || (newProp.status === 'Rent' ? 'Rent' : 'Sale'),
       listingStatus: listingStatus,
       published: newProp.published !== false,
       featured: Boolean(newProp.featured),
@@ -3057,6 +3060,7 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.priceDisplay !== undefined) updateData.priceDisplay = String(d.priceDisplay);
     if (d.category !== undefined) updateData.category = String(d.category);
     if (d.status !== undefined) updateData.status = String(d.status);
+    if (d.propertyPurpose !== undefined) updateData.propertyPurpose = String(d.propertyPurpose);
     if (d.furnishing !== undefined || d.furnishingStatus !== undefined) updateData.furnishing = String(d.furnishing || d.furnishingStatus);
     if (d.areaSqFt !== undefined) updateData.areaSqFt = String(d.areaSqFt);
     if (d.bedrooms !== undefined) updateData.bedrooms = Number(d.bedrooms);

@@ -47,6 +47,26 @@ interface PropertyCategoriesProps {
   onBack?: () => void;
 }
 
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  'hyderabad': { lat: 17.3850, lng: 78.4867 },
+  'visakhapatnam': { lat: 17.6868, lng: 83.2185 },
+  'vizag': { lat: 17.6868, lng: 83.2185 },
+  'guntur': { lat: 16.3067, lng: 80.4365 },
+  'vijayawada': { lat: 16.5062, lng: 80.6480 },
+  'bengaluru': { lat: 12.9716, lng: 77.5946 },
+  'bangalore': { lat: 12.9716, lng: 77.5946 },
+  'chennai': { lat: 13.0827, lng: 80.2707 },
+  'mumbai': { lat: 19.0760, lng: 72.8777 },
+  'delhi': { lat: 28.7041, lng: 77.1025 },
+  'pune': { lat: 18.5204, lng: 73.8567 },
+  'tirupati': { lat: 13.6288, lng: 79.4192 },
+  'rajahmundry': { lat: 17.0005, lng: 81.8040 },
+  'kakinada': { lat: 16.9891, lng: 82.2475 },
+  'nellore': { lat: 14.4426, lng: 79.9865 },
+  'kurnool': { lat: 15.8281, lng: 78.0373 },
+  'warangal': { lat: 17.9689, lng: 79.5941 }
+};
+
 export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   onPropertyClick,
   onBuyProperty,
@@ -793,6 +813,27 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
     }
 
+    // Resolve coordinates for selected city if chosen
+    let cityLat: number | undefined;
+    let cityLng: number | undefined;
+    if (selectedCityId) {
+      const selCity = availableCities.find(c => c.id === selectedCityId);
+      const selCityName = selCity ? selCity.name.toLowerCase().trim() : '';
+      if (selCity && (selCity as any).latitude && (selCity as any).longitude) {
+        cityLat = (selCity as any).latitude;
+        cityLng = (selCity as any).longitude;
+      } else if (CITY_COORDS[selCityName]) {
+        cityLat = CITY_COORDS[selCityName].lat;
+        cityLng = CITY_COORDS[selCityName].lng;
+      } else {
+        const anchor = baseList.find(p => p.city && p.city.toLowerCase() === selCityName && p.latitude && p.longitude);
+        if (anchor) {
+          cityLat = anchor.latitude;
+          cityLng = anchor.longitude;
+        }
+      }
+    }
+
     let filtered = baseList.filter((item) => {
       // Hierarchical Location Filter (City → Area → Locality)
       if (selectedCityId) {
@@ -810,14 +851,66 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           const itemArea = (item.area || '').toLowerCase().trim();
           const isAreaMatch = (item.areaId && item.areaId === selectedAreaId) || (selAreaName && (itemArea.includes(selAreaName) || itemLoc.includes(selAreaName) || selAreaName.includes(itemArea)));
           if (!isAreaMatch) return false;
-        } else if (!isCityMatch) {
+          (item as any).exactLocationMatch = true;
+          (item as any).distanceKm = 0;
+        } else if (isCityMatch) {
+          (item as any).exactLocationMatch = true;
+          (item as any).distanceKm = 0;
+        } else {
           // Calculate distance from the selected city to apply Location Intelligence tiers
-          if (selCity && (selCity as any).latitude && (selCity as any).longitude && item.latitude && item.longitude) {
-             const dist = getDistance((selCity as any).latitude, (selCity as any).longitude, item.latitude, item.longitude);
+          const targetRefLat = cityLat || searchLat;
+          const targetRefLng = cityLng || searchLng;
+          if (targetRefLat && targetRefLng && item.latitude && item.longitude) {
+             const dist = getDistance(targetRefLat, targetRefLng, item.latitude, item.longitude);
              (item as any).distanceKm = dist;
+             (item as any).exactLocationMatch = false;
           } else {
              return false;
           }
+        }
+      } else {
+        // Geospatial Location Filtering (when no specific sidebar city is selected)
+        let exactLocationMatch = true;
+        let distanceKm = 0;
+        const locStr = locationText ? locationText.toLowerCase().trim() : '';
+
+        if (searchLat && searchLng && item.latitude && item.longitude) {
+           const dist = getDistance(searchLat, searchLng, item.latitude, item.longitude);
+           distanceKm = dist;
+           
+           const targetLoc = (location?.area || location?.locality || location?.city || location?.displayName || locStr).toLowerCase();
+           const itemCity = (item.city || '').toLowerCase();
+           const itemArea = (item.area || '').toLowerCase();
+           const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
+           const itemLocStr = (item.location || '').toLowerCase();
+           
+           if (targetLoc) {
+               exactLocationMatch = itemCity === targetLoc || itemArea.includes(targetLoc) || itemSubLoc.includes(targetLoc) || itemLocStr.includes(targetLoc) || (item.title || '').toLowerCase().includes(targetLoc);
+           } else {
+               exactLocationMatch = dist <= 10;
+           }
+        } else if (hasLocalSearch) {
+           const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
+           const matchLoc =
+            (item.city && item.city.toLowerCase().includes(locStr)) ||
+            (item.area && item.area.toLowerCase().includes(locStr)) ||
+            (itemSubLoc && itemSubLoc.includes(locStr)) ||
+            (item.location && item.location.toLowerCase().includes(locStr)) ||
+            (item.title && item.title.toLowerCase().includes(locStr)) ||
+            (item.type && item.type.toLowerCase().includes(locStr));
+           if (!matchLoc) return false;
+           
+           const itemCity = (item.city || '').toLowerCase();
+           const itemArea = (item.area || '').toLowerCase();
+           const itemLocStr = (item.location || '').toLowerCase();
+           exactLocationMatch = itemCity === locStr || itemArea.includes(locStr) || itemSubLoc.includes(locStr) || itemLocStr.includes(locStr) || (item.title || '').toLowerCase().includes(locStr);
+        } else {
+           exactLocationMatch = true; 
+        }
+        
+        (item as any).exactLocationMatch = exactLocationMatch;
+        if (distanceKm > 0) {
+           (item as any).distanceKm = distanceKm;
         }
       }
 
@@ -856,65 +949,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           item.type.toLowerCase().includes(q);
         if (!match) return false;
       }
-
-      let exactLocationMatch = true;
-      let distanceKm = 0;
-      // 2. Geospatial Location Filtering
-      
-      const locStr = locationText ? locationText.toLowerCase().trim() : '';
-
-      if (searchLat && searchLng && item.latitude && item.longitude) {
-         const dist = getDistance(searchLat, searchLng, item.latitude, item.longitude);
-         distanceKm = dist;
-         
-         const targetLoc = (location?.area || location?.locality || location?.city || location?.displayName || locStr).toLowerCase();
-         const itemCity = (item.city || '').toLowerCase();
-         const itemArea = (item.area || '').toLowerCase();
-         const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
-         const itemLocStr = (item.location || '').toLowerCase();
-         
-         if (targetLoc) {
-             exactLocationMatch = itemCity === targetLoc || itemArea.includes(targetLoc) || itemSubLoc.includes(targetLoc) || itemLocStr.includes(targetLoc) || (item.title || '').toLowerCase().includes(targetLoc);
-         } else {
-             exactLocationMatch = dist <= 10;
-         }
-      } else if (hasLocalSearch) {
-         // Fallback to string only if no lat/lng found anywhere
-         const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
-         const matchLoc =
-          (item.city && item.city.toLowerCase().includes(locStr)) ||
-          (item.area && item.area.toLowerCase().includes(locStr)) ||
-          (itemSubLoc && itemSubLoc.includes(locStr)) ||
-          (item.location && item.location.toLowerCase().includes(locStr)) ||
-          (item.title && item.title.toLowerCase().includes(locStr)) ||
-          (item.type && item.type.toLowerCase().includes(locStr));
-         if (!matchLoc) return false;
-         
-         const itemCity = (item.city || '').toLowerCase();
-         const itemArea = (item.area || '').toLowerCase();
-         const itemLocStr = (item.location || '').toLowerCase();
-         exactLocationMatch = itemCity === locStr || itemArea.includes(locStr) || itemSubLoc.includes(locStr) || itemLocStr.includes(locStr) || (item.title || '').toLowerCase().includes(locStr);
-      } else {
-         // If no search, exactLocationMatch is true (shows all by default if no filters)
-         exactLocationMatch = true; 
-      }
-      
-      (item as any).exactLocationMatch = exactLocationMatch;
-      if (distanceKm > 0) {
-         (item as any).distanceKm = distanceKm;
-      } else if ((item as any).distanceKm) {
-         distanceKm = (item as any).distanceKm;
-         exactLocationMatch = false; // It's from a city filter fallback, so not exact
-         (item as any).exactLocationMatch = false;
-      }
       
       let distanceTier = 0;
-      if (!exactLocationMatch && distanceKm > 0) {
-        if (distanceKm <= 50) distanceTier = 50;
-        else if (distanceKm <= 100) distanceTier = 100;
-        else if (distanceKm <= 150) distanceTier = 150;
-        else if (distanceKm <= 200) distanceTier = 200;
-        else if (distanceKm <= 250) distanceTier = 250;
+      const isExact = (item as any).exactLocationMatch;
+      const finalDist = (item as any).distanceKm || 0;
+      if (!isExact && finalDist > 0) {
+        if (finalDist <= 50) distanceTier = 50;
+        else if (finalDist <= 100) distanceTier = 100;
+        else if (finalDist <= 150) distanceTier = 150;
+        else if (finalDist <= 200) distanceTier = 200;
+        else if (finalDist <= 250) distanceTier = 250;
         else distanceTier = 300;
       }
       (item as any).distanceTier = distanceTier;
@@ -1964,7 +2008,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               ) : (
                 paginatedProperties.map((prop, index) => {
                 const selCityForTitle = availableCities.find(c => c.id === selectedCityId)?.name;
-                const targetCityRaw = location?.city || location?.displayName || (locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') ? locationText : selCityForTitle);
+                const targetCityRaw = selCityForTitle || (locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') && !locationText.toLowerCase().includes('all') ? locationText : (location?.city || location?.displayName || 'your city'));
                 const targetCity = targetCityRaw ? targetCityRaw.charAt(0).toUpperCase() + targetCityRaw.slice(1) : 'your selected city';
                 const currentTier = (prop as any).distanceTier || 0;
                 const prevTier = index === 0 ? 0 : ((paginatedProperties[index - 1] as any).distanceTier || 0);

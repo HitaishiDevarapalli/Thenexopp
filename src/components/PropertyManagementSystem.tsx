@@ -467,8 +467,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   };
 
   const openEditModal = (prop: PropertyListing) => {
+    const rawPurpose = prop.propertyPurpose || (String(prop.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale');
     setFormData({
       ...prop,
+      propertyPurpose: rawPurpose as any,
+      status: rawPurpose === 'Rent' ? 'Rent' : 'Buy',
       assignedBrokerIds: (prop.assignedBrokerIds && prop.assignedBrokerIds.length > 0) ? prop.assignedBrokerIds : (prop.dealerId ? [prop.dealerId] : [])
     });
     setAddressSearchQuery(prop.formatted_address || prop.fullAddress || '');
@@ -596,8 +599,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const fallbackLng = formData.longitude || 78.3762;
     const fallbackAddress = formData.formatted_address || formData.fullAddress || `${formData.area || 'Jubilee Hills'}, ${formData.city || 'Hyderabad'}, Telangana, India`;
 
+    const isRentPurpose = formData.propertyPurpose === 'Rent' || formData.status === 'Rent';
+
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
+      propertyPurpose: isRentPurpose ? 'Rent' : (formData.propertyPurpose || 'Sale'),
+      status: isRentPurpose ? 'Rent' : 'Buy',
       id: formData.id || `P-${Date.now()}`,
       latitude: fallbackLat,
       longitude: fallbackLng,
@@ -2401,7 +2408,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PURPOSE *</label>
-                      <select value={formData.propertyPurpose || 'Sale'} onChange={e => setFormData({ ...formData, propertyPurpose: e.target.value as any, status: e.target.value === 'Rent' ? 'Rent' : 'Buy' })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                      <select 
+                        value={formData.propertyPurpose || (String(formData.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale')} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          setFormData({ 
+                            ...formData, 
+                            propertyPurpose: val as any, 
+                            status: val === 'Rent' ? 'Rent' : 'Buy' 
+                          });
+                        }} 
+                        style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
+                      >
                         <option value="Sale">Sale (Buy)</option>
                         <option value="Rent">Rent</option>
                         <option value="Lease">Long-term Lease</option>
