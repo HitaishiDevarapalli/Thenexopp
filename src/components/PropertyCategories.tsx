@@ -791,11 +791,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           const isAreaMatch = (item.areaId && item.areaId === selectedAreaId) || (selAreaName && (itemArea.includes(selAreaName) || itemLoc.includes(selAreaName) || selAreaName.includes(itemArea)));
           if (!isAreaMatch) return false;
         } else if (!isCityMatch) {
-          // If no area is specified and property isn't in exact city, check distance radius (e.g. within 50km tier)
-          if (item.distanceKm && item.distanceKm <= 50) {
-            // Keep nearby property visible with distance indicator
+          // Calculate distance from the selected city to apply Location Intelligence tiers
+          if (selCity && selCity.latitude && selCity.longitude && item.latitude && item.longitude) {
+             const dist = getDistance(selCity.latitude, selCity.longitude, item.latitude, item.longitude);
+             (item as any).distanceKm = dist;
           } else {
-            return false;
+             return false;
           }
         }
       }
@@ -879,7 +880,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
       
       (item as any).exactLocationMatch = exactLocationMatch;
-      (item as any).distanceKm = distanceKm;
+      if (distanceKm > 0) {
+         (item as any).distanceKm = distanceKm;
+      } else if ((item as any).distanceKm) {
+         distanceKm = (item as any).distanceKm;
+         exactLocationMatch = false; // It's from a city filter fallback, so not exact
+         (item as any).exactLocationMatch = false;
+      }
       
       let distanceTier = 0;
       if (!exactLocationMatch && distanceKm > 0) {
@@ -1933,12 +1940,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 </div>
               ) : (
                 paginatedProperties.map((prop, index) => {
-                const targetCityRaw = location?.city || location?.displayName || (locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') ? locationText : null);
-                const targetCity = targetCityRaw ? targetCityRaw.charAt(0).toUpperCase() + targetCityRaw.slice(1) : '';
+                const selCityForTitle = availableCities.find(c => c.id === selectedCityId)?.name;
+                const targetCityRaw = location?.city || location?.displayName || (locationText && locationText.trim() !== '' && !locationText.toLowerCase().includes('current location') ? locationText : selCityForTitle);
+                const targetCity = targetCityRaw ? targetCityRaw.charAt(0).toUpperCase() + targetCityRaw.slice(1) : 'your selected city';
                 const currentTier = (prop as any).distanceTier || 0;
                 const prevTier = index === 0 ? 0 : ((paginatedProperties[index - 1] as any).distanceTier || 0);
                 
-                const showSeparator = currentTier > 0 && currentTier > prevTier && targetCity;
+                const showSeparator = currentTier > 0 && currentTier > prevTier;
 
                 const isFav = isWishlisted(prop.id);
                 let badgeBg = '#DCFCE7';

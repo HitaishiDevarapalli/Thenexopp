@@ -590,21 +590,6 @@ export const searchPropertiesByLocationService = async (prisma, queryParams = {}
   const { location, city, area, type, minPrice, maxPrice, bedrooms } = queryParams;
   const where = {};
 
-  if (city) {
-    where.city = { contains: city, mode: 'insensitive' };
-  } else if (location) {
-    where.OR = [
-      { city: { contains: location, mode: 'insensitive' } },
-      { area: { contains: location, mode: 'insensitive' } },
-      { address: { contains: location, mode: 'insensitive' } },
-      { title: { contains: location, mode: 'insensitive' } },
-    ];
-  }
-
-  if (area) {
-    where.area = { contains: area, mode: 'insensitive' };
-  }
-
   if (type && type !== 'All' && type !== 'Any') {
     where.type = { contains: type, mode: 'insensitive' };
   }
@@ -620,10 +605,61 @@ export const searchPropertiesByLocationService = async (prisma, queryParams = {}
     if (maxPrice) where.price.lte = parseFloat(maxPrice);
   }
 
-  const properties = await prisma.property.findMany({
+  // Fetch all properties matching the strict non-location filters
+  let properties = await prisma.property.findMany({
     where,
     orderBy: { createdAt: 'desc' },
   }).catch(() => []);
+
+  const searchLocStr = location || city || area;
+
+  // If a location is provided, we apply "Location Intelligence"
+  if (searchLocStr) {
+    try {
+      const locMatches = await searchLocationsService(prisma, searchLocStr, 1);
+      if (locMatches && locMatches.length > 0) {
+        const targetLat = locMatches[0].latitude;
+        const targetLng = locMatches[0].longitude;
+
+        const resultsWithDistance = [];
+        for (const property of properties) {
+          const pLat = parseFloat(property.latitude);
+          const pLng = parseFloat(property.longitude);
+
+          if (!isNaN(pLat) && !isNaN(pLng)) {
+            const dist = haversineKm(targetLat, targetLng, pLat, pLng);
+            resultsWithDistance.push({
+              ...property,
+              distanceKm: parseFloat(dist.toFixed(2)),
+              distanceText: dist < 1 ? `${Math.round(dist * 1000)} m away` : `${dist.toFixed(1)} km away`,
+            });
+          } else {
+            resultsWithDistance.push(property); // No coordinates, keep at bottom
+          }
+        }
+
+        // Sort by distance
+        resultsWithDistance.sort((a, b) => {
+          if (a.distanceKm !== undefined && b.distanceKm !== undefined) return a.distanceKm - b.distanceKm;
+          if (a.distanceKm !== undefined) return -1;
+          if (b.distanceKm !== undefined) return 1;
+          return 0;
+        });
+
+        return resultsWithDistance;
+      } else {
+        // Fallback: strict text match if geocoding fails
+        const q = searchLocStr.toLowerCase();
+        properties = properties.filter(p => 
+          (p.city && p.city.toLowerCase().includes(q)) || 
+          (p.area && p.area.toLowerCase().includes(q)) || 
+          (p.title && p.title.toLowerCase().includes(q))
+        );
+      }
+    } catch (err) {
+      logger.error({ error: err.message }, 'Failed during Location Intelligence processing');
+    }
+  }
 
   return properties;
 };
