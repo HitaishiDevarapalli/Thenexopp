@@ -1200,7 +1200,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
             </div>
 
             {/* Modal Body Container */}
-            <form onSubmit={handleSaveBusiness} style={{ padding: '28px 36px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+            <form onSubmit={e => e.preventDefault()} style={{ padding: '28px 36px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
               
               {/* ================= STEP 1: LOCATION ================= */}
               {modalSubTab === 'location' && (
@@ -1998,7 +1998,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                     <>
                       {formData.title?.trim() && (
                         <button
-                          type="submit"
+                          type="button"
+                          onClick={handleSaveBusiness as any}
                           disabled={isSaving}
                           style={{ padding: '10px 20px', backgroundColor: '#FFFFFF', color: '#059669', border: '1.5px solid #059669', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.65 : 1 }}
                         >
@@ -2015,7 +2016,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                     </>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleSaveBusiness as any}
                       disabled={isSaving}
                       style={{ padding: '10px 28px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.92rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1, boxShadow: '0 2px 8px rgba(5,150,105,0.3)' }}
                     >
