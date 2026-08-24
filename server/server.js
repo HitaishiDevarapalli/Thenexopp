@@ -2472,6 +2472,30 @@ app.get('/api/admin/customers-login-history', optionalAuthMiddleware, async (req
   }
 });
 
+app.get('/api/customers-login-history', optionalAuthMiddleware, async (req, res) => {
+  try {
+    const history = await prisma.customerLoginHistory.findMany({
+      take: 50,
+      orderBy: { loginAt: 'desc' },
+      include: {
+        customer: {
+          select: {
+            name: true,
+            email: true,
+            phone: true,
+            avatar: true,
+            district: true
+          }
+        }
+      }
+    }).catch(() => []);
+
+    return res.json(history || []);
+  } catch (err) {
+    return res.json([]);
+  }
+});
+
 // 7.3. Admin CRM Single Customer Detail & History
 app.get('/api/admin/customers/:id', optionalAuthMiddleware, async (req, res) => {
   try {
