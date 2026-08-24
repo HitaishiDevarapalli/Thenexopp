@@ -1999,7 +1999,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             </div>
 
             {/* Modal Body Container */}
-            <form onSubmit={handleSaveProperty} style={{ padding: '28px 36px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+            <form onSubmit={e => e.preventDefault()} style={{ padding: '28px 36px', overflowY: 'auto', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
               
               {/* STEP 1: LOCATION (EXACT SCREENSHOT MATCH) */}
               {modalSubTab === 'location' && (

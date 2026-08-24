@@ -822,7 +822,9 @@ const isDataImage = (value: any) => typeof value === 'string' && value.startsWit
 const fetchWithApiFallback = async (url: string, init?: RequestInit) => {
   const relativePath = url.includes('/api/') ? '/api/' + url.split('/api/')[1] : null;
   let res = await fetch(url, init).catch(() => null);
-  if ((!res || !res.ok) && relativePath && relativePath !== url) {
+  // Only fall back on network errors (res === null), not on HTTP error responses.
+  // Preserving non-OK responses lets apiJson surface the real server error message.
+  if (!res && relativePath && relativePath !== url) {
     res = await fetch(relativePath, init).catch(() => null);
   }
   if (!res) throw new Error('Database API is unreachable');
@@ -855,16 +857,30 @@ const persistListingImages = async <T extends Record<string, any>>(item: T, fold
 
   for (const field of mediaFields) {
     if (isDataImage(payload[field])) {
-      payload[field] = await uploadDataImage(payload[field], folder, `${prefix}-${field}-${Date.now()}.jpg`);
+      try {
+        payload[field] = await uploadDataImage(payload[field], folder, `${prefix}-${field}-${Date.now()}.jpg`);
+      } catch (err) {
+        console.warn(`Image upload failed for field "${field}", keeping original value:`, err);
+        // Keep the data URL — the server can still save the property without the image
+        payload[field] = null;
+      }
     } else if (field in payload) {
       payload[field] = sanitizeImgStr(payload[field]) || null;
     }
   }
 
   if (Array.isArray(payload.images)) {
-    payload.images = await Promise.all(payload.images.map((img: any, idx: number) => (
-      isDataImage(img) ? uploadDataImage(img, folder, `${prefix}-gallery-${idx + 1}-${Date.now()}.jpg`) : sanitizeImgStr(img)
-    )));
+    payload.images = await Promise.all(payload.images.map(async (img: any, idx: number) => {
+      if (isDataImage(img)) {
+        try {
+          return await uploadDataImage(img, folder, `${prefix}-gallery-${idx + 1}-${Date.now()}.jpg`);
+        } catch (err) {
+          console.warn(`Gallery image upload failed for index ${idx}:`, err);
+          return null;
+        }
+      }
+      return sanitizeImgStr(img);
+    }));
     payload.images = payload.images.filter(Boolean);
   }
 
