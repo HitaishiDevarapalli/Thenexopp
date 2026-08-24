@@ -4406,7 +4406,8 @@ const ensureInitialCustomerData = async () => {
 const distDir = path.join(__dirname, '../dist');
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir));
-  app.get('*', (req, res, next) => {
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
     if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
     const cleanPath = req.path.replace(/\/$/, '');
     const routeHtmlPath = path.join(distDir, cleanPath, 'index.html');
