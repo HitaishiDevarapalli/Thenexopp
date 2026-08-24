@@ -469,7 +469,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   const openEditModal = (prop: PropertyListing) => {
     setFormData({
       ...prop,
-      assignedBrokerIds: prop.assignedBrokerIds || [prop.dealerId]
+      assignedBrokerIds: (prop.assignedBrokerIds && prop.assignedBrokerIds.length > 0) ? prop.assignedBrokerIds : (prop.dealerId ? [prop.dealerId] : [])
     });
     setAddressSearchQuery(prop.formatted_address || prop.fullAddress || '');
     setMapMarkerPos({ lat: prop.latitude || 17.4326, lng: prop.longitude || 78.4071 });

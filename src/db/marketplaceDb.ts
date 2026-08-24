@@ -175,6 +175,7 @@ export interface PropertyListing {
   floorNumber?: number;
   totalFloors?: number;
   ownershipType?: string;
+  reraNumber?: string;
   customFields?: { label: string; value: string }[];
 
   // Detailed Location

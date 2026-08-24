@@ -137,6 +137,18 @@ model Property {
   propertyType  String         @default("Residential")
   furnishing    String?        @default("Unfurnished")
   areaSqFt      String
+  superBuiltUpArea String?
+  carpetArea       String?
+  plotArea         String?
+  facing           String?
+  parkingSlots     Int?
+  balconies        Int?
+  floorNumber      Int?
+  totalFloors      Int?
+  ageYears         Int?
+  reraNumber       String?
+  amenities        String[]       @default([])
+  customFields     Json?
   bedrooms      Int            @default(0)
   bathrooms     Int            @default(0)
   rating        Float          @default(4.5)

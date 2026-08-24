@@ -2840,16 +2840,25 @@ app.get('/api/properties', async (req, res) => {
         id: String(p.id),
         dealerId: bId,
         assignedBrokerIds: bId ? [bId] : [],
-        agentName: p.agentName || (p.broker ? (p.broker.companyName || p.broker.fullName) : 'Verified Advisor'),
+        agentName: p.agentName || (p.broker ? (p.broker.companyName || p.broker.fullName) : undefined),
         agentRating: p.broker?.rating || p.rating || 4.8,
         agentImage: p.broker?.photo || p.broker?.logo || undefined,
         sold: isSold,
-        priceDisplay: p.priceDisplay || (p.price ? (p.price < 100000 ? `₹${p.price} /mo` : `₹${(p.price / 100000).toFixed(2)} Lacs`) : '₹32,000 /mo'),
-        areaSqFt: p.areaSqFt || (p.superBuiltUpArea ? String(p.superBuiltUpArea) : '1500 sqft'),
-        superBuiltUpArea: p.superBuiltUpArea || p.areaSqFt || '1500 sqft',
-        carpetArea: p.carpetArea || (p.superBuiltUpArea ? `${Math.round(parseInt(p.superBuiltUpArea) * 0.85)} sqft` : '1200 sqft'),
-        ownershipType: p.ownershipType || 'Freehold',
-        facing: p.facing || 'East',
+        priceDisplay: p.priceDisplay || (p.price ? `₹${p.price}` : ''),
+        areaSqFt: p.areaSqFt || p.superBuiltUpArea || '',
+        superBuiltUpArea: p.superBuiltUpArea || p.areaSqFt || '',
+        carpetArea: p.carpetArea || undefined,
+        plotArea: p.plotArea || undefined,
+        ownershipType: p.ownershipType || undefined,
+        facing: p.facing || undefined,
+        parkingSlots: p.parkingSlots !== undefined && p.parkingSlots !== null ? p.parkingSlots : undefined,
+        balconies: p.balconies !== undefined && p.balconies !== null ? p.balconies : undefined,
+        floorNumber: p.floorNumber !== undefined && p.floorNumber !== null ? p.floorNumber : undefined,
+        totalFloors: p.totalFloors !== undefined && p.totalFloors !== null ? p.totalFloors : undefined,
+        ageYears: p.ageYears !== undefined && p.ageYears !== null ? p.ageYears : undefined,
+        reraNumber: p.reraNumber || undefined,
+        amenities: Array.isArray(p.amenities) ? p.amenities : [],
+        customFields: p.customFields || [],
         approvalStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
         listingStatus: isSold ? 'Sold' : (p.listingStatus === 'DRAFT' ? 'Draft' : p.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
         recentlySold: isSold,
@@ -2879,11 +2888,25 @@ app.get('/api/properties/:id', async (req, res) => {
       id: String(prop.id),
       dealerId: bId,
       assignedBrokerIds: bId ? [bId] : [],
-      agentName: prop.agentName || (prop.broker ? (prop.broker.companyName || prop.broker.fullName) : 'Verified Advisor'),
+      agentName: prop.agentName || (prop.broker ? (prop.broker.companyName || prop.broker.fullName) : undefined),
       agentRating: prop.broker?.rating || prop.rating || 4.8,
       agentImage: prop.broker?.photo || prop.broker?.logo || undefined,
       sold: isSold,
-      priceDisplay: prop.priceDisplay || (prop.price ? (prop.price < 100000 ? `₹${prop.price} /mo` : `₹${(prop.price / 100000).toFixed(2)} Lacs`) : '₹32,000 /mo'),
+      priceDisplay: prop.priceDisplay || (prop.price ? `₹${prop.price}` : ''),
+      areaSqFt: prop.areaSqFt || prop.superBuiltUpArea || '',
+      superBuiltUpArea: prop.superBuiltUpArea || prop.areaSqFt || '',
+      carpetArea: prop.carpetArea || undefined,
+      plotArea: prop.plotArea || undefined,
+      ownershipType: prop.ownershipType || undefined,
+      facing: prop.facing || undefined,
+      parkingSlots: prop.parkingSlots !== undefined && prop.parkingSlots !== null ? prop.parkingSlots : undefined,
+      balconies: prop.balconies !== undefined && prop.balconies !== null ? prop.balconies : undefined,
+      floorNumber: prop.floorNumber !== undefined && prop.floorNumber !== null ? prop.floorNumber : undefined,
+      totalFloors: prop.totalFloors !== undefined && prop.totalFloors !== null ? prop.totalFloors : undefined,
+      ageYears: prop.ageYears !== undefined && prop.ageYears !== null ? prop.ageYears : undefined,
+      reraNumber: prop.reraNumber || undefined,
+      amenities: Array.isArray(prop.amenities) ? prop.amenities : [],
+      customFields: prop.customFields || [],
       approvalStatus: isSold ? 'Sold' : (prop.listingStatus === 'DRAFT' ? 'Draft' : prop.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
       listingStatus: isSold ? 'Sold' : (prop.listingStatus === 'DRAFT' ? 'Draft' : prop.listingStatus === 'PENDING' ? 'Pending Approval' : 'Published'),
       recentlySold: isSold,
@@ -2948,18 +2971,30 @@ app.post('/api/properties', async (req, res, next) => {
       listingStatus: listingStatus,
       published: newProp.published !== false,
       featured: Boolean(newProp.featured),
-      areaSqFt: newProp.areaSqFt || '1000 Sq.ft',
+      areaSqFt: newProp.areaSqFt || newProp.superBuiltUpArea || '1000 Sq.ft',
+      superBuiltUpArea: newProp.superBuiltUpArea ? String(newProp.superBuiltUpArea) : null,
+      carpetArea: newProp.carpetArea ? String(newProp.carpetArea) : null,
+      plotArea: newProp.plotArea ? String(newProp.plotArea) : null,
+      facing: newProp.facing ? String(newProp.facing) : null,
+      parkingSlots: newProp.parkingSlots !== undefined && newProp.parkingSlots !== null && newProp.parkingSlots !== '' ? Number(newProp.parkingSlots) : null,
+      balconies: newProp.balconies !== undefined && newProp.balconies !== null && newProp.balconies !== '' ? Number(newProp.balconies) : null,
+      floorNumber: newProp.floorNumber !== undefined && newProp.floorNumber !== null && newProp.floorNumber !== '' ? Number(newProp.floorNumber) : null,
+      totalFloors: newProp.totalFloors !== undefined && newProp.totalFloors !== null && newProp.totalFloors !== '' ? Number(newProp.totalFloors) : null,
+      ageYears: newProp.ageYears !== undefined && newProp.ageYears !== null && newProp.ageYears !== '' ? Number(newProp.ageYears) : null,
+      reraNumber: newProp.reraNumber ? String(newProp.reraNumber) : null,
+      amenities: Array.isArray(newProp.amenities) ? newProp.amenities : [],
+      customFields: newProp.customFields || null,
       bedrooms: safeNum(newProp.bedrooms, 0),
       bathrooms: safeNum(newProp.bathrooms, 0),
-      furnishing: newProp.furnishing || newProp.furnishingStatus || 'Unfurnished',
+      furnishing: newProp.furnishing || newProp.furnishingStatus || null,
       propertyType: newProp.propertyType || 'Residential',
-      ownershipType: newProp.ownershipType || 'Freehold',
+      ownershipType: newProp.ownershipType || null,
       rating: safeNum(newProp.rating, 4.5),
       reviewCount: safeNum(newProp.reviewCount, 0),
       verified: newProp.verified !== false,
       premium: Boolean(newProp.premium),
       trending: Boolean(newProp.trending),
-      agentName: newProp.agentName || 'NEXOPP Advisor',
+      agentName: newProp.agentName || null,
       brokerId: safeBrokerId,
     };
 
@@ -3036,8 +3071,19 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.agentName !== undefined) updateData.agentName = d.agentName;
     if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
     if (d.ownershipType !== undefined) updateData.ownershipType = String(d.ownershipType);
-    if (d.propertyType !== undefined) updateData.propertyType = String(d.propertyType);
     if (d.published !== undefined) updateData.published = d.published === true || d.published === 'true';
+    if (d.superBuiltUpArea !== undefined) updateData.superBuiltUpArea = d.superBuiltUpArea ? String(d.superBuiltUpArea) : null;
+    if (d.carpetArea !== undefined) updateData.carpetArea = d.carpetArea ? String(d.carpetArea) : null;
+    if (d.plotArea !== undefined) updateData.plotArea = d.plotArea ? String(d.plotArea) : null;
+    if (d.facing !== undefined) updateData.facing = d.facing ? String(d.facing) : null;
+    if (d.parkingSlots !== undefined) updateData.parkingSlots = d.parkingSlots !== null && d.parkingSlots !== '' ? Number(d.parkingSlots) : null;
+    if (d.balconies !== undefined) updateData.balconies = d.balconies !== null && d.balconies !== '' ? Number(d.balconies) : null;
+    if (d.floorNumber !== undefined) updateData.floorNumber = d.floorNumber !== null && d.floorNumber !== '' ? Number(d.floorNumber) : null;
+    if (d.totalFloors !== undefined) updateData.totalFloors = d.totalFloors !== null && d.totalFloors !== '' ? Number(d.totalFloors) : null;
+    if (d.ageYears !== undefined) updateData.ageYears = d.ageYears !== null && d.ageYears !== '' ? Number(d.ageYears) : null;
+    if (d.reraNumber !== undefined) updateData.reraNumber = d.reraNumber ? String(d.reraNumber) : null;
+    if (d.amenities !== undefined) updateData.amenities = Array.isArray(d.amenities) ? d.amenities : [];
+    if (d.customFields !== undefined) updateData.customFields = d.customFields;
     
     // Persist broker assignment strictly from existing brokers
     if (d.dealerId !== undefined || d.brokerId !== undefined) {
