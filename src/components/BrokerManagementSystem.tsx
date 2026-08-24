@@ -35,6 +35,14 @@ const FRANCHISE_CATEGORIES_LIST = [
 export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange }) => {
   const [activeTab, setActiveTab] = useState<'directory' | 'leaderboard' | 'premium' | 'category_rank' | 'location_rank' | 'analytics'>('directory');
 
+  // Trigger re-render on global data change
+  const [dataUpdated, setDataUpdated] = useState(0);
+  React.useEffect(() => {
+    const handleDataChange = () => setDataUpdated(prev => prev + 1);
+    window.addEventListener('nexopp_data_changed', handleDataChange);
+    return () => window.removeEventListener('nexopp_data_changed', handleDataChange);
+  }, []);
+
   React.useEffect(() => {
     if (activeSubTab) {
       setActiveTab(activeSubTab as any);
@@ -249,7 +257,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
 
       return matchSearch && matchStatus;
     });
-  }, [dealersDb, searchTerm, statusFilter]);
+  }, [dealersDb, searchTerm, statusFilter, dataUpdated]);
 
   // Leaderboard sorted brokers
   const leaderboardBrokers = useMemo(() => {
@@ -285,7 +293,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
 
     if (leaderboardLimit === 'All') return sorted;
     return sorted.slice(0, parseInt(leaderboardLimit));
-  }, [dealersDb, propertiesDb, timePeriod, sortBy, leaderboardLimit]);
+  }, [dealersDb, propertiesDb, timePeriod, sortBy, leaderboardLimit, dataUpdated]);
 
   // Category ranked brokers
   const categoryRankedBrokers = useMemo(() => {
@@ -293,7 +301,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       if (!b.propertyCategories) return true;
       return b.propertyCategories.includes(selectedCategory);
     }).sort((a, b) => (b.totalPropertiesSold || 0) - (a.totalPropertiesSold || 0));
-  }, [dealersDb, selectedCategory]);
+  }, [dealersDb, selectedCategory, dataUpdated]);
 
   // Location ranked brokers
   const locationRankedBrokers = useMemo(() => {
@@ -305,7 +313,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       const matchArea = filterAreaSearch === '' || areas.some(a => a.area.toLowerCase().includes(filterAreaSearch.toLowerCase()));
       return matchState && matchDistrict && matchCity && matchArea;
     }).sort((a, b) => (b.totalPropertiesSold || 0) - (a.totalPropertiesSold || 0));
-  }, [dealersDb, filterState, filterDistrict, filterCity, filterAreaSearch]);
+  }, [dealersDb, filterState, filterDistrict, filterCity, filterAreaSearch, dataUpdated]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>

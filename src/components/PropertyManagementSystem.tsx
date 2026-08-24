@@ -89,6 +89,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   // Main Navigation Tabs
   const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'sellRequests'>('listings');
 
+  // Trigger re-render on global data change
+  const [dataUpdated, setDataUpdated] = useState(0);
+  useEffect(() => {
+    const handleDataChange = () => setDataUpdated(prev => prev + 1);
+    window.addEventListener('nexopp_data_changed', handleDataChange);
+    return () => window.removeEventListener('nexopp_data_changed', handleDataChange);
+  }, []);
+
   React.useEffect(() => {
     if (activeSubTab) {
       setActiveModuleTab(activeSubTab as any);
@@ -338,7 +346,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
       return matchesSearch && matchesStatus && matchesCategory && matchesCity;
     });
-  }, [propertiesDb, activeModuleTab, searchQuery, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter]);
+  }, [propertiesDb, activeModuleTab, searchQuery, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter, dataUpdated]);
 
   // Analytics KPIs
   const stats = useMemo(() => {
@@ -381,7 +389,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       recentlySold30Days, reserved, featuredCount, sponsoredCount, 
       totalValue: totalValueInCr.toFixed(2), avgPrice: avgPriceInCr
     };
-  }, [propertiesDb]);
+  }, [propertiesDb, dataUpdated]);
 
   const openAddModal = () => {
     setPriceUnit('Lakhs');
