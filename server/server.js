@@ -3029,9 +3029,15 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.verified !== undefined) updateData.verified = Boolean(d.verified);
     if (d.premium !== undefined) updateData.premium = Boolean(d.premium);
     if (d.trending !== undefined) updateData.trending = Boolean(d.trending);
+    if (d.featured !== undefined) updateData.featured = Boolean(d.featured);
+    if (d.rating !== undefined) updateData.rating = Number(d.rating);
+    if (d.reviewCount !== undefined) updateData.reviewCount = Number(d.reviewCount);
+    if (d.createdDate !== undefined) updateData.createdDate = String(d.createdDate);
     if (d.agentName !== undefined) updateData.agentName = d.agentName;
     if (d.viewsCount !== undefined) updateData.viewsCount = Number(d.viewsCount);
     if (d.ownershipType !== undefined) updateData.ownershipType = String(d.ownershipType);
+    if (d.propertyType !== undefined) updateData.propertyType = String(d.propertyType);
+    if (d.published !== undefined) updateData.published = d.published === true || d.published === 'true';
     
     // Persist broker assignment strictly from existing brokers
     if (d.dealerId !== undefined || d.brokerId !== undefined) {
