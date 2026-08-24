@@ -901,11 +901,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
       // 3. Tab Categorization
       const isItemRent = item.status.toLowerCase() === 'rent' ||
-                         String((item as any).propertyPurpose || '').toLowerCase().includes('rent') ||
-                         String((item as any).propertyPurpose || '').toLowerCase().includes('lease') ||
+                         String((item as any).propertyPurpose || '').toLowerCase() === 'rent' ||
                          item.title.toLowerCase().includes('for rent') ||
-                         item.title.toLowerCase().includes('for lease') ||
-                         item.title.toLowerCase().includes('rent/lease') ||
                          (item.price || '').toLowerCase().includes('/mo') ||
                          (item.price || '').toLowerCase().includes('/month');
 

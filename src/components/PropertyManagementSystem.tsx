@@ -2421,7 +2421,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>PURPOSE *</label>
-                      <select value={formData.propertyPurpose || 'Sale'} onChange={e => setFormData({ ...formData, propertyPurpose: e.target.value as any, status: e.target.value === 'Sale' ? 'Buy' : 'Rent' })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                      <select value={formData.propertyPurpose || 'Sale'} onChange={e => setFormData({ ...formData, propertyPurpose: e.target.value as any, status: e.target.value === 'Rent' ? 'Rent' : 'Buy' })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
                         <option value="Sale">Sale (Buy)</option>
                         <option value="Rent">Rent</option>
                         <option value="Lease">Long-term Lease</option>
