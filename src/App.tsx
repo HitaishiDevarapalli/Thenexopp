@@ -461,7 +461,10 @@ export const App: React.FC = () => {
               />
               )
             ) : currentPage === 'rentPage' ? (
-              <RentPropertyPage 
+              <PropertyCategories 
+                title="Properties for Rent"
+                subtitle="Explore verified residential and commercial rental properties across India."
+                initialCategory="Rent"
                 onBack={navigateBack}
                 searchQuery={globalSearchQuery}
                 onClearSearch={() => setGlobalSearchQuery('')}
