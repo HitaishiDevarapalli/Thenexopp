@@ -2978,19 +2978,7 @@ app.post('/api/properties', async (req, res, next) => {
       console.warn('Property upsert initial attempt warning:', err.message);
       // Clean fallback with essential schema fields to ensure 100% PostgreSQL database persistence
       const cleanFallback = {
-        title: propPayload.title,
-        description: propPayload.description,
-        image: propPayload.image,
-        city: propPayload.city,
-        state: propPayload.state,
-        area: propPayload.area,
-        price: propPayload.price,
-        category: propPayload.category,
-        status: propPayload.status,
-        published: propPayload.published,
-        featured: propPayload.featured,
-        bedrooms: propPayload.bedrooms,
-        bathrooms: propPayload.bathrooms,
+        ...propPayload,
         brokerId: null
       };
       created = await prisma.property.upsert({
@@ -3316,21 +3304,7 @@ app.post('/api/businesses', async (req, res, next) => {
     } catch (err) {
       console.warn('Business upsert initial attempt warning:', err.message);
       const cleanFallback = {
-        name: businessData.name,
-        title: businessData.title,
-        industry: businessData.industry,
-        category: businessData.category,
-        businessType: businessData.businessType,
-        location: businessData.location,
-        city: businessData.city,
-        state: businessData.state,
-        price: businessData.price,
-        askingPrice: businessData.askingPrice,
-        priceDisplay: businessData.priceDisplay,
-        image: businessData.image,
-        description: businessData.description,
-        published: businessData.published,
-        featured: businessData.featured,
+        ...businessData,
         brokerId: null
       };
       created = await prisma.business.upsert({
