@@ -121,9 +121,9 @@ model Property {
   image4        String?
   image5        String?
   image6        String?
-  state         String
-  district      String
-  city          String
+  state         String         @default("Telangana")
+  district      String?        @default("Hyderabad")
+  city          String         @default("Hyderabad")
   area          String
   latitude      Float          @default(16.3067)
   longitude     Float          @default(80.4363)
