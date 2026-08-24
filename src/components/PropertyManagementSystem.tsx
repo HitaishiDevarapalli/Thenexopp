@@ -1960,27 +1960,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       <button
                       type="button"
                       onClick={() => {
-                        const stepOrder = ['location', 'basic', 'specs', 'pricing', 'media', 'review'];
-                        const currentIndex = stepOrder.indexOf(modalSubTab);
-                        const targetIndex = stepOrder.indexOf(step.id);
-                        
-                        // Can always go back to previous steps
-                        if (targetIndex <= currentIndex) {
-                          setModalSubTab(step.id as any);
-                          return;
-                        }
-                        
-                        // Can only go forward if all steps up to target-1 are valid
-                        let isValid = true;
-                        for (let i = currentIndex; i < targetIndex; i++) {
-                          if (!validateStep(stepOrder[i])) {
-                            isValid = false;
-                            break;
-                          }
-                        }
-                        if (isValid) {
-                          setModalSubTab(step.id as any);
-                        }
+                        setModalSubTab(step.id as any);
                       }}
                       style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap', opacity: arr.findIndex(x => x.id === modalSubTab) >= idx ? 1 : 0.6 }}
                     >
