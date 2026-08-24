@@ -33,7 +33,6 @@ const SellBusinessPage = lazy(() => import('./components/forms/SellBusinessPage'
 const SellPropertyPage = lazy(() => import('./components/forms/SellPropertyPage').then(m => ({ default: m.SellPropertyPage })));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const NexOppAiAssistant = lazy(() => import('./components/NexOppAiAssistant'));
-const RentPropertyPage = lazy(() => import('./components/RentPropertyPage').then(m => ({ default: m.RentPropertyPage })));
 
 type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
 

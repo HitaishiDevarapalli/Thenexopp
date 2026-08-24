@@ -792,8 +792,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           if (!isAreaMatch) return false;
         } else if (!isCityMatch) {
           // Calculate distance from the selected city to apply Location Intelligence tiers
-          if (selCity && selCity.latitude && selCity.longitude && item.latitude && item.longitude) {
-             const dist = getDistance(selCity.latitude, selCity.longitude, item.latitude, item.longitude);
+          if (selCity && (selCity as any).latitude && (selCity as any).longitude && item.latitude && item.longitude) {
+             const dist = getDistance((selCity as any).latitude, (selCity as any).longitude, item.latitude, item.longitude);
              (item as any).distanceKm = dist;
           } else {
              return false;
