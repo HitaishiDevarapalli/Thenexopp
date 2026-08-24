@@ -32,7 +32,7 @@ export const optimizeAndSaveImage = async (base64Data, originalFileName, uploadD
     .toFile(thumbPath);
 
   return {
-    fileName: webpFileName,
+    webpFileName: webpFileName,
     thumbFileName: thumbFileName,
   };
 };
