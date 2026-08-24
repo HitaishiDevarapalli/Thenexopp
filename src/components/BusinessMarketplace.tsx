@@ -317,7 +317,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    globalToggleWishlist(id);
+    globalToggleWishlist(id, 'BUSINESS');
   };
 
   const toggleInd = (val: string) => {

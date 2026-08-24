@@ -103,7 +103,7 @@ export const FranchiseMarketplace: React.FC<FranchiseMarketplaceProps> = ({
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    globalToggleWishlist(id);
+    globalToggleWishlist(id, 'BUSINESS'); // Assuming Franchises are treated as BUSINESS in favorites DB or maybe 'FRANCHISE'? Let's check server.js
   };
 
   const toggleCat = (val: string) => {
