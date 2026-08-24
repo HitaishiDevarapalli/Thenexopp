@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @source "./**/*.{js,ts,jsx,tsx,html}";
 
+/* Hide static SEO crawler shell from browser UI so human users only see clean styled React app */
+.seo-crawler-shell {
+  display: none !important;
+}
+
+
 /* Global Reset & Typography Setup */
 *, *::before, *::after {
   box-sizing: border-box;

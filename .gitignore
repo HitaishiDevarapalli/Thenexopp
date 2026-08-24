@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Server Data & Local Stores
+server/*.json
+server/data/
+
