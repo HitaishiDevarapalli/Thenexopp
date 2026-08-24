@@ -2995,7 +2995,7 @@ app.post('/api/properties', async (req, res, next) => {
     return res.status(201).json(created);
   } catch (err) {
     logger.error('POST /api/properties error:', err.message);
-    return res.status(500).json({ error: 'Failed to create property' });
+    return res.status(500).json({ error: `Failed to create property: ${err.message}` });
   }
 });
 
@@ -3320,7 +3320,7 @@ app.post('/api/businesses', async (req, res, next) => {
     return res.status(201).json(created);
   } catch (err) {
     console.error('Error creating business:', err);
-    return res.status(500).json({ error: 'Failed to save business on database' });
+    return res.status(500).json({ error: `Failed to save business: ${err.message}` });
   }
 });
 
