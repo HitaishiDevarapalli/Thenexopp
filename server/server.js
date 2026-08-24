@@ -2988,17 +2988,33 @@ app.post('/api/properties', async (req, res, next) => {
         },
       });
     } catch (err) {
-      console.warn('Property upsert warning (retrying without broker constraint):', err.message);
-      const fallbackPayload = { ...propPayload, brokerId: null };
+      console.warn('Property upsert initial attempt warning:', err.message);
+      // Clean fallback with essential schema fields to ensure 100% PostgreSQL database persistence
+      const cleanFallback = {
+        title: propPayload.title,
+        description: propPayload.description,
+        image: propPayload.image,
+        city: propPayload.city,
+        state: propPayload.state,
+        area: propPayload.area,
+        price: propPayload.price,
+        category: propPayload.category,
+        status: propPayload.status,
+        published: propPayload.published,
+        featured: propPayload.featured,
+        bedrooms: propPayload.bedrooms,
+        bathrooms: propPayload.bathrooms,
+        brokerId: null
+      };
       created = await prisma.property.upsert({
         where: { id: newProp.id },
-        update: fallbackPayload,
+        update: cleanFallback,
         create: {
           id: newProp.id,
-          ...fallbackPayload,
-          createdDate: newProp.createdDate || new Date().toLocaleDateString(),
+          ...cleanFallback,
+          createdDate: new Date().toLocaleDateString(),
         },
-      }).catch(() => ({ id: newProp.id, ...fallbackPayload }));
+      });
     }
 
     return res.status(201).json(created);
@@ -3337,16 +3353,33 @@ app.post('/api/businesses', async (req, res, next) => {
         }
       });
     } catch (err) {
-      console.warn('Business upsert warning (retrying without broker constraint):', err.message);
-      const fallbackData = { ...businessData, brokerId: null };
+      console.warn('Business upsert initial attempt warning:', err.message);
+      const cleanFallback = {
+        name: businessData.name,
+        title: businessData.title,
+        industry: businessData.industry,
+        category: businessData.category,
+        businessType: businessData.businessType,
+        location: businessData.location,
+        city: businessData.city,
+        state: businessData.state,
+        price: businessData.price,
+        askingPrice: businessData.askingPrice,
+        priceDisplay: businessData.priceDisplay,
+        image: businessData.image,
+        description: businessData.description,
+        published: businessData.published,
+        featured: businessData.featured,
+        brokerId: null
+      };
       created = await prisma.business.upsert({
         where: { id: businessId },
-        update: fallbackData,
+        update: cleanFallback,
         create: {
           id: businessId,
-          ...fallbackData,
+          ...cleanFallback,
         }
-      }).catch(() => ({ id: businessId, ...fallbackData }));
+      });
     }
 
     return res.status(201).json(created);
