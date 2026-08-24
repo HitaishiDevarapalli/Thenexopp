@@ -89,7 +89,10 @@ const parseUrl = (path: string) => {
   if (window.location.search.includes('admin=true') || window.location.search.includes('portal=true')) {
     return { page: 'adminPortal' as PageType };
   }
-  const cleanPath = (path || '').split('?')[0].split('#')[0];
+  let cleanPath = (path || '').split('?')[0].split('#')[0];
+  if (cleanPath !== '/' && cleanPath.endsWith('/')) {
+    cleanPath = cleanPath.slice(0, -1);
+  }
   if (cleanPath.startsWith('/property/')) {
     const rawId = cleanPath.split('/')[2];
     return { page: 'propertyDetails' as PageType, propertyId: rawId ? decodeURIComponent(rawId) : undefined };
