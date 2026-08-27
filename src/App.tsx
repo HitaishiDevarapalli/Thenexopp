@@ -7,7 +7,7 @@ import CTABanner from './components/common/CTABanner';
 import ContactUs from './components/ContactUs';
 import Footer from './components/common/Footer';
 import { FaArrowLeft } from 'react-icons/fa';
-import { siteSettingsDb, updateSiteSettings, isModuleActive, propertiesDb } from './db/marketplaceDb';
+import { siteSettingsDb, updateSiteSettings, isModuleActive, propertiesDb, isInitialSyncCompleted } from './db/marketplaceDb';
 import { useAuth } from './context/AuthContext';
 import LoadingScreen from './components/common/LoadingScreen';
 import { updateSEO } from './utils/seo';
@@ -163,7 +163,7 @@ export const App: React.FC = () => {
  
    // Visitor counter increment
    useEffect(() => {
-     if (!sessionStorage.getItem('nexopp_visited_session')) {
+     if (isInitialSyncCompleted && !sessionStorage.getItem('nexopp_visited_session')) {
        sessionStorage.setItem('nexopp_visited_session', 'true');
        const currentCount = siteSettingsDb.analytics?.totalVisitors || 0;
        updateSiteSettings({
@@ -173,7 +173,7 @@ export const App: React.FC = () => {
          }
        });
      }
-   }, []);
+   }, [isInitialSyncCompleted]);
 
   const routeData = parseUrl(currentPath);
   const currentPage = routeData.page;

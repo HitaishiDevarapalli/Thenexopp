@@ -648,6 +648,7 @@ export let dealersDb: Dealer[] = [];
 export let propertiesDb: PropertyListing[] = [];
 export let franchiseDb: FranchiseListing[] = [];
 export let businessDb: BusinessListing[] = [];
+export let isInitialSyncCompleted = false;
 
 // PostgreSQL-Only Data Sync — Server is the ONLY source of truth
 export const syncWithBackend = async () => {
@@ -788,6 +789,7 @@ export const syncWithBackend = async () => {
     } catch {}
 
     recalculateAllDemandRegions();
+    isInitialSyncCompleted = true;
     notifyDataChanged();
   } catch (err) {
     console.error("Error syncing with backend:", err);
