@@ -28,4 +28,6 @@ dist-ssr
 # Server Data & Local Stores
 server/*.json
 server/data/
+uploads/
+server/uploads/
 
