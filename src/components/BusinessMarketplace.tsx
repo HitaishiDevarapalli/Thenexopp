@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb, masterAreasDb, dealersDb } from '../db/marketplaceDb';
+import { parseIndiaLocation } from '../utils/locationIntelligence';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -307,13 +308,14 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     if (cityId) {
       if (matched) {
         lastSyncedGlobalCityRef.current = matched.name;
+        const cityGeo = parseIndiaLocation(matched.name);
         setLocation({
           city: matched.name,
           displayName: matched.name,
-          state: '',
+          state: cityGeo.state || '',
           country: 'India',
-          lat: 0,
-          lng: 0
+          lat: cityGeo.latitude || 16.3067,
+          lng: cityGeo.longitude || 80.4365
         });
       }
     } else {
@@ -323,8 +325,8 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         displayName: 'All India',
         state: '',
         country: 'India',
-        lat: 0,
-        lng: 0
+        lat: 16.3067,
+        lng: 80.4365
       });
     }
   };
@@ -397,7 +399,27 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
           status: b.status || 'Available',
           image: b.image || b.imageUrl || (b.images && b.images[0]) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%23F1F5F9' width='600' height='400'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18'%3EBusiness%3C/text%3E%3C/svg%3E",
           valuation: b.priceDisplay || (b.price ? `₹${b.price} Lakhs` : ''),
-          price: Number(b.price) || Number(b.askingPrice) || 0,
+          price: (() => {
+            let calcPrice = Number(b.price) || Number(b.askingPrice) || 0;
+            if (b.priceDisplay) {
+              const lowerDisplay = b.priceDisplay.toLowerCase();
+              const numValue = parseFloat(lowerDisplay.replace(/[^0-9.]/g, '')) || 0;
+              if (lowerDisplay.includes('cr')) {
+                calcPrice = numValue * 100;
+              } else if (lowerDisplay.includes('lakh') || lowerDisplay.includes('lac')) {
+                calcPrice = numValue;
+              } else if (lowerDisplay.includes('k') || lowerDisplay.includes('thousand')) {
+                calcPrice = numValue / 100;
+              } else if (numValue > 1000) {
+                calcPrice = numValue / 100000;
+              } else if (numValue > 0) {
+                calcPrice = numValue;
+              }
+            } else if (calcPrice > 10000) {
+              calcPrice = calcPrice / 100000;
+            }
+            return calcPrice;
+          })(),
           revenue: cleanRev,
           margin: cleanProfit,
           employees: cleanEmployees,
@@ -447,6 +469,16 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         if (maxBudget < sliderMax && item.price > maxBudget) return false;
       }
 
+      // Valuation Budget Dropdown Filter
+      if (valuation && valuation !== 'Any Budget') {
+        const p = item.price; // in Lakhs
+        if (valuation === 'Under ₹ 20 Lac' && p >= 20) return false;
+        if (valuation === '₹ 20 Lac - ₹ 50 Lac' && (p < 20 || p > 50)) return false;
+        if (valuation === '₹ 50 Lac - ₹ 2 Cr' && (p < 50 || p > 200)) return false;
+        if (valuation === '₹ 2 Cr - ₹ 5 Cr' && (p < 200 || p > 500)) return false;
+        if (valuation === '₹ 5 Cr+' && p < 500) return false;
+      }
+
       // Quick filters
       if (activeQuickFilter) {
         if (activeQuickFilter === 'Verified Sellers' && item.badgeType !== 'verified') return false;
@@ -466,7 +498,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     }
 
     return filtered;
-  }, [businessDb, activeTab, selectedInds, selectedCityId, selectedAreaId, availableCities, availableAreas, locationText, selectedProfs, minBudget, maxBudget, sliderMax, activeQuickFilter, sortBy]);
+  }, [businessDb, activeTab, selectedInds, selectedCityId, selectedAreaId, availableCities, availableAreas, locationText, selectedProfs, minBudget, maxBudget, sliderMax, activeQuickFilter, sortBy, valuation]);
 
   const totalPages = Math.ceil(businessesList.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));

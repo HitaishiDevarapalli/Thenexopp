@@ -3020,30 +3020,9 @@ app.post('/api/properties', async (req, res, next) => {
       });
     } catch (err) {
       console.warn('Property upsert initial attempt warning:', err.message);
-      // Clean fallback with guaranteed baseline schema fields to ensure 100% PostgreSQL database persistence
+      // Clean fallback using the spread operator to preserve all payload fields (like amenities) while safety-nullifying brokerId
       const cleanFallback = {
-        title: propPayload.title || 'Untitled Property',
-        description: propPayload.description || '',
-        image: propPayload.image || '',
-        state: propPayload.state || 'Telangana',
-        district: propPayload.district || 'Hyderabad',
-        city: propPayload.city || 'Hyderabad',
-        area: propPayload.area || '',
-        latitude: propPayload.latitude || 17.4326,
-        longitude: propPayload.longitude || 78.4071,
-        price: propPayload.price || 0,
-        priceDisplay: propPayload.priceDisplay || `₹${propPayload.price || 0}`,
-        category: propPayload.category || 'Flats',
-        status: propPayload.status || 'Buy',
-        areaSqFt: propPayload.areaSqFt || '1000 Sq.ft',
-        bedrooms: propPayload.bedrooms || 0,
-        bathrooms: propPayload.bathrooms || 0,
-        ownershipType: propPayload.ownershipType || 'Individual',
-        propertyType: propPayload.propertyType || 'Residential',
-        furnishing: propPayload.furnishing || 'Unfurnished',
-        verified: propPayload.verified !== false,
-        published: propPayload.published !== false,
-        listingStatus: propPayload.listingStatus || 'PUBLISHED',
+        ...propPayload,
         brokerId: null
       };
       created = await prisma.property.upsert({
@@ -3052,7 +3031,7 @@ app.post('/api/properties', async (req, res, next) => {
         create: {
           id: newProp.id,
           ...cleanFallback,
-          createdDate: new Date().toLocaleDateString(),
+          createdDate: newProp.createdDate || new Date().toLocaleDateString(),
         },
       });
     }
@@ -3170,36 +3149,25 @@ app.put('/api/properties/:id', async (req, res, next) => {
       });
     } catch (dbErr) {
       logger.warn('Property PUT upsert initial attempt warning:', dbErr.message);
-      // Fallback in case newly added columns aren't pushed in DB yet
+      // Clean fallback using the spread operator to preserve all updated fields (like amenities) while safety-nullifying brokerId
       const essentialFields = {
-        title: updateData.title || 'Untitled Property',
-        description: updateData.description || '',
-        image: updateData.image || '',
-        state: updateData.state || 'Telangana',
-        district: updateData.district || 'Hyderabad',
-        city: updateData.city || 'Hyderabad',
-        area: updateData.area || '',
-        latitude: updateData.latitude || 17.4326,
-        longitude: updateData.longitude || 78.4071,
-        price: updateData.price || 0,
-        priceDisplay: updateData.priceDisplay || `₹${updateData.price || 0}`,
-        category: updateData.category || 'Flats',
-        status: updateData.status || 'Buy',
-        areaSqFt: updateData.areaSqFt || '1000 Sq.ft',
-        bedrooms: updateData.bedrooms || 0,
-        bathrooms: updateData.bathrooms || 0,
-        ownershipType: updateData.ownershipType || 'Individual',
-        propertyType: updateData.propertyType || 'Residential',
-        furnishing: updateData.furnishing || 'Unfurnished',
-        verified: updateData.verified !== false,
-        published: updateData.published !== false,
-        listingStatus: updateData.listingStatus || 'PUBLISHED'
+        ...updateData,
+        brokerId: null
       };
       updated = await prisma.property.upsert({
         where: { id },
         update: essentialFields,
         create: {
           id,
+          title: d.title || 'Untitled Property',
+          description: d.description || '',
+          image: d.image || '',
+          area: d.area || '',
+          areaSqFt: d.areaSqFt || '1000 Sq.ft',
+          price: Number(d.price) || 0,
+          priceDisplay: d.priceDisplay || `₹${d.price || 0}`,
+          category: d.category || 'Flats',
+          status: d.status || 'Buy',
           ...essentialFields
         }
       });

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
+import { parseIndiaLocation } from '../utils/locationIntelligence';
 import { useWishlist } from '../context/WishlistContext';
 import {
   FaSearch,
@@ -97,6 +98,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [budget, setBudget] = useState('₹ 1K - 1Cr+');
   const [bhkFilter, setBhkFilter] = useState('Any BHK');
   const [rentCategoryFilter, setRentCategoryFilter] = useState<'All' | 'Residential' | 'Commercial'>('All');
+  const [selectedPropertyTypesFilter, setSelectedPropertyTypesFilter] = useState<string[]>([]);
 
   // Dynamic Cities (Master locations + any unique cities present in propertiesDb)
   const availableCities = useMemo(() => {
@@ -161,6 +163,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     if (!_initialCategory) {
       setSelectedTypes([]);
       setPropertyType('All Types');
+      setActiveTab('Buy');
       // Do not return here, allow the search params effect below to run
     } else {
       if (_initialCategory === 'BuyApartment') {
@@ -358,19 +361,27 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setPropertyType(val);
     if (val === 'All Types' || val === 'All Plots' || val === 'All Commercial' || val === 'All Projects') {
       setSelectedTypes([]);
-      setBhkFilter('Any Configuration');
+      setBhkFilter('Any BHK');
       setSelectedBhks([]);
+      setSelectedPropertyTypesFilter([]);
     } else {
       setSelectedTypes([val]);
       const lower = val.toLowerCase();
+      
+      // Auto-tick matching categories in sidebar
+      if (lower.includes('apartment') || lower.includes('villa') || lower.includes('house') || lower.includes('flat') || lower.includes('pg') || lower.includes('living')) {
+        setSelectedPropertyTypesFilter(['Residential']);
+      } else if (lower.includes('commercial') || lower.includes('office') || lower.includes('shop') || lower.includes('showroom') || lower.includes('warehouse') || lower.includes('space')) {
+        setSelectedPropertyTypesFilter(['Commercial']);
+      } else if (lower.includes('plot') || lower.includes('land')) {
+        setSelectedPropertyTypesFilter(['Agricultural']);
+      }
+
       if (lower.includes('plot') || lower.includes('land')) {
         setBhkFilter('Any Size');
         setSelectedBhks([]);
       } else if (lower.includes('commercial') || lower.includes('office') || lower.includes('shop') || lower.includes('showroom') || lower.includes('warehouse')) {
         setBhkFilter('Any Usage');
-        setSelectedBhks([]);
-      } else if (lower.includes('villa') || lower.includes('house')) {
-        setBhkFilter('Any Configuration');
         setSelectedBhks([]);
       } else {
         setBhkFilter('Any BHK');
@@ -414,23 +425,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       };
     }
 
-    if (propertyType === 'Villa' || propertyType === 'Independent House') {
-      return {
-        typeLabel: 'Property Type',
-        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
-        specLabel: 'Villa / House Configuration',
-        specs: ['Any Configuration', '2 BHK House', '3 BHK Villa / Duplex', '4 BHK Luxury Villa', '5+ BHK Mansion / Duplex'],
-      };
-    }
 
-    if (propertyType === 'Apartment' || propertyType === 'Flats') {
-      return {
-        typeLabel: 'Property Type',
-        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
-        specLabel: 'Apartment BHK',
-        specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK / Penthouse'],
-      };
-    }
 
     if (activeTab === 'Rent') {
       return {
@@ -549,7 +544,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
 
 
-  const [selectedPropertyTypesFilter, setSelectedPropertyTypesFilter] = useState<string[]>([]);
+
 
   // Accordion Expand/Collapse States for Sidebar Filter Sections
   const [isLocationOpen, setIsLocationOpen] = useState<boolean>(true);
@@ -566,13 +561,14 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       const cityObj = availableCities.find(c => c.id === cityId);
       if (cityObj) {
         lastSyncedGlobalCityRef.current = cityObj.name;
+        const cityGeo = parseIndiaLocation(cityObj.name);
         setLocation({
           city: cityObj.name,
           displayName: cityObj.name,
-          state: '',
+          state: cityGeo.state || '',
           country: 'India',
-          lat: 0,
-          lng: 0
+          lat: cityGeo.latitude || 16.3067,
+          lng: cityGeo.longitude || 80.4365
         });
       }
     } else {
@@ -582,8 +578,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         displayName: 'All India',
         state: '',
         country: 'India',
-        lat: 0,
-        lng: 0
+        lat: 16.3067,
+        lng: 80.4365
       });
     }
   };
@@ -755,10 +751,34 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         badge: p.verified ? 'Verified' : (p.premium ? 'Premium' : 'New'),
         badgeType: p.verified ? 'verified' : (p.premium ? 'premium' : 'new'),
         image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
-        area: p.sqft ? `${p.sqft} sq ft` : (p.builtUpArea ? `${p.builtUpArea} sq ft` : '1500 sq ft'),
-        bhk: String(p.bedrooms || 3),
+        area: (() => {
+          const val = p.areaSqFt || p.superBuiltUpArea || p.carpetArea || p.plotArea || p.sqft || p.builtUpArea;
+          if (!val) return '1500 sq ft';
+          const valStr = String(val).toLowerCase();
+          if (valStr.includes('sq') || valStr.includes('yard') || valStr.includes('cent') || valStr.includes('guntas') || valStr.includes('acre') || valStr.includes('ft')) {
+            return String(val);
+          }
+          return `${val} sq ft`;
+        })(),
+        bhk: (() => {
+          const bedroomsNum = parseInt(String(p.bedrooms));
+          if (!isNaN(bedroomsNum) && bedroomsNum > 0) {
+            return String(bedroomsNum);
+          }
+          const catLower = (p.category || '').toLowerCase();
+          const isNonResidential = catLower.includes('plot') || catLower.includes('land') || catLower.includes('commercial') || catLower.includes('office') || catLower.includes('shop') || catLower.includes('showroom') || catLower.includes('industrial') || catLower.includes('warehouse');
+          if (isNonResidential) {
+            return '0';
+          }
+          const title = String(p.title || '');
+          const match = title.match(/(\d+)\s*(?:BHK|bhk|Bed|bed)/i);
+          if (match && match[1]) {
+            return match[1];
+          }
+          return '3';
+        })(),
         bath: String(p.bathrooms || 3),
-        parking: String(p.parking || 1),
+        parking: String(p.parkingSlots !== undefined && p.parkingSlots !== null ? p.parkingSlots : (p.parking || 1)),
         price: p.priceDisplay || (`₹ ${p.price || 1} L`),
         priceDisplay: p.priceDisplay || (`₹ ${p.price || 1} L`),
         dist: '1.2 KM away',
@@ -881,16 +901,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           (item as any).exactLocationMatch = true;
           (item as any).distanceKm = 0;
         } else {
-          // Calculate distance from the selected city to apply Location Intelligence tiers
-          const targetRefLat = cityLat || searchLat;
-          const targetRefLng = cityLng || searchLng;
-          if (targetRefLat && targetRefLng && item.latitude && item.longitude) {
-             const dist = getDistance(targetRefLat, targetRefLng, item.latitude, item.longitude);
-             (item as any).distanceKm = dist;
-             (item as any).exactLocationMatch = false;
-          } else {
-             return false;
-          }
+          return false;
         }
       } else {
         // Bypass location filtering entirely when All Cities is selected!
@@ -1004,16 +1015,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           const normItemType = item.type.toLowerCase();
           const normItemTitle = item.title.toLowerCase();
 
-          if (normLabel.includes('apartment') && (normItemType.includes('apartment') || normItemType.includes('flat') || normItemTitle.includes('apartment'))) return true;
-          if (normLabel.includes('villa') && (normItemType.includes('villa') || normItemTitle.includes('villa'))) return true;
-          if (normLabel.includes('house') && (normItemType.includes('house') || normItemType.includes('independent') || normItemTitle.includes('house'))) return true;
-          if (normLabel.includes('office') && (normItemType.includes('office') || normItemType.includes('commercial') || normItemTitle.includes('office'))) return true;
-          if (normLabel.includes('shop') && (normItemType.includes('shop') || normItemType.includes('retail') || normItemType.includes('commercial') || normItemTitle.includes('shop'))) return true;
-          if (normLabel.includes('showroom') && (normItemType.includes('showroom') || normItemType.includes('commercial') || normItemTitle.includes('showroom'))) return true;
-          if ((normLabel.includes('warehouse') || normLabel.includes('godown')) && (normItemType.includes('warehouse') || normItemType.includes('godown') || normItemTitle.includes('warehouse'))) return true;
-          if (normLabel.includes('industrial') && (normItemType.includes('industrial') || normItemTitle.includes('industrial'))) return true;
-          if ((normLabel.includes('plot') || normLabel.includes('land')) && (normItemType.includes('plot') || normItemType.includes('land') || normItemTitle.includes('plot') || normItemTitle.includes('land'))) return true;
-          if (normLabel.includes('commercial') && (normItemType.includes('commercial') || normItemTitle.includes('office') || normItemTitle.includes('shop') || normItemTitle.includes('showroom'))) return true;
+          if (normLabel.includes('apartment') && (normItemType.includes('apartment') || normItemType.includes('flat'))) return true;
+          if (normLabel.includes('villa') && normItemType.includes('villa')) return true;
+          if (normLabel.includes('house') && (normItemType.includes('house') || normItemType.includes('independent'))) return true;
+          if (normLabel.includes('office') && (normItemType.includes('office') || normItemType.includes('commercial'))) return true;
+          if (normLabel.includes('shop') && (normItemType.includes('shop') || normItemType.includes('retail') || normItemType.includes('commercial'))) return true;
+          if (normLabel.includes('showroom') && (normItemType.includes('showroom') || normItemType.includes('commercial'))) return true;
+          if ((normLabel.includes('warehouse') || normLabel.includes('godown')) && (normItemType.includes('warehouse') || normItemType.includes('godown'))) return true;
+          if (normLabel.includes('industrial') && normItemType.includes('industrial')) return true;
+          if ((normLabel.includes('plot') || normLabel.includes('land')) && (normItemType.includes('plot') || normItemType.includes('land'))) return true;
+          if (normLabel.includes('commercial') && (normItemType.includes('commercial') || normItemType.includes('office') || normItemType.includes('shop') || normItemType.includes('showroom'))) return true;
 
           return normItemType === normLabel;
         });
@@ -1651,20 +1662,22 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
               {isPropertyTypeOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {masterPropertyTypesDb.filter(pt => pt.is_active).map((pt) => {
-                    const isSelected = selectedPropertyTypesFilter.includes(pt.name);
-                    return (
-                      <label key={pt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => togglePropertyTypeFilter(pt.name)}
-                          style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                        />
-                        <span>{pt.name}</span>
-                      </label>
-                    );
-                  })}
+                  {masterPropertyTypesDb
+                    .filter(pt => pt.is_active && (!isRent || pt.name === 'Residential' || pt.name === 'Commercial'))
+                    .map((pt) => {
+                      const isSelected = selectedPropertyTypesFilter.includes(pt.name);
+                      return (
+                        <label key={pt.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => togglePropertyTypeFilter(pt.name)}
+                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
+                          />
+                          <span>{pt.name}</span>
+                        </label>
+                      );
+                    })}
                 </div>
               )}
             </div>

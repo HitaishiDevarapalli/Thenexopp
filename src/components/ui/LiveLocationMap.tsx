@@ -38,7 +38,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   const mapCenter = useMemo(() => {
     if (userGps) return userGps;
 
-    if (navbarLocation && typeof navbarLocation.lat === 'number' && typeof navbarLocation.lng === 'number') {
+    if (navbarLocation && typeof navbarLocation.lat === 'number' && typeof navbarLocation.lng === 'number' && navbarLocation.lat !== 0 && navbarLocation.lng !== 0) {
       const areaLabel = navbarLocation.suburb || navbarLocation.area || navbarLocation.locality || navbarLocation.city || 'Location';
       return {
         lat: navbarLocation.lat,
