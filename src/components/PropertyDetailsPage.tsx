@@ -26,8 +26,8 @@ const PropertyLocationMap: React.FC<{ latitude: number; longitude: number; title
       zoomControl: true
     });
     
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri',
       maxZoom: 20,
     }).addTo(map);
     
