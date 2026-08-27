@@ -903,6 +903,11 @@ export const addProperty = async (item: PropertyListing) => {
 };
 
 export const updateProperty = async (id: string, updated: Partial<PropertyListing>) => {
+  const idx = propertiesDb.findIndex(p => p.id === id);
+  if (idx !== -1) {
+    propertiesDb[idx] = { ...propertiesDb[idx], ...updated };
+    notifyDataChanged();
+  }
   const payload = await cleanPropPayload({ ...updated, id });
   const saved = await apiJson<PropertyListing>(`${API_BASE_URL}/api/properties/${id}`, {
     method: 'PUT',

@@ -1649,26 +1649,45 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                       {/* Asking Price with Unit Selector */}
                       <div>
                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', marginBottom: '6px' }}>
-                          Asking Price <span style={{ color: '#EF4444' }}>*</span>
+                          Price Value *
                         </label>
-                        <div style={{ display: 'flex', gap: '6px' }}>
+                        <div style={{ display: 'flex', gap: '12px' }}>
                           <input
                             required
                             type="number"
                             step="any"
                             value={formData.askingPrice !== undefined && formData.askingPrice !== null ? formData.askingPrice : ''}
-                            onChange={e => setFormData({ ...formData, askingPrice: e.target.value === '' ? ('' as any) : parseFloat(e.target.value) })}
+                            onChange={e => {
+                              const valStr = e.target.value;
+                              const val = valStr === '' ? 0 : parseFloat(valStr);
+                              const label = valStr === '' ? '' : (
+                                priceUnit === 'Crores' ? `₹${val.toFixed(2)} Crore` :
+                                priceUnit === 'Lakhs' ? `₹${val.toFixed(2)} Lakh` :
+                                `₹${val.toLocaleString('en-IN')}`
+                              );
+                              setFormData({ ...formData, askingPrice: valStr === '' ? ('' as any) : val, priceDisplay: label });
+                            }}
                             placeholder="e.g. 50"
-                            style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #CBD5E1', outline: 'none', fontSize: '0.9rem', fontWeight: 700 }}
+                            style={{ flexGrow: 1, padding: '14px', border: '1.5px solid #059669', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 800, color: '#059669', outline: 'none' }}
                           />
                           <select
                             value={priceUnit}
-                            onChange={e => setPriceUnit(e.target.value as any)}
-                            style={{ padding: '10px 8px', borderRadius: '8px', border: '1.5px solid #CBD5E1', fontSize: '0.82rem', fontWeight: 700, backgroundColor: '#F8FAFC', cursor: 'pointer' }}
+                            onChange={e => {
+                              const unit = e.target.value as any;
+                              setPriceUnit(unit);
+                              const val = formData.askingPrice || 0;
+                              const label = val === 0 ? '' : (
+                                unit === 'Crores' ? `₹${val.toFixed(2)} Crore` :
+                                unit === 'Lakhs' ? `₹${val.toFixed(2)} Lakh` :
+                                `₹${val.toLocaleString('en-IN')}`
+                              );
+                              setFormData({ ...formData, priceDisplay: label });
+                            }}
+                            style={{ padding: '14px', border: '1.5px solid #059669', borderRadius: '12px', fontSize: '1.05rem', fontWeight: 700, backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}
                           >
-                            <option value="Thousands">Thousand</option>
-                            <option value="Lakhs">Lakhs</option>
-                            <option value="Crores">Crores</option>
+                            <option value="Thousands">Thousands (₹)</option>
+                            <option value="Lakhs">Lakhs (₹)</option>
+                            <option value="Crores">Crores (₹)</option>
                           </select>
                         </div>
                       </div>
@@ -1682,8 +1701,8 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                           type="text"
                           value={formData.priceDisplay || ''}
                           onChange={e => setFormData({ ...formData, priceDisplay: e.target.value })}
-                          placeholder="e.g. ₹50 Lakhs (Negotiable)"
-                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #CBD5E1', outline: 'none', fontSize: '0.88rem', boxSizing: 'border-box' }}
+                          placeholder="e.g. ₹50.00 Lakh"
+                          style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontSize: '1rem', fontWeight: 700, boxSizing: 'border-box' }}
                         />
                       </div>
 

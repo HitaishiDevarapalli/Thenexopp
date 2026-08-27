@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { businessDb, masterCategoriesDb, masterLocationsDb, masterBusinessTypesDb, masterLocalitiesDb, masterAreasDb, dealersDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
@@ -49,7 +49,8 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
   subtitle,
   onBack,
 }) => {
-  const { location } = useLocationStore();
+  const { location, setLocation } = useLocationStore();
+  const lastSyncedGlobalCityRef = useRef<string>(location?.city || location?.displayName || '');
   const [, setForceUpdate] = useState(0);
   useEffect(() => {
     const handler = () => setForceUpdate((prev) => prev + 1);
@@ -115,8 +116,11 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     if (currentGlobalCity) {
       setLocationText(currentGlobalCity);
       const matchedCity = availableCities.find(c => c.is_active && (currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(currentGlobalCity.toLowerCase())));
-      if (matchedCity && !selectedCityId) {
-        setSelectedCityId(matchedCity.id);
+      if (lastSyncedGlobalCityRef.current !== currentGlobalCity) {
+        if (matchedCity) {
+          setSelectedCityId(matchedCity.id);
+        }
+        lastSyncedGlobalCityRef.current = currentGlobalCity;
       }
     }
   }, [location, availableCities]);
@@ -299,6 +303,30 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
     setSelectedAreaId('');
     const matched = availableCities.find(c => c.id === cityId);
     setLocationText(matched ? matched.name : 'All Cities');
+
+    if (cityId) {
+      if (matched) {
+        lastSyncedGlobalCityRef.current = matched.name;
+        setLocation({
+          city: matched.name,
+          displayName: matched.name,
+          state: '',
+          country: 'India',
+          lat: 0,
+          lng: 0
+        });
+      }
+    } else {
+      lastSyncedGlobalCityRef.current = '';
+      setLocation({
+        city: '',
+        displayName: 'All India',
+        state: '',
+        country: 'India',
+        lat: 0,
+        lng: 0
+      });
+    }
   };
 
   const handleAreaChange = (areaId: string) => {
@@ -408,11 +436,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         } else if (!isCityMatch) {
           return false;
         }
-      } else if (locationText && locationText !== 'All Cities' && locationText !== 'All Locations') {
-        const locLow = locationText.toLowerCase().trim();
-        const match = (item.city || '').toLowerCase().includes(locLow) || (item.location || '').toLowerCase().includes(locLow);
-        if (!match) return false;
-      }
+
 
       // Business structure / deal type filter
       if (selectedProfs.length > 0 && !selectedProfs.includes(item.businessType)) return false;

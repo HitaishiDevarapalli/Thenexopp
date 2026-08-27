@@ -16,13 +16,11 @@ import {
   FaCheckCircle,
   FaCrown,
   FaStar,
-  FaSearch,
   FaChevronDown,
   FaRegHeart,
   FaHeart,
   FaTag,
   FaHeadset,
-  FaSlidersH,
   FaBed,
   FaBath,
   FaRulerCombined,
@@ -90,7 +88,7 @@ const HERO_SLIDES = [
 ];
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick }) => {
-  const [, setForceUpdate] = useState(0);
+  const [forceUpdate, setForceUpdate] = useState(0);
   useEffect(() => {
     const handler = () => setForceUpdate(prev => prev + 1);
     window.addEventListener('nexopp_data_changed', handler);
@@ -122,41 +120,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   ];
   const stats = rawStats.filter(st => !st.mod || isModuleActive(st.mod));
 
-  // Search Bar Filter States
-  const [activeSearchTab, setActiveSearchTab] = useState<'Property' | 'Franchise' | 'Business' | 'Plots/Land' | 'Commercial'>('Property');
-  const [searchLocation, setSearchLocationState] = useState(selectedCity || '');
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState('BHK');
-  const [budgetFilter, setBudgetFilter] = useState('₹5L - ₹5 Cr');
-  const [priceRangeFilter, setPriceRangeFilter] = useState('Any');
-  const [selectedTag, setSelectedTag] = useState('Villa');
   const { toggleWishlist: globalToggleWishlist, isWishlisted } = useWishlist();
 
   const toggleWishlist = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     globalToggleWishlist(id);
-  };
-
-  const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (searchLocation) params.set('location', searchLocation);
-    if (propertyTypeFilter && propertyTypeFilter !== 'Any' && propertyTypeFilter !== 'BHK') params.set('type', propertyTypeFilter);
-    if (budgetFilter && budgetFilter !== 'Any') params.set('budget', budgetFilter);
-    if (priceRangeFilter && priceRangeFilter !== 'Any') params.set('priceRange', priceRangeFilter);
-
-    const query = params.toString() ? `?${params.toString()}` : '';
-
-    if (activeSearchTab === 'Property') {
-      onNavigate('propertiesPage', query);
-    } else if (activeSearchTab === 'Franchise') {
-      onNavigate('franchisePage', query);
-    } else if (activeSearchTab === 'Business') {
-      onNavigate('businessPage', query);
-    } else if (activeSearchTab === 'Plots/Land') {
-      onNavigate('landPage', query);
-    } else if (activeSearchTab === 'Commercial') {
-      params.set('type', 'Commercial Property');
-      onNavigate('propertiesPage', `?${params.toString()}`);
-    }
   };
 
   const handleNextSlide = () => {
@@ -204,9 +172,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     );
   };
 
-  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !isPropertySold(p) && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb]);
-  const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb]);
-  const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb]);
+  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !isPropertySold(p) && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb, forceUpdate]);
+  const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb, forceUpdate]);
+  const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb, forceUpdate]);
 
   // Recently Sold properties and businesses (ordered by soldDate descending)
   const recentlySoldListings = React.useMemo(() => {
@@ -243,7 +211,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       const dateB = b.soldDate ? new Date(b.soldDate).getTime() : 0;
       return dateB - dateA;
     });
-  }, [propertiesDb, businessDb]);
+  }, [propertiesDb, businessDb, forceUpdate]);
 
   // Featured Listings from marketplaceDb
   // Get the target region for distance calculations
@@ -586,322 +554,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         </div>
       </div>
 
-      {/* 2. MAIN SEARCH FILTER CARD */}
-      <div style={{ maxWidth: '1360px', margin: '0 auto 50px auto', padding: '0 24px' }}>
-        <div style={{
-          backgroundColor: '#FFFFFF',
-          borderRadius: '24px',
-          padding: '24px',
-          boxShadow: '0 10px 40px rgba(15, 23, 42, 0.06)',
-          border: '1px solid #E2E8F0'
-        }}>
-          
-          {/* Top Tabs */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            flexWrap: 'wrap',
-            marginBottom: '20px',
-            borderBottom: '1px solid #F1F5F9',
-            paddingBottom: '16px'
-          }}>
-            {[
-              { id: 'Property', label: 'Property', icon: FaHome, color: '#002B66', bg: '#EFF6FF', mod: 'properties' },
-              { id: 'Franchise', label: 'Franchise', icon: FaStore, color: '#D97706', bg: '#FEF3C7', mod: 'franchises' },
-              { id: 'Business', label: 'Business', icon: FaBriefcase, color: '#002B66', bg: '#EFF6FF', mod: 'business' },
-              { id: 'Plots/Land', label: 'Plots/Land', icon: FaMapMarkerAlt, color: '#059669', bg: '#ECFDF5', mod: 'properties' },
-              { id: 'Commercial', label: 'Commercial', icon: FaBuilding, color: '#D97706', bg: '#FEF3C7', mod: 'properties' },
-            ].filter(tab => {
-              if (!isModuleActive(tab.mod)) return false;
-              if (tab.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
-              if (tab.mod === 'business' && businessDb.length === 0) return false;
-              if (tab.mod === 'properties' && propertiesDb.length === 0) return false;
-              return true;
-            }).map((tab) => {
-              const TabIcon = tab.icon;
-              const isActive = activeSearchTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveSearchTab(tab.id as any)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 20px',
-                    borderRadius: '30px',
-                    border: isActive ? `1.5px solid ${tab.color}` : '1px solid #E2E8F0',
-                    backgroundColor: isActive ? tab.color : '#F8FAFC',
-                    color: isActive ? '#FFFFFF' : '#475569',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: isActive ? `0 4px 14px ${tab.color}40` : 'none',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <TabIcon style={{ fontSize: '14px', color: isActive ? '#FFFFFF' : tab.color }} />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
 
-          {/* Filter Dropdowns Grid */}
-          <div className="top-search-filter-bar-home">
-
-            {/* 2. Dynamic Type/Category Field */}
-            <div style={{
-              backgroundColor: '#F8FAFC',
-              border: '1.5px solid #E2E8F0',
-              borderRadius: '14px',
-              padding: '10px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center'
-            }}>
-              <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                {activeSearchTab === 'Franchise' ? 'Industry' : 
-                 activeSearchTab === 'Business' ? 'Category' : 
-                 activeSearchTab === 'Plots/Land' ? 'Land Type' : 'Property Type'}
-              </span>
-              <select
-                value={propertyTypeFilter}
-                onChange={(e) => setPropertyTypeFilter(e.target.value)}
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  color: '#0F172A',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  paddingTop: '2px'
-                }}
-              >
-                {activeSearchTab === 'Property' && (
-                  <>
-                    <option value="All Types">All Configurations</option>
-                    <option value="1 BHK">1 BHK Apartment / Flat</option>
-                    <option value="2 BHK">2 BHK Apartment / Flat</option>
-                    <option value="3 BHK">3 BHK Luxury Apartment</option>
-                    <option value="4+ BHK">4+ BHK / Luxury Villa</option>
-                  </>
-                )}
-                {activeSearchTab === 'Franchise' && (
-                  <>
-                    <option value="Any">All Franchise Industries</option>
-                    <option value="Food & Beverage">Food & Beverage (QSR / Cafe)</option>
-                    <option value="Retail">Retail & Supermarket</option>
-                    <option value="Education">Education & Training</option>
-                    <option value="Healthcare">Healthcare & Pharmacy</option>
-                  </>
-                )}
-                {activeSearchTab === 'Business' && (
-                  <>
-                    <option value="Any">All Business Sectors</option>
-                    <option value="Tech">Tech & SaaS Businesses</option>
-                    <option value="Manufacturing">Manufacturing & Production</option>
-                    <option value="Retail">Retail & Convenience</option>
-                    <option value="Services">Professional Services</option>
-                  </>
-                )}
-                {activeSearchTab === 'Plots/Land' && (
-                  <>
-                    <option value="Any">All Land & Plot Types</option>
-                    <option value="Residential">Residential Plots (RERA / DTCP)</option>
-                    <option value="Commercial">Commercial Lands / Highway Facing</option>
-                    <option value="Agricultural">Agricultural Lands / Farm Lands</option>
-                    <option value="Industrial">Industrial Plots & Logistics</option>
-                  </>
-                )}
-                {activeSearchTab === 'Commercial' && (
-                  <>
-                    <option value="Any">All Commercial Spaces</option>
-                    <option value="Office Space">Corporate Office Spaces</option>
-                    <option value="Retail Shop">Retail Shops & Showrooms</option>
-                    <option value="Warehouse">Warehouses & Logistics Hubs</option>
-                    <option value="Commercial Land">Commercial Plot / Land</option>
-                  </>
-                )}
-              </select>
-            </div>
-
-            {/* 3. Budget / Investment */}
-            <div style={{
-              backgroundColor: '#F8FAFC',
-              border: '1.5px solid #E2E8F0',
-              borderRadius: '14px',
-              padding: '10px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center'
-            }}>
-              <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                {(activeSearchTab === 'Franchise' || activeSearchTab === 'Business') ? 'Investment Size' : 'Budget'}
-              </span>
-              <select
-                value={budgetFilter}
-                onChange={(e) => setBudgetFilter(e.target.value)}
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  color: '#0F172A',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  paddingTop: '2px'
-                }}
-              >
-                <option value="₹5L - ₹5 Cr">₹5L - ₹5 Cr</option>
-                <option value="Under ₹50L">Under ₹50L</option>
-                <option value="₹50L - ₹1 Cr">₹50L - ₹1 Cr</option>
-                <option value="₹1 Cr - ₹3 Cr">₹1 Cr - ₹3 Cr</option>
-                <option value="₹3 Cr+">₹3 Cr+</option>
-              </select>
-            </div>
-
-            {/* 4. Price Range */}
-            <div style={{
-              backgroundColor: '#F8FAFC',
-              border: '1.5px solid #E2E8F0',
-              borderRadius: '14px',
-              padding: '10px 14px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center'
-            }}>
-              <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>
-                Price Range
-              </span>
-              <select
-                value={priceRangeFilter}
-                onChange={(e) => setPriceRangeFilter(e.target.value)}
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  color: '#0F172A',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  paddingTop: '2px'
-                }}
-              >
-                <option value="Any">Any</option>
-                <option value="Min Price">Min Price</option>
-                <option value="Max Price">Max Price</option>
-              </select>
-            </div>
-
-            {/* 5. More Filters Button */}
-            <button
-              onClick={() => onNavigate('propertiesPage')}
-              style={{
-                padding: '16px 20px',
-                borderRadius: '14px',
-                border: '1.5px solid #E2E8F0',
-                backgroundColor: '#F8FAFC',
-                color: '#475569',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <FaSlidersH /> More Filters
-            </button>
-
-            {/* 6. Search Button */}
-            <button
-              onClick={handleSearch}
-              style={{
-                padding: '16px 28px',
-                borderRadius: '14px',
-                background: 'linear-gradient(135deg, #002B66 0%, #059669 100%)',
-                color: '#FFFFFF',
-                border: 'none',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-                boxShadow: '0 8px 24px rgba(0, 43, 102, 0.25)',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <FaSearch style={{ color: '#FDE68A' }} />
-              <span>Search {activeSearchTab}</span>
-            </button>
-
-          </div>
-
-
-
-          {/* Popular Searches & Advanced Search Section */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            marginTop: '16px',
-            paddingTop: '16px',
-            borderTop: '1px solid #F1F5F9'
-          }}>
-            {/* Top: Popular Searches Tags */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569', marginRight: '4px' }}>
-                Popular Searches:
-              </span>
-              {[
-                { tag: 'Apartment', mod: 'properties', page: 'flatsPage' },
-                { tag: 'Villa', mod: 'properties', page: 'propertiesPage' },
-                { tag: 'Plots', mod: 'properties', page: 'landPage' },
-                { tag: 'Commercial', mod: 'properties', page: 'propertiesPage' },
-                { tag: 'Franchise', mod: 'franchises', page: 'franchisePage' },
-                { tag: 'Farm Land', mod: 'properties', page: 'landPage' },
-              ].filter(item => {
-                if (!item.mod) return true;
-                if (!isModuleActive(item.mod)) return false;
-                if (item.mod === 'franchises' && (siteSettingsDb.showFranchiseSection === false || franchiseDb.length === 0)) return false;
-                if (item.mod === 'properties' && propertiesDb.length === 0) return false;
-                return true;
-              }).map(({ tag, page }) => (
-                <button
-                  key={tag}
-                  onClick={() => {
-                    setSelectedTag(tag);
-                    onNavigate(page as any);
-                  }}
-                  style={{
-                    padding: '6px 14px',
-                    borderRadius: '16px',
-                    border: tag === selectedTag ? 'none' : '1px solid #E2E8F0',
-                    backgroundColor: tag === selectedTag ? '#DCFCE7' : '#F8FAFC',
-                    color: tag === selectedTag ? '#16A34A' : '#64748B',
-                    fontWeight: tag === selectedTag ? 800 : 600,
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s'
-                  }}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-
-          </div>
-
-        </div>
-      </div>
 
       {/* 1. SEPARATE PROPERTY LISTINGS SECTION */}
       {isModuleActive('properties') && propertyListingsShowcase.length > 0 && (

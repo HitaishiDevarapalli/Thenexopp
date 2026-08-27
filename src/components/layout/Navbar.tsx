@@ -131,6 +131,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Compute active navigation tab precisely so Home does not glow on other pages
   const currentActiveTab = React.useMemo(() => {
+    const pathname = (window.location.pathname || '').toLowerCase();
+    
+    // Explicit override for business detail/related pages
+    if (pathname.includes('/biz-') || pathname.includes('biz-')) {
+      return 'business';
+    }
+
     if (currentPage && currentPage !== 'home') {
       if (['propertiesPage', 'flatsPage', 'villasPage', 'landPage', 'rentPage', 'sellPropertyPage', 'propertyDetails'].includes(currentPage)) {
         return 'properties';
@@ -154,7 +161,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
 
     if (isSubpage) {
-      const pathname = (window.location.pathname || '').toLowerCase();
       if (pathname.includes('/properties') || pathname.includes('/flats') || pathname.includes('/villas') || pathname.includes('/land') || pathname.includes('/rent')) {
         return 'properties';
       }

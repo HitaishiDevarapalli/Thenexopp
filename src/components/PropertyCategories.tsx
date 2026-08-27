@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
 import {
@@ -79,7 +79,18 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   onBack,
 }) => {
   // Top Search Card State
-  const { location } = useLocationStore();
+  const { location, setLocation } = useLocationStore();
+  const lastSyncedGlobalCityRef = useRef<string>(location?.city || location?.displayName || selectedCity || '');
+  
+  // Specified Property Filter States (Location, Property Type, Price, Status, Ownership, Sort By)
+  const [selectedCityId, setSelectedCityId] = useState<string>('');
+  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
+  const [selectedLocalityId, setSelectedLocalityId] = useState<string>('');
+  const [areaSearchText, setAreaSearchText] = useState<string>('');
+  const [localitySearchText, setLocalitySearchText] = useState<string>('');
+  const [areaDropdownOpen, setAreaDropdownOpen] = useState<boolean>(false);
+  const [localityDropdownOpen, setLocalityDropdownOpen] = useState<boolean>(false);
+
   const [activeTab, setActiveTab] = useState<'Buy' | 'Rent' | 'Commercial' | 'Plots' | 'New Projects'>('Buy');
   const [locationText, setLocationText] = useState('');
   const [propertyType, setPropertyType] = useState('All Types');
@@ -109,8 +120,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       setLocationText(currentGlobalCity);
       // Auto-select city if it matches available cities
       const matchedCity = availableCities.find(c => c.is_active && (currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(currentGlobalCity.toLowerCase())));
-      if (matchedCity && !selectedCityId) {
-        setSelectedCityId(matchedCity.id);
+      if (lastSyncedGlobalCityRef.current !== currentGlobalCity) {
+        if (matchedCity) {
+          setSelectedCityId(matchedCity.id);
+        }
+        lastSyncedGlobalCityRef.current = currentGlobalCity;
       }
     }
   }, [location?.city, location?.displayName, selectedCity, availableCities]);
@@ -136,6 +150,14 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [availabilityFilter, setAvailabilityFilter] = useState<'All' | 'Available' | 'Sold'>('All');
 
   useEffect(() => {
+    setSelectedCityId('');
+    setSelectedAreaId('');
+    setSelectedLocalityId('');
+    setAreaSearchText('');
+    setLocalitySearchText('');
+    setAreaDropdownOpen(false);
+    setLocalityDropdownOpen(false);
+
     if (!_initialCategory) {
       setSelectedTypes([]);
       setPropertyType('All Types');
@@ -523,26 +545,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
 
-  // 6 Specified Property Filter States (Location, Property Type, Price, Status, Ownership, Sort By)
-  const [selectedCityId, setSelectedCityId] = useState<string>('');
-  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
-  const [selectedLocalityId, setSelectedLocalityId] = useState<string>('');
-  const [areaSearchText, setAreaSearchText] = useState<string>('');
-  const [localitySearchText, setLocalitySearchText] = useState<string>('');
-  const [areaDropdownOpen, setAreaDropdownOpen] = useState<boolean>(false);
-  const [localityDropdownOpen, setLocalityDropdownOpen] = useState<boolean>(false);
+
 
 
 
   const [selectedPropertyTypesFilter, setSelectedPropertyTypesFilter] = useState<string[]>([]);
-  const [selectedPropertyStatusesFilter, setSelectedPropertyStatusesFilter] = useState<string[]>([]);
-  const [selectedPropertyOwnershipsFilter, setSelectedPropertyOwnershipsFilter] = useState<string[]>([]);
 
   // Accordion Expand/Collapse States for Sidebar Filter Sections
   const [isLocationOpen, setIsLocationOpen] = useState<boolean>(true);
   const [isPropertyTypeOpen, setIsPropertyTypeOpen] = useState<boolean>(true);
-  const [isPropertyStatusOpen, setIsPropertyStatusOpen] = useState<boolean>(true);
-  const [isPropertyOwnershipOpen, setIsPropertyOwnershipOpen] = useState<boolean>(true);
 
   const handleCityChange = (cityId: string) => {
     setSelectedCityId(cityId);
@@ -550,6 +561,31 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setSelectedLocalityId('');
     setAreaSearchText('');
     setLocalitySearchText('');
+
+    if (cityId) {
+      const cityObj = availableCities.find(c => c.id === cityId);
+      if (cityObj) {
+        lastSyncedGlobalCityRef.current = cityObj.name;
+        setLocation({
+          city: cityObj.name,
+          displayName: cityObj.name,
+          state: '',
+          country: 'India',
+          lat: 0,
+          lng: 0
+        });
+      }
+    } else {
+      lastSyncedGlobalCityRef.current = '';
+      setLocation({
+        city: '',
+        displayName: 'All India',
+        state: '',
+        country: 'India',
+        lat: 0,
+        lng: 0
+      });
+    }
   };
 
   const handleAreaChange = (areaId: string) => {
@@ -631,17 +667,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     );
   };
 
-  const togglePropertyStatusFilter = (val: string) => {
-    setSelectedPropertyStatusesFilter((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
-  };
 
-  const togglePropertyOwnershipFilter = (val: string) => {
-    setSelectedPropertyOwnershipsFilter((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
-  };
 
   const toggleBhk = (val: string) => {
     setSelectedBhks((prev) =>
@@ -675,8 +701,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   const clearAllFilters = () => {
     setSelectedPropertyTypesFilter([]);
-    setSelectedPropertyStatusesFilter([]);
-    setSelectedPropertyOwnershipsFilter([]);
     setSelectedFurnishingsFilter([]);
     setSelectedBhks([]);
     setSelectedTypes([]);
@@ -869,49 +893,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           }
         }
       } else {
-        // Geospatial Location Filtering (when no specific sidebar city is selected)
-        let exactLocationMatch = true;
-        let distanceKm = 0;
-        const locStr = locationText ? locationText.toLowerCase().trim() : '';
-
-        if (searchLat && searchLng && item.latitude && item.longitude) {
-           const dist = getDistance(searchLat, searchLng, item.latitude, item.longitude);
-           distanceKm = dist;
-           
-           const targetLoc = (location?.area || location?.locality || location?.city || location?.displayName || locStr).toLowerCase();
-           const itemCity = (item.city || '').toLowerCase();
-           const itemArea = (item.area || '').toLowerCase();
-           const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
-           const itemLocStr = (item.location || '').toLowerCase();
-           
-           if (targetLoc) {
-               exactLocationMatch = itemCity === targetLoc || itemArea.includes(targetLoc) || itemSubLoc.includes(targetLoc) || itemLocStr.includes(targetLoc) || (item.title || '').toLowerCase().includes(targetLoc);
-           } else {
-               exactLocationMatch = dist <= 10;
-           }
-        } else if (hasLocalSearch) {
-           const itemSubLoc = ((item as any).subLocation || (item as any).sub_location || '').toLowerCase();
-           const matchLoc =
-            (item.city && item.city.toLowerCase().includes(locStr)) ||
-            (item.area && item.area.toLowerCase().includes(locStr)) ||
-            (itemSubLoc && itemSubLoc.includes(locStr)) ||
-            (item.location && item.location.toLowerCase().includes(locStr)) ||
-            (item.title && item.title.toLowerCase().includes(locStr)) ||
-            (item.type && item.type.toLowerCase().includes(locStr));
-           if (!matchLoc) return false;
-           
-           const itemCity = (item.city || '').toLowerCase();
-           const itemArea = (item.area || '').toLowerCase();
-           const itemLocStr = (item.location || '').toLowerCase();
-           exactLocationMatch = itemCity === locStr || itemArea.includes(locStr) || itemSubLoc.includes(locStr) || itemLocStr.includes(locStr) || (item.title || '').toLowerCase().includes(locStr);
-        } else {
-           exactLocationMatch = true; 
-        }
-        
-        (item as any).exactLocationMatch = exactLocationMatch;
-        if (distanceKm > 0) {
-           (item as any).distanceKm = distanceKm;
-        }
+        // Bypass location filtering entirely when All Cities is selected!
+        (item as any).exactLocationMatch = true;
+        (item as any).distanceKm = 0;
       }
 
       if (selectedLocalityId) {
@@ -966,9 +950,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       // 3. Tab Categorization
       const isItemRent = item.status.toLowerCase() === 'rent' ||
                          String((item as any).propertyPurpose || '').toLowerCase() === 'rent' ||
+                         String((item as any).propertyPurpose || '').toLowerCase() === 'lease' ||
                          item.title.toLowerCase().includes('for rent') ||
+                         item.title.toLowerCase().includes('for lease') ||
                          String(item.priceDisplay || '').toLowerCase().includes('/mo') ||
-                         String(item.priceDisplay || '').toLowerCase().includes('/month');
+                         String(item.priceDisplay || '').toLowerCase().includes('/month') ||
+                         String(item.priceDisplay || '').toLowerCase().includes('/yr') ||
+                         String(item.priceDisplay || '').toLowerCase().includes('/year');
 
       if (activeTab === 'Buy') {
         if (isItemRent) return false;
@@ -1033,7 +1021,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
 
       // 6. Budget Slider Min / Max
-      if (item.rawPrice < minBudget || item.rawPrice > maxBudget) {
+      if (item.rawPrice < minBudget) {
+        return false;
+      }
+      if (maxBudget < sliderMax && item.rawPrice > maxBudget) {
         return false;
       }
 
@@ -1071,32 +1062,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (!matchPropType) return false;
       }
 
-      // SPECIFIED FILTER 4: Property Status (Ready to Move, Under Construction, New Property, Resale Property)
-      if (selectedPropertyStatusesFilter.length > 0) {
-        const matchStatus = selectedPropertyStatusesFilter.some((ps) => {
-          const norm = ps.toLowerCase();
-          if (norm === 'ready to move') return (item as any).availabilityCount > 0 || (item as any).badgeType === 'verified';
-          if (norm === 'under construction') return (item as any).badgeType === 'new';
-          if (norm === 'new property') return (item as any).badgeType === 'new' || (item as any).trending;
-          if (norm === 'resale property') return !(item as any).trending;
-          return true;
-        });
-        if (!matchStatus) return false;
-      }
 
-      // SPECIFIED FILTER 5: Property Ownership (Individual, Company / Developer, Builder, Agent)
-      if (selectedPropertyOwnershipsFilter.length > 0) {
-        const matchOwner = selectedPropertyOwnershipsFilter.some((po) => {
-          const norm = po.toLowerCase();
-          const bName = (item.brokerName || '').toLowerCase();
-          if (norm === 'individual') return bName.includes('owner') || bName.includes('individual') || !bName;
-          if (norm === 'company / developer' || norm.includes('developer')) return bName.includes('developer') || bName.includes('realty') || bName.includes('pvts');
-          if (norm === 'builder') return bName.includes('builder') || bName.includes('constructions');
-          if (norm === 'agent') return bName.includes('advisors') || bName.includes('broker') || bName.includes('agent');
-          return true;
-        });
-        if (!matchOwner) return false;
-      }
 
       // SPECIFIED FILTER 6: Furnishing Status (Furnished, Semi-Furnished, Unfurnished)
       if (selectedFurnishingsFilter.length > 0) {
@@ -1166,7 +1132,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     });
 
     return filtered;
-  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedCityId, selectedAreaId, selectedLocalityId, selectedPropertyTypesFilter, selectedPropertyStatusesFilter, selectedPropertyOwnershipsFilter, selectedMoreFilters, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy]);
+  }, [propertiesDb, searchQuery, locationText, location, activeTab, selectedBhks, selectedTypes, selectedCityId, selectedAreaId, selectedLocalityId, selectedPropertyTypesFilter, selectedMoreFilters, selectedFurnishingsFilter, minBudget, maxBudget, activeQuickFilter, availabilityFilter, sortBy, tick]);
 
   const totalPages = Math.ceil(displayProperties.length / itemsPerPage);
   const validPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
@@ -1177,7 +1143,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   const recentlySoldList = useMemo(() => {
     return propertiesDb.filter((p: any) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold' || p.recentlySold || p.badge === 'RECENTLY SOLD');
-  }, [propertiesDb]);
+  }, [propertiesDb, tick]);
 
   const tabs = [
     { id: 'Buy' as const, label: 'Buy', icon: FaHome },
@@ -1285,38 +1251,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 <span>{isRent ? 'Rent Property' : (_initialCategory === 'Sell' ? 'Sell Property' : 'Buy Property')}</span>
               </button>
 
-              {isRent && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Categories:</span>
-                  {[
-                    { id: 'All', label: 'All Categories' },
-                    { id: 'Residential', label: '1. Residential' },
-                    { id: 'Commercial', label: '2. Commercial' },
-                  ].map((cat) => {
-                    const isSelected = rentCategoryFilter === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setRentCategoryFilter(cat.id as any)}
-                        style={{
-                          padding: '6px 16px',
-                          borderRadius: '9999px',
-                          border: isSelected ? '2px solid #16A34A' : '1px solid #CBD5E1',
-                          backgroundColor: isSelected ? '#16A34A' : '#FFFFFF',
-                          color: isSelected ? '#FFFFFF' : '#475569',
-                          fontWeight: isSelected ? 800 : 600,
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          boxShadow: isSelected ? '0 2px 8px rgba(22, 163, 74, 0.2)' : 'none',
-                        }}
-                      >
-                        {cat.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
           <div className="top-search-filter-bar">
@@ -1735,69 +1669,6 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               )}
             </div>
 
-            {/* 4. Property Status Filter Section (Hidden for Rental Property) */}
-            {!isRent && (
-              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-                <div 
-                  onClick={() => setIsPropertyStatusOpen(!isPropertyStatusOpen)}
-                  style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isPropertyStatusOpen ? '10px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
-                >
-                  <span>■ Property Status</span>
-                  {isPropertyStatusOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
-                </div>
-
-                {isPropertyStatusOpen && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {masterPropertyStatusesDb.filter(ps => ps.is_active).map((ps) => {
-                      const isSelected = selectedPropertyStatusesFilter.includes(ps.name);
-                      return (
-                        <label key={ps.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => togglePropertyStatusFilter(ps.name)}
-                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                          />
-                          <span>{ps.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 5. Property Ownership Filter Section (Hidden for Rental Property) */}
-            {!isRent && (
-              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>
-                <div 
-                  onClick={() => setIsPropertyOwnershipOpen(!isPropertyOwnershipOpen)}
-                  style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A', marginBottom: isPropertyOwnershipOpen ? '10px' : '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
-                >
-                  <span>■ Property Ownership</span>
-                  {isPropertyOwnershipOpen ? <FaChevronUp style={{ fontSize: '12px', color: '#64748B' }} /> : <FaChevronDown style={{ fontSize: '12px', color: '#64748B' }} />}
-                </div>
-
-                {isPropertyOwnershipOpen && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {masterPropertyOwnershipsDb.filter(po => po.is_active).map((po) => {
-                      const isSelected = selectedPropertyOwnershipsFilter.includes(po.name);
-                      return (
-                        <label key={po.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13.5px', color: isSelected ? '#16A34A' : '#334155', fontWeight: isSelected ? 700 : 500 }}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => togglePropertyOwnershipFilter(po.name)}
-                            style={{ accentColor: '#16A34A', width: '16px', height: '16px', cursor: 'pointer' }}
-                          />
-                          <span>{po.name}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* 6. Furnishing Status Filter Section */}
             <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '16px', marginTop: '16px' }}>

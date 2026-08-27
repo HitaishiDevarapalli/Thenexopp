@@ -599,11 +599,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const fallbackLng = formData.longitude || 78.3762;
     const fallbackAddress = formData.formatted_address || formData.fullAddress || `${formData.area || 'Jubilee Hills'}, ${formData.city || 'Hyderabad'}, Telangana, India`;
 
-    const isRentPurpose = formData.propertyPurpose === 'Rent' || formData.status === 'Rent';
+    const isRentPurpose = formData.propertyPurpose === 'Rent' || formData.propertyPurpose === 'Lease' || formData.status === 'Rent';
 
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
-      propertyPurpose: isRentPurpose ? 'Rent' : (formData.propertyPurpose || 'Sale'),
+      propertyPurpose: isRentPurpose ? (formData.propertyPurpose || 'Rent') : (formData.propertyPurpose || 'Sale'),
       status: isRentPurpose ? 'Rent' : 'Buy',
       id: formData.id || `P-${Date.now()}`,
       latitude: fallbackLat,
@@ -1720,16 +1720,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       <div style={{ display: 'inline-flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                         {/* Option 1: Restore to Active Listings (Main Page) */}
                         <button
-                          onClick={() => {
-                            updateProperty(prop.id, {
-                              sold: false,
-                              approvalStatus: 'Published',
-                              listingStatus: 'Published',
-                              status: 'Buy',
-                              recentlySold: false,
-                              badge: prop.verified ? 'Verified' : undefined
-                            });
-                            showNotification?.(`Property "${prop.title}" restored back to Active Marketplace Listings!`, 'success');
+                          onClick={async () => {
+                            try {
+                              await updateProperty(prop.id, {
+                                sold: false,
+                                approvalStatus: 'Published',
+                                listingStatus: 'Published',
+                                status: 'Buy',
+                                recentlySold: false,
+                                badge: prop.verified ? 'Verified' : undefined
+                              });
+                              showNotification?.(`Property "${prop.title}" restored back to Active Marketplace Listings!`, 'success');
+                            } catch (err: any) {
+                              showNotification?.(`Failed to restore property: ${err.message}`, 'error');
+                            }
                           }}
                           title="Restore property back to active listings on main page"
                           style={{
@@ -1752,21 +1756,25 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
                         {/* Option 2: Push to Recently Sold Showcase (Below Business Listings) */}
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             const nextState = !prop.recentlySold;
-                            updateProperty(prop.id, {
-                              recentlySold: nextState,
-                              sold: true,
-                              approvalStatus: 'Sold',
-                              listingStatus: 'Sold',
-                              badge: nextState ? 'RECENTLY SOLD' : undefined
-                            });
-                            showNotification?.(
-                              nextState
-                                ? `Property pushed to Recently Sold Showcase below business listings on main page!`
-                                : `Property removed from Recently Sold Showcase on main page.`,
-                              'success'
-                            );
+                            try {
+                              await updateProperty(prop.id, {
+                                recentlySold: nextState,
+                                sold: true,
+                                approvalStatus: 'Sold',
+                                listingStatus: 'Sold',
+                                badge: nextState ? 'RECENTLY SOLD' : undefined
+                              });
+                              showNotification?.(
+                                nextState
+                                  ? `Property pushed to Recently Sold Showcase below business listings on main page!`
+                                  : `Property removed from Recently Sold Showcase on main page.`,
+                                'success'
+                              );
+                            } catch (err: any) {
+                              showNotification?.(`Failed to update sold status: ${err.message}`, 'error');
+                            }
                           }}
                           title={prop.recentlySold ? "Currently displayed under Recently Sold on Main Website. Click to remove." : "Push to Recently Sold Showcase below business listings on Main Website"}
                           style={{
