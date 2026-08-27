@@ -129,7 +129,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     }
   }, [location?.city, location?.displayName, selectedCity, availableCities]);
 
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     const handler = () => setTick(t => t + 1);
     window.addEventListener('nexopp_data_changed', handler);
