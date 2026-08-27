@@ -1016,8 +1016,8 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 <h3 className="section-block-title">Amenities & Facilities</h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '1rem' }}>
                   {property.amenities.map((am: string, i: number) => (
-                    <span key={i} style={{ padding: '8px 16px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                      ✓ {am}
+                    <span key={i} style={{ padding: '8px 16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '20px', fontSize: '0.9rem', fontWeight: 600, color: '#334155', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#059669' }}>✓</span> {am}
                     </span>
                   ))}
                 </div>
