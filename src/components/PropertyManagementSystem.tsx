@@ -926,18 +926,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       style={{ borderRadius: '4px', cursor: 'pointer' }}
                     />
                   </th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Property Details</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Category &amp; Type ↕</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Location</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Assigned Broker</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Price ↕</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                      <FaEye style={{ color: '#059669', fontSize: '0.85rem' }} /> Views
-                    </span>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '260px' }}>Property Details</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '140px' }}>Category &amp; Type ↕</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '160px' }}>Location</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '180px' }}>Assigned Broker</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '130px' }}>Price ↕</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '100px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} onClick={() => handleSort('viewsCount')}>
+                      <FaEye style={{ fontSize: '0.8rem' }} /> Views {sortField === 'viewsCount' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
+                    </div>
                   </th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700 }}>Status ↕</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right' }}>Actions</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '120px' }}>Status ↕</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right', minWidth: '280px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -969,9 +969,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         </td>
                         <td style={{ padding: '16px' }}>
                           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                            <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '64px', height: '52px', objectFit: 'cover', borderRadius: '8px' }} />
-                            <div>
-                              <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px' }}>{prop.title}</div>
+                            <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '64px', height: '52px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{prop.title}</div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{prop.id}</div>
                               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <span style={{ padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
