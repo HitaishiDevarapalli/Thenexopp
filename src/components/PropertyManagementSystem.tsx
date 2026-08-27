@@ -932,9 +932,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '180px' }}>Assigned Broker</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '130px' }}>Price ↕</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '100px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} onClick={() => handleSort('viewsCount')}>
-                      <FaEye style={{ fontSize: '0.8rem' }} /> Views {sortField === 'viewsCount' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
-                    </div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                      <FaEye style={{ color: '#059669', fontSize: '0.85rem' }} /> Views
+                    </span>
                   </th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '120px' }}>Status ↕</th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right', minWidth: '280px' }}>Actions</th>
