@@ -5,7 +5,8 @@ import {
   updateDealer, 
   deleteDealer, 
   propertiesDb,
-  franchiseDb 
+  franchiseDb,
+  businessDb
 } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { 
@@ -455,7 +456,9 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                     const brokerProperties = propertiesDb.filter(p => p.dealerId === broker.id || (p.assignedBrokerIds && p.assignedBrokerIds.includes(broker.id)));
                     const brokerPropertyListed = brokerProperties.filter(p => p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold').length;
                     const brokerPropertySold = brokerProperties.filter(p => p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length;
-                    const brokerFranchiseCount = franchiseDb.filter(f => (f as any).dealerId === broker.id).length;
+                    const brokerBusinessCount = businessDb.filter(b => b.dealerId === broker.id || b.brokerId === broker.id || (b.assignedBrokerIds && b.assignedBrokerIds.includes(broker.id))).length;
+                    const brokerFranchiseCount = franchiseDb.filter(f => (f as any).dealerId === broker.id || (f as any).brokerId === broker.id || ((f as any).assignedBrokerIds && (f as any).assignedBrokerIds.includes(broker.id))).length;
+                    const totalBizFranchise = brokerBusinessCount + brokerFranchiseCount;
                     return (
                       <div style={{ padding: '12px 20px', backgroundColor: '#F8FAFC', borderTop: '1px solid #F1F5F9', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', gap: '8px' }}>
                         <div>
@@ -467,8 +470,8 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                           <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#16A34A' }}>{brokerPropertySold} Sold</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>FRANCHISES</div>
-                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>{brokerFranchiseCount} Listed</div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>BUSINESSES</div>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>{totalBizFranchise} Listed</div>
                         </div>
                       </div>
                     );
