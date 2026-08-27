@@ -436,7 +436,7 @@ export const BusinessMarketplace: React.FC<BusinessMarketplaceProps> = ({
         } else if (!isCityMatch) {
           return false;
         }
-
+      }
 
       // Business structure / deal type filter
       if (selectedProfs.length > 0 && !selectedProfs.includes(item.businessType)) return false;
