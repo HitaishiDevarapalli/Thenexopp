@@ -542,6 +542,7 @@ export interface SiteSettings {
   promotionalVideoUrl?: string;
   mainPageStats?: MainPageStats;
   showFranchiseSection?: boolean;
+  showDemandRegions?: boolean;
   showVideoShowcase?: boolean;
 }
 
@@ -594,6 +595,7 @@ const defaultSettings: SiteSettings = {
   defaultCity: '',
   promotionalVideoUrl: '',
   showFranchiseSection: true,
+  showDemandRegions: true,
   showVideoShowcase: true,
   mainPageStats: {
     propertiesListed: '0',
@@ -1137,11 +1139,19 @@ export const isModuleActive = (moduleId: string): boolean => {
   if (moduleId === 'franchise' || moduleId === 'franchises') {
     if (siteSettingsDb.showFranchiseSection === false) return false;
   }
+  if (moduleId === 'demand_regions' || moduleId === 'demand_region' || moduleId === 'demand-regions') {
+    if (siteSettingsDb.showDemandRegions === false) return false;
+  }
   if (moduleId === 'showcase_videos' || moduleId === 'main_page_settings') {
     if (showcaseSettingsDb.enabled === false) return false;
     if (siteSettingsDb.showVideoShowcase === false) return false;
   }
   return item ? item.isActive !== false : true;
+};
+
+export const isDemandRegionsEnabled = (): boolean => {
+  if (siteSettingsDb.showDemandRegions === false) return false;
+  return isModuleActive('demand_regions');
 };
 
 export const saveAdminModules = (modules: AdminModuleItem[]) => {

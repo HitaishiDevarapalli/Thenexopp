@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { franchiseDb, dealersDb, addFranchiseEnquiry, demandRegionsDb, getDistance, API_BASE_URL } from '../db/marketplaceDb';
+import { franchiseDb, dealersDb, addFranchiseEnquiry, demandRegionsDb, getDistance, API_BASE_URL, isDemandRegionsEnabled } from '../db/marketplaceDb';
 import {
   FaArrowLeft,
   FaCheckCircle,
@@ -173,7 +173,7 @@ export const FranchiseDetailsPage: React.FC<FranchiseDetailsPageProps> = ({
   return (
     <div style={{ backgroundColor: '#F8FAFC', padding: '115px 0 32px', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 20px' }}>
-        {demandBadge}
+        {isDemandRegionsEnabled() && demandBadge}
         
         {/* Top bar & Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

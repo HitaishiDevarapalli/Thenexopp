@@ -93,6 +93,7 @@ import {
   updateDemandRegion,
   deleteDemandRegion,
   recalculateAllDemandRegions,
+  isDemandRegionsEnabled,
   showcaseVideosDb,
   showcaseSettingsDb,
   addShowcaseVideo,
@@ -2885,6 +2886,87 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   </label>
                   <span style={{ fontWeight: 800, fontSize: '0.95rem', color: settingsForm.showFranchiseSection !== false ? '#059669' : '#DC2626' }}>
                     {settingsForm.showFranchiseSection !== false ? 'SHOW' : 'HIDE'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Demand Regions Section Visibility Toggle Card */}
+              <div style={{ 
+                backgroundColor: settingsForm.showDemandRegions !== false ? '#ECFDF5' : '#FEF2F2', 
+                padding: '24px 28px', 
+                border: settingsForm.showDemandRegions !== false ? '2px solid #10B981' : '2px solid #EF4444', 
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+                transition: 'all 0.3s ease'
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '1.4rem' }}>
+                      {settingsForm.showDemandRegions !== false ? '📍' : '🙈'}
+                    </span>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      DEMAND REGIONS VISIBILITY & FEATURE APPEARANCE
+                    </h3>
+                    <span style={{ 
+                      padding: '4px 12px', 
+                      borderRadius: '20px', 
+                      fontSize: '0.72rem', 
+                      fontWeight: 800, 
+                      backgroundColor: settingsForm.showDemandRegions !== false ? '#10B981' : '#EF4444',
+                      color: '#FFFFFF',
+                      letterSpacing: '0.05em'
+                    }}>
+                      {settingsForm.showDemandRegions !== false ? 'LIVE & VISIBLE' : 'HIDDEN FROM WEBSITE'}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: 1.5, maxWidth: '650px' }}>
+                    {settingsForm.showDemandRegions !== false 
+                      ? 'Demand Regions heatmaps, location badges, demand score indicators, and regional filters are currently visible across the website.'
+                      : 'Demand Regions features, heatmap overlays, demand badges, and demand level filters are completely turned off and hidden from the live website.'
+                    }
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ position: 'relative', display: 'inline-block', width: '64px', height: '34px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.showDemandRegions !== false}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setSettingsForm({ ...settingsForm, showDemandRegions: checked });
+                        toggleAdminModuleActive('demand_regions');
+                      }}
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span style={{
+                      position: 'absolute',
+                      cursor: 'pointer',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: settingsForm.showDemandRegions !== false ? '#10B981' : '#CBD5E1',
+                      transition: '0.3s',
+                      borderRadius: '34px'
+                    }}>
+                      <span style={{
+                        position: 'absolute',
+                        content: '""',
+                        height: '26px',
+                        width: '26px',
+                        left: settingsForm.showDemandRegions !== false ? '34px' : '4px',
+                        bottom: '4px',
+                        backgroundColor: 'white',
+                        transition: '0.3s',
+                        borderRadius: '50%',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                      }} />
+                    </span>
+                  </label>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: settingsForm.showDemandRegions !== false ? '#059669' : '#DC2626' }}>
+                    {settingsForm.showDemandRegions !== false ? 'SHOW' : 'HIDE'}
                   </span>
                 </div>
               </div>

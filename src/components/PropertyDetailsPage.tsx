@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addEnquiry, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addEnquiry, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL, isDemandRegionsEnabled } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { 
   FaArrowLeft, FaHeart, FaRegHeart, FaShareAlt, 
@@ -719,7 +719,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       <div className="container" style={{ position: 'relative' }}>
         
         {/* Demand Region Badge */}
-        {demandBadge}
+        {isDemandRegionsEnabled() && demandBadge}
         
         {/* Back navigation */}
         <button className="circle-back-btn" onClick={onBack} title="Go Back" style={{ position: 'relative', left: '0', display: 'inline-flex', marginBottom: '1.5rem', zIndex: 10 }}>

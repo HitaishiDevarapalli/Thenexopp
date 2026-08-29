@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { parseIndiaLocation } from '../../utils/locationIntelligence';
-import { selectedCity as dbSelectedCity, demandRegionsDb } from '../../db/marketplaceDb';
+import { selectedCity as dbSelectedCity, demandRegionsDb, isDemandRegionsEnabled } from '../../db/marketplaceDb';
 import { FaLocationArrow, FaPlus, FaMinus, FaCompressArrowsAlt, FaMapMarkerAlt } from 'react-icons/fa';
 import { useLocationStore } from '../../context/LocationContext';
 
@@ -144,9 +144,9 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
     L.marker([mapCenter.lat, mapCenter.lng], { icon: centerIcon, zIndexOffset: 1000 }).addTo(layer);
 
     // 1.5 Draw Demand Regions if filtered/enabled
-    const activeRegions = demandRegionsDb.filter(r => 
-      demandFilter === 'All' || r.demandLevel === demandFilter
-    );
+    const activeRegions = isDemandRegionsEnabled() 
+      ? demandRegionsDb.filter(r => demandFilter === 'All' || r.demandLevel === demandFilter)
+      : [];
 
     activeRegions.forEach((region: any) => {
       const regionColor = region.demandLevel === 'High' ? '#EF4444' : region.demandLevel === 'Medium' ? '#F59E0B' : '#3B82F6';
@@ -344,28 +344,30 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
         </button>
 
         {/* Demand Filter Pill Chips */}
-        <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '4px 6px', borderRadius: '14px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 800, paddingLeft: '6px', textTransform: 'uppercase' }}>Demand:</span>
-          {(['All', 'High', 'Medium', 'Low'] as const).map(lvl => (
-            <button
-              key={lvl}
-              onClick={() => setDemandFilter(lvl)}
-              style={{
-                border: 'none',
-                backgroundColor: demandFilter === lvl ? '#0F172A' : 'transparent',
-                color: demandFilter === lvl ? '#FFFFFF' : '#475569',
-                fontSize: '11px',
-                fontWeight: 700,
-                padding: '4px 10px',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-            >
-              {lvl}
-            </button>
-          ))}
-        </div>
+        {isDemandRegionsEnabled() && (
+          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '4px 6px', borderRadius: '14px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 800, paddingLeft: '6px', textTransform: 'uppercase' }}>Demand:</span>
+            {(['All', 'High', 'Medium', 'Low'] as const).map(lvl => (
+              <button
+                key={lvl}
+                onClick={() => setDemandFilter(lvl)}
+                style={{
+                  border: 'none',
+                  backgroundColor: demandFilter === lvl ? '#0F172A' : 'transparent',
+                  color: demandFilter === lvl ? '#FFFFFF' : '#475569',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  padding: '4px 10px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Floating "Search this area" Button when Map is Panned */}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb } from '../db/marketplaceDb';
+import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb, isDemandRegionsEnabled } from '../db/marketplaceDb';
 import { parseIndiaLocation } from '../utils/locationIntelligence';
 import { useWishlist } from '../context/WishlistContext';
 import {
@@ -1346,42 +1346,44 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             </div>
 
             {/* Demand Region Filter */}
-            <div>
-              <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
-                Demand Region
-              </label>
-              <div
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: '1px solid #CBD5E1',
-                  borderRadius: '12px',
-                  padding: '10px 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <select
-                  value={demandFilter}
-                  onChange={(e) => setDemandFilter(e.target.value as any)}
+            {isDemandRegionsEnabled() && (
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 800, color: '#0F172A', display: 'block', marginBottom: '6px' }}>
+                  Demand Region
+                </label>
+                <div
                   style={{
-                    border: 'none',
-                    background: 'transparent',
-                    outline: 'none',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#0F172A',
-                    cursor: 'pointer',
-                    width: '100%',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '12px',
+                    padding: '10px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                   }}
                 >
-                  <option value="All">All Regions</option>
-                  <option value="High">🟢 High Demand</option>
-                  <option value="Medium">🟡 Medium Demand</option>
-                  <option value="Low">🔴 Low Demand</option>
-                </select>
+                  <select
+                    value={demandFilter}
+                    onChange={(e) => setDemandFilter(e.target.value as any)}
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      outline: 'none',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0F172A',
+                      cursor: 'pointer',
+                      width: '100%',
+                    }}
+                  >
+                    <option value="All">All Regions</option>
+                    <option value="High">🟢 High Demand</option>
+                    <option value="Medium">🟡 Medium Demand</option>
+                    <option value="Low">🔴 Low Demand</option>
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Search Button & Advanced Search */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '22px' }}>
