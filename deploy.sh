@@ -10,6 +10,7 @@ git pull origin main
 # 2. Install dependencies
 echo "📦 Installing dependencies..."
 npm install
+rm -rf server/node_modules
 
 # 3. Prisma database sync & client generation
 echo "🗄️ Syncing Prisma schema..."
