@@ -70,29 +70,6 @@ const DEFAULT_CATEGORIES = [
 export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange, mode = 'franchise' }) => {
   const [activeTab, setActiveTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'approvals' | 'enquiries' | 'gallery'>('listings');
 
-  React.useEffect(() => {
-    if (activeSubTab) {
-      if (activeSubTab === 'all' || activeSubTab === 'listings') {
-        setActiveTab('listings');
-      } else if (activeSubTab === 'add') {
-        setActiveTab('listings');
-        setIsModalOpen(true);
-        setModalMode('add');
-        setEditingFranchise({});
-      } else if (activeSubTab === 'soldOut' || activeSubTab === 'sold') {
-        setActiveTab('soldOut');
-      } else if (activeSubTab === 'resales' || activeSubTab === 'resale_requests') {
-        setActiveTab('reports');
-      } else if (activeSubTab === 'enquiries' || activeSubTab === 'franchise_leads') {
-        setActiveTab('enquiries');
-      } else if (['listings', 'editProperty', 'featured', 'analytics', 'categories', 'locations', 'soldOut', 'reports', 'approvals', 'enquiries', 'gallery'].includes(activeSubTab)) {
-        setActiveTab(activeSubTab as any);
-      } else {
-        setActiveTab('listings');
-      }
-    }
-  }, [activeSubTab]);
-
   // Search & Filter state for listings
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -105,6 +82,46 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [modalSubTab, setModalSubTab] = useState<'basic' | 'investment' | 'business' | 'space' | 'location' | 'media' | 'broker'>('basic');
   const [editingFranchise, setEditingFranchise] = useState<Partial<FranchiseListing>>({});
+
+  React.useEffect(() => {
+    if (activeSubTab) {
+      if (activeSubTab === 'all' || activeSubTab === 'listings') {
+        setActiveTab('listings');
+        setSelectedCategory('All');
+        setSelectedStatus('All');
+        setSelectedBroker('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'add') {
+        setActiveTab('listings');
+        setIsModalOpen(true);
+        setModalMode('add');
+        setEditingFranchise({});
+        setModalSubTab('basic');
+      } else if (activeSubTab === 'soldOut' || activeSubTab === 'sold') {
+        setActiveTab('soldOut');
+        setSelectedCategory('All');
+        setSelectedStatus('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'resales' || activeSubTab === 'resale_requests') {
+        setActiveTab('reports');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'enquiries' || activeSubTab === 'franchise_leads') {
+        setActiveTab('enquiries');
+        setIsModalOpen(false);
+      } else if (['listings', 'editProperty', 'featured', 'analytics', 'categories', 'locations', 'soldOut', 'reports', 'approvals', 'enquiries', 'gallery'].includes(activeSubTab)) {
+        setActiveTab(activeSubTab as any);
+        setIsModalOpen(false);
+      } else {
+        setActiveTab('listings');
+        setSelectedCategory('All');
+        setSelectedStatus('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+      }
+    }
+  }, [activeSubTab]);
 
   // Location Intelligence Picker States & Helpers inside Modal
   const [addressSearchQuery, setAddressSearchQuery] = useState('');

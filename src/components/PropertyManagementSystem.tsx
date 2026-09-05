@@ -85,7 +85,7 @@ const compressImageFile = (file: File, maxWidth = 1920, maxHeight = 1080, qualit
   });
 };
 
-export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange }) => {
+export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange }) => {
   // Main Navigation Tabs
   const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'sellRequests'>('listings');
 
@@ -96,27 +96,6 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     window.addEventListener('nexopp_data_changed', handleDataChange);
     return () => window.removeEventListener('nexopp_data_changed', handleDataChange);
   }, []);
-
-  React.useEffect(() => {
-    if (activeSubTab) {
-      if (activeSubTab === 'all' || activeSubTab === 'listings') {
-        setActiveModuleTab('listings');
-      } else if (activeSubTab === 'add' || activeSubTab === 'editProperty') {
-        setActiveModuleTab('listings');
-        setIsModalOpen(true);
-        setModalMode('add');
-      } else if (activeSubTab === 'pending' || activeSubTab === 'approvals') {
-        setActiveModuleTab('listings');
-        setSelectedStatusFilter('Pending');
-      } else if (activeSubTab === 'sold' || activeSubTab === 'soldOut') {
-        setActiveModuleTab('soldOut');
-      } else if (['listings', 'editProperty', 'featured', 'analytics', 'categories', 'locations', 'soldOut', 'reports', 'sellRequests'].includes(activeSubTab)) {
-        setActiveModuleTab(activeSubTab as any);
-      } else {
-        setActiveModuleTab('listings');
-      }
-    }
-  }, [activeSubTab]);
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -519,6 +498,59 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     setIsModalOpen(true);
   };
 
+  React.useEffect(() => {
+    if (activeSubTab) {
+      if (activeSubTab === 'all' || activeSubTab === 'listings') {
+        setActiveModuleTab('listings');
+        setSelectedStatusFilter('All');
+        setSelectedCategoryFilter('All');
+        setSelectedCityFilter('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+        setEditingId(null);
+      } else if (activeSubTab === 'add' || activeSubTab === 'editProperty') {
+        setActiveModuleTab('listings');
+        openAddModal();
+      } else if (activeSubTab === 'pending' || activeSubTab === 'approvals') {
+        setActiveModuleTab('listings');
+        setSelectedStatusFilter('Pending');
+        setSelectedCategoryFilter('All');
+        setSelectedCityFilter('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+        setEditingId(null);
+      } else if (activeSubTab === 'sold' || activeSubTab === 'soldOut') {
+        setActiveModuleTab('soldOut');
+        setSelectedStatusFilter('All');
+        setSelectedCategoryFilter('All');
+        setSelectedCityFilter('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+        setEditingId(null);
+      } else if (activeSubTab === 'bulk') {
+        setActiveModuleTab('listings');
+        setSelectedStatusFilter('All');
+        setSelectedCategoryFilter('All');
+        setSelectedCityFilter('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+        setEditingId(null);
+      } else if (['listings', 'editProperty', 'featured', 'analytics', 'categories', 'locations', 'soldOut', 'reports', 'sellRequests'].includes(activeSubTab)) {
+        setActiveModuleTab(activeSubTab as any);
+        setIsModalOpen(false);
+        setEditingId(null);
+      } else {
+        setActiveModuleTab('listings');
+        setSelectedStatusFilter('All');
+        setSelectedCategoryFilter('All');
+        setSelectedCityFilter('All');
+        setSearchQuery('');
+        setIsModalOpen(false);
+        setEditingId(null);
+      }
+    }
+  }, [activeSubTab]);
+
   const handleSaveDraft = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (isSaving) return;
@@ -757,8 +789,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             key={tab.id}
             onClick={() => {
               setActiveModuleTab(tab.id as any);
-              if (selectedStatusFilter === 'Pending' && tab.id === 'listings') {
+              if (tab.id === 'listings') {
                 setSelectedStatusFilter('All');
+                setSelectedCategoryFilter('All');
+                setSelectedCityFilter('All');
+                setSearchQuery('');
+              }
+              if (onSubTabChange) {
+                onSubTabChange(tab.id === 'listings' ? 'all' : tab.id);
               }
             }}
             style={{

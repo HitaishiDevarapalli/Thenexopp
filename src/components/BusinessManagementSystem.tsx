@@ -75,31 +75,51 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
   // Main Navigation Tabs
   const [activeModuleTab, setActiveModuleTab] = useState<'listings' | 'soldOut' | 'categories' | 'types' | 'sellRequests' | 'enquiries'>('listings');
 
-  useEffect(() => {
-    if (activeSubTab) {
-      if (activeSubTab === 'soldOut' || activeSubTab === 'sold') setActiveModuleTab('soldOut');
-      else if (activeSubTab === 'all' || activeSubTab === 'listings') setActiveModuleTab('listings');
-      else if (activeSubTab === 'add') {
-        setActiveModuleTab('listings');
-        setIsModalOpen(true);
-        setModalMode('add');
-        setEditingId(null);
-      }
-      else if (activeSubTab === 'buyEnquiries' || activeSubTab === 'enquiries') setActiveModuleTab('enquiries');
-      else if (activeSubTab === 'businessTypes' || activeSubTab === 'types') setActiveModuleTab('types');
-      else if (activeSubTab === 'sellRequests' || activeSubTab === 'sell_requests') setActiveModuleTab('sellRequests');
-      else if (['listings', 'categories', 'types', 'sellRequests', 'enquiries'].includes(activeSubTab)) {
-        setActiveModuleTab(activeSubTab as any);
-      } else {
-        setActiveModuleTab('listings');
-      }
-    }
-  }, [activeSubTab]);
-
   // Search & Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('All');
+
+  useEffect(() => {
+    if (activeSubTab) {
+      if (activeSubTab === 'soldOut' || activeSubTab === 'sold') {
+        setActiveModuleTab('soldOut');
+        setSelectedCategoryFilter('All');
+        setSelectedStatusFilter('All');
+        setSearchTerm('');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'all' || activeSubTab === 'listings') {
+        setActiveModuleTab('listings');
+        setSelectedCategoryFilter('All');
+        setSelectedStatusFilter('All');
+        setSearchTerm('');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'add') {
+        setActiveModuleTab('listings');
+        setIsModalOpen(true);
+        setModalMode('add');
+        setEditingId(null);
+      } else if (activeSubTab === 'buyEnquiries' || activeSubTab === 'enquiries') {
+        setActiveModuleTab('enquiries');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'businessTypes' || activeSubTab === 'types') {
+        setActiveModuleTab('types');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'sellRequests' || activeSubTab === 'sell_requests') {
+        setActiveModuleTab('sellRequests');
+        setIsModalOpen(false);
+      } else if (['listings', 'categories', 'types', 'sellRequests', 'enquiries'].includes(activeSubTab)) {
+        setActiveModuleTab(activeSubTab as any);
+        setIsModalOpen(false);
+      } else {
+        setActiveModuleTab('listings');
+        setSelectedCategoryFilter('All');
+        setSelectedStatusFilter('All');
+        setSearchTerm('');
+        setIsModalOpen(false);
+      }
+    }
+  }, [activeSubTab]);
   
   // Data snapshots
   const businesses = useMemo(() => businessDb, [dataUpdated, businessDb]);
