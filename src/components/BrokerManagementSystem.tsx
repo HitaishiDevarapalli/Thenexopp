@@ -34,7 +34,7 @@ const FRANCHISE_CATEGORIES_LIST = [
   'Automotive', 'Beauty', 'Technology', 'Existing Business', 'New Franchise'
 ];
 
-export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange }) => {
+export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange }) => {
   const [activeTab, setActiveTab] = useState<'directory' | 'leaderboard' | 'premium' | 'category_rank' | 'location_rank' | 'analytics'>('directory');
 
   // Trigger re-render on global data change
@@ -47,7 +47,17 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
 
   React.useEffect(() => {
     if (activeSubTab) {
-      setActiveTab(activeSubTab as any);
+      if (activeSubTab === 'add') {
+        openNewBrokerModal();
+      } else if (activeSubTab === 'kyc' || activeSubTab === 'premium') {
+        setActiveTab('premium');
+      } else if (activeSubTab === 'analytics') {
+        setActiveTab('analytics');
+      } else if (['directory', 'leaderboard', 'premium', 'category_rank', 'location_rank', 'analytics'].includes(activeSubTab)) {
+        setActiveTab(activeSubTab as any);
+      } else {
+        setActiveTab('directory');
+      }
     }
   }, [activeSubTab]);
 
@@ -456,11 +466,49 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
             </button>
             <button
               onClick={openNewBrokerModal}
-              style={{ padding: '10px 20px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(30,64,175,0.25)' }}
+              style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(5,150,105,0.25)' }}
             >
               <FaPlus /> REGISTER NEW BROKER
             </button>
           </div>
+        </div>
+
+        {/* Navigation Subtabs Bar */}
+        <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '16px', overflowX: 'auto' }}>
+          {[
+            { id: 'directory', label: 'Broker Directory', count: dealersDb.length, icon: FaUserTie },
+            { id: 'leaderboard', label: 'Top Leaderboard', count: dealersDb.filter(d => (d.totalPropertiesSold || 0) > 0).length, icon: FaMedal },
+            { id: 'premium', label: 'Premium Privileges & KYC', count: dealersDb.filter(d => d.premiumPartner).length, icon: FaCrown },
+            { id: 'analytics', label: 'Revenue Analytics', count: brokerMetrics.totalRevenueSum ? `₹${brokerMetrics.totalRevenueSum.toFixed(1)}Cr` : '0', icon: FaChartLine }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                onSubTabChange?.(tab.id);
+              }}
+              style={{
+                padding: '10px 18px',
+                border: 'none',
+                borderBottom: activeTab === tab.id ? '3px solid #059669' : '3px solid transparent',
+                backgroundColor: activeTab === tab.id ? '#ECFDF5' : 'transparent',
+                color: activeTab === tab.id ? '#059669' : '#475569',
+                fontWeight: 800,
+                fontSize: '0.88rem',
+                borderRadius: '8px 8px 0 0',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.15s'
+              }}
+            >
+              <tab.icon /> {tab.label}
+              <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: activeTab === tab.id ? '#A7F3D0' : '#F1F5F9', color: activeTab === tab.id ? '#065F46' : '#64748B' }}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
 
       </div>
