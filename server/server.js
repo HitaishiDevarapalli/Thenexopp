@@ -3757,22 +3757,54 @@ app.get('/api/dealers', async (req, res) => {
 app.post('/api/dealers', async (req, res, next) => {
   try {
     const d = req.body;
+    const ratingVal = d.rating !== undefined && d.rating !== null && d.rating !== '' ? parseFloat(String(d.rating)) : 4.8;
+    const expVal = d.yearsExperience !== undefined && d.yearsExperience !== null && d.yearsExperience !== '' ? parseInt(String(d.yearsExperience), 10) : 0;
+    const revCountVal = d.reviewCount !== undefined && d.reviewCount !== null && d.reviewCount !== '' ? parseInt(String(d.reviewCount), 10) : 0;
+
+    const companyName = String(d.companyName || d.fullName || d.name || 'Independent Realty').trim();
+    const fullName = String(d.fullName || d.name || d.companyName || '').trim() || null;
+
     const created = await prisma.broker.create({
       data: {
         id: d.id || `dealer-pg-${Date.now()}`,
-        companyName: d.companyName || d.fullName || 'Independent Realty',
+        companyName: companyName,
+        fullName: fullName,
+        name: fullName || companyName,
         logo: d.logo || d.photo || null,
         photo: d.photo || d.logo || null,
-        rating: Number(d.rating) || 4.8,
-        reviewCount: Number(d.reviewCount) || 0,
+        rating: isNaN(ratingVal) ? 4.8 : Math.max(0, Math.min(5, Number(ratingVal.toFixed(1)))),
+        reviewCount: isNaN(revCountVal) ? 0 : revCountVal,
         verified: d.verified !== false,
-        yearsExperience: Number(d.yearsExperience) || 5,
+        yearsExperience: isNaN(expVal) ? 0 : expVal,
         phone: d.phone || d.mobileNumber || null,
+        mobileNumber: d.mobileNumber || d.phone || null,
         email: d.email || null,
+        gender: d.gender || 'Male',
+        dob: d.dob || null,
         specialization: d.specialization || 'Residential & Commercial',
         reraNumber: d.reraNumber || null,
+        languages: d.languages || null,
         state: d.state || 'Andhra Pradesh',
+        district: d.district || null,
         city: d.city || 'Guntur',
+        officeAddress: d.officeAddress || null,
+        whatsapp: d.whatsapp || null,
+        alternateMobile: d.alternateMobile || null,
+        googleMapsLink: d.googleMapsLink || null,
+        socialLinks: d.socialLinks || undefined,
+        serviceAreas: d.serviceAreas || undefined,
+        coverage: d.coverage || undefined,
+        areasOfExpertise: Array.isArray(d.areasOfExpertise) ? d.areasOfExpertise : [],
+        propertyCategories: Array.isArray(d.propertyCategories) ? d.propertyCategories : [],
+        franchiseCategories: Array.isArray(d.franchiseCategories) ? d.franchiseCategories : [],
+        totalPropertiesSold: Number(d.totalPropertiesSold) || 0,
+        totalFranchiseDealsClosed: Number(d.totalFranchiseDealsClosed) || 0,
+        revenueGenerated: Number(d.revenueGenerated) || 0,
+        successRate: Number(d.successRate) || 0,
+        totalLeadsHandled: Number(d.totalLeadsHandled) || 0,
+        responseTime: d.responseTime || 'Within 30 mins',
+        premiumPartner: Boolean(d.premiumPartner),
+        featured: Boolean(d.featured),
         status: d.status || 'Active',
       },
     });
@@ -3787,18 +3819,55 @@ app.put('/api/dealers/:id', async (req, res, next) => {
     const { id } = req.params;
     const d = req.body;
     const updateData = {};
-    if (d.companyName !== undefined || d.fullName !== undefined) updateData.companyName = d.companyName || d.fullName;
+    if (d.companyName !== undefined) updateData.companyName = String(d.companyName).trim();
+    if (d.fullName !== undefined) {
+      updateData.fullName = String(d.fullName).trim();
+      updateData.name = String(d.fullName).trim();
+    }
+    if (d.name !== undefined && updateData.fullName === undefined) {
+      updateData.fullName = String(d.name).trim();
+      updateData.name = String(d.name).trim();
+    }
     if (d.logo !== undefined) updateData.logo = d.logo;
     if (d.photo !== undefined) updateData.photo = d.photo;
-    if (d.rating !== undefined) updateData.rating = Number(d.rating);
+    if (d.rating !== undefined) {
+      const parsedRating = parseFloat(String(d.rating));
+      if (!isNaN(parsedRating)) updateData.rating = Math.max(0, Math.min(5, Number(parsedRating.toFixed(1))));
+    }
+    if (d.reviewCount !== undefined) updateData.reviewCount = parseInt(String(d.reviewCount), 10) || 0;
     if (d.verified !== undefined) updateData.verified = Boolean(d.verified);
-    if (d.yearsExperience !== undefined) updateData.yearsExperience = Number(d.yearsExperience);
-    if (d.phone !== undefined || d.mobileNumber !== undefined) updateData.phone = d.phone || d.mobileNumber;
+    if (d.yearsExperience !== undefined) updateData.yearsExperience = parseInt(String(d.yearsExperience), 10) || 0;
+    if (d.phone !== undefined || d.mobileNumber !== undefined) {
+      updateData.phone = d.phone || d.mobileNumber;
+      updateData.mobileNumber = d.mobileNumber || d.phone;
+    }
     if (d.email !== undefined) updateData.email = d.email;
+    if (d.gender !== undefined) updateData.gender = d.gender;
+    if (d.dob !== undefined) updateData.dob = d.dob;
     if (d.specialization !== undefined) updateData.specialization = d.specialization;
     if (d.reraNumber !== undefined) updateData.reraNumber = d.reraNumber;
+    if (d.languages !== undefined) updateData.languages = d.languages;
     if (d.state !== undefined) updateData.state = d.state;
+    if (d.district !== undefined) updateData.district = d.district;
     if (d.city !== undefined) updateData.city = d.city;
+    if (d.officeAddress !== undefined) updateData.officeAddress = d.officeAddress;
+    if (d.whatsapp !== undefined) updateData.whatsapp = d.whatsapp;
+    if (d.alternateMobile !== undefined) updateData.alternateMobile = d.alternateMobile;
+    if (d.googleMapsLink !== undefined) updateData.googleMapsLink = d.googleMapsLink;
+    if (d.socialLinks !== undefined) updateData.socialLinks = d.socialLinks;
+    if (d.serviceAreas !== undefined) updateData.serviceAreas = d.serviceAreas;
+    if (d.coverage !== undefined) updateData.coverage = d.coverage;
+    if (d.areasOfExpertise !== undefined && Array.isArray(d.areasOfExpertise)) updateData.areasOfExpertise = d.areasOfExpertise;
+    if (d.propertyCategories !== undefined && Array.isArray(d.propertyCategories)) updateData.propertyCategories = d.propertyCategories;
+    if (d.franchiseCategories !== undefined && Array.isArray(d.franchiseCategories)) updateData.franchiseCategories = d.franchiseCategories;
+    if (d.totalPropertiesSold !== undefined) updateData.totalPropertiesSold = Number(d.totalPropertiesSold) || 0;
+    if (d.totalFranchiseDealsClosed !== undefined) updateData.totalFranchiseDealsClosed = Number(d.totalFranchiseDealsClosed) || 0;
+    if (d.revenueGenerated !== undefined) updateData.revenueGenerated = Number(d.revenueGenerated) || 0;
+    if (d.successRate !== undefined) updateData.successRate = Number(d.successRate) || 0;
+    if (d.totalLeadsHandled !== undefined) updateData.totalLeadsHandled = Number(d.totalLeadsHandled) || 0;
+    if (d.responseTime !== undefined) updateData.responseTime = d.responseTime;
+    if (d.premiumPartner !== undefined) updateData.premiumPartner = Boolean(d.premiumPartner);
+    if (d.featured !== undefined) updateData.featured = Boolean(d.featured);
     if (d.status !== undefined) updateData.status = d.status;
 
     const updated = await prisma.broker.update({ where: { id }, data: updateData });

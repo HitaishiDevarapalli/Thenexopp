@@ -718,7 +718,16 @@ export const syncWithBackend = async () => {
       });
     }
     if (dealersRes.status === 'fulfilled' && Array.isArray(dealersRes.value) && dealersRes.value.length > 0) {
-      dealersDb = dealersRes.value;
+      dealersDb = dealersRes.value.map((d: any) => ({
+        ...d,
+        fullName: d.fullName || d.name || d.companyName || '',
+        name: d.fullName || d.name || d.companyName || '',
+        companyName: d.companyName || d.fullName || d.name || 'Independent Realty',
+        phone: d.phone || d.mobileNumber || '',
+        mobileNumber: d.mobileNumber || d.phone || '',
+        rating: typeof d.rating === 'number' ? d.rating : (parseFloat(String(d.rating)) || 4.8),
+        reviewCount: typeof d.reviewCount === 'number' ? d.reviewCount : (parseInt(String(d.reviewCount), 10) || 0)
+      }));
     }
     if (empRes.status === 'fulfilled' && Array.isArray(empRes.value)) employeeUsersDb = empRes.value;
     if (rolesRes.status === 'fulfilled' && Array.isArray(rolesRes.value)) rolesDb = rolesRes.value;

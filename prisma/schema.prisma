@@ -48,26 +48,51 @@ model User {
 }
 
 model Broker {
-  id              String   @id @default(uuid())
-  companyName     String
-  logo            String?
-  photo           String?
-  rating          Float    @default(4.5)
-  reviewCount     Int      @default(0)
-  verified        Boolean  @default(true)
-  yearsExperience Int      @default(5)
-  phone           String?
-  email           String?
-  specialization  String?
-  reraNumber      String?
-  state           String   @default("Andhra Pradesh")
-  city            String   @default("Guntur")
-  status          String   @default("Active")
-  createdAt       DateTime @default(now())
+  id                        String   @id @default(uuid())
+  companyName               String
+  fullName                  String?
+  name                      String?
+  logo                      String?
+  photo                     String?
+  rating                    Float    @default(4.8)
+  reviewCount               Int      @default(0)
+  verified                  Boolean  @default(true)
+  yearsExperience           Int      @default(5)
+  phone                     String?
+  mobileNumber              String?
+  email                     String?
+  gender                    String?
+  dob                       String?
+  specialization            String?
+  reraNumber                String?
+  languages                 String?
+  state                     String   @default("Andhra Pradesh")
+  district                  String?
+  city                      String   @default("Guntur")
+  officeAddress             String?
+  whatsapp                  String?
+  alternateMobile           String?
+  googleMapsLink            String?
+  socialLinks               Json?
+  serviceAreas              Json?
+  coverage                  Json?
+  areasOfExpertise          String[] @default([])
+  propertyCategories        String[] @default([])
+  franchiseCategories       String[] @default([])
+  totalPropertiesSold       Int      @default(0)
+  totalFranchiseDealsClosed Int      @default(0)
+  revenueGenerated          Float    @default(0)
+  successRate               Float    @default(0)
+  totalLeadsHandled         Int      @default(0)
+  responseTime              String?
+  premiumPartner            Boolean  @default(false)
+  featured                  Boolean  @default(false)
+  status                    String   @default("Active")
+  createdAt                 DateTime @default(now())
 
-  properties      Property[]
-  franchises      Franchise[]
-  businesses      Business[]
+  properties                Property[]
+  franchises                Franchise[]
+  businesses                Business[]
 }
 
 model Category {

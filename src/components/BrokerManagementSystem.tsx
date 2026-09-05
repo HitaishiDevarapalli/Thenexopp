@@ -120,26 +120,27 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       id: `D${Date.now()}`,
       companyName: '',
       fullName: '',
+      name: '',
       mobileNumber: '',
+      phone: '',
       email: '',
       dob: '',
       gender: 'Male',
       photo: '',
       logo: '',
-      yearsExperience: 0,
+      yearsExperience: 5,
       reraNumber: '',
-      languages: '',
-      specialization: '',
-      areasOfExpertise: [],
-      propertyCategories: [],
-      franchiseCategories: [],
+      languages: 'English, Telugu, Hindi',
+      specialization: 'Residential & Commercial',
+      areasOfExpertise: ['Apartments', 'Villas'],
+      propertyCategories: ['Flats', 'Apartments', 'Villas'],
+      franchiseCategories: ['Food', 'Retail'],
       serviceAreas: [],
       officeAddress: '',
-      phone: '',
       whatsapp: '',
-      rating: 0,
-      reviewCount: 0,
-      verified: false,
+      rating: 4.8,
+      reviewCount: 25,
+      verified: true,
       premiumPartner: false,
       featured: false,
       status: 'Active',
@@ -148,7 +149,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       revenueGenerated: 0,
       successRate: 0,
       totalLeadsHandled: 0,
-      responseTime: 'N/A',
+      responseTime: 'Within 30 mins',
       coverage: {}
     });
     setModalTab('personal');
@@ -160,6 +161,13 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     setEditingBrokerId(broker.id);
     setFormData({
       ...broker,
+      fullName: broker.fullName || broker.name || broker.companyName || '',
+      name: broker.fullName || broker.name || broker.companyName || '',
+      companyName: broker.companyName || broker.fullName || '',
+      mobileNumber: broker.mobileNumber || broker.phone || '',
+      phone: broker.phone || broker.mobileNumber || '',
+      rating: typeof broker.rating === 'number' ? broker.rating : (parseFloat(String(broker.rating)) || 4.8),
+      reviewCount: typeof broker.reviewCount === 'number' ? broker.reviewCount : (parseInt(String(broker.reviewCount), 10) || 0),
       propertyCategories: broker.propertyCategories || ['Flats', 'Apartments'],
       franchiseCategories: broker.franchiseCategories || ['Food'],
       serviceAreas: broker.serviceAreas && broker.serviceAreas.length > 0 ? broker.serviceAreas : [
@@ -173,7 +181,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
   const handleSaveBroker = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaving) return;
-    const fullName = (formData.fullName || formData.companyName || '').trim();
+    const fullName = (formData.fullName || formData.name || '').trim();
     const companyName = (formData.companyName || formData.fullName || '').trim();
 
     if (!fullName && !companyName) {
@@ -181,12 +189,19 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       return;
     }
 
-    const finalBrokerData = {
+    const ratingNum = formData.rating !== undefined && formData.rating !== null && String(formData.rating) !== '' ? parseFloat(String(formData.rating)) : 4.8;
+    const cleanRating = isNaN(ratingNum) ? 4.8 : Math.max(0, Math.min(5, Number(ratingNum.toFixed(1))));
+
+    const finalBrokerData: Partial<Dealer> = {
       ...formData,
       fullName: fullName || companyName,
+      name: fullName || companyName,
       companyName: companyName || fullName,
       phone: formData.phone || formData.mobileNumber || '',
       mobileNumber: formData.mobileNumber || formData.phone || '',
+      rating: cleanRating,
+      reviewCount: Number(formData.reviewCount) || 0,
+      yearsExperience: Number(formData.yearsExperience) || 0,
       status: formData.status || 'Active',
       verified: formData.verified !== false
     };
@@ -195,7 +210,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       setIsSaving(true);
       if (editingBrokerId) {
         await updateDealer(editingBrokerId, finalBrokerData);
-        showNotification(`Broker '${finalBrokerData.companyName}' updated in database!`);
+        showNotification(`Broker '${finalBrokerData.fullName || finalBrokerData.companyName}' updated in database!`);
       } else {
         const newBroker: Dealer = {
           ...finalBrokerData as Dealer,
@@ -203,7 +218,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
           inventoryCount: propertiesDb.filter(p => p.dealerId === formData.id).length
         };
         await addDealer(newBroker);
-        showNotification(`New Broker '${newBroker.companyName}' registered in database!`);
+        showNotification(`New Broker '${newBroker.fullName || newBroker.companyName}' registered in database!`);
       }
       setIsModalOpen(false);
     } catch (err: any) {
@@ -1077,12 +1092,12 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               {modalTab === 'personal' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Company / Agency Name *</label>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Company / Agency Name</label>
                     <input type="text" value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="e.g. TheNexOpp Premier Realty" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Full Name *</label>
-                    <input required type="text" value={formData.fullName || ''} onChange={e => setFormData({ ...formData, fullName: e.target.value })} placeholder="e.g. Rajeshwar Reddy" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Full Name (Broker Name) *</label>
+                    <input required type="text" value={formData.fullName || ''} onChange={e => setFormData({ ...formData, fullName: e.target.value, name: e.target.value })} placeholder="e.g. Rajeshwar Reddy" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Mobile Number *</label>
@@ -1162,12 +1177,37 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               {modalTab === 'professional' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Company / Agency Name *</label>
-                    <input required type="text" value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="e.g. TheNexOpp Premier Realty" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Company / Agency Name</label>
+                    <input type="text" value={formData.companyName || ''} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="e.g. TheNexOpp Premier Realty" style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Experience (Years)</label>
-                    <input type="number" value={formData.yearsExperience || 0} onChange={e => setFormData({ ...formData, yearsExperience: parseInt(e.target.value) || 0 })} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                    <input type="number" min="0" value={formData.yearsExperience ?? 0} onChange={e => setFormData({ ...formData, yearsExperience: parseInt(e.target.value) || 0 })} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>⭐ Admin Rating (0.0 – 5.0) *</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      required
+                      value={formData.rating !== undefined ? formData.rating : 4.8}
+                      onChange={e => setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })}
+                      placeholder="e.g. 4.8"
+                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontWeight: 700, color: '#D97706' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Total Reviews Count</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.reviewCount !== undefined ? formData.reviewCount : 0}
+                      onChange={e => setFormData({ ...formData, reviewCount: parseInt(e.target.value) || 0 })}
+                      placeholder="e.g. 25"
+                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }}
+                    />
                   </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>RERA Registration Number</label>
@@ -1302,6 +1342,30 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
 
               {modalTab === 'performance' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>⭐ Admin Rating (0.0 – 5.0)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      value={formData.rating !== undefined ? formData.rating : 4.8}
+                      onChange={e => setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })}
+                      placeholder="e.g. 4.8"
+                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px', fontWeight: 700, color: '#D97706' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Total Reviews Count</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.reviewCount !== undefined ? formData.reviewCount : 0}
+                      onChange={e => setFormData({ ...formData, reviewCount: parseInt(e.target.value) || 0 })}
+                      placeholder="e.g. 25"
+                      style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }}
+                    />
+                  </div>
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Premium Broker Status</label>
                     <select value={formData.premiumPartner ? 'yes' : 'no'} onChange={e => setFormData({ ...formData, premiumPartner: e.target.value === 'yes' })} style={{ width: '100%', padding: '12px', border: '1px solid #CBD5E1', borderRadius: '6px' }}>
