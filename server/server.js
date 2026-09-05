@@ -1915,11 +1915,11 @@ app.post('/api/enquiries', optionalAuthMiddleware, async (req, res) => {
     const email = req.body.email || (req.user ? (req.user.email && !req.user.email.includes('@nexopp.in') && !req.user.email.includes('@thenexopp') ? req.user.email : '') : '');
     const listingTitle = req.body.listingTitle || req.body.title || 'General Enquiry';
     const listingType = req.body.listingType || (req.body.enquiryType?.includes('BUSINESS') ? 'BUSINESS' : req.body.enquiryType?.includes('FRANCHISE') ? 'FRANCHISE' : 'PROPERTY');
-    const listingId = req.body.listingId || req.body.propertyId || 'general';
-    const enquiryType = req.body.enquiryType || (req.body.preferredTime || req.body.mode === 'book' ? 'SLOT_BOOKING' : 'GENERAL_ENQUIRY');
+    const isExplicitBooking = req.body.enquiryType === 'SLOT_BOOKING' || req.body.mode === 'book' || (req.body.preferredTime && String(req.body.preferredTime).trim().length > 0);
+    const enquiryType = req.body.enquiryType || (isExplicitBooking ? 'SLOT_BOOKING' : 'GENERAL_ENQUIRY');
     const message = req.body.message || '';
-    const date = req.body.date || req.body.preferredMoveInDate || req.body.bookingDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const preferredMoveInDate = req.body.preferredMoveInDate || req.body.bookingDate || date;
+    const date = req.body.date || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const preferredMoveInDate = req.body.preferredMoveInDate || req.body.bookingDate || '';
     const preferredTime = req.body.preferredTime || req.body.bookingTime || '';
     const brokerName = req.body.brokerName || 'NEXOPP Advisor';
     const priority = req.body.priority || 'High';

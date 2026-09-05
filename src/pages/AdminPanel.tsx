@@ -4930,7 +4930,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   listingType: b.listingType || 'PROPERTY',
                   listingId: b.listingId,
                   enquiryType: 'SLOT_BOOKING',
-                  message: b.notes || `Visit requested for ${b.bookingDate || 'Scheduled Date'} at ${b.bookingTime || '11:00 AM'}`,
+                  message: b.notes || (b.bookingTime ? `Visit requested for ${b.bookingDate || 'Scheduled Date'} at ${b.bookingTime}` : `Visit requested for ${b.bookingDate || 'Scheduled Date'}`),
                   date: b.bookingDate,
                   preferredTime: b.bookingTime,
                   preferredMoveInDate: b.bookingDate,
@@ -4955,35 +4955,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               }
               
               const isContactUs = (e: any) => 
+                e.enquiryType === 'CONTACT_US' || 
+                e.enquiryType === 'GENERAL_ENQUIRY' ||
                 e.source === 'Contact Us Page' || 
                 e.source === 'Contact Us' || 
-                (e.source && e.source.toLowerCase().includes('contact')) || 
-                (e.listingTitle && e.listingTitle.toLowerCase().includes('contact')) || 
                 e.listingId === 'contact-page-inquiry' ||
-                e.enquiryType === 'CONTACT_US' ||
-                e.enquiryType === 'GENERAL_ENQUIRY';
+                (typeof e.listingTitle === 'string' && e.listingTitle.toLowerCase().startsWith('contact us')) ||
+                (typeof e.source === 'string' && e.source.toLowerCase().includes('contact us'));
 
-              const isSlotBooking = (e: any) => 
-                e.enquiryType === 'SLOT_BOOKING' || 
-                !!e.preferredTime || 
-                !!e.preferredMoveInDate || 
-                e.mode === 'book' || 
-                (e.message && (e.message.toLowerCase().includes('visit') || e.message.toLowerCase().includes('slot'))) || 
-                (e.interest && e.interest.toLowerCase().includes('visit'));
+              const isSlotBooking = (e: any) => {
+                if (isContactUs(e)) return false;
+                if (e.enquiryType === 'SLOT_BOOKING' || e.mode === 'book') return true;
+                const msg = (e.message || '').toLowerCase();
+                const interest = (e.interest || '').toLowerCase();
+                if (interest.includes('requested visit') || msg.includes('requested visit') || msg.includes('visit slot') || msg.includes('scheduled visit')) {
+                  return true;
+                }
+                return false;
+              };
 
-              const isBusiness = (e: any) => 
-                e.listingType === 'BUSINESS' || 
-                e.listingType === 'business' || 
-                e.listingType === 'FRANCHISE' || 
-                e.listingType === 'franchise' || 
-                (e.source && (e.source.toLowerCase().includes('business') || e.source.toLowerCase().includes('franchise'))) || 
-                (e.listingTitle && (e.listingTitle.toLowerCase().includes('business') || e.listingTitle.toLowerCase().includes('franchise')));
+              const isBusiness = (e: any) => {
+                if (isContactUs(e)) return false;
+                return (
+                  e.listingType === 'BUSINESS' || 
+                  e.listingType === 'business' || 
+                  e.listingType === 'FRANCHISE' || 
+                  e.listingType === 'franchise' || 
+                  (e.source && (e.source.toLowerCase().includes('business') || e.source.toLowerCase().includes('franchise'))) || 
+                  (e.listingTitle && (e.listingTitle.toLowerCase().includes('business') || e.listingTitle.toLowerCase().includes('franchise')))
+                );
+              };
 
-              const isProperty = (e: any) => 
-                e.listingType === 'PROPERTY' || 
-                e.listingType === 'property' || 
-                (e.source && (e.source.toLowerCase().includes('property') || e.source.toLowerCase().includes('enquiry'))) || 
-                (!isContactUs(e) && !isBusiness(e));
+              const isProperty = (e: any) => {
+                if (isContactUs(e)) return false;
+                if (isBusiness(e)) return false;
+                return (
+                  e.listingType === 'PROPERTY' || 
+                  e.listingType === 'property' || 
+                  (e.source && (e.source.toLowerCase().includes('property') || e.source.toLowerCase().includes('enquiry'))) || 
+                  true
+                );
+              };
 
               // Counts calculation
               const totalCount = baseList.length;
@@ -5374,8 +5386,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         const name = enq.customerName || enq.name || 'User Lead';
                         const initial = name.trim().charAt(0).toUpperCase() || 'U';
 
-                        const isSlot = isSlotBooking(enq) || enq.enquiryType === 'SLOT_BOOKING';
+                        const isSlot = isSlotBooking(enq);
+                        const isContact = isContactUs(enq);
                         const rawMsg = enq.message || enq.interest || enq.notes || '';
+                        
+                        // Real submission time
+                        let submissionTime = '';
+                        if (enq.createdAt) {
+                          const dt = new Date(enq.createdAt);
+                          if (!isNaN(dt.getTime())) {
+                            submissionTime = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+                          }
+                        } else if (enq.time) {
+                          submissionTime = enq.time;
+                        }
                         
                         let visitTime = enq.preferredTime || '';
                         if (!visitTime && rawMsg.includes(' at ')) {
@@ -5388,7 +5412,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                         } else if (!visitDate && rawMsg.includes('for ')) {
                           visitDate = rawMsg.split('for ')[1]?.split(' at ')[0]?.trim();
                         }
-                        if (!visitDate) visitDate = enq.date || 'Scheduled Visit';
+                        if (!visitDate) visitDate = enq.date || 'Scheduled Date';
+
+                        const displayDate = enq.date || (enq.createdAt ? new Date(enq.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent');
 
                         return (
                           <div
@@ -5429,8 +5455,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                               </div>
 
                               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
-                                <span>🗓️ {enq.date || (enq.createdAt ? new Date(enq.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent')}</span>
-                                <span>⏰ {visitTime || '10:45 AM'}</span>
+                                <span>🗓️ {displayDate}</span>
+                                {submissionTime ? <span>⏰ {submissionTime}</span> : null}
                                 <span
                                   style={{
                                     padding: '4px 12px',
@@ -5450,23 +5476,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             {/* Listing Title & Category Tags */}
                             <div>
                               <h4 style={{ margin: '0 0 6px 0', fontSize: '1.05rem', fontWeight: 800, color: '#0F172A' }}>
-                                {enq.listingTitle || enq.interest || 'Property Inquiry'}
+                                {enq.listingTitle || enq.interest || (isContact ? 'Contact Us Inquiry' : 'Property Inquiry')}
                               </h4>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                 <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#F1F5F9', color: '#475569' }}>
-                                  {enq.source || 'Property Details Page'}
+                                  {enq.source || (isContact ? 'Contact Us Page' : 'Property Details Page')}
                                 </span>
                                 {isSlot && (
                                   <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, backgroundColor: '#FEF3C7', color: '#D97706' }}>
                                     Slot Booking
                                   </span>
                                 )}
+                                {isContact && (
+                                  <span style={{ padding: '3px 10px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, backgroundColor: '#F3E8FF', color: '#7E22CE' }}>
+                                    Contact Us
+                                  </span>
+                                )}
                               </div>
                             </div>
 
-                            {/* Middle Row: 2-Column Cards for Slot & Message */}
+                            {/* Middle Row: 2-Column Cards for Slot & Message if isSlot, otherwise 1 Column */}
                             <div style={{ display: 'grid', gridTemplateColumns: isSlot && rawMsg ? '1fr 1fr' : '1fr', gap: '14px' }}>
-                              {/* Left Box: Scheduled Visit Slot */}
+                              {/* Left Box: Scheduled Visit Slot (ONLY if isSlot is true) */}
                               {isSlot && (
                                 <div style={{ backgroundColor: '#F0F9FF', padding: '14px 18px', borderRadius: '12px', border: '1px solid #BAE6FD', display: 'flex', alignItems: 'center', gap: '14px' }}>
                                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', backgroundColor: '#E0F2FE', color: '#0284C7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
@@ -5477,7 +5508,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                       Scheduled Property Visit Slot
                                     </div>
                                     <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0C4A6E', marginTop: '2px' }}>
-                                      <strong style={{ color: '#0284C7' }}>{visitDate}</strong> • Preferred Time: <strong style={{ color: '#0284C7' }}>{visitTime || '11:00 AM'}</strong>
+                                      <strong style={{ color: '#0284C7' }}>{visitDate}</strong> • Preferred Time: <strong style={{ color: '#0284C7' }}>{visitTime || 'Flexible / Any Time'}</strong>
                                     </div>
                                   </div>
                                 </div>
