@@ -86,6 +86,11 @@ model Broker {
   totalLeadsHandled         Int      @default(0)
   responseTime              String?
   premiumPartner            Boolean  @default(false)
+  premiumStartDate          String?
+  premiumExpiryDate         String?
+  featuredHomepageListing   Boolean  @default(false)
+  highlightPremiumCards     Boolean  @default(false)
+  showPremiumBadge          Boolean  @default(false)
   featured                  Boolean  @default(false)
   status                    String   @default("Active")
   createdAt                 DateTime @default(now())

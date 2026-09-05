@@ -1355,6 +1355,10 @@ export const deleteFranchise = (id: string) => {
 };
 
 export const addDealer = async (item: Dealer) => {
+  dealersDb = [item, ...dealersDb.filter(d => d.id !== item.id)];
+  saveToStorage('nexopp_dealers_db', dealersDb);
+  notifyDataChanged();
+
   const payload = await persistListingImages(item as any, 'broker-images', String(item.id || 'broker'));
   const created = await apiJson<Dealer>(`${API_BASE_URL}/api/dealers`, {
     method: 'POST',
@@ -1366,6 +1370,10 @@ export const addDealer = async (item: Dealer) => {
 };
 
 export const updateDealer = async (id: string, updated: Partial<Dealer>) => {
+  dealersDb = dealersDb.map(d => d.id === id ? { ...d, ...updated } : d);
+  saveToStorage('nexopp_dealers_db', dealersDb);
+  notifyDataChanged();
+
   const payload = await persistListingImages({ ...updated, id } as any, 'broker-images', id);
   const saved = await apiJson<Dealer>(`${API_BASE_URL}/api/dealers/${id}`, {
     method: 'PUT',
@@ -1377,6 +1385,10 @@ export const updateDealer = async (id: string, updated: Partial<Dealer>) => {
 };
 
 export const deleteDealer = async (id: string) => {
+  dealersDb = dealersDb.filter(d => d.id !== id);
+  saveToStorage('nexopp_dealers_db', dealersDb);
+  notifyDataChanged();
+
   const deleted = await apiJson(`${API_BASE_URL}/api/dealers/${id}`, { method: 'DELETE' });
   await syncWithBackend();
   return deleted;

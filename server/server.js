@@ -3804,6 +3804,11 @@ app.post('/api/dealers', async (req, res, next) => {
         totalLeadsHandled: Number(d.totalLeadsHandled) || 0,
         responseTime: d.responseTime || 'Within 30 mins',
         premiumPartner: Boolean(d.premiumPartner),
+        premiumStartDate: d.premiumStartDate || null,
+        premiumExpiryDate: d.premiumExpiryDate || null,
+        featuredHomepageListing: Boolean(d.featuredHomepageListing),
+        highlightPremiumCards: Boolean(d.highlightPremiumCards),
+        showPremiumBadge: Boolean(d.showPremiumBadge),
         featured: Boolean(d.featured),
         status: d.status || 'Active',
       },
@@ -3867,6 +3872,11 @@ app.put('/api/dealers/:id', async (req, res, next) => {
     if (d.totalLeadsHandled !== undefined) updateData.totalLeadsHandled = Number(d.totalLeadsHandled) || 0;
     if (d.responseTime !== undefined) updateData.responseTime = d.responseTime;
     if (d.premiumPartner !== undefined) updateData.premiumPartner = Boolean(d.premiumPartner);
+    if (d.premiumStartDate !== undefined) updateData.premiumStartDate = d.premiumStartDate;
+    if (d.premiumExpiryDate !== undefined) updateData.premiumExpiryDate = d.premiumExpiryDate;
+    if (d.featuredHomepageListing !== undefined) updateData.featuredHomepageListing = Boolean(d.featuredHomepageListing);
+    if (d.highlightPremiumCards !== undefined) updateData.highlightPremiumCards = Boolean(d.highlightPremiumCards);
+    if (d.showPremiumBadge !== undefined) updateData.showPremiumBadge = Boolean(d.showPremiumBadge);
     if (d.featured !== undefined) updateData.featured = Boolean(d.featured);
     if (d.status !== undefined) updateData.status = d.status;
 

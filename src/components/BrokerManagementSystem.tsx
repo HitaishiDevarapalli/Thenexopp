@@ -4,9 +4,10 @@ import {
   addDealer, 
   updateDealer, 
   deleteDealer, 
-  propertiesDb,
-  franchiseDb,
-  businessDb
+  propertiesDb, 
+  franchiseDb, 
+  businessDb,
+  enquiriesDb
 } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { 
@@ -330,6 +331,106 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       return matchState && matchDistrict && matchCity && matchArea;
     }).sort((a, b) => (b.totalPropertiesSold || 0) - (a.totalPropertiesSold || 0));
   }, [dealersDb, filterState, filterDistrict, filterCity, filterAreaSearch, dataUpdated]);
+
+  // Real-time dynamic broker metrics
+  const brokerMetrics = useMemo(() => {
+    const totalBrokers = dealersDb.length;
+    const activeBrokers = dealersDb.filter(d => d.status !== 'Inactive').length;
+    const premiumBrokers = dealersDb.filter(d => d.premiumPartner).length;
+    const verifiedBrokers = dealersDb.filter(d => d.verified).length;
+
+    // Real property sales calculated from propertiesDb + broker declared sales
+    const dbSoldProps = propertiesDb.filter(p => p.sold || p.recentlySold || p.listingStatus === 'Sold').length;
+    const brokerDeclaredSales = dealersDb.reduce((acc, d) => acc + (d.totalPropertiesSold || 0), 0);
+    const totalPropertySales = Math.max(dbSoldProps, brokerDeclaredSales);
+
+    // Real franchise deals
+    const dbSoldFranchise = franchiseDb.filter(f => (f as any).sold || (f as any).status === 'Closed' || (f as any).status === 'Sold').length;
+    const brokerDeclaredFranchise = dealersDb.reduce((acc, d) => acc + (d.totalFranchiseDealsClosed || 0), 0);
+    const totalFranchiseDeals = Math.max(dbSoldFranchise, brokerDeclaredFranchise);
+
+    // Real avg rating
+    const avgRating = totalBrokers > 0
+      ? (dealersDb.reduce((acc, d) => acc + (typeof d.rating === 'number' ? d.rating : (parseFloat(String(d.rating)) || 4.8)), 0) / totalBrokers).toFixed(1)
+      : '0.0';
+
+    // Real conversion rate
+    const totalEnquiries = enquiriesDb.length;
+    const resolvedEnquiries = enquiriesDb.filter(e => (e.status as string) === 'Resolved' || (e.status as string) === 'Closed' || (e as any).status === 'Converted').length;
+    const totalListings = propertiesDb.length + businessDb.length + franchiseDb.length;
+    const totalSoldListings = propertiesDb.filter(p => p.sold || p.recentlySold).length + businessDb.filter(b => (b as any).sold).length;
+
+    let conversionRate = '0.0%';
+    if (totalEnquiries > 0) {
+      conversionRate = `${((resolvedEnquiries / totalEnquiries) * 100).toFixed(1)}%`;
+    } else if (totalListings > 0 && totalSoldListings > 0) {
+      conversionRate = `${((totalSoldListings / totalListings) * 100).toFixed(1)}%`;
+    } else if (totalBrokers > 0) {
+      const avgRate = dealersDb.reduce((acc, d) => acc + (d.successRate || 0), 0) / totalBrokers;
+      conversionRate = avgRate > 0 ? `${avgRate.toFixed(1)}%` : '0.0%';
+    }
+
+    // Monthly Performance (2026) calculated from real listings / enquiries
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    const activeMonths = monthNames.slice(0, Math.max(6, currentMonth + 1));
+
+    const monthlyData = activeMonths.map((m, idx) => {
+      const pCount = propertiesDb.filter(p => {
+        const d = new Date(p.createdDate || (p as any).createdAt || '');
+        return !isNaN(d.getTime()) && d.getMonth() === idx;
+      }).length;
+      const eCount = enquiriesDb.filter(e => {
+        const d = new Date((e as any).createdAt || (e as any).date || '');
+        return !isNaN(d.getTime()) && d.getMonth() === idx;
+      }).length;
+      return { month: m, count: pCount + eCount };
+    });
+
+    const maxMonthVal = Math.max(...monthlyData.map(d => d.count), 1);
+    const monthlyFormatted = monthlyData.map(d => ({
+      ...d,
+      barHeight: d.count === 0 ? 12 : Math.max(20, Math.min(140, Math.round((d.count / maxMonthVal) * 130)))
+    }));
+
+    // Top Revenue Contributing Brokers (₹ Cr)
+    const brokerRevenues = dealersDb.map(d => {
+      const bProps = propertiesDb.filter(p => 
+        p.dealerId === d.id || 
+        (p.agentName && (p.agentName.toLowerCase() === (d.companyName || '').toLowerCase() || p.agentName.toLowerCase() === (d.fullName || '').toLowerCase()))
+      );
+      const propRev = bProps.reduce((sum, p) => sum + (p.price || 0), 0) / 10000000; // Crores
+      const declaredRev = typeof d.revenueGenerated === 'number' && d.revenueGenerated > 0 ? d.revenueGenerated : 0;
+      const computedRev = declaredRev > 0 ? declaredRev : Number(propRev.toFixed(2));
+      return {
+        id: d.id,
+        name: d.fullName || d.companyName || 'Broker',
+        companyName: d.companyName || d.fullName || 'Broker',
+        revenue: computedRev,
+        propertiesCount: bProps.length
+      };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    const totalRevenueSum = Number(brokerRevenues.reduce((acc, b) => acc + b.revenue, 0).toFixed(2));
+    const topRevenueBrokers = brokerRevenues.slice(0, 6).map(b => ({
+      ...b,
+      pct: totalRevenueSum > 0 ? Math.round((b.revenue / totalRevenueSum) * 100) : 0
+    }));
+
+    return {
+      totalBrokers,
+      activeBrokers,
+      premiumBrokers,
+      verifiedBrokers,
+      totalPropertySales,
+      totalFranchiseDeals,
+      avgRating,
+      conversionRate,
+      monthlySales: monthlyFormatted,
+      topRevenueBrokers,
+      totalRevenueSum
+    };
+  }, [dealersDb, propertiesDb, franchiseDb, businessDb, enquiriesDb, dataUpdated]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
@@ -708,59 +809,97 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {dealersDb.map(broker => (
-                  <div key={broker.id} style={{ padding: '18px', border: broker.premiumPartner ? '2px solid #F59E0B' : '1px solid #E2E8F0', borderRadius: '10px', backgroundColor: broker.premiumPartner ? '#FFFBEB' : '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      {broker.photo || broker.logo ? (
-                        <img 
-                          src={broker.photo || broker.logo} 
-                          alt="" 
-                          style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
-                          onError={(e) => {
-                            (e.currentTarget as HTMLElement).style.display = 'none';
-                            if (e.currentTarget.parentElement) {
-                              const fallback = document.createElement('div');
-                              fallback.style.cssText = 'width:56px;height:56px;border-radius:50%;background-color:#1E40AF;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;flex-shrink:0;';
-                              fallback.innerText = (broker.companyName || 'B').substring(0, 2).toUpperCase();
-                              e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
-                            }
+                {dealersDb.map(broker => {
+                  const isPrem = Boolean(broker.premiumPartner);
+                  return (
+                    <div key={broker.id} style={{ padding: '18px', border: isPrem ? '2px solid #F59E0B' : '1px solid #E2E8F0', borderRadius: '10px', backgroundColor: isPrem ? '#FFFBEB' : '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s ease' }}>
+                      <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                        {broker.photo || broker.logo ? (
+                          <img 
+                            src={broker.photo || broker.logo} 
+                            alt="" 
+                            style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isPrem ? '2px solid #F59E0B' : '1px solid #CBD5E1' }} 
+                            onError={(e) => {
+                              (e.currentTarget as HTMLElement).style.display = 'none';
+                              if (e.currentTarget.parentElement) {
+                                const fallback = document.createElement('div');
+                                fallback.style.cssText = `width:56px;height:56px;border-radius:50%;background-color:${isPrem ? '#D97706' : '#1E40AF'};color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;flex-shrink:0;`;
+                                fallback.innerText = (broker.fullName || broker.companyName || 'B').substring(0, 2).toUpperCase();
+                                e.currentTarget.parentElement.insertBefore(fallback, e.currentTarget);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: isPrem ? '#D97706' : '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', flexShrink: 0 }}>
+                            {(broker.fullName || broker.companyName || 'B').substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>{broker.fullName || broker.companyName}</h4>
+                            {broker.companyName && broker.fullName && broker.companyName !== broker.fullName && (
+                              <span style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 600 }}>({broker.companyName})</span>
+                            )}
+                            {isPrem ? (
+                              <span style={{ padding: '3px 8px', backgroundColor: '#F59E0B', color: '#FFFFFF', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <FaCrown /> PREMIUM ACTIVE
+                              </span>
+                            ) : (
+                              <span style={{ padding: '3px 8px', backgroundColor: '#F1F5F9', color: '#64748B', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700 }}>
+                                STANDARD
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+                            {isPrem ? (
+                              <>Valid: <strong>{broker.premiumStartDate || new Date().toISOString().slice(0,10)}</strong> to <strong>{broker.premiumExpiryDate || new Date(Date.now() + 365*24*60*60*1000).toISOString().slice(0,10)}</strong></>
+                            ) : (
+                              <>Status: <strong>Standard Partner</strong> • Priority: <strong>Standard</strong></>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const nextPrem = !isPrem;
+                            const now = new Date();
+                            const nextYear = new Date();
+                            nextYear.setFullYear(now.getFullYear() + 1);
+                            const sDate = now.toISOString().slice(0, 10);
+                            const eDate = nextYear.toISOString().slice(0, 10);
+
+                            await updateDealer(broker.id, { 
+                              premiumPartner: nextPrem,
+                              featuredHomepageListing: nextPrem,
+                              highlightPremiumCards: nextPrem,
+                              showPremiumBadge: nextPrem,
+                              premiumStartDate: nextPrem ? sDate : '',
+                              premiumExpiryDate: nextPrem ? eDate : ''
+                            });
+                            showNotification(nextPrem ? `Upgraded '${broker.fullName || broker.companyName}' to Premium Status!` : `Revoked Premium status for '${broker.fullName || broker.companyName}'.`);
                           }}
-                        />
-                      ) : (
-                        <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#1E40AF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem', flexShrink: 0 }}>
-                          {(broker.companyName || 'B').substring(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>{broker.companyName}</h4>
-                          {broker.premiumPartner && <span style={{ padding: '2px 8px', backgroundColor: '#F59E0B', color: '#FFFFFF', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>PREMIUM</span>}
-                        </div>
-                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
-                          Start: <strong>{broker.premiumStartDate || '2025-01-01'}</strong> • Expiry: <strong>{broker.premiumExpiryDate || '2026-12-31'}</strong>
-                        </p>
+                          style={{
+                            padding: '10px 18px',
+                            backgroundColor: isPrem ? '#FEE2E2' : '#D97706',
+                            color: isPrem ? '#DC2626' : '#FFFFFF',
+                            border: isPrem ? '1px solid #FECACA' : 'none',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            boxShadow: isPrem ? 'none' : '0 2px 8px rgba(217,119,6,0.3)',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {isPrem ? 'REVOKE PREMIUM' : 'UPGRADE TO PREMIUM'}
+                        </button>
                       </div>
                     </div>
-
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => {
-                          const nextPrem = !broker.premiumPartner;
-                          updateDealer(broker.id, { 
-                            premiumPartner: nextPrem,
-                            featuredHomepageListing: nextPrem,
-                            highlightPremiumCards: nextPrem,
-                            showPremiumBadge: nextPrem
-                          });
-                          showNotification(`Updated Premium status for '${broker.companyName}'.`);
-                        }}
-                        style={{ padding: '8px 16px', backgroundColor: broker.premiumPartner ? '#FEE2E2' : '#D97706', color: broker.premiumPartner ? '#DC2626' : '#FFFFFF', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-                      >
-                        {broker.premiumPartner ? 'REVOKE PREMIUM' : 'UPGRADE TO PREMIUM'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -978,14 +1117,14 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
           {/* Executive KPI Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
             {[
-              { label: 'Total Brokers', val: dealersDb.length, color: '#1E40AF', icon: <FaUserTie /> },
-              { label: 'Active Brokers', val: dealersDb.filter(d => d.status !== 'Inactive').length, color: '#16A34A', icon: <FaCheckCircle /> },
-              { label: 'Premium Brokers', val: dealersDb.filter(d => d.premiumPartner).length, color: '#D97706', icon: <FaCrown /> },
-              { label: 'Verified Partners', val: dealersDb.filter(d => d.verified).length, color: '#2563EB', icon: <FaMedal /> },
-              { label: 'Total Property Sales', val: dealersDb.reduce((acc, d) => acc + (d.totalPropertiesSold || 0), 0), color: '#7C3AED', icon: <FaBuilding /> },
-              { label: 'Franchise Deals Closed', val: dealersDb.reduce((acc, d) => acc + (d.totalFranchiseDealsClosed || 0), 0), color: '#EA580C', icon: <FaChartLine /> },
-              { label: 'Avg Customer Rating', val: dealersDb.length ? (dealersDb.reduce((acc, d) => acc + (d.rating || 4.8), 0) / dealersDb.length).toFixed(1) + ' ⭐' : '0.0 ⭐', color: '#F59E0B', icon: <FaStar /> },
-              { label: 'Conversion Rate', val: dealersDb.length ? '94.2%' : '0.0%', color: '#0F172A', icon: <FaChartPie /> }
+              { label: 'Total Brokers', val: brokerMetrics.totalBrokers, color: '#1E40AF', icon: <FaUserTie /> },
+              { label: 'Active Brokers', val: brokerMetrics.activeBrokers, color: '#16A34A', icon: <FaCheckCircle /> },
+              { label: 'Premium Brokers', val: brokerMetrics.premiumBrokers, color: '#D97706', icon: <FaCrown /> },
+              { label: 'Verified Partners', val: brokerMetrics.verifiedBrokers, color: '#2563EB', icon: <FaMedal /> },
+              { label: 'Total Property Sales', val: brokerMetrics.totalPropertySales, color: '#7C3AED', icon: <FaBuilding /> },
+              { label: 'Franchise Deals Closed', val: brokerMetrics.totalFranchiseDeals, color: '#EA580C', icon: <FaChartLine /> },
+              { label: 'Avg Customer Rating', val: `${brokerMetrics.avgRating} ⭐`, color: '#F59E0B', icon: <FaStar /> },
+              { label: 'Conversion Rate', val: brokerMetrics.conversionRate, color: '#0F172A', icon: <FaChartPie /> }
             ].map((kpi, i) => (
               <div key={i} style={{ backgroundColor: '#FFFFFF', padding: '20px', border: '1px solid #E2E8F0', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B', fontSize: '0.85rem', fontWeight: 600 }}>
@@ -1002,40 +1141,43 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
             
             {/* Monthly Sales Performance Bar Chart */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
-              <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.15rem', margin: '0 0 20px 0', color: '#0F172A' }}>Monthly Sales Performance (2026)</h4>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0' }}>
-                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((m, idx) => {
-                  const height = [65, 80, 50, 95, 120, 110][idx];
-                  return (
-                    <div key={m} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E40AF' }}>{height}</div>
-                      <div style={{ width: '36px', height: `${height}px`, backgroundColor: '#1E40AF', borderRadius: '6px 6px 0 0', transition: 'height 0.3s ease' }} />
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>{m}</div>
-                    </div>
-                  );
-                })}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.15rem', margin: 0, color: '#0F172A' }}>Monthly Activity & Sales (2026)</h4>
+                <span style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700, backgroundColor: '#DCFCE7', padding: '3px 8px', borderRadius: '4px' }}>● Live Sync</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '180px', paddingBottom: '20px', borderBottom: '1px solid #E2E8F0' }}>
+                {brokerMetrics.monthlySales.map((m) => (
+                  <div key={m.month} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: m.count > 0 ? '#1E40AF' : '#94A3B8' }}>{m.count}</div>
+                    <div style={{ width: '36px', height: `${m.barHeight}px`, backgroundColor: m.count > 0 ? '#1E40AF' : '#E2E8F0', borderRadius: '6px 6px 0 0', transition: 'height 0.3s ease' }} />
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>{m.month}</div>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Revenue Contribution by Broker */}
             <div style={{ backgroundColor: '#FFFFFF', padding: '24px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
-              <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.15rem', margin: '0 0 20px 0', color: '#0F172A' }}>Top Revenue Contributing Brokers (₹ Cr)</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h4 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.15rem', margin: 0, color: '#0F172A' }}>Top Revenue Contributing Brokers (₹ Cr)</h4>
+                <span style={{ fontSize: '0.8rem', color: '#1E40AF', fontWeight: 700 }}>Total: ₹{brokerMetrics.totalRevenueSum} Cr</span>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {dealersDb.slice(0, 4).map((d, i) => {
-                  const rev = d.revenueGenerated || 15;
-                  const pct = Math.min(100, Math.round((rev / 80) * 100));
-                  return (
+                {brokerMetrics.topRevenueBrokers.length === 0 ? (
+                  <div style={{ padding: '30px', textAlign: 'center', color: '#94A3B8', fontSize: '0.9rem' }}>No broker revenue recorded yet.</div>
+                ) : (
+                  brokerMetrics.topRevenueBrokers.map((d, i) => (
                     <div key={d.id}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginBottom: '4px' }}>
-                        <span>{d.companyName}</span>
-                        <span style={{ color: '#1E40AF' }}>₹{rev} Cr ({pct}%)</span>
+                        <span>{d.name} {d.companyName && d.companyName !== d.name ? `(${d.companyName})` : ''}</span>
+                        <span style={{ color: '#1E40AF' }}>₹{d.revenue} Cr ({d.pct}%)</span>
                       </div>
                       <div style={{ width: '100%', height: '10px', backgroundColor: '#F1F5F9', borderRadius: '5px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', backgroundColor: i === 0 ? '#F59E0B' : '#1E40AF', borderRadius: '5px' }} />
+                        <div style={{ width: `${Math.max(d.pct, d.revenue > 0 ? 5 : 0)}%`, height: '100%', backgroundColor: i === 0 ? '#F59E0B' : '#1E40AF', borderRadius: '5px', transition: 'width 0.4s ease' }} />
                       </div>
                     </div>
-                  );
-                })}
+                  ))
+                )}
               </div>
             </div>
           </div>
