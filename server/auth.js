@@ -76,8 +76,16 @@ export const requireRole = (allowedRoles = []) => {
       return res.status(401).json({ error: 'Unauthorized: Authentication required' });
     }
 
-    if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Forbidden: Insufficient privileges' });
+    if (allowedRoles.length > 0) {
+      const userRoleNorm = (req.user.role || '').toUpperCase().replace(/[\s_-]+/g, '');
+      const isAllowed = allowedRoles.some(r => {
+        const rNorm = (r || '').toUpperCase().replace(/[\s_-]+/g, '');
+        return rNorm === userRoleNorm || userRoleNorm === 'SUPERADMIN';
+      });
+
+      if (!isAllowed) {
+        return res.status(403).json({ error: 'Forbidden: Insufficient privileges' });
+      }
     }
 
     next();

@@ -1327,20 +1327,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   }
 
   // Granular Permission Checking Logic
-  const loggedInEmail = sessionStorage.getItem('nexopp_admin_user_email') || '';
+  const loggedInEmail = sessionStorage.getItem('nexopp_admin_user_email') || localStorage.getItem('nexopp_admin_user_email') || '';
   const currentEmpUser = employeeUsersDb.find(u => (u.email || '').toLowerCase() === loggedInEmail.toLowerCase());
-  const userRoleData = rolesDb.find(r => r.name === currentUserRole);
+  const userRoleData = rolesDb.find(r => r.name === currentUserRole || (r.name.toLowerCase().replace(/[\s_]+/g, '') === (currentUserRole || '').toLowerCase().replace(/[\s_]+/g, '')));
 
   // If user has customPermissions explicitly defined (even if empty or custom), use it! Otherwise fallback to role permissions
   const activePermissions = (currentEmpUser && currentEmpUser.customPermissions !== undefined)
     ? currentEmpUser.customPermissions
     : (userRoleData ? userRoleData.permissions : []);
 
+  const roleNormalized = (currentUserRole || '').toUpperCase().replace(/[\s_-]+/g, '');
+  const isSuperOrAdmin = (
+    roleNormalized === 'SUPERADMIN' ||
+    roleNormalized === 'ADMIN' ||
+    ['thenexopptech@gmail.com', 'talatalareddy870@gmail.com', 'mk0081709@gmail.com'].includes((loggedInEmail || '').toLowerCase())
+  );
+
   const hasPermission = (permKey: string) => {
+    if (isSuperOrAdmin) return true;
     if (permKey === 'overview' || permKey === 'dashboard') {
-      return currentUserRole === 'Super Admin' || currentUserRole === 'Admin';
+      return true;
     }
-    if (currentUserRole === 'Super Admin' || activePermissions.includes('all')) return true;
+    if (activePermissions.includes('all')) return true;
     if (activePermissions.includes(permKey)) return true;
     if (permKey === 'selling_leads' && (activePermissions.includes('properties') || activePermissions.includes('inquiries') || activePermissions.includes('leads'))) return true;
 
