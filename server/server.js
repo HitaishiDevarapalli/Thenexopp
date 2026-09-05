@@ -2640,10 +2640,17 @@ app.post('/api/auth/admin-google-auth', async (req, res, next) => {
 
     // Step 1 Successful: User verified with authorized Google Account!
     // Issue a 5-minute temporary session token requiring Step 2 (Google Authenticator TOTP)
+    const defaultName =
+      verifiedEmail === 'thenexopptech@gmail.com'
+        ? 'NexOpp Tech Admin'
+        : verifiedEmail === 'mk0081709@gmail.com'
+        ? 'MK Admin'
+        : 'Talatalareddy Admin';
+
     const tempSessionToken = jwt.sign(
       {
         email: verifiedEmail,
-        fullName: verifiedName || (verifiedEmail === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin'),
+        fullName: verifiedName || defaultName,
         type: 'admin_2fa_temp',
       },
       JWT_SECRET,
@@ -2722,11 +2729,18 @@ app.post('/api/auth/admin-verify-2fa', async (req, res, next) => {
       return res.status(401).json({ error: verifyResult.error || 'ACCESS DENIED: Incorrect 6-digit code. Check your Google Authenticator app and try again.' });
     }
 
-    // Both Step 1 (Google Auth) and Step 2 (Google Authenticator) verified!
+    const adminDisplayName =
+      decoded.fullName ||
+      (email === 'thenexopptech@gmail.com'
+        ? 'NexOpp Tech Admin'
+        : email === 'mk0081709@gmail.com'
+        ? 'MK Admin'
+        : 'Talatalareddy Admin');
+
     const adminUser = {
       id: `google-admin-${email}`,
       email: email,
-      fullName: decoded.fullName || (email === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin'),
+      fullName: adminDisplayName,
       role: 'SUPER_ADMIN'
     };
 

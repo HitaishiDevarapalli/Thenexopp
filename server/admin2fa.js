@@ -20,7 +20,8 @@ authenticator.options = {
 // Strictly authorized administrator emails
 export const AUTHORIZED_ADMIN_EMAILS = [
   'thenexopptech@gmail.com',
-  'talatalareddy870@gmail.com'
+  'talatalareddy870@gmail.com',
+  'mk0081709@gmail.com'
 ];
 
 function ensureDataDir() {

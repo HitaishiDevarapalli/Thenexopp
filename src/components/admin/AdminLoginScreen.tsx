@@ -16,7 +16,8 @@ import { AdminButton } from './ui/AdminButton';
 
 const ALLOWED_ADMIN_EMAILS = [
   'thenexopptech@gmail.com',
-  'talatalareddy870@gmail.com'
+  'talatalareddy870@gmail.com',
+  'mk0081709@gmail.com'
 ];
 
 interface AdminLoginScreenProps {
@@ -118,7 +119,12 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: cleanEmail,
-          name: cleanEmail === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin',
+          name:
+            cleanEmail === 'thenexopptech@gmail.com'
+              ? 'NexOpp Tech Admin'
+              : cleanEmail === 'mk0081709@gmail.com'
+              ? 'MK Admin'
+              : 'Talatalareddy Admin',
         }),
       });
       const data = await res.json();
