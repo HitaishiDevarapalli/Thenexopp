@@ -171,7 +171,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
         <div>
           <h4 style={columnHeaderStyle}>EXPLORE</h4>
           {isModuleActive('properties') && propertiesDb.length > 0 && (
-            <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('propertiesPage'))} style={linkStyle}>Property</a>
+            <>
+              <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('propertiesPage'))} style={linkStyle}>Buy &amp; Rent Properties</a>
+              <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('sellPropertyPage'))} style={linkStyle}>Post Your Property</a>
+            </>
           )}
           {isModuleActive('franchises') && siteSettingsDb.showFranchiseSection !== false && franchiseDb.length > 0 && (
             <a href="#" onClick={(e) => handleLinkClick(e, () => onNavigate?.('franchisePage'))} style={linkStyle}>Franchise</a>

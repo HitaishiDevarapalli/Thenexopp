@@ -194,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       dropdown: [
         { name: 'Buy Property', desc: 'Browse verified real estate & property listings', link: 'propertiesPage', subIcon: <FaBuilding />, color: '#059669' },
         { name: 'Rent Property', desc: 'Explore verified residential & commercial rentals', link: 'rentPage', subIcon: <FaKey />, color: '#2563EB' },
-        { name: 'Sell / Post Property', desc: 'List your property to thousands of buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#D97706', isCta: true },
+        { name: 'Post Property', desc: 'List your property to thousands of verified buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#059669', isCta: true },
       ]
     },
     { 
