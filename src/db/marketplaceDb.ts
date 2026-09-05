@@ -519,6 +519,20 @@ export interface MainPageStats {
   customerSupportWhy?: string;
 }
 
+export const defaultMainPageStats: MainPageStats = {
+  propertiesListed: '18,500+',
+  franchisesCount: '950+',
+  verifiedBrokers: '2,400+',
+  citiesCovered: '32',
+  totalPropertyValue: '₹850 Cr+',
+  happyClients: '15K+',
+  activeListingsWhy: '10,000+',
+  happyCustomersWhy: '5,000+',
+  citiesCoveredWhy: '50+',
+  verifiedListingsWhy: '100%',
+  customerSupportWhy: '24/7'
+};
+
 export interface SiteSettings {
   heroTitle: string;
   heroHighlightText?: string;
@@ -597,19 +611,7 @@ const defaultSettings: SiteSettings = {
   showFranchiseSection: true,
   showDemandRegions: true,
   showVideoShowcase: true,
-  mainPageStats: {
-    propertiesListed: '0',
-    franchisesCount: '0',
-    verifiedBrokers: '0',
-    citiesCovered: '0',
-    totalPropertyValue: '₹0',
-    happyClients: '0',
-    activeListingsWhy: '0',
-    happyCustomersWhy: '0',
-    citiesCoveredWhy: '0',
-    verifiedListingsWhy: '0',
-    customerSupportWhy: '0'
-  }
+  mainPageStats: defaultMainPageStats
 };
 
 export interface AdminModuleItem {
@@ -744,8 +746,17 @@ export const syncWithBackend = async () => {
     }
     if (franEnqRes.status === 'fulfilled' && Array.isArray(franEnqRes.value)) franchiseEnquiriesDb = franEnqRes.value;
     if (settingsRes.status === 'fulfilled' && settingsRes.value && typeof settingsRes.value === 'object') {
-      siteSettingsDb = { ...siteSettingsDb, ...settingsRes.value };
+      const incomingStats = (settingsRes.value.mainPageStats && typeof settingsRes.value.mainPageStats === 'object' && Object.keys(settingsRes.value.mainPageStats).length > 0)
+        ? { ...(siteSettingsDb.mainPageStats || defaultMainPageStats), ...settingsRes.value.mainPageStats }
+        : siteSettingsDb.mainPageStats;
+
+      siteSettingsDb = { 
+        ...siteSettingsDb, 
+        ...settingsRes.value,
+        ...(incomingStats ? { mainPageStats: incomingStats } : {})
+      };
       saveToStorage('nexopp_site_settings', siteSettingsDb);
+      notifyDataChanged();
     }
     if (contactRes.status === 'fulfilled' && contactRes.value && typeof contactRes.value === 'object') {
       contactDetailsDb = { ...contactDetailsDb, ...contactRes.value };

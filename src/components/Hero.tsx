@@ -21,7 +21,7 @@ import {
   FaSmile,
   FaCrosshairs,
 } from 'react-icons/fa';
-import { siteSettingsDb, selectedCity, isModuleActive, franchiseDb, propertiesDb, businessDb } from '../db/marketplaceDb';
+import { siteSettingsDb, selectedCity, isModuleActive, franchiseDb, propertiesDb, businessDb, defaultMainPageStats } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 
 interface HeroProps {
@@ -32,6 +32,13 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
+  const [, setForceUpdate] = useState(0);
+  useEffect(() => {
+    const handler = () => setForceUpdate(prev => prev + 1);
+    window.addEventListener('nexopp_data_changed', handler);
+    return () => window.removeEventListener('nexopp_data_changed', handler);
+  }, []);
+
   const { location, openLocationPicker, detectCurrentLocation, isDetectingGPS } = useLocationStore();
   const [activeTab, setActiveTab] = useState<'Property' | 'Franchise' | 'Business' | 'Plots/Land' | 'Commercial'>('Property');
   const [locationText, setLocationText] = useState(() => {
@@ -106,22 +113,15 @@ export const Hero: React.FC<HeroProps> = ({ onPropertyClick, onSearch }) => {
     return true;
   });
 
-  const s = siteSettingsDb.mainPageStats || {
-    propertiesListed: '18,500+',
-    franchisesCount: '950+',
-    verifiedBrokers: '2,400+',
-    citiesCovered: '32',
-    totalPropertyValue: '₹850 Cr+',
-    happyClients: '15K+',
-  };
+  const s = siteSettingsDb.mainPageStats || defaultMainPageStats;
 
   const rawStats = [
-    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed', mod: 'properties' },
-    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount, label: 'Franchises', mod: 'franchises' },
-    { icon: FaUsers, color: '#16A34A', bg: '#DCFCE7', value: s.verifiedBrokers, label: 'Verified Brokers' },
-    { icon: FaCity, color: '#0D9488', bg: '#CCFBF1', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
-    { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients, label: 'Happy Clients' },
+    { icon: FaHome, color: '#10B981', bg: '#ECFDF5', value: s.propertiesListed || defaultMainPageStats.propertiesListed, label: 'Properties Listed', mod: 'properties' },
+    { icon: FaStore, color: '#059669', bg: '#E6F4EA', value: s.franchisesCount || defaultMainPageStats.franchisesCount, label: 'Franchises', mod: 'franchises' },
+    { icon: FaUsers, color: '#16A34A', bg: '#DCFCE7', value: s.verifiedBrokers || defaultMainPageStats.verifiedBrokers, label: 'Verified Brokers' },
+    { icon: FaCity, color: '#0D9488', bg: '#CCFBF1', value: s.citiesCovered || defaultMainPageStats.citiesCovered, label: 'Cities Covered' },
+    { icon: FaCoins, color: '#059669', bg: '#ECFDF5', value: s.totalPropertyValue || defaultMainPageStats.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
+    { icon: FaSmile, color: '#10B981', bg: '#DCFCE7', value: s.happyClients || defaultMainPageStats.happyClients, label: 'Happy Clients' },
   ];
   const stats = rawStats.filter(st => {
     if (!st.mod) return true;

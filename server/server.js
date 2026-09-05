@@ -4316,14 +4316,23 @@ const siteSettingsStorePath = path.join(__dirname, 'site_settings_store.json');
 
 app.get('/api/settings', async (req, res) => {
   try {
-    let settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
-    if (!settings && fs.existsSync(siteSettingsStorePath)) {
+    let fileSettings = {};
+    if (fs.existsSync(siteSettingsStorePath)) {
       try {
-        const raw = fs.readFileSync(siteSettingsStorePath, 'utf8');
-        settings = JSON.parse(raw);
+        fileSettings = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')) || {};
       } catch (_) {}
     }
-    return res.json(settings || {});
+    let dbSettings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
+    
+    // Merge DB settings onto fileSettings
+    const merged = { ...fileSettings, ...(dbSettings || {}) };
+    
+    // Defensive check: if DB had null/empty mainPageStats but file store has it, keep file store's version
+    if ((!merged.mainPageStats || typeof merged.mainPageStats !== 'object' || Object.keys(merged.mainPageStats).length === 0) && fileSettings.mainPageStats) {
+      merged.mainPageStats = fileSettings.mainPageStats;
+    }
+    
+    return res.json(merged);
   } catch (err) {
     if (fs.existsSync(siteSettingsStorePath)) {
       try {
@@ -4338,17 +4347,22 @@ app.put('/api/settings', async (req, res) => {
   try {
     const rawData = req.body || {};
     
-    // Save to fallback file store immediately
+    // 1. Save to file store immediately
+    let mergedStore = {};
     try {
-      let existing = {};
       if (fs.existsSync(siteSettingsStorePath)) {
-        try { existing = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')); } catch (_) {}
+        try { mergedStore = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')) || {}; } catch (_) {}
       }
-      const merged = { ...existing, ...rawData };
-      fs.writeFileSync(siteSettingsStorePath, JSON.stringify(merged, null, 2), 'utf8');
-    } catch (_) {}
+      mergedStore = { ...mergedStore, ...rawData };
+      if (rawData.mainPageStats) {
+        mergedStore.mainPageStats = { ...(mergedStore.mainPageStats || {}), ...rawData.mainPageStats };
+      }
+      fs.writeFileSync(siteSettingsStorePath, JSON.stringify(mergedStore, null, 2), 'utf8');
+    } catch (fsErr) {
+      logger.warn({ error: fsErr.message }, 'Failed to write site_settings_store.json');
+    }
 
-    // Clean Prisma fields
+    // 2. Clean Prisma fields
     const validFields = [
       'heroTitle', 'heroHighlightText', 'heroSubtitle', 'heroBgUrl', 'heroMediaType',
       'heroVideoUrl', 'heroPopularTags', 'heroBadge1Text', 'heroBadge2Text', 'primaryColor',
@@ -4362,16 +4376,25 @@ app.put('/api/settings', async (req, res) => {
       }
     }
 
-    const settings = await prisma.siteSettings.upsert({
-      where: { id: 'default' },
-      update: updateData,
-      create: { id: 'default', ...updateData },
-    }).catch(async (dbErr) => {
-      logger.warn({ error: dbErr.message }, 'SiteSettings prisma upsert warning, using fallback store');
-      return { id: 'default', ...rawData };
-    });
+    let settings = null;
+    try {
+      settings = await prisma.siteSettings.upsert({
+        where: { id: 'default' },
+        update: updateData,
+        create: { id: 'default', ...updateData },
+      });
+    } catch (dbErr) {
+      logger.warn({ error: dbErr.message }, 'SiteSettings prisma upsert warning, using file store');
+    }
 
-    return res.json(settings);
+    const finalResponse = { 
+      id: 'default', 
+      ...mergedStore, 
+      ...(settings || {}), 
+      ...rawData,
+      ...(rawData.mainPageStats ? { mainPageStats: rawData.mainPageStats } : {})
+    };
+    return res.json(finalResponse);
   } catch (err) {
     logger.error({ error: err.message }, 'Error in PUT /api/settings');
     return res.json({ id: 'default', ...req.body });

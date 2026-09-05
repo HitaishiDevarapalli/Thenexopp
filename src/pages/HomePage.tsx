@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive, showcaseVideosDb, showcaseSettingsDb } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive, showcaseVideosDb, showcaseSettingsDb, defaultMainPageStats } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { useWishlist } from '../context/WishlistContext';
 const ShowcaseVideoCarousel = React.lazy(() =>
@@ -101,22 +101,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
 
-  const s = siteSettingsDb.mainPageStats || {
-    propertiesListed: '18,500+',
-    franchisesCount: '950+',
-    verifiedBrokers: '2,400+',
-    citiesCovered: '32',
-    totalPropertyValue: '₹850 Cr+',
-    happyClients: '15K+',
-  };
+  const s = siteSettingsDb.mainPageStats || defaultMainPageStats;
 
   const rawStats = [
-    { icon: FaHome, color: '#059669', bg: '#ECFDF5', value: s.propertiesListed, label: 'Properties Listed', mod: 'properties' },
-    { icon: FaStore, color: '#D97706', bg: '#FEF3C7', value: s.franchisesCount, label: 'Franchises', mod: 'franchises' },
-    { icon: FaUsers, color: '#002B66', bg: '#EFF6FF', value: s.verifiedBrokers, label: 'Verified Brokers' },
-    { icon: FaCity, color: '#059669', bg: '#ECFDF5', value: s.citiesCovered, label: 'Cities Covered' },
-    { icon: FaCoins, color: '#D97706', bg: '#FEF3C7', value: s.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
-    { icon: FaSmile, color: '#002B66', bg: '#EFF6FF', value: s.happyClients, label: 'Happy Clients' },
+    { icon: FaHome, color: '#059669', bg: '#ECFDF5', value: s.propertiesListed || defaultMainPageStats.propertiesListed, label: 'Properties Listed', mod: 'properties' },
+    { icon: FaStore, color: '#D97706', bg: '#FEF3C7', value: s.franchisesCount || defaultMainPageStats.franchisesCount, label: 'Franchises', mod: 'franchises' },
+    { icon: FaUsers, color: '#002B66', bg: '#EFF6FF', value: s.verifiedBrokers || defaultMainPageStats.verifiedBrokers, label: 'Verified Brokers' },
+    { icon: FaCity, color: '#059669', bg: '#ECFDF5', value: s.citiesCovered || defaultMainPageStats.citiesCovered, label: 'Cities Covered' },
+    { icon: FaCoins, color: '#D97706', bg: '#FEF3C7', value: s.totalPropertyValue || defaultMainPageStats.totalPropertyValue, label: 'Total Property Value', mod: 'properties' },
+    { icon: FaSmile, color: '#002B66', bg: '#EFF6FF', value: s.happyClients || defaultMainPageStats.happyClients, label: 'Happy Clients' },
   ];
   const stats = rawStats.filter(st => !st.mod || isModuleActive(st.mod));
 

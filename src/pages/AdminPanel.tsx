@@ -77,7 +77,8 @@ import {
   syncWithBackend,
   enquiriesDb, 
   siteSettingsDb, 
-  teamMembersDb,
+  defaultMainPageStats,
+  teamMembersDb, 
   deleteEnquiry, 
   updateEnquiryStatus, 
   updateSiteSettings, 
@@ -1209,19 +1210,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     }
   }, [siteSettingsDb]);
 
-  const currentMainStats = settingsForm.mainPageStats || {
-    propertiesListed: '18,500+',
-    franchisesCount: '950+',
-    verifiedBrokers: '2,400+',
-    citiesCovered: '32',
-    totalPropertyValue: '₹850 Cr+',
-    happyClients: '15K+',
-    activeListingsWhy: '10,000+',
-    happyCustomersWhy: '5,000+',
-    citiesCoveredWhy: '50+',
-    verifiedListingsWhy: '100%',
-    customerSupportWhy: '24/7'
-  };
+  const currentMainStats = settingsForm.mainPageStats || defaultMainPageStats;
 
   const handleAddCity = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -1261,7 +1250,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     e.preventDefault();
     setIsSavingSettings(true);
     try {
-      await updateSiteSettings(settingsForm);
+      const payload: SiteSettings = {
+        ...settingsForm,
+        mainPageStats: settingsForm.mainPageStats || currentMainStats
+      };
+      await updateSiteSettings(payload);
       isSettingsDirty.current = false;
       showNotification("Website appearance, homepage stats & metrics successfully published across the live site!", "success");
     } catch (err) {
