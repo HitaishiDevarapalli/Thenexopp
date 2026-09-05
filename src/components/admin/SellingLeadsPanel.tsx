@@ -8,32 +8,18 @@ import {
   Phone,
   Mail,
   MessageSquare,
-  Calendar,
-  MapPin,
-  IndianRupee,
-  Bed,
-  Bath,
-  Layers,
-  Compass,
-  Maximize2,
-  CheckCircle2,
   Clock,
-  AlertCircle,
-  Filter,
   Search,
-  ExternalLink,
+  CheckCircle2,
   ShieldCheck,
   Check,
   X,
-  ChevronRight,
   Image as ImageIcon,
   FileText,
   RefreshCw,
-  Copy,
-  Tag,
-  Share2,
-  Info,
-  ChevronDown
+  MapPin,
+  IndianRupee,
+  AlignLeft
 } from 'lucide-react';
 import type { SellPropertyRequest, SellPropertyPhoto } from '../../db/marketplaceDb';
 import {
@@ -86,7 +72,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
 
   // Lead Details Modal
   const [selectedLead, setSelectedLead] = useState<SellPropertyRequest | null>(null);
-  const [activeModalTab, setActiveModalTab] = useState<'specs' | 'photos' | 'seller' | 'adminNotes'>('specs');
+  const [activeModalTab, setActiveModalTab] = useState<'details' | 'photos' | 'seller' | 'adminNotes'>('details');
   const [adminNotesInput, setAdminNotesInput] = useState('');
   const [statusInput, setStatusInput] = useState<string>('PENDING_REVIEW');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -315,7 +301,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
             </h1>
           </div>
           <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748B' }}>
-            Live customer submissions from the <strong>Post Your Property</strong> portal with verified specifications and 100% original lossless uncompressed photos.
+            Live customer submissions from the <strong>Post Your Property</strong> portal with verified seller info and 100% original lossless uncompressed photos.
           </p>
         </div>
 
@@ -494,13 +480,16 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                 }}
               >
                 <option value="ALL">All Categories</option>
-                <option value="Flat / Apartment">Flat / Apartment</option>
+                <option value="Apartment / Flat">Apartment / Flat</option>
                 <option value="Independent House / Villa">Independent House / Villa</option>
+                <option value="Gated Community Villa">Gated Community Villa</option>
                 <option value="Residential Plot / Land">Residential Plot / Land</option>
-                <option value="Commercial Office / Retail">Commercial Office / Retail</option>
-                <option value="Commercial Land / Plot">Commercial Land / Plot</option>
+                <option value="Agricultural / Farm Land">Agricultural / Farm Land</option>
+                <option value="Commercial Office / Shop">Commercial Office / Shop</option>
+                <option value="Commercial Land / Building">Commercial Land / Building</option>
+                <option value="Penthouse / Duplex">Penthouse / Duplex</option>
                 <option value="Builder Floor">Builder Floor</option>
-                <option value="Farmhouse / Agricultural Land">Farmhouse / Land</option>
+                <option value="Industrial / Warehouse">Industrial / Warehouse</option>
               </select>
             </div>
 
@@ -700,7 +689,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                         </a>
 
                         <a
-                          href={`https://wa.me/91${(lead.mobile || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${lead.name || ''}, regarding your property posting for ${lead.title || lead.propertyType || 'property'} on TheNexopp:`)}`}
+                          href={`https://wa.me/91${(lead.mobile || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${lead.name || ''}, regarding your property posting for "${lead.title || lead.propertyType || 'property'}" on TheNexopp:`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           title="Chat on WhatsApp"
@@ -750,16 +739,16 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* Column 2: Property Overview & Specifications */}
+                  {/* Column 2: Property Overview & Details */}
                   <div style={{ borderRight: '1px solid #F1F5F9', paddingRight: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          {lead.propertyType || 'Residential Property'}
+                          {lead.propertyType || 'Property'}
                         </span>
                       </div>
                       <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>
-                        {lead.title || `${lead.bedrooms ? `${lead.bedrooms} BHK ` : ''}${lead.propertyType || 'Property'} in ${lead.locality || lead.city || 'Prime Location'}`}
+                        {lead.title || `${lead.propertyType || 'Property'} in ${lead.locality || lead.city || 'Prime Location'}`}
                       </h4>
                       <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <MapPin size={13} style={{ color: '#DC2626' }} />
@@ -779,34 +768,12 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                       )}
                     </div>
 
-                    {/* Spec Chips */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {lead.bedrooms && (
-                        <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', backgroundColor: '#F1F5F9', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Bed size={12} /> {lead.bedrooms} BHK
-                        </span>
-                      )}
-                      {lead.bathrooms && (
-                        <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', backgroundColor: '#F1F5F9', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Bath size={12} /> {lead.bathrooms} Baths
-                        </span>
-                      )}
-                      {lead.areaSqFt && (
-                        <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', backgroundColor: '#F1F5F9', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Maximize2 size={12} /> {lead.areaSqFt} Sq.Ft
-                        </span>
-                      )}
-                      {lead.furnishing && (
-                        <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', backgroundColor: '#F1F5F9', color: '#334155' }}>
-                          {lead.furnishing}
-                        </span>
-                      )}
-                      {lead.facing && (
-                        <span style={{ fontSize: '0.74rem', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', backgroundColor: '#F1F5F9', color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Compass size={12} /> {lead.facing} Facing
-                        </span>
-                      )}
-                    </div>
+                    {/* Description preview if present */}
+                    {lead.description && (
+                      <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                        {lead.description}
+                      </p>
+                    )}
                   </div>
 
                   {/* Column 3: Lossless Photos Preview & Quick Actions */}
@@ -819,7 +786,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                         </span>
                         {photosCount >= 6 && (
                           <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>
-                            Mandatory 6+ Done
+                            6+ Uploaded
                           </span>
                         )}
                       </div>
@@ -872,7 +839,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                         icon={<Eye size={14} />}
                         onClick={() => {
                           setSelectedLead(lead);
-                          setActiveModalTab('specs');
+                          setActiveModalTab('details');
                         }}
                         style={{ width: '100%', justifyContent: 'center' }}
                       >
@@ -928,7 +895,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
           title={
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>
-                {selectedLead.title || `${selectedLead.bedrooms ? `${selectedLead.bedrooms} BHK ` : ''}${selectedLead.propertyType || 'Property'}`}
+                {selectedLead.title || selectedLead.propertyType || 'Property Posting'}
               </span>
               {getStatusBadge(selectedLead.status)}
             </div>
@@ -985,7 +952,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
             {/* Modal Internal Navigation Tabs */}
             <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
               {[
-                { id: 'specs', label: 'Property Specifications & Amenities', icon: <Building2 size={15} /> },
+                { id: 'details', label: 'Property Overview & Details', icon: <Building2 size={15} /> },
                 { id: 'photos', label: `Original Photos (${selectedLead.photos?.length || 0})`, icon: <ImageIcon size={15} /> },
                 { id: 'seller', label: 'Seller & Contact Info', icon: <Phone size={15} /> },
                 { id: 'adminNotes', label: 'Admin Follow-up Notes', icon: <FileText size={15} /> },
@@ -1014,8 +981,8 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
               ))}
             </div>
 
-            {/* TAB 1: SPECS & AMENITIES */}
-            {activeModalTab === 'specs' && (
+            {/* TAB 1: DETAILS & DESCRIPTION */}
+            {activeModalTab === 'details' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {/* Core Details Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
@@ -1040,100 +1007,25 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                       {selectedLead.locality ? `${selectedLead.locality}, ` : ''}{selectedLead.city || 'AP/Telangana'}
                     </div>
                   </div>
-                </div>
-
-                {/* Detailed Specifications Grid */}
-                <div>
-                  <h4 style={{ margin: '0 0 12px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-                    Detailed Property Specifications
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Bedrooms (BHK)</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.bedrooms ? `${selectedLead.bedrooms} BHK` : 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Bathrooms</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.bathrooms || 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Balconies</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.balconies || 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Super Built-up Area</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.areaSqFt ? `${selectedLead.areaSqFt} Sq.Ft` : 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Carpet Area</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.carpetArea ? `${selectedLead.carpetArea} Sq.Ft` : 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Facing Direction</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.facing || 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Furnishing Status</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.furnishing || 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Property Age</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.propertyAge || 'N/A'}</div>
-                    </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Floor Number</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>
-                        {selectedLead.floorNumber ? `Floor ${selectedLead.floorNumber}` : 'N/A'} {selectedLead.totalFloors ? `(of ${selectedLead.totalFloors})` : ''}
+                  {selectedLead.address && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Address / Landmark</span>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#0F172A', marginTop: '2px' }}>
+                        {selectedLead.address} {selectedLead.pincode ? `- ${selectedLead.pincode}` : ''}
                       </div>
                     </div>
-                    <div style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>Parking Slots</span>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', marginTop: '2px' }}>{selectedLead.parkingSlots || 'N/A'}</div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Amenities List */}
-                {selectedLead.amenities && selectedLead.amenities.length > 0 && (
-                  <div>
-                    <h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-                      Key Amenities Selected by Seller
-                    </h4>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {selectedLead.amenities.map(am => (
-                        <span
-                          key={am}
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: '6px',
-                            backgroundColor: '#ECFDF5',
-                            border: '1px solid #A7F3D0',
-                            color: '#065F46',
-                            fontSize: '0.8rem',
-                            fontWeight: 700,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          <Check size={12} /> {am}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Description */}
-                {selectedLead.description && (
-                  <div>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
-                      Seller Description / Highlights
-                    </h4>
-                    <div style={{ padding: '14px 16px', borderRadius: '8px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', fontSize: '0.88rem', color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                      {selectedLead.description}
-                    </div>
+                <div>
+                  <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                    Seller Description / Notes
+                  </h4>
+                  <div style={{ padding: '14px 16px', borderRadius: '8px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', fontSize: '0.88rem', color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    {selectedLead.description || 'No additional description provided by the seller.'}
                   </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -1360,7 +1252,7 @@ export const SellingLeadsPanel: React.FC<SellingLeadsPanelProps> = ({
                   rows={5}
                   value={adminNotesInput}
                   onChange={e => setAdminNotesInput(e.target.value)}
-                  placeholder="e.g., Called seller on 5th Sep. Property is ready for possession with clear title. Scheduled site visit on Saturday 11 AM..."
+                  placeholder="e.g., Called seller on 5th Sep. Clear title, verified ownership. Scheduled site visit on Saturday..."
                   style={{
                     width: '100%',
                     padding: '12px',

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { addSellPropertyRequest } from '../../db/marketplaceDb';
 import type { SellPropertyPhoto } from '../../db/marketplaceDb';
 import {
@@ -6,29 +6,18 @@ import {
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
-  FaHome,
+  FaBuilding,
+  FaRupeeSign,
   FaCheckCircle,
   FaPaperPlane,
   FaUpload,
   FaTrash,
   FaImage,
   FaStar,
-  FaRupeeSign,
-  FaBuilding,
-  FaCompass,
-  FaBed,
-  FaBath,
-  FaCouch,
-  FaCalendarAlt,
-  FaLayerGroup,
-  FaCar,
-  FaCheck,
   FaInfoCircle,
   FaShieldAlt,
-  FaBolt,
-  FaLock,
   FaArrowLeft,
-  FaRegLightbulb
+  FaAlignLeft
 } from 'react-icons/fa';
 
 interface SellPropertyPageProps {
@@ -46,50 +35,6 @@ const ACTIVE_CITIES = [
   'Kakinada',
   'Nellore',
   'Kurnool',
-];
-
-// Dynamic Amenities by Category
-const RESIDENTIAL_AMENITIES = [
-  'Covered Car Parking',
-  '24/7 Security & CCTV',
-  '100% Power Backup',
-  'High-Speed Elevators',
-  'Clubhouse & Gym',
-  'Swimming Pool',
-  'Children Play Area',
-  'Gated Community',
-  '100% Vastu Compliant',
-  'Rainwater Harvesting',
-  'Landscaped Gardens',
-  'Intercom Facility',
-  'EV Charging Station',
-  'Piped Gas Connection',
-];
-
-const LAND_AMENITIES = [
-  'Clear Title & Immediate Registration',
-  'Boundary Wall / Fencing',
-  'Borewell / Water Supply',
-  'Electricity Connection',
-  'Blacktop CC / Tar Road Access',
-  'Gated Layout / Security',
-  'Street Lighting',
-  '100% Vastu Compliant',
-  'DTCP / HMDA / RERA Approved',
-  'Corner Plot / Multi-Side Open',
-];
-
-const COMMERCIAL_AMENITIES = [
-  '100% DG Power Backup',
-  '24/7 Security & CCTV',
-  'Reserved Car Parking',
-  'High-Speed Passenger & Service Lifts',
-  'Centralized Air Conditioning',
-  'Fire Fighting & Sprinkler System',
-  'High-Speed Fiber Internet Ready',
-  'Cafeteria / Food Court',
-  'Visitor Parking',
-  'Conference Rooms Access',
 ];
 
 export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) => {
@@ -117,79 +62,9 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
     address: '',
     pincode: '',
 
-    // Specifications (Dynamic based on Category)
-    bedrooms: '3 BHK',
-    bathrooms: '3',
-    balconies: '2',
-    areaSqFt: '',
-    carpetArea: '',
-    plotAreaUnit: 'Sq.Yards',
-    facing: 'East',
-    furnishing: 'Semi-Furnished',
-    propertyAge: 'Ready to Move',
-    floorNumber: '',
-    totalFloors: '',
-    parkingSlots: '1 Covered Parking',
-    washrooms: 'Private Attached Washroom',
-    roadWidth: '30 Ft Road',
-    boundaryWall: 'Constructed Boundary Wall',
-    openSides: '1 Side Open',
-    layoutApproval: 'HMDA / DTCP Approved',
+    // Description
     description: '',
   });
-
-  // Dynamic Category Identifiers
-  const isLand = ['Residential Plot / Land', 'Agricultural / Farm Land', 'Commercial Land / Building'].includes(formData.propertyType);
-  const isCommercial = ['Commercial Office / Shop', 'Industrial / Warehouse'].includes(formData.propertyType);
-  const isVillaOrHouse = ['Independent House / Villa', 'Gated Community Villa'].includes(formData.propertyType);
-  const isApartment = ['Apartment / Flat', 'Penthouse / Duplex', 'Builder Floor'].includes(formData.propertyType);
-
-  // Dynamic amenities based on property category
-  const activeAmenitiesList = isLand 
-    ? LAND_AMENITIES 
-    : isCommercial 
-    ? COMMERCIAL_AMENITIES 
-    : RESIDENTIAL_AMENITIES;
-
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([
-    'Covered Car Parking',
-    '24/7 Security & CCTV',
-    '100% Power Backup',
-  ]);
-
-  // Adjust defaults when category changes
-  useEffect(() => {
-    if (isLand) {
-      setSelectedAmenities(['Clear Title & Immediate Registration', 'Boundary Wall / Fencing', 'Borewell / Water Supply']);
-      setFormData(prev => ({
-        ...prev,
-        plotAreaUnit: prev.plotAreaUnit || 'Sq.Yards',
-        bedrooms: '',
-        bathrooms: '',
-        balconies: '',
-        furnishing: '',
-        floorNumber: '',
-        totalFloors: '',
-      }));
-    } else if (isCommercial) {
-      setSelectedAmenities(['100% DG Power Backup', '24/7 Security & CCTV', 'Reserved Car Parking']);
-      setFormData(prev => ({
-        ...prev,
-        bedrooms: '',
-        balconies: '',
-        furnishing: prev.furnishing || 'Bare Shell (Unfurnished)',
-      }));
-    } else {
-      setSelectedAmenities(['Covered Car Parking', '24/7 Security & CCTV', '100% Power Backup']);
-      setFormData(prev => ({
-        ...prev,
-        bedrooms: prev.bedrooms || '3 BHK',
-        bathrooms: prev.bathrooms || '3',
-        balconies: prev.balconies || '2',
-        furnishing: prev.furnishing || 'Semi-Furnished',
-      }));
-    }
-  }, [formData.propertyType]);
 
   // ── Photos State (Mandatory Min 6) ────────────────────────────────────────
   const [uploadedPhotos, setUploadedPhotos] = useState<SellPropertyPhoto[]>([]);
@@ -227,14 +102,6 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
         return copy;
       });
     }
-  };
-
-  const toggleAmenity = (amenity: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(amenity)
-        ? prev.filter((a) => a !== amenity)
-        : [...prev, amenity]
-    );
   };
 
   // ── Lossless Photo Upload Handler ─────────────────────────────────────────
@@ -349,13 +216,6 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
     if (!activeCity.trim()) newErrors.city = 'City / Location is required';
     if (!formData.locality.trim()) newErrors.locality = 'Locality / Area is required';
 
-    // Specifications
-    if (!formData.areaSqFt.trim() || parseFloat(formData.areaSqFt) <= 0) {
-      newErrors.areaSqFt = isLand 
-        ? `Plot / Land Area in ${formData.plotAreaUnit || 'Sq.Yards'} is required` 
-        : 'Total Area (Sq.Ft) is required';
-    }
-
     // Mandatory Photos (MINIMUM 6 PHOTOS)
     if (uploadedPhotos.length < 6) {
       newErrors.photos = `Minimum 6 property photos are required (Currently uploaded: ${uploadedPhotos.length}/6). Please add at least ${6 - uploadedPhotos.length} more photo(s).`;
@@ -382,11 +242,6 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
     const priceNum = parseFloat(formData.expectedPrice) || 0;
     const priceDisplay = formatIndianPrice(formData.expectedPrice);
 
-    // Format Area with Unit for land
-    const formattedArea = isLand 
-      ? `${formData.areaSqFt} ${formData.plotAreaUnit || 'Sq.Yards'}`
-      : formData.areaSqFt;
-
     const requestPayload = {
       id: leadId,
       name: formData.sellerName.trim(),
@@ -409,19 +264,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
       address: formData.address.trim(),
       pincode: formData.pincode.trim(),
 
-      bedrooms: isLand ? 'N/A' : (formData.bedrooms || 'N/A'),
-      bathrooms: isLand ? 'N/A' : (formData.bathrooms || 'N/A'),
-      balconies: (isLand || isCommercial) ? 'N/A' : (formData.balconies || 'N/A'),
-      areaSqFt: formattedArea,
-      carpetArea: isLand ? '' : formData.carpetArea,
-      facing: formData.facing,
-      furnishing: isLand ? 'N/A' : formData.furnishing,
-      propertyAge: isLand ? 'Clear Land' : formData.propertyAge,
-      floorNumber: isLand ? 'Ground' : formData.floorNumber,
-      totalFloors: isLand ? 'Ground' : formData.totalFloors,
-      parkingSlots: isLand ? 'Open Land' : formData.parkingSlots,
-      amenities: selectedAmenities,
-      description: formData.description.trim() + (isLand ? ` [Road: ${formData.roadWidth}, Boundary: ${formData.boundaryWall}, Open Sides: ${formData.openSides}, Approval: ${formData.layoutApproval}]` : ''),
+      description: formData.description.trim(),
 
       photos: uploadedPhotos.map((p, idx) => ({
         url: p.url,
@@ -523,23 +366,6 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   locality: '',
                   address: '',
                   pincode: '',
-                  bedrooms: '3 BHK',
-                  bathrooms: '3',
-                  balconies: '2',
-                  areaSqFt: '',
-                  carpetArea: '',
-                  plotAreaUnit: 'Sq.Yards',
-                  facing: 'East',
-                  furnishing: 'Semi-Furnished',
-                  propertyAge: 'Ready to Move',
-                  floorNumber: '',
-                  totalFloors: '',
-                  parkingSlots: '1 Covered Parking',
-                  washrooms: 'Private Attached Washroom',
-                  roadWidth: '30 Ft Road',
-                  boundaryWall: 'Constructed Boundary Wall',
-                  openSides: '1 Side Open',
-                  layoutApproval: 'HMDA / DTCP Approved',
                   description: '',
                 });
               }}
@@ -618,7 +444,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
             Post Your Property for Sale, Rent or Lease
           </h1>
           <p style={{ fontSize: '1rem', color: '#64748B', margin: 0, maxWidth: '780px', lineHeight: 1.5 }}>
-            Reach thousands of active buyers and investors across Andhra Pradesh and Telangana. Upload specifications and 100% original uncompressed photos to connect with verified buyers.
+            Reach thousands of active buyers and investors across Andhra Pradesh and Telangana. Upload property details and 100% original uncompressed photos to connect with verified buyers.
           </p>
         </div>
 
@@ -830,13 +656,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   </label>
                   <input
                     type="text"
-                    placeholder={
-                      isLand 
-                        ? 'e.g. 500 Sq.Yds HMDA Approved East Facing Clear Title Residential Plot in Mokila'
-                        : isCommercial
-                        ? 'e.g. 3500 Sq.Ft Fully Furnished Commercial Office Space with 40 Workstations in Hitech City'
-                        : 'e.g. Luxury 3 BHK Gated Community Apartment with East Facing in Madhapur'
-                    }
+                    placeholder="e.g. 500 Sq.Yds Commercial Land near Highway / Luxury 3 BHK Flat in Madhapur"
                     value={formData.title}
                     onChange={(e) => handleChange('title', e.target.value)}
                     style={{
@@ -1098,7 +918,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
               </div>
             </div>
 
-            {/* ── SECTION 4: DYNAMIC PROPERTY SPECIFICATIONS ───────────────── */}
+            {/* ── SECTION 4: PROPERTY DESCRIPTION & DETAILS ───────────────── */}
             <div style={{ marginBottom: '36px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', borderBottom: '2px solid #F1F5F9', paddingBottom: '12px' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#EFF6FF', color: '#1E40AF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '14px' }}>
@@ -1106,769 +926,26 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    {isLand 
-                      ? 'Land & Plot Dimensions & Approvals' 
-                      : isCommercial 
-                      ? 'Commercial Space Specifications' 
-                      : 'Property Specifications & Features'}
+                    Property Description &amp; Details
                   </h3>
                   <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '2px 0 0 0' }}>
-                    {isLand 
-                      ? 'Specify plot area, facing direction, road access and layout approvals' 
-                      : isCommercial 
-                      ? 'Detailed built-up size, furnishing and floor configurations' 
-                      : 'Detailed size, room configuration and facing details'}
+                    Share property dimensions, features, road access, and key highlights
                   </p>
                 </div>
               </div>
 
-              {/* ── CASE A: LAND / PLOT / AGRICULTURAL FIELDS ─────────────── */}
-              {isLand && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-                  
-                  {/* Plot Area with Unit */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Plot / Land Area <span style={{ color: '#EF4444' }}>*</span>
-                    </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input
-                        type="number"
-                        placeholder="e.g. 300"
-                        value={formData.areaSqFt}
-                        onChange={(e) => handleChange('areaSqFt', e.target.value)}
-                        style={{
-                          flex: 1,
-                          padding: '12px 14px',
-                          borderRadius: '10px',
-                          border: errors.areaSqFt ? '2px solid #EF4444' : '1px solid #CBD5E1',
-                          fontSize: '14px',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                      <select
-                        value={formData.plotAreaUnit}
-                        onChange={(e) => handleChange('plotAreaUnit', e.target.value)}
-                        style={{
-                          width: '120px',
-                          padding: '12px 8px',
-                          borderRadius: '10px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          backgroundColor: '#F8FAFC',
-                          outline: 'none',
-                        }}
-                      >
-                        <option value="Sq.Yards">Sq.Yards</option>
-                        <option value="Acres">Acres</option>
-                        <option value="Cents">Cents</option>
-                        <option value="Gunthas">Gunthas</option>
-                        <option value="Sq.Ft">Sq.Ft</option>
-                      </select>
-                    </div>
-                    {errors.areaSqFt && <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.areaSqFt}</span>}
-                  </div>
-
-                  {/* Facing Direction */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaCompass style={{ color: '#1E40AF' }} /> Facing Direction
-                    </label>
-                    <select
-                      value={formData.facing}
-                      onChange={(e) => handleChange('facing', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="East">East</option>
-                      <option value="North">North</option>
-                      <option value="West">West</option>
-                      <option value="South">South</option>
-                      <option value="North-East">North-East</option>
-                      <option value="North-West">North-West</option>
-                      <option value="South-East">South-East</option>
-                      <option value="South-West">South-West</option>
-                    </select>
-                  </div>
-
-                  {/* Road Width in Front */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Road Width in Front
-                    </label>
-                    <select
-                      value={formData.roadWidth}
-                      onChange={(e) => handleChange('roadWidth', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="30 Ft Road">30 Feet Road</option>
-                      <option value="40 Ft Road">40 Feet Road</option>
-                      <option value="60 Ft Road">60 Feet Road</option>
-                      <option value="100+ Ft Main Road">100+ Feet Main Road</option>
-                    </select>
-                  </div>
-
-                  {/* Open Sides */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Open Sides
-                    </label>
-                    <select
-                      value={formData.openSides}
-                      onChange={(e) => handleChange('openSides', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="1 Side Open">1 Side Open</option>
-                      <option value="2 Sides Open (Corner)">2 Sides Open (Corner Plot)</option>
-                      <option value="3 Sides Open">3 Sides Open</option>
-                      <option value="4 Sides Open">4 Sides Open</option>
-                    </select>
-                  </div>
-
-                  {/* Boundary Wall */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Boundary Wall / Fencing
-                    </label>
-                    <select
-                      value={formData.boundaryWall}
-                      onChange={(e) => handleChange('boundaryWall', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="Constructed Boundary Wall">Constructed Boundary Wall</option>
-                      <option value="Fenced / Barbed Wire">Fenced / Barbed Wire</option>
-                      <option value="No Boundary Wall">No Boundary Wall</option>
-                    </select>
-                  </div>
-
-                  {/* Layout Approval */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Approvals &amp; Authority
-                    </label>
-                    <select
-                      value={formData.layoutApproval}
-                      onChange={(e) => handleChange('layoutApproval', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="HMDA / DTCP Approved">HMDA / DTCP Approved</option>
-                      <option value="RERA Approved Layout">RERA Approved Layout</option>
-                      <option value="Clear Title / Freehold Patta">Clear Title / Freehold Patta</option>
-                      <option value="Gram Panchayat Approved">Gram Panchayat Approved</option>
-                      <option value="Agricultural Zone">Agricultural Zone</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* ── CASE B: COMMERCIAL OFFICE / SHOP / INDUSTRIAL ────────── */}
-              {isCommercial && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-                  
-                  {/* Super Builtup Area */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Super Built-up Area (Sq.Ft) <span style={{ color: '#EF4444' }}>*</span>
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 2500"
-                      value={formData.areaSqFt}
-                      onChange={(e) => handleChange('areaSqFt', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: errors.areaSqFt ? '2px solid #EF4444' : '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                    {errors.areaSqFt && <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.areaSqFt}</span>}
-                  </div>
-
-                  {/* Carpet Area */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Carpet Area (Sq.Ft) <span style={{ color: '#94A3B8', fontWeight: 400 }}>(Optional)</span>
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 1950"
-                      value={formData.carpetArea}
-                      onChange={(e) => handleChange('carpetArea', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  {/* Furnishing Status */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaCouch style={{ color: '#1E40AF' }} /> Furnishing Status
-                    </label>
-                    <select
-                      value={formData.furnishing}
-                      onChange={(e) => handleChange('furnishing', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="Bare Shell (Unfurnished)">Bare Shell (Unfurnished)</option>
-                      <option value="Warm Shell (Basic Setup)">Warm Shell (Basic Setup)</option>
-                      <option value="Fully Furnished / Plug & Play">Fully Furnished / Plug &amp; Play</option>
-                    </select>
-                  </div>
-
-                  {/* Washrooms */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaBath style={{ color: '#1E40AF' }} /> Washrooms
-                    </label>
-                    <select
-                      value={formData.washrooms}
-                      onChange={(e) => handleChange('washrooms', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="Private Attached Washroom">Private Attached Washroom</option>
-                      <option value="Shared Floor Washrooms">Shared Floor Washrooms</option>
-                      <option value="Both Private & Shared">Both Private &amp; Shared</option>
-                    </select>
-                  </div>
-
-                  {/* Facing */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaCompass style={{ color: '#1E40AF' }} /> Facing Direction
-                    </label>
-                    <select
-                      value={formData.facing}
-                      onChange={(e) => handleChange('facing', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="East">East</option>
-                      <option value="North">North</option>
-                      <option value="West">West</option>
-                      <option value="South">South</option>
-                      <option value="North-East">North-East</option>
-                      <option value="North-West">North-West</option>
-                      <option value="South-East">South-East</option>
-                      <option value="South-West">South-West</option>
-                    </select>
-                  </div>
-
-                  {/* Floor Number */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaLayerGroup style={{ color: '#1E40AF' }} /> Floor Number
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 5"
-                      value={formData.floorNumber}
-                      onChange={(e) => handleChange('floorNumber', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  {/* Total Floors */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Total Floors in Building
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 10"
-                      value={formData.totalFloors}
-                      onChange={(e) => handleChange('totalFloors', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  {/* Parking */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Parking Slots
-                    </label>
-                    <select
-                      value={formData.parkingSlots}
-                      onChange={(e) => handleChange('parkingSlots', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="1 Reserved Parking">1 Reserved Parking</option>
-                      <option value="2 Reserved Parkings">2 Reserved Parkings</option>
-                      <option value="3+ Parkings">3+ Parkings</option>
-                      <option value="Dedicated Commercial Lot">Dedicated Commercial Lot</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* ── CASE C: RESIDENTIAL (FLATS, VILLAS, HOUSES, PENTHOUSE) ── */}
-              {!isLand && !isCommercial && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-                  
-                  {/* Bedrooms */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaBed style={{ color: '#1E40AF' }} /> Bedrooms / BHK <span style={{ color: '#EF4444' }}>*</span>
-                    </label>
-                    <select
-                      value={formData.bedrooms}
-                      onChange={(e) => handleChange('bedrooms', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="1 BHK">1 BHK</option>
-                      <option value="2 BHK">2 BHK</option>
-                      <option value="2.5 BHK">2.5 BHK</option>
-                      <option value="3 BHK">3 BHK</option>
-                      <option value="3.5 BHK">3.5 BHK</option>
-                      <option value="4 BHK">4 BHK</option>
-                      <option value="5+ BHK">5+ BHK</option>
-                    </select>
-                  </div>
-
-                  {/* Bathrooms */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaBath style={{ color: '#1E40AF' }} /> Bathrooms
-                    </label>
-                    <select
-                      value={formData.bathrooms}
-                      onChange={(e) => handleChange('bathrooms', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="1">1 Bathroom</option>
-                      <option value="2">2 Bathrooms</option>
-                      <option value="3">3 Bathrooms</option>
-                      <option value="4">4 Bathrooms</option>
-                      <option value="5+">5+ Bathrooms</option>
-                    </select>
-                  </div>
-
-                  {/* Balconies */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Balconies
-                    </label>
-                    <select
-                      value={formData.balconies}
-                      onChange={(e) => handleChange('balconies', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="0">0 Balconies</option>
-                      <option value="1">1 Balcony</option>
-                      <option value="2">2 Balconies</option>
-                      <option value="3">3 Balconies</option>
-                      <option value="4+">4+ Balconies</option>
-                    </select>
-                  </div>
-
-                  {/* Super Builtup Area */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Super Built-up Area (Sq.Ft) <span style={{ color: '#EF4444' }}>*</span>
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 1850"
-                      value={formData.areaSqFt}
-                      onChange={(e) => handleChange('areaSqFt', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: errors.areaSqFt ? '2px solid #EF4444' : '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                    {errors.areaSqFt && <span style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.areaSqFt}</span>}
-                  </div>
-
-                  {/* Carpet Area */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Carpet Area (Sq.Ft) <span style={{ color: '#94A3B8', fontWeight: 400 }}>(Optional)</span>
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 1450"
-                      value={formData.carpetArea}
-                      onChange={(e) => handleChange('carpetArea', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  {/* Facing */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaCompass style={{ color: '#1E40AF' }} /> Facing Direction
-                    </label>
-                    <select
-                      value={formData.facing}
-                      onChange={(e) => handleChange('facing', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="East">East</option>
-                      <option value="North">North</option>
-                      <option value="West">West</option>
-                      <option value="South">South</option>
-                      <option value="North-East">North-East</option>
-                      <option value="North-West">North-West</option>
-                      <option value="South-East">South-East</option>
-                      <option value="South-West">South-West</option>
-                    </select>
-                  </div>
-
-                  {/* Furnishing */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaCouch style={{ color: '#1E40AF' }} /> Furnishing Status
-                    </label>
-                    <select
-                      value={formData.furnishing}
-                      onChange={(e) => handleChange('furnishing', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="Unfurnished">Unfurnished</option>
-                      <option value="Semi-Furnished">Semi-Furnished</option>
-                      <option value="Fully-Furnished">Fully-Furnished</option>
-                    </select>
-                  </div>
-
-                  {/* Construction Stage / Age */}
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      <FaCalendarAlt style={{ color: '#1E40AF' }} /> Property Age / Stage
-                    </label>
-                    <select
-                      value={formData.propertyAge}
-                      onChange={(e) => handleChange('propertyAge', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="Ready to Move">Ready to Move (New)</option>
-                      <option value="Under Construction">Under Construction</option>
-                      <option value="0 - 2 Years Old">0 - 2 Years Old</option>
-                      <option value="2 - 5 Years Old">2 - 5 Years Old</option>
-                      <option value="5 - 10 Years Old">5 - 10 Years Old</option>
-                      <option value="10+ Years Old">10+ Years Old</option>
-                    </select>
-                  </div>
-
-                  {/* Floor Number (For Apartments/Flats/Floors) */}
-                  {isApartment && (
-                    <div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                        <FaLayerGroup style={{ color: '#1E40AF' }} /> Floor Number
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 4"
-                        value={formData.floorNumber}
-                        onChange={(e) => handleChange('floorNumber', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '12px 14px',
-                          borderRadius: '10px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '14px',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Total Floors */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      {isVillaOrHouse ? 'Total Floors in House (G+1, etc.)' : 'Total Floors in Building'}
-                    </label>
-                    <input
-                      type="number"
-                      placeholder={isVillaOrHouse ? 'e.g. 2' : 'e.g. 12'}
-                      value={formData.totalFloors}
-                      onChange={(e) => handleChange('totalFloors', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-
-                  {/* Parking Slots */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                      Car Parking Slots
-                    </label>
-                    <select
-                      value={formData.parkingSlots}
-                      onChange={(e) => handleChange('parkingSlots', e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: '1px solid #CBD5E1',
-                        fontSize: '14px',
-                        backgroundColor: '#FFFFFF',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    >
-                      <option value="0">0 Parking</option>
-                      <option value="1 Covered Parking">1 Covered Parking</option>
-                      <option value="2 Covered Parkings">2 Covered Parkings</option>
-                      <option value="3+ Parkings">3+ Parkings</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* ── DYNAMIC KEY AMENITIES ───────────────────────────────────── */}
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '10px' }}>
-                  Select Available Features &amp; Amenities
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '10px' }}>
-                  {activeAmenitiesList.map((amenity) => {
-                    const isChecked = selectedAmenities.includes(amenity);
-                    return (
-                      <button
-                        key={amenity}
-                        type="button"
-                        onClick={() => toggleAmenity(amenity)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '10px 12px',
-                          borderRadius: '10px',
-                          border: isChecked ? '1.5px solid #1E40AF' : '1px solid #E2E8F0',
-                          backgroundColor: isChecked ? '#EFF6FF' : '#FFFFFF',
-                          color: isChecked ? '#1E40AF' : '#475569',
-                          fontSize: '12px',
-                          fontWeight: isChecked ? 700 : 500,
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'all 0.15s ease',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: '18px',
-                            height: '18px',
-                            borderRadius: '4px',
-                            border: isChecked ? '1px solid #1E40AF' : '1px solid #CBD5E1',
-                            backgroundColor: isChecked ? '#1E40AF' : '#FFFFFF',
-                            color: '#FFFFFF',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '10px',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {isChecked && <FaCheck />}
-                        </div>
-                        <span style={{ lineHeight: 1.3 }}>{amenity}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Description */}
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
-                  Property Description &amp; Highlights <span style={{ color: '#94A3B8', fontWeight: 400 }}>(Optional)</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, color: '#0F172A', marginBottom: '8px' }}>
+                  <FaAlignLeft style={{ color: '#1E40AF' }} /> Property Details / Highlights <span style={{ color: '#94A3B8', fontWeight: 400 }}>(Optional)</span>
                 </label>
                 <textarea
                   rows={4}
-                  placeholder={
-                    isLand
-                      ? 'Describe plot advantages, water source, proximity to highway, neighboring developments...'
-                      : isCommercial
-                      ? 'Describe building facilities, power backup capacity, IT connectivity, nearby transit...'
-                      : 'Describe top USPs, ventilation, quality of construction, proximity to schools, hospitals...'
-                  }
+                  placeholder="Describe your property details such as area/size, facing direction, floor, boundary wall, road width, surrounding landmarks, or key highlights for buyers..."
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '12px 14px',
+                    padding: '14px',
                     borderRadius: '10px',
                     border: '1px solid #CBD5E1',
                     fontSize: '14px',
@@ -1965,7 +1042,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   Click to select photos from your device
                 </h4>
                 <p style={{ margin: 0, fontSize: '13px', color: '#64748B' }}>
-                  Upload at least <strong>6 photos</strong> of your property ({isLand ? 'Boundary, Entrance, Access Road, Surrounding Layout' : 'Exterior, Living Room, Bedrooms, Kitchen, Bathrooms, Balcony'}).
+                  Upload at least <strong>6 photos</strong> of your property (Entrance, Surroundings, Views, Details).
                 </p>
                 <div style={{ marginTop: '10px', fontSize: '12px', color: '#059669', fontWeight: 700 }}>
                   ✓ Exact original pixel dimensions &amp; uncompressed clarity preserved
@@ -2142,9 +1219,9 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#EFF6FF', color: '#1E40AF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 800, margin: '0 auto 12px auto' }}>
                 1
               </div>
-              <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0' }}>Fill Specs &amp; 6+ Photos</h4>
+              <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0' }}>Fill Details &amp; 6+ Photos</h4>
               <p style={{ fontSize: '13px', color: '#64748B', margin: 0, lineHeight: 1.5 }}>
-                Provide exact dimensions, expected pricing and upload original uncompressed photos.
+                Enter property pricing, address, description, and upload minimum 6 uncompressed photos.
               </p>
             </div>
 
