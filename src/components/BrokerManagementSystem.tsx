@@ -45,22 +45,6 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     return () => window.removeEventListener('nexopp_data_changed', handleDataChange);
   }, []);
 
-  React.useEffect(() => {
-    if (activeSubTab) {
-      if (activeSubTab === 'add') {
-        openNewBrokerModal();
-      } else if (activeSubTab === 'kyc' || activeSubTab === 'premium') {
-        setActiveTab('premium');
-      } else if (activeSubTab === 'analytics') {
-        setActiveTab('analytics');
-      } else if (['directory', 'leaderboard', 'premium', 'category_rank', 'location_rank', 'analytics'].includes(activeSubTab)) {
-        setActiveTab(activeSubTab as any);
-      } else {
-        setActiveTab('directory');
-      }
-    }
-  }, [activeSubTab]);
-
   // Directory Filters & State
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive' | 'Premium' | 'Verified'>('All');
@@ -166,6 +150,32 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     setModalTab('personal');
     setIsModalOpen(true);
   };
+
+  React.useEffect(() => {
+    if (activeSubTab) {
+      if (activeSubTab === 'add') {
+        openNewBrokerModal();
+      } else if (activeSubTab === 'kyc' || activeSubTab === 'premium') {
+        setActiveTab('premium');
+        setIsModalOpen(false);
+      } else if (activeSubTab === 'analytics') {
+        setActiveTab('analytics');
+        setIsModalOpen(false);
+      } else if (['directory', 'leaderboard', 'premium', 'category_rank', 'location_rank', 'analytics'].includes(activeSubTab)) {
+        setActiveTab(activeSubTab as any);
+        if (activeSubTab === 'directory') {
+          setStatusFilter('All');
+          setSearchTerm('');
+        }
+        setIsModalOpen(false);
+      } else {
+        setActiveTab('directory');
+        setStatusFilter('All');
+        setSearchTerm('');
+        setIsModalOpen(false);
+      }
+    }
+  }, [activeSubTab]);
 
   // Open modal to edit broker
   const openEditBrokerModal = (broker: Dealer) => {
