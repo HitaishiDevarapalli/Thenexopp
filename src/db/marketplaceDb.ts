@@ -745,9 +745,11 @@ export const syncWithBackend = async () => {
     if (franEnqRes.status === 'fulfilled' && Array.isArray(franEnqRes.value)) franchiseEnquiriesDb = franEnqRes.value;
     if (settingsRes.status === 'fulfilled' && settingsRes.value && typeof settingsRes.value === 'object') {
       siteSettingsDb = { ...siteSettingsDb, ...settingsRes.value };
+      saveToStorage('nexopp_site_settings', siteSettingsDb);
     }
     if (contactRes.status === 'fulfilled' && contactRes.value && typeof contactRes.value === 'object') {
       contactDetailsDb = { ...contactDetailsDb, ...contactRes.value };
+      saveToStorage('nexopp_contact_details', contactDetailsDb);
     }
 
     // Admin modules
@@ -940,7 +942,7 @@ export let insuranceDb: InsuranceProvider[] = [];
 export let servicesDb: ServiceProvider[] = [];
 export let enquiriesDb: CustomerEnquiry[] = [];
 export let franchiseEnquiriesDb: FranchiseEnquiry[] = [];
-export let siteSettingsDb: SiteSettings = defaultSettings;
+export let siteSettingsDb: SiteSettings = loadFromStorage('nexopp_site_settings', defaultSettings);
 
 export interface ContactDetails {
   companyName: string;
@@ -1582,14 +1584,27 @@ export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'F
   }).catch(err => console.error('API Sync Error:', err));
 };
 
-export const updateSiteSettings = (settings: Partial<SiteSettings>) => {
+export const updateSiteSettings = async (settings: Partial<SiteSettings>) => {
   siteSettingsDb = { ...siteSettingsDb, ...settings };
+  saveToStorage('nexopp_site_settings', siteSettingsDb);
   notifyDataChanged();
-  fetch(`${API_BASE_URL}/api/settings`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(settings)
-  }).catch(err => console.error('API Sync Error:', err));
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && typeof data === 'object') {
+        siteSettingsDb = { ...siteSettingsDb, ...data };
+        saveToStorage('nexopp_site_settings', siteSettingsDb);
+        notifyDataChanged();
+      }
+    }
+  } catch (err) {
+    console.error('API Sync Error for settings:', err);
+  }
 };
 
 export const clearAllStaticData = () => {

@@ -509,15 +509,24 @@ model ShowcaseVideo {
 }
 
 model SiteSettings {
-  id                String   @id @default("default")
-  heroTitle         String   @default("The Nexopp")
-  heroHighlightText String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
-  heroSubtitle      String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
-  primaryColor      String   @default("#007A55")
-  themeStyle        String   @default("professional-white-green")
+  id                    String   @id @default("default")
+  heroTitle             String   @default("The Nexopp")
+  heroHighlightText     String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
+  heroSubtitle          String   @default("India's Trusted Platform for Verified Listings to Buy and Sell")
+  heroBgUrl             String?
+  heroMediaType         String?  @default("image")
+  heroVideoUrl          String?
+  heroPopularTags       String[] @default(["Apartment", "Villa", "Franchise", "Commercial Property"])
+  heroBadge1Text        String?
+  heroBadge2Text        String?
+  primaryColor          String   @default("#007A55")
+  themeStyle            String   @default("professional-white-green")
   availableCities       String[] @default(["Guntur", "Vijayawada", "Hyderabad", "Visakhapatnam"])
+  defaultCity           String?
+  promotionalVideoUrl   String?
   showFranchiseSection  Boolean  @default(true)
   showDemandRegions     Boolean  @default(true)
+  showVideoShowcase     Boolean  @default(true)
   analytics             Json?
   mainPageStats         Json?
   updatedAt             DateTime @updatedAt

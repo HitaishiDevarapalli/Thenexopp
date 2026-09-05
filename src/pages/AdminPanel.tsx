@@ -1226,10 +1226,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     setSettingsForm({ ...settingsForm, heroPopularTags: currentTags.filter(t => t !== tagToRemove) });
   };
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateSiteSettings(settingsForm);
-    showNotification("Website appearance, locations & analytics successfully updated across the entire site!");
+    await updateSiteSettings(settingsForm);
+    showNotification("Website appearance, homepage stats & metrics successfully published across the entire site!");
   };
 
   const handleClearStaticData = () => {

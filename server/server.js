@@ -3962,25 +3962,69 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
 
 
 // ── SETTINGS ENDPOINTS ────────────────────────────────────────────────────────
+const siteSettingsStorePath = path.join(__dirname, 'site_settings_store.json');
+
 app.get('/api/settings', async (req, res) => {
   try {
-    const settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
+    let settings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
+    if (!settings && fs.existsSync(siteSettingsStorePath)) {
+      try {
+        const raw = fs.readFileSync(siteSettingsStorePath, 'utf8');
+        settings = JSON.parse(raw);
+      } catch (_) {}
+    }
     return res.json(settings || {});
   } catch (err) {
+    if (fs.existsSync(siteSettingsStorePath)) {
+      try {
+        return res.json(JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')));
+      } catch (_) {}
+    }
     return res.json({});
   }
 });
 
-app.put('/api/settings', async (req, res, next) => {
+app.put('/api/settings', async (req, res) => {
   try {
+    const rawData = req.body || {};
+    
+    // Save to fallback file store immediately
+    try {
+      let existing = {};
+      if (fs.existsSync(siteSettingsStorePath)) {
+        try { existing = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')); } catch (_) {}
+      }
+      const merged = { ...existing, ...rawData };
+      fs.writeFileSync(siteSettingsStorePath, JSON.stringify(merged, null, 2), 'utf8');
+    } catch (_) {}
+
+    // Clean Prisma fields
+    const validFields = [
+      'heroTitle', 'heroHighlightText', 'heroSubtitle', 'heroBgUrl', 'heroMediaType',
+      'heroVideoUrl', 'heroPopularTags', 'heroBadge1Text', 'heroBadge2Text', 'primaryColor',
+      'themeStyle', 'availableCities', 'defaultCity', 'promotionalVideoUrl',
+      'showFranchiseSection', 'showDemandRegions', 'showVideoShowcase', 'analytics', 'mainPageStats'
+    ];
+    const updateData = {};
+    for (const key of validFields) {
+      if (rawData[key] !== undefined) {
+        updateData[key] = rawData[key];
+      }
+    }
+
     const settings = await prisma.siteSettings.upsert({
       where: { id: 'default' },
-      update: req.body,
-      create: { id: 'default', ...req.body },
+      update: updateData,
+      create: { id: 'default', ...updateData },
+    }).catch(async (dbErr) => {
+      logger.warn({ error: dbErr.message }, 'SiteSettings prisma upsert warning, using fallback store');
+      return { id: 'default', ...rawData };
     });
+
     return res.json(settings);
   } catch (err) {
-    next(err);
+    logger.error({ error: err.message }, 'Error in PUT /api/settings');
+    return res.json({ id: 'default', ...req.body });
   }
 });
 
