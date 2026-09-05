@@ -898,7 +898,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           {selectedIds.length > 0 && (
             <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #F59E0B', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, color: '#92400E', fontSize: '0.88rem' }}>
-                ✓ {selectedIds.length} property items selected
+                {selectedIds.length} property items selected
               </span>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => handleBulkStatusChange('Published')} style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>Publish Selected</button>
@@ -979,12 +979,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 </span>
                                 {prop.premium ? (
                                   <span style={{ padding: '2px 6px', backgroundColor: '#FEF3C7', color: '#92400E', fontSize: '0.7rem', fontWeight: 800, borderRadius: '4px', border: '1px solid #FCD34D' }}>
-                                    💎 PREMIUM
+                                    PREMIUM
                                   </span>
                                 ) : null}
                                 {prop.featured ? (
                                   <span style={{ padding: '2px 6px', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontSize: '0.7rem', fontWeight: 800, borderRadius: '4px', border: '1px solid #BFDBFE' }}>
-                                    ⭐ FEATURED
+                                    FEATURED
                                   </span>
                                 ) : null}
                               </div>
@@ -1033,13 +1033,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               <option value="">-- Independent / Unassigned --</option>
                               {dealersDb.map(d => (
                                 <option key={d.id} value={d.id}>
-                                  {d.companyName || d.fullName} (⭐ {d.rating || 4.9})
+                                  {d.companyName || d.fullName} ({d.rating || 4.9})
                                 </option>
                               ))}
                             </select>
                             {assignedBroker && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#059669', fontWeight: 600 }}>
-                                <span>⭐ {assignedBroker.rating} • 📍 {assignedBroker.city || 'Hyderabad'}</span>
+                                <span>{assignedBroker.rating} • {assignedBroker.city || 'Hyderabad'}</span>
                               </div>
                             )}
                           </div>
@@ -1133,9 +1133,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               onClick={() => {
                                 const nextVal = !prop.premium;
                                 updateProperty(prop.id, { premium: nextVal });
-                                showNotification?.(`Property '${prop.title}' ${nextVal ? 'marked as 💎 Premium' : 'changed to Standard listing'}.`, "success");
+                                showNotification?.(`Property '${prop.title}' ${nextVal ? 'marked as Premium' : 'changed to Standard listing'}.`, "success");
                               }}
-                              title={prop.premium ? "Click to Revoke Premium (Change to Standard)" : "Click to Upgrade to 💎 Premium Listing"}
+                              title={prop.premium ? "Click to Revoke Premium (Change to Standard)" : "Click to Upgrade to Premium Listing"}
                               style={{
                                 padding: '6px 10px',
                                 backgroundColor: prop.premium ? '#FEF3C7' : '#F8FAFC',
@@ -1151,7 +1151,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 transition: 'all 0.2s'
                               }}
                             >
-                              💎 {prop.premium ? 'Premium' : 'Standard'}
+                              {prop.premium ? 'Premium' : 'Standard'}
                             </button>
                             <button
                               onClick={() => setViewAnalyticsProperty(prop)}
@@ -1191,7 +1191,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                   transition: 'all 0.2s'
                                 }}
                               >
-                                {prop.recentlySold ? '✓ Pushed to Main (Recently Sold)' : '🚀 Push Property to Main'}
+                                {prop.recentlySold ? 'Pushed to Main (Recently Sold)' : 'Push Property to Main'}
                               </button>
                             )}
                             {activeModuleTab === 'editProperty' ? (
@@ -1317,7 +1317,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       transition: 'all 0.2s'
                     }}
                   >
-                    {prop.premium ? '💎 PREMIUM ACTIVE' : 'ENABLE PREMIUM'}
+                    {prop.premium ? 'PREMIUM ACTIVE' : 'ENABLE PREMIUM'}
                   </button>
                   <button
                     onClick={() => {
@@ -1341,7 +1341,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                       transition: 'all 0.2s'
                     }}
                   >
-                    {prop.featured ? '⭐ SPOTLIGHT ON' : 'ENABLE SPOTLIGHT'}
+                    {prop.featured ? 'SPOTLIGHT ON' : 'ENABLE SPOTLIGHT'}
                   </button>
                 </div>
               </div>
@@ -1380,7 +1380,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
                 <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Avg Views / Property</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#D97706', marginTop: '6px' }}>📊 {avgViews.toLocaleString()}</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#D97706', marginTop: '6px' }}>{avgViews.toLocaleString()}</div>
                   <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '4px' }}>Listing engagement index</div>
                 </div>
 
@@ -1670,7 +1670,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 6px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>
-                🏷️ Sold Out & Reserved Properties
+                Sold Out & Reserved Properties
               </h2>
               <p style={{ color: '#64748B', margin: 0, fontSize: '0.88rem' }}>
                 Manage properties that have been marked as sold. You can restore them back to active listings or publish them to the Recently Sold showcase section on the main website.
@@ -1713,7 +1713,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </td>
                     <td style={{ padding: '16px' }}>
                       <span style={{ padding: '5px 12px', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #FECACA', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        🏷️ Sold Out
+                        Sold Out
                       </span>
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }}>
@@ -1751,7 +1751,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             transition: 'all 0.2s'
                           }}
                         >
-                          🔄 Restore to Active
+                          Restore to Active
                         </button>
 
                         {/* Option 2: Push to Recently Sold Showcase (Below Business Listings) */}
@@ -1793,7 +1793,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             boxShadow: prop.recentlySold ? 'none' : '0 2px 8px rgba(5, 150, 105, 0.25)'
                           }}
                         >
-                          {prop.recentlySold ? '✓ Pushed to Recently Sold' : '🚀 Push to Recently Sold'}
+                          {prop.recentlySold ? 'Pushed to Recently Sold' : 'Push to Recently Sold'}
                         </button>
                       </div>
                     </td>
@@ -2087,7 +2087,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                           onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#059669'; e.currentTarget.style.color = '#FFFFFF'; }}
                                           onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F1F5F9'; e.currentTarget.style.color = '#334155'; }}
                                         >
-                                          📍 {cName}
+                                          {cName}
                                         </button>
                                       );
                                     })}
@@ -2124,7 +2124,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                   {/* Exact Lat/Lng Badge */}
                                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', padding: '3px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-                                      📍 {place.latitude?.toFixed(6)}, {place.longitude?.toFixed(6)}
+                                      {place.latitude?.toFixed(6)}, {place.longitude?.toFixed(6)}
                                     </div>
                                     <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '3px', fontWeight: 600 }}>Exact GPS</div>
                                   </div>
@@ -2905,7 +2905,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     {(formData.image || formData.image2 || formData.image3 || formData.image4 || formData.image5 || formData.image6) ? (
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                         {[
-                          { key: 'image', val: formData.image, label: '★ COVER HERO IMAGE' },
+                          { key: 'image', val: formData.image, label: 'COVER HERO IMAGE' },
                           { key: 'image2', val: formData.image2, label: 'SHOWCASE SLIDE #2' },
                           { key: 'image3', val: formData.image3, label: 'SHOWCASE SLIDE #3' },
                           { key: 'image4', val: formData.image4, label: 'SHOWCASE SLIDE #4' },
@@ -3001,12 +3001,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 )}
                                 <div>
                                   <div style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.95rem' }}>{broker.companyName}</div>
-                                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{broker.fullName || 'Advisor'} • ⭐ {broker.rating}</div>
+                                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{broker.fullName || 'Advisor'} • {broker.rating}</div>
                                 </div>
                               </div>
                               <div>
                                 {isAssigned ? (
-                                  <span style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', fontWeight: 800, fontSize: '0.78rem', borderRadius: '16px' }}>✓ ASSIGNED</span>
+                                  <span style={{ padding: '6px 14px', backgroundColor: '#059669', color: '#FFF', fontWeight: 800, fontSize: '0.78rem', borderRadius: '16px' }}>ASSIGNED</span>
                                 ) : (
                                   <span style={{ padding: '6px 14px', backgroundColor: '#E2E8F0', color: '#475569', fontWeight: 700, fontSize: '0.78rem', borderRadius: '16px' }}>SELECT</span>
                                 )}
@@ -3021,16 +3021,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   {/* Premium & Featured Badge Settings */}
                   <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                     <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      💎 Premium & Featured Listing Badges
+                      Premium & Featured Listing Badges
                     </h4>
                     <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '0 0 20px 0' }}>
-                      Control whether this property listing receives a <strong>💎 PREMIUM</strong> badge or <strong>⭐ FEATURED</strong> spotlight on the website. By default, listings are normal/standard until enabled here.
+                      Control whether this property listing receives a <strong>PREMIUM</strong> badge or <strong>FEATURED</strong> spotlight on the website. By default, listings are normal/standard until enabled here.
                     </p>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                       <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', backgroundColor: formData.premium ? '#FEF3C7' : '#F8FAFC', border: formData.premium ? '2px solid #D97706' : '1px solid #E2E8F0', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.2s' }}>
                         <div>
-                          <div style={{ fontWeight: 800, color: formData.premium ? '#92400E' : '#0F172A', fontSize: '0.95rem' }}>💎 Premium Badge</div>
+                          <div style={{ fontWeight: 800, color: formData.premium ? '#92400E' : '#0F172A', fontSize: '0.95rem' }}>Premium Badge</div>
                           <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Display gold "PREMIUM" badge across main page and listing cards</div>
                         </div>
                         <input
@@ -3043,7 +3043,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
                       <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', backgroundColor: formData.featured ? '#ECFDF5' : '#F8FAFC', border: formData.featured ? '2px solid #059669' : '1px solid #E2E8F0', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.2s' }}>
                         <div>
-                          <div style={{ fontWeight: 800, color: formData.featured ? '#065F46' : '#0F172A', fontSize: '0.95rem' }}>⭐ Featured Spotlight</div>
+                          <div style={{ fontWeight: 800, color: formData.featured ? '#065F46' : '#0F172A', fontSize: '0.95rem' }}>Featured Spotlight</div>
                           <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '2px' }}>Spotlight property on homepage carousels and top ranks</div>
                         </div>
                         <input
@@ -3134,7 +3134,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   style={{ padding: '12px 32px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
                 >
                   {modalSubTab === 'review' ? (
-                    <>{isSaving ? 'Saving...' : '✓ Save & Publish'}</>
+                    <>{isSaving ? 'Saving...' : 'Save & Publish'}</>
                   ) : (
                     <>Save & Continue <FaArrowRight style={{ fontSize: '0.8rem' }} /></>
                   )}
@@ -3159,7 +3159,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.78rem', color: '#93C5FD', fontWeight: 500 }}>Live Individual Property Analytics</p>
                 </div>
               </div>
-              <button onClick={() => setViewAnalyticsProperty(null)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.4rem', cursor: 'pointer', opacity: 0.8 }} title="Close">✕</button>
+              <button onClick={() => setViewAnalyticsProperty(null)} style={{ background: 'none', border: 'none', color: '#FFFFFF', fontSize: '1.4rem', cursor: 'pointer', opacity: 0.8 }} title="Close">&times;</button>
             </div>
 
             <div style={{ padding: '24px' }}>
@@ -3322,7 +3322,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 }}
                 style={{ padding: '10px 24px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 2px 8px rgba(5,150,105,0.3)' }}
               >
-                ✓ Save &amp; Apply Views
+                Save &amp; Apply Views
               </button>
             </div>
           </div>

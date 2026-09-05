@@ -62,10 +62,10 @@ export const AiAssistantAdminPanel: React.FC = () => {
       const saved = localStorage.getItem('nexopp_ai_admin_settings');
       return saved ? JSON.parse(saved) : {
         assistantName: 'NexOpp AI',
-        welcomeMessage: "Hi 👋 I'm NexOpp AI, Your Retrieval-Augmented Property Consultant. How can I help you today?",
+        welcomeMessage: "Hello! I'm NexOpp AI, Your Retrieval-Augmented Property Consultant. How can I help you today?",
         greetingText: "Welcome to NexOpp Real Estate! Ask me about properties, franchises, businesses, or home loans.",
         tagline: "Your Retrieval-Augmented Property Consultant",
-        bubbleMessage: "Need help finding your perfect property? Ask NexOpp AI ⚡",
+        bubbleMessage: "Need help finding your perfect property? Ask NexOpp AI",
         themeColor: '#10B981',
         onlineStatus: 'online',
         femaleAvatarUrl: 'default',
@@ -86,10 +86,10 @@ export const AiAssistantAdminPanel: React.FC = () => {
     } catch (e) {
       return {
         assistantName: 'NexOpp AI',
-        welcomeMessage: "Hi 👋 I'm NexOpp AI, Your Retrieval-Augmented Property Consultant.",
+        welcomeMessage: "Hello! I'm NexOpp AI, Your Retrieval-Augmented Property Consultant.",
         greetingText: "Welcome to NexOpp Real Estate!",
         tagline: "Your Retrieval-Augmented Property Consultant",
-        bubbleMessage: "Need help finding your perfect property? Ask NexOpp AI ⚡",
+        bubbleMessage: "Need help finding your perfect property? Ask NexOpp AI",
         themeColor: '#10B981',
         onlineStatus: 'online',
         femaleAvatarUrl: 'default',
@@ -216,7 +216,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '0.78rem', color: '#10B981', backgroundColor: '#ECFDF5', padding: '6px 12px', borderRadius: '20px', fontWeight: 700, border: '1px solid #A7F3D0' }}>
-            ✓ RAG Engine Active
+            RAG Engine Active
           </span>
           <button 
             onClick={triggerManualSync}
@@ -244,14 +244,14 @@ export const AiAssistantAdminPanel: React.FC = () => {
       {/* Tabs Navigation */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E5E7EB', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
         {[
-          { id: 'dashboard', label: '📊 Dashboard' },
-          { id: 'appearance', label: '🎨 Appearance' },
-          { id: 'knowledge', label: '🧠 Knowledge Base' },
-          { id: 'training', label: '🎓 Training & Docs' },
-          { id: 'logic', label: '⚙️ Business Logic' },
-          { id: 'analytics', label: '📈 Analytics' },
-          { id: 'conversations', label: '💬 Conversations' },
-          { id: 'settings', label: '🔒 Settings & Security' }
+          { id: 'dashboard', label: 'Dashboard' },
+          { id: 'appearance', label: 'Appearance' },
+          { id: 'knowledge', label: 'Knowledge Base' },
+          { id: 'training', label: 'Training & Docs' },
+          { id: 'logic', label: 'Business Logic' },
+          { id: 'analytics', label: 'Analytics' },
+          { id: 'conversations', label: 'Conversations' },
+          { id: 'settings', label: 'Settings & Security' }
         ].map(t => (
           <button
             key={t.id}
@@ -311,11 +311,11 @@ export const AiAssistantAdminPanel: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '10px' }}>
                   <span>Website Auto-Crawler</span>
-                  <span style={{ color: '#10B981', fontWeight: 800 }}>✓ Synced ({settings.lastSynced})</span>
+                  <span style={{ color: '#10B981', fontWeight: 800 }}>Synced ({settings.lastSynced})</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '10px' }}>
                   <span>Multilingual Engine (EN / TE / HI)</span>
-                  <span style={{ color: '#10B981', fontWeight: 800 }}>✓ Active</span>
+                  <span style={{ color: '#10B981', fontWeight: 800 }}>Active</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '10px' }}>
                   <span>Custom Training Documents</span>
@@ -328,13 +328,13 @@ export const AiAssistantAdminPanel: React.FC = () => {
               <h3 style={{ margin: '0 0 16px 0', fontSize: '1.05rem', fontWeight: 800, color: '#111827' }}>Quick Actions</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <button onClick={() => setActiveTab('appearance')} style={{ width: '100%', padding: '10px', backgroundColor: '#F3F4F6', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
-                  🎨 Edit Avatar & Greeting
+                  Edit Avatar & Greeting
                 </button>
                 <button onClick={() => setActiveTab('training')} style={{ width: '100%', padding: '10px', backgroundColor: '#F3F4F6', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
-                  🎓 Upload New RAG Documents
+                  Upload New RAG Documents
                 </button>
                 <button onClick={() => setActiveTab('conversations')} style={{ width: '100%', padding: '10px', backgroundColor: '#F3F4F6', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', textAlign: 'left' }}>
-                  💬 View User Conversations
+                  View User Conversations
                 </button>
               </div>
             </div>
@@ -448,7 +448,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
                   <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '2px' }}>{item.count}</div>
                 </div>
                 <span style={{ fontSize: '0.75rem', color: '#10B981', backgroundColor: '#ECFDF5', padding: '4px 10px', borderRadius: '9999px', fontWeight: 800 }}>
-                  ✓ {item.status}
+                  {item.status}
                 </span>
               </div>
             ))}
@@ -512,7 +512,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
                     <td style={{ padding: '12px 10px', color: '#6B7280' }}>{doc.uploadedAt}</td>
                     <td style={{ padding: '12px 10px' }}>
                       <span style={{ fontSize: '0.75rem', backgroundColor: '#ECFDF5', color: '#10B981', padding: '4px 10px', borderRadius: '9999px', fontWeight: 800 }}>
-                        ✓ {doc.status}
+                        {doc.status}
                       </span>
                     </td>
                     <td style={{ padding: '12px 10px', textAlign: 'right' }}>
@@ -573,7 +573,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
               'Commercial Space Vizag Beach Road'
             ].map((q, idx) => (
               <span key={idx} style={{ backgroundColor: '#F3F4F6', border: '1px solid #E5E7EB', padding: '8px 16px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: 700, color: '#111827' }}>
-                🔍 {q}
+                {q}
               </span>
             ))}
           </div>
@@ -657,7 +657,7 @@ export const AiAssistantAdminPanel: React.FC = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ padding: '14px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '12px', color: '#065F46', fontSize: '0.85rem', fontWeight: 600 }}>
-              ✓ JWT Token Authentication active. Only authenticated Super Admins can alter RAG settings or training data.
+              JWT Token Authentication active. Only authenticated Super Admins can alter RAG settings or training data.
             </div>
 
             <div style={{ border: '1px solid #E5E7EB', padding: '16px', borderRadius: '12px', backgroundColor: '#F9FAFB' }}>

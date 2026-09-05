@@ -554,10 +554,10 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                         <span>Exp: <strong>{broker.yearsExperience} Yrs</strong></span>
                       </div>
 
-                      <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 8px 0', lineHeight: 1.4 }}>
-                        📞 {broker.phone || broker.mobileNumber} <br />
-                        ✉️ {broker.email || 'N/A'}
-                      </p>
+                      <div style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 8px 0', lineHeight: 1.5 }}>
+                        <div>Phone: {broker.phone || broker.mobileNumber}</div>
+                        <div>Email: {broker.email || 'N/A'}</div>
+                      </div>
 
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                         {(broker.propertyCategories || ['Flats', 'Villas']).slice(0, 3).map(cat => (
@@ -1063,7 +1063,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
           {/* Podium Display for Top 3 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
             {locationRankedBrokers.slice(0, 3).map((broker, idx) => {
-              const medal = idx === 0 ? '🏆 1st Place (Gold)' : idx === 1 ? '🥈 2nd Place (Silver)' : '🥉 3rd Place (Bronze)';
+              const medal = idx === 0 ? 'Rank 1 (Gold)' : idx === 1 ? 'Rank 2 (Silver)' : 'Rank 3 (Bronze)';
               const borderColor = idx === 0 ? '#F59E0B' : idx === 1 ? '#94A3B8' : '#D97706';
               return (
                 <div key={broker.id} style={{ backgroundColor: '#FFFFFF', padding: '24px', borderTop: `6px solid ${borderColor}`, border: '1px solid #E2E8F0', borderRadius: '12px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -1098,11 +1098,11 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                     </div>
                     <div>
                       <div style={{ fontSize: '0.7rem', color: '#64748B' }}>RATING</div>
-                      <div style={{ fontWeight: 800, color: '#D97706' }}>⭐ {broker.rating}</div>
+                      <div style={{ fontWeight: 800, color: '#D97706' }}>{broker.rating} / 5.0</div>
                     </div>
                   </div>
 
-                  <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0 }}>📞 {broker.phone || broker.mobileNumber}</p>
+                  <p style={{ fontSize: '0.8rem', color: '#475569', margin: 0 }}>Phone: {broker.phone || broker.mobileNumber}</p>
                 </div>
               );
             })}
@@ -1264,7 +1264,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                         <img src={formData.photo} alt="Profile" style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #CBD5E1' }} />
                       )}
                       <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 18px', backgroundColor: '#1E40AF', color: '#FFF', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', transition: 'background 0.2s' }}>
-                        📷 Upload Photo
+                        Upload Photo
                         <input
                           type="file"
                           accept="image/*"
@@ -1292,7 +1292,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                         <img src={formData.logo} alt="Logo" style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', border: '2px solid #CBD5E1' }} />
                       )}
                       <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 18px', backgroundColor: '#0F172A', color: '#FFF', borderRadius: '8px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', transition: 'background 0.2s' }}>
-                        🏢 Upload Logo
+                        Upload Logo
                         <input
                           type="file"
                           accept="image/*"

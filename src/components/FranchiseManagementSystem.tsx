@@ -481,7 +481,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
           {selectedIds.length > 0 && (
             <div style={{ backgroundColor: '#ECFDF5', padding: '14px 20px', border: '1px solid #A7F3D0', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.95rem' }}>
-                ✓ Selected {selectedIds.length} Franchise Opportunity {selectedIds.length === 1 ? 'Listing' : 'Listings'}
+                Selected {selectedIds.length} Franchise Opportunity {selectedIds.length === 1 ? 'Listing' : 'Listings'}
               </span>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button onClick={handleBulkPublish} style={{ padding: '8px 16px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}>
@@ -541,9 +541,9 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                             <img src={fran.logo || fran.image} alt={fran.brand} style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #CBD5E1' }} />
                             <div>
                               <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0F172A', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>
-                                {fran.brand} {fran.featured && <span style={{ fontSize: '0.7rem', padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', marginLeft: '6px', fontWeight: 700 }}>★ FEATURED</span>}
+                                {fran.brand} {fran.featured && <span style={{ fontSize: '0.7rem', padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', marginLeft: '6px', fontWeight: 700 }}>FEATURED</span>}
                               </div>
-                              <div style={{ color: '#64748B', fontSize: '0.8rem' }}>ID: {fran.id} • 📍 {fran.location}</div>
+                              <div style={{ color: '#64748B', fontSize: '0.8rem' }}>ID: {fran.id} • {fran.location}</div>
                             </div>
                           </div>
                         </td>
@@ -671,7 +671,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                 onClick={() => { updateFranchise(f.id, { approvalStatus: 'Published', status: 'Active' }); showNotification(`Published '${f.brand}'!`, 'success'); }}
                                 style={{ padding: '6px 10px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer' }}
                               >
-                                ✓ PUBLISH
+                                PUBLISH
                               </button>
                             )}
                             {stage !== 'Pending Approval' && (
@@ -739,7 +739,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         cursor: 'pointer'
                       }}
                     >
-                      {f.featured ? '★ FEATURED ACTIVE' : 'MARK AS FEATURED'}
+                      {f.featured ? 'FEATURED ACTIVE' : 'MARK AS FEATURED'}
                     </button>
                   </td>
                   <td style={{ padding: '16px' }}>
@@ -755,7 +755,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         cursor: 'pointer'
                       }}
                     >
-                      {f.premiumFranchise ? '💎 PREMIUM VERIFIED' : 'ENABLE PREMIUM'}
+                      {f.premiumFranchise ? 'PREMIUM VERIFIED' : 'ENABLE PREMIUM'}
                     </button>
                   </td>
                   <td style={{ padding: '16px' }}>
@@ -837,7 +837,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                       <img src={dealer.image} alt={dealer.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                       <div>
                         <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A' }}>{dealer.name}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • Rating: {dealer.rating}★</div>
+                        <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • Rating: {dealer.rating}</div>
                       </div>
                     </div>
                     <span style={{ padding: '4px 12px', backgroundColor: '#ECFDF5', color: '#059669', fontWeight: 800, fontSize: '0.8rem', border: '1px solid #A7F3D0' }}>
@@ -958,7 +958,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {areasList.map(area => (
                 <span key={area} style={{ padding: '6px 12px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  📍 {area}
+                  {area}
                   <button onClick={() => setAreasList(areasList.filter(a => a !== area))} style={{ background: 'none', border: 'none', color: '#991B1B', cursor: 'pointer', fontWeight: 800 }}>×</button>
                 </span>
               ))}
@@ -1023,12 +1023,12 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                   <tr key={enq.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
                     <td style={{ padding: '14px' }}>
                       <div style={{ fontWeight: 800, color: '#0F172A' }}>{enq.customerName}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#64748B' }}>📞 {enq.mobileNumber} • {enq.email}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Tel: {enq.mobileNumber} • {enq.email}</div>
                     </td>
                     <td style={{ padding: '14px', fontWeight: 700, color: '#059669' }}>{enq.interestedFranchise}</td>
                     <td style={{ padding: '14px' }}>
                       <div style={{ fontWeight: 700, color: '#059669' }}>{enq.investmentBudget}</div>
-                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>📍 {enq.preferredLocation}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{enq.preferredLocation}</div>
                     </td>
                     <td style={{ padding: '14px' }}>
                       <select
@@ -1134,7 +1134,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
               <div key={i} style={{ position: 'relative', border: '1px solid #CBD5E1', borderRadius: '4px', overflow: 'hidden' }}>
                 <img src={img} alt="Gallery item" style={{ width: '100%', height: '140px', objectFit: 'cover' }} />
                 <div style={{ padding: '8px', backgroundColor: '#FFFFFF', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155' }}>{i === 0 ? '★ COVER IMAGE' : `Slide #${i + 1}`}</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155' }}>{i === 0 ? 'COVER IMAGE' : `Slide #${i + 1}`}</span>
                   <button
                     onClick={() => {
                       const item = franchiseDb.find(f => f.id === galleryFranchiseId);
@@ -1341,7 +1341,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                         Provide clear, precise descriptions of the operational model and brand parameters. Standardizing the title and subtype formatting makes your listings highly searchable for prospective brokers and investors.
                       </p>
                       <div style={{ backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '8px', padding: '16px', display: 'flex', gap: '12px', color: '#059669', fontSize: '0.85rem', fontWeight: 600 }}>
-                        <span style={{ fontSize: '1.25rem' }}>★</span>
+                        <span style={{ fontSize: '1.25rem' }}></span>
                         <span>Ensure brand name matches registered trade name exactly to ensure successful verification.</span>
                       </div>
                     </div>
@@ -2024,10 +2024,10 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                                     )}
                                     <div>
                                       <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0F172A' }}>{dealer.name}</div>
-                                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • {dealer.rating}★</div>
+                                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{dealer.company} • {dealer.rating}</div>
                                     </div>
                                   </div>
-                                  <span style={{ fontWeight: 800, color: isAssigned ? '#059669' : '#94A3B8', fontSize: '0.85rem' }}>{isAssigned ? '✓ ASSIGNED' : '+ Assign'}</span>
+                                  <span style={{ fontWeight: 800, color: isAssigned ? '#059669' : '#94A3B8', fontSize: '0.85rem' }}>{isAssigned ? 'ASSIGNED' : '+ Assign'}</span>
                                 </div>
                               );
                             })}
@@ -2060,7 +2060,7 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                     type="submit"
                     style={{ padding: '12px 28px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)', transition: 'all 0.2s' }}
                   >
-                    {modalMode === 'add' ? '✓ SAVE & PUBLISH' : '✓ SAVE CHANGES'}
+                    {modalMode === 'add' ? 'SAVE & PUBLISH' : 'SAVE CHANGES'}
                   </button>
                 </div>
               </div>

@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { AdminSidebar } from '../components/admin/AdminSidebar';
+import { AdminHeader } from '../components/admin/AdminHeader';
+import { AdminLoginScreen } from '../components/admin/AdminLoginScreen';
 import { 
   FaBars,
   FaBuilding, 
@@ -342,7 +345,7 @@ const ShowcaseAddVideoForm: React.FC<ShowcaseAddVideoFormProps> = ({
                 {addUploading && <div style={{ marginTop: '10px', color: '#16A34A', fontWeight: 800, fontSize: '0.85rem' }}>⏳ Processing video file...</div>}
                 {addVideoUrl && !addUploading && (
                   <div style={{ marginTop: '10px', color: '#15803D', fontWeight: 700, fontSize: '0.85rem' }}>
-                    ✅ Video Loaded Successfully
+                    Video Loaded Successfully
                   </div>
                 )}
               </div>
@@ -360,7 +363,7 @@ const ShowcaseAddVideoForm: React.FC<ShowcaseAddVideoFormProps> = ({
       {previewEmbed && previewEmbed.embedUrl && (
         <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
           <label style={{ display: 'block', fontWeight: 700, fontSize: '0.75rem', color: '#16A34A', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
-            🎥 Live Video Player Preview
+            Live Video Player Preview
           </label>
           <div style={{ maxWidth: '420px', aspectRatio: '16 / 9', backgroundColor: '#000', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
             {previewEmbed.type === 'youtube' || previewEmbed.type === 'vimeo' || previewEmbed.type === 'gdrive' || previewEmbed.type === 'iframe' ? (
@@ -392,7 +395,7 @@ const ShowcaseAddVideoForm: React.FC<ShowcaseAddVideoFormProps> = ({
                 fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s',
                 transform: isSelected ? 'scale(1.05)' : 'scale(1)',
               }}>
-                {isSelected ? '✓ ' : ''}{tag}
+                {isSelected ? '[Selected] ' : ''}{tag}
               </button>
             );
           })}
@@ -536,6 +539,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [businessSubTab, setBusinessSubTab] = useState<string>('listings');
   const [brokerSubTab, setBrokerSubTab] = useState<string>('directory');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    content: true,
+    partners: true,
+    crm: true,
+    website: true,
+  });
+
+  const handleToggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
 
   // CRM Customer Management states
   const [userTabSection, setUserTabSection] = useState<'customers' | 'bookings' | 'employees'>('customers');
@@ -1253,92 +1267,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [selectedLocalityAreaId, setSelectedLocalityAreaId] = useState('');
 
 
-  // ================= PASSWORD AUTH LOGIN SCREEN (WHITE & GREEN PROFESSIONAL) =================
+  // ================= PASSWORD & GOOGLE SSO AUTH LOGIN SCREEN =================
   if (!isAuthenticated) {
     return (
-      <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Outfit', 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", padding: '20px' }}>
-        <div style={{ backgroundColor: '#FFFFFF', padding: '48px 40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid #E2E8F0', width: '100%', maxWidth: '440px', textAlign: 'center' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-            <Logo size="xl" />
-          </div>
+      <AdminLoginScreen
+        onLoginSuccess={(user) => {
+          const expiresAt = Date.now() + SEVEN_DAYS_MS;
+          localStorage.setItem('nexopp_admin_auth', 'true');
+          localStorage.setItem('nexopp_admin_auth_expires', String(expiresAt));
+          localStorage.setItem('nexopp_admin_role', user.role);
+          localStorage.setItem('nexopp_admin_user_name', user.fullName);
+          localStorage.setItem('nexopp_admin_user_email', user.email);
 
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#0F172A', margin: '0 0 6px 0' }}>
-            Secure Admin Login
-          </h1>
-          <p style={{ color: '#64748B', fontSize: '0.85rem', margin: '0 0 32px 0', fontWeight: 500 }}>
-            Enter your employee credentials to access the marketplace control center.
-          </p>
+          sessionStorage.setItem('nexopp_admin_auth', 'true');
+          sessionStorage.setItem('nexopp_admin_role', user.role);
+          sessionStorage.setItem('nexopp_admin_user_name', user.fullName);
+          sessionStorage.setItem('nexopp_admin_user_email', user.email);
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ position: 'relative' }}>
-              <input
-                type="text"
-                required
-                placeholder="admin@thenexoop.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }}
-              />
-            </div>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: '100%', padding: '14px 44px 14px 16px', borderRadius: '12px', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontSize: '0.95rem', outline: 'none', transition: 'all 0.2s', boxSizing: 'border-box' }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '14px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: '#64748B',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4px',
-                  fontSize: '1.1rem',
-                  transition: 'color 0.2s'
-                }}
-                title={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-            
-            {error && (
-              <span style={{ color: '#EF4444', fontSize: '0.85rem', fontWeight: 600 }}>
-                {error}
-              </span>
-            )}
+          setIsAuthenticated(true);
+          setCurrentUserRole(user.role);
+          setCurrentUserName(user.fullName);
+          setError(null);
+          window.scrollTo(0, 0);
+          document.body.scrollTop = 0;
+          document.documentElement.scrollTop = 0;
 
-            <button
-              type="submit"
-              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: 'none', backgroundColor: '#0F172A', color: '#FFFFFF', fontSize: '1rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', marginTop: '8px', boxShadow: '0 4px 12px rgba(15,23,42,0.15)' }}
-            >
-              Access Portal
-            </button>
-          </form>
-          
-          <div style={{ marginTop: '32px', borderTop: '1px solid #F1F5F9', paddingTop: '20px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
-            <button
-              onClick={() => window.location.href = '/'}
-              style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              ← Return to Main Website
-            </button>
-          </div>
-        </div>
-      </div>
+          // Set initial active tab based on permissions
+          const employee = employeeUsersDb.find(u => (u.email || '').toLowerCase() === user.email.toLowerCase());
+          if (employee) {
+            const empPerms = employee.customPermissions !== undefined
+              ? employee.customPermissions
+              : (rolesDb.find(r => r.name === employee.role)?.permissions || []);
+            const can = (k: string) => empPerms.includes('all') || empPerms.includes(k) || empPerms.some(p => p.startsWith(k + ':'));
+            if (can('properties')) {
+              setActiveTab('properties');
+              setPropertySubTab('listings');
+            } else if (can('franchises')) {
+              setActiveTab('franchises');
+              setFranchiseSubTab('listings');
+            } else if (can('businesses')) {
+              setActiveTab('businesses');
+              setBusinessSubTab('listings');
+            } else if (can('demand_regions')) {
+              setActiveTab('demand_regions');
+            } else if (can('brokers')) {
+              setActiveTab('brokers');
+              setBrokerSubTab('directory');
+            } else {
+              setActiveTab('overview');
+            }
+          }
+        }}
+        employeeUsersDb={employeeUsersDb}
+        rolesDb={rolesDb}
+      />
     );
   }
 
@@ -1414,11 +1396,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'main_stats': return { title: 'Main Page Stats & Trust Metrics', sub: 'Edit Live Homepage Statistics, Trust Badges & Numbers' };
       case 'hero_cms': return { title: 'Homepage Builder Studio & Stats', sub: 'Customize Hero Sections, Stats, Backgrounds & Visible Elements' };
       case 'customization': return { title: 'Website Settings & Customization', sub: 'Configure Showcase Feeds, Brand Interactions & Stats' };
-      case 'contact_settings': return { title: '📞 Contact Us Details CMS', sub: 'Edit Company Address, Priority Phones, Emails, Working Hours & Location Map' };
-      case 'inquiries': return { title: '📬 Contact Inquiries & Leads Inbox', sub: 'Manage and respond to Contact Us messages, buyer leads & consultation requests' };
+      case 'contact_settings': return { title: 'Contact Us Details CMS', sub: 'Edit Company Address, Priority Phones, Emails, Working Hours & Location Map' };
+      case 'inquiries': return { title: 'Contact Inquiries & Leads Inbox', sub: 'Manage and respond to Contact Us messages, buyer leads & consultation requests' };
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
-      case 'media_manager': return { title: '🖥️ Main Page Settings', sub: 'Manage videos and settings displayed on the homepage carousel' };
-      case 'users_data': return { title: '👥 Users Data (Registered Customers)', sub: 'Database of all registered and logged-in customers across AP & Telangana' };
+      case 'media_manager': return { title: 'Main Page Settings', sub: 'Manage videos and settings displayed on the homepage carousel' };
+      case 'users_data': return { title: 'Users Data (Registered Customers)', sub: 'Database of all registered and logged-in customers across AP & Telangana' };
       default: return { title: `Welcome back, ${currentUserName}`, sub: `Role: ${currentUserRole} — Here's what's happening with your marketplace today.` };
     }
   };
@@ -1488,538 +1470,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const headerInfo = getHeaderInfo();
 
-  // ================= MAIN ULTRA-MODERN SAAS DASHBOARD EXACTLY MATCHING USER SCREENSHOT =================
+  // ================= MAIN ENTERPRISE SAAS DASHBOARD =================
   return (
-    <div data-lenis-prevent="true" style={{ backgroundColor: '#F8FAFC', height: '100vh', width: '100%', overflow: 'hidden', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: '#0F172A', display: 'flex' }}>
-      
-      {/* Mobile Sidebar Overlay Backdrop */}
-      {isSidebarOpen && (
-        <div 
-          onClick={() => setIsSidebarOpen(false)}
-          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', zIndex: 9998 }}
+    <div data-lenis-prevent="true" className="h-screen w-full overflow-hidden bg-slate-50 font-sans text-slate-900 flex">
+      {/* SaaS Admin Sidebar */}
+      <AdminSidebar
+        activeTab={activeTab}
+        onSelectTab={(tabId) => {
+          setActiveTab(tabId as any);
+          setIsSidebarOpen(false);
+        }}
+        expandedGroups={expandedGroups}
+        onToggleGroup={handleToggleGroup}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        counts={{
+          pendingProperties: propertiesDb.filter(p => p.approvalStatus === 'Pending Approval').length,
+          inquiries: enquiriesDb.filter(e => e.status === 'New').length,
+          users: registeredCustomers.length,
+          brokers: dealersDb.length,
+        }}
+        currentUserRole={currentUserRole}
+        currentUserName={currentUserName}
+        currentUserEmail={sessionStorage.getItem('nexopp_admin_user_email') || ''}
+        hasPermission={hasPermission}
+        onLogout={handleLogout}
+        propertySubTab={propertySubTab}
+        onSelectPropertySubTab={setPropertySubTab}
+        franchiseSubTab={franchiseSubTab}
+        onSelectFranchiseSubTab={setFranchiseSubTab}
+        businessSubTab={businessSubTab}
+        onSelectBusinessSubTab={setBusinessSubTab}
+        brokerSubTab={brokerSubTab}
+        onSelectBrokerSubTab={setBrokerSubTab}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+        <AdminHeader
+          activeTab={activeTab}
+          activeTabLabel={headerInfo.title}
+          categoryLabel="Control Center"
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          currentUserName={currentUserName}
+          currentUserEmail={sessionStorage.getItem('nexopp_admin_user_email') || ''}
+          currentUserRole={currentUserRole}
+          onLogout={handleLogout}
+          onRefreshData={onRefresh || (() => window.location.reload())}
+          unreadInquiriesCount={enquiriesDb.filter(e => e.status === 'New').length}
+          onOpenInquiries={() => setActiveTab('inquiries')}
         />
-      )}
-
-      {/* Sidebar Navigation */}
-      <div className={`admin-sidebar-drawer ${isSidebarOpen ? 'admin-sidebar-open' : 'admin-sidebar-closed'}`} style={{ width: '265px', height: '100%', backgroundColor: '#FFFFFF', borderRight: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10 }}>
-        
-        {/* Top Brand Box */}
-        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9' }}>
-          <Logo size="sm" showTagline={false} />
-          <button onClick={() => setIsSidebarOpen(false)} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '1.25rem', cursor: 'pointer', padding: '4px' }}>
-            ✕
-          </button>
-        </div>
-
-        {/* Sidebar Scrollable Nav */}
-        <nav data-lenis-prevent="true" style={{ display: 'flex', flexDirection: 'column', padding: '10px 14px', gap: '4px', overflowY: 'auto', flexGrow: 1 }}>
-          
-          {/* Active Item: Dashboard */}
-          {hasPermission('overview') && (
-            <button
-              onClick={() => {
-                setActiveTab('overview');
-                setExpandedMenu(null);
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
-                fontSize: '0.88rem', fontWeight: activeTab === 'overview' ? 700 : 500,
-                backgroundColor: activeTab === 'overview' ? '#ECFDF5' : 'transparent',
-                color: activeTab === 'overview' ? '#059669' : '#475569',
-                border: activeTab === 'overview' ? '1px solid #A7F3D0' : '1px solid transparent',
-                transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
-                fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-              }}
-            >
-              <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', color: activeTab === 'overview' ? '#059669' : '#64748B' }}><FaHome /></span>
-              <span style={{ flexGrow: 1 }}>Dashboard</span>
-            </button>
-          )}
-
-          {/* Section: CONTENT MANAGEMENT */}
-          {(hasPermission('properties') || hasPermission('franchises') || hasPermission('businesses') || hasPermission('demand_regions')) && (
-            <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              CONTENT MANAGEMENT
-            </div>
-          )}
-          {hasPermission('properties') && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  onClick={() => {
-                    setActiveTab('properties');
-                    setExpandedMenu(expandedMenu === 'properties' ? null : 'properties');
-                  }}
-                  style={{
-                    flexGrow: 1, padding: '11px 12px', backgroundColor: activeTab === 'properties' ? '#ECFDF5' : 'transparent', color: activeTab === 'properties' ? '#059669' : '#475569', border: activeTab === 'properties' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FaBuilding style={{ color: activeTab === 'properties' ? '#059669' : '#64748B' }} /> Property Management</div>
-                  <FaChevronDown style={{ transform: expandedMenu === 'properties' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleAdminModuleActive('properties');
-                    showNotification(`Property Management is now ${isModuleActive('properties') ? 'Disabled' : 'Enabled'} on website`);
-                    triggerRefresh();
-                  }}
-                  title={isModuleActive('properties') ? 'Click to Disable Property page on Website' : 'Click to Enable Property page on Website'}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    backgroundColor: isModuleActive('properties') ? '#DCFCE7' : '#FEE2E2',
-                    color: isModuleActive('properties') ? '#15803D' : '#DC2626',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {isModuleActive('properties') ? 'ON' : 'OFF'}
-                </button>
-              </div>
-              
-              {expandedMenu === 'properties' && (
-                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
-                  {SUB_MENU_ITEMS['properties']
-                    .filter(sub => hasPermission(`properties:${sub.id}`))
-                    .map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPropertySubTab(sub.id);
-                          setActiveTab('properties');
-                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                        }}
-                        style={{
-                          padding: '8px 12px', backgroundColor: propertySubTab === sub.id && activeTab === 'properties' ? '#F0FDF4' : 'transparent', color: propertySubTab === sub.id && activeTab === 'properties' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: propertySubTab === sub.id && activeTab === 'properties' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
-                        }}
-                      >
-                        {sub.icon} {sub.label}
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-            
-          {hasPermission('franchises') && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  onClick={() => {
-                    setActiveTab('franchises');
-                    setExpandedMenu(expandedMenu === 'franchises' ? null : 'franchises');
-                  }}
-                  style={{
-                    flexGrow: 1, padding: '11px 12px', backgroundColor: activeTab === 'franchises' ? '#ECFDF5' : 'transparent', color: activeTab === 'franchises' ? '#059669' : '#475569', border: activeTab === 'franchises' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FaStore style={{ color: activeTab === 'franchises' ? '#059669' : '#64748B' }} /> Franchise Management</div>
-                  <FaChevronDown style={{ transform: expandedMenu === 'franchises' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleAdminModuleActive('franchises');
-                    showNotification(`Franchise Management is now ${isModuleActive('franchises') ? 'Disabled' : 'Enabled'} on website`);
-                    triggerRefresh();
-                  }}
-                  title={isModuleActive('franchises') ? 'Click to Disable Franchise page on Website' : 'Click to Enable Franchise page on Website'}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    backgroundColor: isModuleActive('franchises') ? '#DCFCE7' : '#FEE2E2',
-                    color: isModuleActive('franchises') ? '#15803D' : '#DC2626',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {isModuleActive('franchises') ? 'ON' : 'OFF'}
-                </button>
-              </div>
-
-              {expandedMenu === 'franchises' && (
-                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
-                  {SUB_MENU_ITEMS['franchises']
-                    .filter(sub => hasPermission(`franchises:${sub.id}`))
-                    .map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFranchiseSubTab(sub.id);
-                          setActiveTab('franchises');
-                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                        }}
-                        style={{
-                          padding: '8px 12px', backgroundColor: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#F0FDF4' : 'transparent', color: franchiseSubTab === sub.id && activeTab === 'franchises' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: franchiseSubTab === sub.id && activeTab === 'franchises' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
-                        }}
-                      >
-                        {sub.icon} {sub.label}
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {hasPermission('businesses') && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <button
-                  onClick={() => {
-                    setActiveTab('businesses');
-                    setExpandedMenu(expandedMenu === 'businesses' ? null : 'businesses');
-                  }}
-                  style={{
-                    flexGrow: 1, padding: '11px 12px', backgroundColor: activeTab === 'businesses' ? '#ECFDF5' : 'transparent', color: activeTab === 'businesses' ? '#059669' : '#475569', border: activeTab === 'businesses' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><FaBriefcase style={{ color: activeTab === 'businesses' ? '#059669' : '#64748B' }} /> Business Management</div>
-                  <FaChevronDown style={{ transform: expandedMenu === 'businesses' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleAdminModuleActive('business');
-                    showNotification(`Business Management is now ${isModuleActive('business') ? 'Disabled' : 'Enabled'} on website`);
-                    triggerRefresh();
-                  }}
-                  title={isModuleActive('business') ? 'Click to Disable Business page on Website' : 'Click to Enable Business page on Website'}
-                  style={{
-                    padding: '4px 8px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '0.68rem',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    backgroundColor: isModuleActive('business') ? '#DCFCE7' : '#FEE2E2',
-                    color: isModuleActive('business') ? '#15803D' : '#DC2626',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  {isModuleActive('business') ? 'ON' : 'OFF'}
-                </button>
-              </div>
-
-              {expandedMenu === 'businesses' && (
-                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
-                  {SUB_MENU_ITEMS['businesses']
-                    .filter(sub => hasPermission(`businesses:${sub.id}`))
-                    .map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBusinessSubTab(sub.id);
-                          setActiveTab('businesses');
-                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                        }}
-                        style={{
-                          padding: '8px 12px', backgroundColor: businessSubTab === sub.id && activeTab === 'businesses' ? '#F0FDF4' : 'transparent', color: businessSubTab === sub.id && activeTab === 'businesses' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.82rem', fontWeight: businessSubTab === sub.id && activeTab === 'businesses' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
-                        }}
-                      >
-                        {sub.icon} {sub.label}
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {hasPermission('demand_regions') && (
-            <button
-              onClick={() => {
-                setActiveTab('demand_regions');
-                setExpandedMenu(null);
-              }}
-              style={{
-                padding: '11px 16px', backgroundColor: activeTab === 'demand_regions' ? '#ECFDF5' : 'transparent', color: activeTab === 'demand_regions' ? '#059669' : '#475569', border: activeTab === 'demand_regions' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'demand_regions' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-              }}
-            >
-              <FaMapMarkerAlt style={{ color: activeTab === 'demand_regions' ? '#059669' : '#64748B' }} /> Demand Regions
-            </button>
-          )}
-
-          <button
-            onClick={() => {
-              setActiveTab('master_filters');
-              setExpandedMenu(null);
-            }}
-            style={{
-              padding: '11px 16px', backgroundColor: activeTab === 'master_filters' ? '#ECFDF5' : 'transparent', color: activeTab === 'master_filters' ? '#059669' : '#475569', border: activeTab === 'master_filters' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'master_filters' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-            }}
-          >
-            <FaFolder style={{ color: activeTab === 'master_filters' ? '#059669' : '#64748B' }} /> Filters & Categories Control
-          </button>
-
-          {/* Section: USER MANAGEMENT */}
-          {(hasPermission('brokers') || hasPermission('users')) && (
-            <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              USER MANAGEMENT
-            </div>
-          )}
-
-          {hasPermission('brokers') && (
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button
-                onClick={() => {
-                  setActiveTab('brokers');
-                  setExpandedMenu(expandedMenu === 'brokers' ? null : 'brokers');
-                }}
-                style={{
-                  padding: '11px 16px', backgroundColor: activeTab === 'brokers' ? '#ECFDF5' : 'transparent', color: activeTab === 'brokers' ? '#059669' : '#475569', border: activeTab === 'brokers' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><FaUserTie style={{ color: activeTab === 'brokers' ? '#059669' : '#64748B' }} /> Broker Management</div>
-                <FaChevronDown style={{ transform: expandedMenu === 'brokers' ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', fontSize: '0.7rem' }} />
-              </button>
-              
-              {expandedMenu === 'brokers' && (
-                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '24px', borderLeft: '2px solid #E2E8F0', paddingLeft: '8px', marginTop: '4px' }}>
-                  {SUB_MENU_ITEMS['brokers']
-                    .filter(sub => hasPermission(`brokers:${sub.id}`))
-                    .map(sub => (
-                      <button
-                        key={sub.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBrokerSubTab(sub.id);
-                          setActiveTab('brokers');
-                          if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                        }}
-                        style={{
-                          padding: '10px 12px', backgroundColor: brokerSubTab === sub.id && activeTab === 'brokers' ? '#F0FDF4' : 'transparent', color: brokerSubTab === sub.id && activeTab === 'brokers' ? '#059669' : '#64748B', border: 'none', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '6px', fontSize: '0.85rem', fontWeight: brokerSubTab === sub.id && activeTab === 'brokers' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s'
-                        }}
-                      >
-                        {sub.icon} {sub.label}
-                      </button>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-            
-            {hasPermission('users') && (
-              <>
-                <button
-                  onClick={() => {
-                    setActiveTab('users');
-                    setExpandedMenu(null);
-                  }}
-                  style={{
-                    padding: '11px 16px', backgroundColor: activeTab === 'users' ? '#ECFDF5' : 'transparent', color: activeTab === 'users' ? '#059669' : '#475569', border: activeTab === 'users' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'users' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                  }}
-                >
-                  <FaUsers style={{ color: activeTab === 'users' ? '#059669' : '#64748B' }} /> User Management
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab('team');
-                    setExpandedMenu(null);
-                  }}
-                  style={{
-                    padding: '11px 16px', backgroundColor: activeTab === 'team' ? '#ECFDF5' : 'transparent', color: activeTab === 'team' ? '#059669' : '#475569', border: activeTab === 'team' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'team' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                  }}
-                >
-                  <FaUserShield style={{ color: activeTab === 'team' ? '#059669' : '#64748B' }} /> Team Members
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab('roles');
-                    setExpandedMenu(null);
-                  }}
-                  style={{
-                    padding: '11px 16px', backgroundColor: activeTab === 'roles' ? '#ECFDF5' : 'transparent', color: activeTab === 'roles' ? '#059669' : '#475569', border: activeTab === 'roles' ? '1px solid #A7F3D0' : '1px solid transparent', textAlign: 'left', width: '100%', cursor: 'pointer', borderRadius: '10px', fontWeight: activeTab === 'roles' ? 700 : 500, display: 'flex', alignItems: 'center', gap: '12px', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                  }}
-                >
-                  <FaCog style={{ color: activeTab === 'roles' ? '#059669' : '#64748B' }} /> Roles & Permissions
-                </button>
-              </>
-            )}
-
-          {/* Section: SITE MANAGEMENT */}
-          {[
-            { id: 'contact_settings', label: '📞 Contact Us Details CMS', icon: <FaPhoneAlt />, perm: 'site:contact_settings' },
-            { id: 'inquiries', label: '📬 Contact Inquiries & Leads', icon: <FaEnvelope />, perm: 'site:inquiries' },
-            { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
-            { id: 'media_manager', label: '🖥️ Main page settings', icon: <FaVideo />, perm: 'media_manager' },
-            { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
-            { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
-            { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
-            { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine />, perm: 'site:seo' },
-          ].filter(item => hasPermission('site_settings') || hasPermission(item.perm) || hasPermission(item.id)).length > 0 && (
-            <>
-              <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                SITE & CONTACT MANAGEMENT
-              </div>
-              {[
-                { id: 'contact_settings', label: '📞 Contact Us Details CMS', icon: <FaPhoneAlt />, perm: 'site:contact_settings' },
-                { id: 'inquiries', label: '📬 Contact Inquiries & Leads', icon: <FaEnvelope />, perm: 'site:inquiries' },
-                { id: 'ai_assistant', label: '🤖 AI Assistant', icon: <FaRobot />, perm: 'ai_assistant' },
-                { id: 'media_manager', label: '🖥️ Main page settings', icon: <FaVideo />, perm: 'media_manager' },
-                { id: 'main_stats', label: 'Main Page Stats', icon: <FaChartLine />, perm: 'site:main_stats' },
-                { id: 'hero_cms', label: 'CMS Builder', icon: <FaDesktop />, perm: 'site:hero_cms' },
-                { id: 'customization', label: 'Website Settings', icon: <FaPalette />, perm: 'site:customization' },
-                { id: 'seo', label: 'SEO & Analytics', icon: <FaChartLine />, perm: 'site:seo' },
-              ]
-                .filter(item => hasPermission('site_settings') || hasPermission(item.perm) || hasPermission(item.id))
-                .map((item) => {
-                  const isActive = activeTab === item.id || (item.id === 'seo' && activeTab === 'customization');
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        if (item.id === 'seo') setActiveTab('customization');
-                        else setActiveTab(item.id as any);
-                        setExpandedMenu(null);
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
-                        fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                        backgroundColor: isActive ? '#ECFDF5' : 'transparent',
-                        color: isActive ? '#059669' : '#475569',
-                        border: isActive ? '1px solid #A7F3D0' : '1px solid transparent',
-                        transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
-                        fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                      }}
-                    >
-                      <span style={{ fontSize: '1rem', color: isActive ? '#059669' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                      <span style={{ flexGrow: 1 }}>{item.label}</span>
-                    </button>
-                  );
-                })}
-            </>
-          )}
-
-          {/* Section: SYSTEM */}
-          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            SYSTEM
-          </div>
-
-          {[
-            { id: 'sys_settings', label: 'System Settings', icon: <FaCog /> },
-            { id: 'logs', label: 'Activity Logs', icon: <FaFileAlt /> },
-          ].map((item) => {
-            const isActive = (item.id === 'sys_settings' && activeTab === 'customization') || (item.id === 'logs' && activeTab === 'overview');
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (item.id === 'sys_settings') setActiveTab('customization');
-                  else setActiveTab('overview');
-                  setExpandedMenu(null);
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
-                  fontSize: '0.88rem', fontWeight: isActive ? 700 : 500,
-                  backgroundColor: isActive ? '#ECFDF5' : 'transparent',
-                  color: isActive ? '#059669' : '#475569',
-                  border: isActive ? '1px solid #A7F3D0' : '1px solid transparent',
-                  transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
-                  fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-                }}
-              >
-                <span style={{ fontSize: '1rem', color: isActive ? '#059669' : '#94A3B8', display: 'flex', alignItems: 'center' }}>{item.icon}</span>
-                <span style={{ flexGrow: 1 }}>{item.label}</span>
-              </button>
-            );
-          })}
-
-          {/* VERY BOTTOM OPTION: Users Data (Registered Customers) */}
-          <div style={{ padding: '16px 10px 6px 10px', fontSize: '0.68rem', fontWeight: 700, color: '#059669', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            CUSTOMER DATA
-          </div>
-          <button
-            onClick={() => {
-              setActiveTab('users_data' as any);
-              setExpandedMenu(null);
-            }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', borderRadius: '10px', cursor: 'pointer',
-              fontSize: '0.88rem', fontWeight: (activeTab as string) === 'users_data' ? 700 : 500,
-              backgroundColor: (activeTab as string) === 'users_data' ? '#ECFDF5' : 'transparent',
-              color: (activeTab as string) === 'users_data' ? '#059669' : '#475569',
-              border: (activeTab as string) === 'users_data' ? '1px solid #A7F3D0' : '1px solid transparent',
-              transition: 'all 0.15s', textAlign: 'left', width: '100%', boxSizing: 'border-box',
-              fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif"
-            }}
-          >
-            <span style={{ fontSize: '1.05rem', display: 'flex', alignItems: 'center', color: (activeTab as string) === 'users_data' ? '#059669' : '#64748B' }}><FaUsers /></span>
-            <span style={{ flexGrow: 1 }}>Users Data</span>
-            <span style={{ backgroundColor: '#ECFDF5', color: '#059669', padding: '2px 8px', borderRadius: '10px', fontSize: '0.72rem', fontWeight: 800, border: '1px solid #A7F3D0' }}>
-              {registeredCustomers.length}
-            </span>
-          </button>
-        </nav>
-      </div>
-
-      {/* ================= RIGHT MAIN PANEL ================= */}
-      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        
-        {/* Top Navbar */}
-        <div style={{ minHeight: '72px', backgroundColor: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-              className="mobile-sidebar-toggle-btn"
-              style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', fontSize: '1.2rem', cursor: 'pointer', padding: '8px 12px', borderRadius: '8px', marginRight: '12px', display: 'none' }}
-            >
-              <FaBars />
-            </button>
-            <div>
-              <h1 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                {activeTab === 'overview' ? `Welcome back, ${currentUserName}` : getHeaderInfo().title}
-              </h1>
-              <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: '#64748B', fontWeight: 500 }}>
-                <span style={{ fontWeight: 700, color: '#059669', marginRight: '6px' }}>{currentUserRole}</span> • {getHeaderInfo().sub}
-              </p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', minWidth: '200px', maxWidth: '260px' }}>
-              <FaSearch style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', fontSize: '0.85rem' }} />
-              <input
-                type="text"
-                placeholder="Search anything..."
-                style={{ width: '100%', padding: '9px 14px 9px 38px', border: '1px solid #E2E8F0', borderRadius: '8px', backgroundColor: '#F8FAFC', fontSize: '0.85rem', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '16px', borderLeft: '1px solid #E2E8F0' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#059669', fontSize: '0.85rem', letterSpacing: '0.5px' }}>
-                {currentUserName ? currentUserName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'SA'}
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>
-                  {currentUserName}
-                </div>
-                <div style={{ fontWeight: 600, fontSize: '0.72rem', color: '#059669' }}>{currentUserRole}</div>
-              </div>
-              <button
-                onClick={handleLogout}
-                title="Logout"
-                style={{ backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}
-              >
-                <FaSignOutAlt /> Logout
-              </button>
-            </div>
-          </div>
-        </div>
 
         {/* Scrollable Content Area */}
-        <div className="admin-content-area" data-lenis-prevent="true" style={{ padding: '32px 36px', overflowY: 'auto', flexGrow: 1, backgroundColor: '#F8FAFC' }}>
+        <div className="admin-content-area flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50" data-lenis-prevent="true">
           
           {/* ================= CATEGORY 0: GRAND OVERVIEW ================= */}
           {activeTab === 'overview' && (
@@ -2829,7 +2333,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '1.4rem' }}>
-                      {settingsForm.showFranchiseSection !== false ? '🏪' : '🙈'}
+                      {settingsForm.showFranchiseSection !== false ? 'Store' : 'Hidden'}
                     </span>
                     <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                       FRANCHISE SECTION VISIBILITY
@@ -2906,7 +2410,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                     <span style={{ fontSize: '1.4rem' }}>
-                      {settingsForm.showDemandRegions !== false ? '📍' : '🙈'}
+                      {settingsForm.showDemandRegions !== false ? 'Active' : 'Hidden'}
                     </span>
                     <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                       DEMAND REGIONS VISIBILITY & FEATURE APPEARANCE
@@ -2975,7 +2479,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <div style={{ backgroundColor: '#F8FAFC', padding: '28px', color: '#0F172A', border: '1px solid #E2E8F0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <span style={{ backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE', padding: '4px 12px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>MAIN CENTER VIDEO</span>
-                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>🎬 16:9 SHOWCASE VIDEO FEED</h3>
+                  <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em' }}>16:9 SHOWCASE VIDEO FEED</h3>
                 </div>
                 <p style={{ margin: '0 0 20px 0', fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>
                   This video displays continuously on the main website center between the Hero banner and Browse by Category. Upload an exact 16:9 widescreen video (e.g. 1920x1080 or 1280x720 MP4).
@@ -2991,7 +2495,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       style={{ flexGrow: 1, padding: '12px 16px', border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#0F172A', fontSize: '0.95rem', outline: 'none' }}
                     />
                     <label style={{ padding: '12px 24px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', transition: 'all 0.2s', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", letterSpacing: '0.06em' }}>
-                      📁 UPLOAD MP4
+                      UPLOAD MP4
                       <input
                         type="file"
                         accept="video/*"
@@ -3090,7 +2594,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', backgroundColor: '#F8FAFC', padding: '16px', border: '1px solid #E2E8F0' }}>
                 {(settingsForm.availableCities || ['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi NCR', 'Chennai', 'Pune']).map((city) => (
                   <div key={city} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #1E40AF', color: '#1E40AF', padding: '6px 14px', fontSize: '0.85rem', fontWeight: 700 }}>
-                    <span>📍 {city}</span>
+                    <span>{city}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveCity(city)}
@@ -3171,7 +2675,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             <div style={{ backgroundColor: '#FFFFFF', padding: '32px', border: '1px solid #E2E8F0', borderTop: '4px solid #16A34A', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '24px', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px' }}>
                 <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', fontWeight: 800 }}>
-                  📊
+                  
                 </div>
                 <div>
                   <h3 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', letterSpacing: '0.03em' }}>
@@ -3187,7 +2691,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Stat 1: Properties Listed */}
                 <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px', color: '#16A34A' }}>
-                    <span>🏠 Properties Listed Stat</span>
+                    <span>Properties Listed Stat</span>
                   </label>
                   <input
                     type="text"
@@ -3208,7 +2712,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Stat 2: Franchises */}
                 <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px', color: '#9333EA' }}>
-                    <span>🏪 Franchises Stat</span>
+                    <span>Franchises Stat</span>
                   </label>
                   <input
                     type="text"
@@ -3229,7 +2733,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Stat 3: Verified Brokers */}
                 <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px', color: '#EA580C' }}>
-                    <span>👥 Verified Brokers Stat</span>
+                    <span>Verified Brokers Stat</span>
                   </label>
                   <input
                     type="text"
@@ -3250,7 +2754,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Stat 4: Cities Covered */}
                 <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px', color: '#2563EB' }}>
-                    <span>🏙️ Cities Covered Stat</span>
+                    <span>Cities Covered Stat</span>
                   </label>
                   <input
                     type="text"
@@ -3271,7 +2775,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Stat 5: Total Property Value */}
                 <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px', color: '#DB2777' }}>
-                    <span>💰 Total Property Value Stat</span>
+                    <span>Total Property Value Stat</span>
                   </label>
                   <input
                     type="text"
@@ -3292,7 +2796,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 {/* Stat 6: Happy Clients */}
                 <div style={{ backgroundColor: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '0.85rem', marginBottom: '8px', color: '#16A34A' }}>
-                    <span>😊 Happy Clients Stat</span>
+                    <span>Happy Clients Stat</span>
                   </label>
                   <input
                     type="text"
@@ -3443,7 +2947,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   >
                     <input type="radio" checked={settingsForm.heroMediaType !== 'video'} onChange={() => setSettingsForm({ ...settingsForm, heroMediaType: 'image' })} style={{ accentColor: '#1E40AF' }} />
                     <div>
-                      <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontWeight: 700, fontSize: '1.05rem', color: '#0F172A' }}>📷 STATIC PHOTO / IMAGE</div>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontWeight: 700, fontSize: '1.05rem', color: '#0F172A' }}>STATIC PHOTO / IMAGE</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px', lineHeight: 1.5 }}>Displays a crisp luxury architectural or property image with hover effect.</div>
                     </div>
                   </label>
@@ -3457,7 +2961,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   >
                     <input type="radio" checked={settingsForm.heroMediaType === 'video'} onChange={() => setSettingsForm({ ...settingsForm, heroMediaType: 'video' })} style={{ accentColor: '#1E40AF' }} />
                     <div>
-                      <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontWeight: 700, fontSize: '1.05rem', color: '#0F172A' }}>🎬 AUTOPLAY VIDEO LOOP</div>
+                      <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", fontWeight: 700, fontSize: '1.05rem', color: '#0F172A' }}>AUTOPLAY VIDEO LOOP</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px', lineHeight: 1.5 }}>Streams a dynamic architectural video loop on the right column.</div>
                     </div>
                   </label>
@@ -3628,7 +3132,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', backgroundColor: '#F8FAFC', padding: '18px', border: '1px solid #E2E8F0' }}>
                 {(settingsForm.heroPopularTags || ['Apartment', 'Villa', 'Franchise', 'Commercial Property']).map((tag) => (
                   <div key={tag} style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFFFFF', border: '1px solid #1E40AF', color: '#1E40AF', padding: '6px 14px', fontSize: '0.85rem', fontWeight: 700 }}>
-                    <span>🏷️ {tag}</span>
+                    <span>{tag}</span>
                     <button
                       type="button"
                       onClick={() => handleRemovePopularTag(tag)}
@@ -3719,28 +3223,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             {/* Dashboard Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>🟢</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>High</div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>HIGH DEMAND REGIONS</div>
                 <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
                   {demandRegionsDb.filter(r => r.demandLevel === 'High').length}
                 </div>
               </div>
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>🟡</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>Medium</div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>MEDIUM DEMAND REGIONS</div>
                 <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
                   {demandRegionsDb.filter(r => r.demandLevel === 'Medium').length}
                 </div>
               </div>
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>🔴</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>Low</div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>LOW DEMAND REGIONS</div>
                 <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
                   {demandRegionsDb.filter(r => r.demandLevel === 'Low').length}
                 </div>
               </div>
               <div style={{ backgroundColor: '#FFFFFF', padding: '20px', borderRadius: '16px', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px -2px rgba(0,0,0,0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: '8px' }}>📍</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: 700, marginBottom: '8px' }}>Active Hubs</div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>TOTAL DEMAND ZONES</div>
                 <div style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
                   {demandRegionsDb.length}
@@ -3759,7 +3263,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   }}
                   style={{ padding: '10px 18px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
                 >
-                  🔄 AI Refresh Calculations
+                  Refresh Calculations
                 </button>
               </div>
               <button
@@ -3791,7 +3295,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 }}
                 style={{ padding: '10px 18px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Plus Jakarta Sans', sans-serif", boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
               >
-                ➕ Add New Region
+                + Add New Region
               </button>
             </div>
 
@@ -3818,7 +3322,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#475569' }}>{region.city}, {region.state}</td>
                       <td style={{ padding: '14px 16px', fontSize: '0.85rem', fontWeight: 600, color: '#0F172A' }}>{region.radius} KM</td>
                       <td style={{ padding: '14px 16px', fontSize: '0.85rem', color: '#475569' }}>
-                        🏡 {region.propertySalesCount} • 🏪 {region.franchiseSalesCount} • 💼 {region.businessSalesCount}
+                        Props: {region.propertySalesCount} • Franchises: {region.franchiseSalesCount} • Biz: {region.businessSalesCount}
                       </td>
                       <td style={{ padding: '14px 16px', fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>{region.demandScore}/100</td>
                       <td style={{ padding: '14px 16px' }}>
@@ -4049,7 +3553,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                          📍 {item.name}
+                          {item.name}
                         </span>
                       </div>
 
@@ -4137,7 +3641,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                          💼 {item.name}
+                          Biz: {item.name}
                         </span>
                       </div>
 
@@ -4221,7 +3725,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       }}
                     >
                       <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                        🏢 {item.name}
+                        {item.name}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
@@ -4289,7 +3793,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       }}
                     >
                       <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                        🔑 {item.name}
+                        {item.name}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
@@ -4357,7 +3861,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       }}
                     >
                       <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                        👤 {item.name}
+                        {item.name}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <button
@@ -4436,7 +3940,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     >
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                          📌 {item.name}
+                          {item.name}
                         </span>
                         <span style={{ fontSize: '10.5px', color: '#64748B', marginTop: '2px', fontWeight: 600 }}>
                           City: {masterLocationsDb.find(c => c.id === item.cityId)?.name || item.cityId}
@@ -4543,7 +4047,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     >
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: item.is_active ? '#0F172A' : '#991B1B' }}>
-                          📍 {item.name}
+                          {item.name}
                         </span>
                         <span style={{ fontSize: '10.5px', color: '#64748B', marginTop: '2px', fontWeight: 600 }}>
                           Area: {(() => { const area = masterAreasDb.find(a => a.id === item.areaId); return area ? `${area.name} (${masterLocationsDb.find(c => c.id === area.cityId)?.name || ''})` : item.areaId; })()}
@@ -4746,7 +4250,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                     </div>
 
                     <div style={{ marginTop: '10px', padding: '14px', backgroundColor: '#F8FAFC', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>💡 Quick Tip:</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569' }}>Quick Tip:</span>
                       <p style={{ margin: '4px 0 0 0', fontSize: '0.78rem', color: '#64748B', lineHeight: '1.4' }}>
                         When users click on the phone numbers on the Contact page, it automatically triggers their phone dialer. The WhatsApp link opens WhatsApp directly with your business number.
                       </p>
@@ -5316,10 +4820,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {[
                           { id: 'ALL', label: `All (${totalCount})` },
-                          { id: 'PROPERTY', label: `🏢 Property (${baseList.filter(isProperty).length})` },
-                          { id: 'BUSINESS', label: `💼 Business (${baseList.filter(isBusiness).length})` },
-                          { id: 'SLOT_BOOKING', label: `📅 Visits (${baseList.filter(isSlotBooking).length})` },
-                          { id: 'CONTACT_US', label: `📩 Contact Us (${baseList.filter(isContactUs).length})` },
+                          { id: 'PROPERTY', label: `Property (${baseList.filter(isProperty).length})` },
+                          { id: 'BUSINESS', label: `Biz: Business (${baseList.filter(isBusiness).length})` },
+                          { id: 'SLOT_BOOKING', label: `Visits (${baseList.filter(isSlotBooking).length})` },
+                          { id: 'CONTACT_US', label: `Contact Us (${baseList.filter(isContactUs).length})` },
                         ].map(pill => (
                           <button
                             key={pill.id}
@@ -5455,7 +4959,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                               </div>
 
                               <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
-                                <span>🗓️ {displayDate}</span>
+                                <span>{displayDate}</span>
                                 {submissionTime ? <span>⏰ {submissionTime}</span> : null}
                                 <span
                                   style={{
@@ -5873,7 +5377,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                     cursor: 'pointer'
                                   }}
                                 >
-                                  {customer.gender === 'Female' ? '👩 Female' : customer.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                                  {customer.gender === 'Female' ? 'Female' : customer.gender === 'Other' ? 'Other' : 'Male'}
                                 </button>
                               </td>
                               <td style={{ padding: '16px 18px', color: '#334155', fontSize: '0.88rem' }}>{customer.area || customer.district || 'N/A'}</td>
@@ -6366,7 +5870,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                                 backgroundColor: selectedCustomerProfile.gender === 'Female' ? '#FCE7F3' : selectedCustomerProfile.gender === 'Other' ? '#FEF3C7' : '#E0F2FE',
                                 color: selectedCustomerProfile.gender === 'Female' ? '#DB2777' : selectedCustomerProfile.gender === 'Other' ? '#D97706' : '#0284C7'
                               }}>
-                                {selectedCustomerProfile.gender === 'Female' ? '👩 Female' : selectedCustomerProfile.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                                {selectedCustomerProfile.gender === 'Female' ? 'Female' : selectedCustomerProfile.gender === 'Other' ? 'Other' : 'Male'}
                               </span>
                             </div>
                             <div>
@@ -6804,7 +6308,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
-                                  {isChecked && '✓'}
+                                  {isChecked && 'Enabled'}
                                 </div>
                                 <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
                                   {item.label}
@@ -6860,7 +6364,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
-                                  {isChecked && '✓'}
+                                  {isChecked && 'Enabled'}
                                 </div>
                                 <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
                                   {item.label}
@@ -6916,7 +6420,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
-                                  {isChecked && '✓'}
+                                  {isChecked && 'Enabled'}
                                 </div>
                                 <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
                                   {item.label}
@@ -6970,7 +6474,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
-                                  {isChecked && '✓'}
+                                  {isChecked && 'Enabled'}
                                 </div>
                                 <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
                                   {item.label}
@@ -7022,7 +6526,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', backgroundColor: isChecked ? '#10B981' : '#FFFFFF', border: isChecked ? 'none' : '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontSize: '0.7rem', fontWeight: 800 }}>
-                                  {isChecked && '✓'}
+                                  {isChecked && 'Enabled'}
                                 </div>
                                 <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 700 : 500, color: isChecked ? '#065F46' : '#334155' }}>
                                   {item.label}
@@ -7231,7 +6735,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       </div>
                     ) : (
                       <div style={{ padding: '20px 0' }}>
-                        <span style={{ fontSize: '2rem' }}>📸</span>
+                        <span style={{ fontSize: '2rem' }}></span>
                         <p style={{ margin: '12px 0 0 0', fontWeight: 600, color: '#475569' }}>Drag & Drop photo here or Click to Upload</p>
                         <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: '#94A3B8' }}>JPEG, PNG up to 5MB</p>
                       </div>
@@ -7358,7 +6862,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                   <FaVideo />
                 </div>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>🖥️ Main Page Settings</h2>
+                  <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>Main Page Settings</h2>
                   <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#64748B', fontWeight: 500 }}>Manage videos and tags displayed on the homepage carousel</p>
                 </div>
                 <div style={{ marginLeft: 'auto', backgroundColor: '#DCFCE7', color: '#16A34A', padding: '8px 16px', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem' }}>
@@ -7414,14 +6918,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       transition: 'all 0.2s'
                     }}
                   >
-                    {settings.enabled !== false ? '🔴 TURN OFF SECTION' : '🟢 TURN ON SECTION'}
+                    {settings.enabled !== false ? 'TURN OFF SECTION' : 'TURN ON SECTION'}
                   </button>
                 </div>
               </div>
 
               {settings.enabled === false && (
                 <div style={{ padding: '14px 18px', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: '12px', color: '#991B1B', fontSize: '0.88rem', fontWeight: 600, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span>⚠️</span>
+                  <span></span>
                   <span><strong>Section is currently Turned OFF:</strong> The showcase video carousel is completely hidden from the website homepage until turned back ON.</span>
                 </div>
               )}
@@ -7631,7 +7135,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
               {/* Add New Module Form */}
               <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px dashed #CBD5E1' }}>
-                <h4 style={{ margin: '0 0 12px 0', fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>➕ Add Custom Side Heading / Module</h4>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '0.92rem', fontWeight: 800, color: '#0F172A' }}>+ Add Custom Side Heading / Module</h4>
                 <AdminModulesCustomForm
                   showNotification={showNotification}
                   triggerRefresh={triggerRefresh}
@@ -7790,7 +7294,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                               gap: '4px'
                             }}
                           >
-                            {cust.gender === 'Female' ? '👩 Female' : cust.gender === 'Other' ? '⚧ Other' : '👨 Male'}
+                            {cust.gender === 'Female' ? 'Female' : cust.gender === 'Other' ? 'Other' : 'Male'}
                           </button>
                         </td>
                         <td style={{ padding: '16px 20px', fontWeight: 700, color: '#047857' }}>{cust.district || 'Guntur'}</td>
@@ -7912,7 +7416,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <div>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '8px', color: '#475569', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN BROKER</label>
                   <select value={editingProperty.dealerId} onChange={e => setEditingProperty({ ...editingProperty, dealerId: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #E2E8F0' }}>
-                    {dealersDb.map(d => <option key={d.id} value={d.id}>{d.companyName} ({d.fullName || 'Partner'}) — ⭐ {d.rating} {d.premiumPartner ? '👑 [PREMIUM]' : ''}</option>)}
+                    {dealersDb.map(d => <option key={d.id} value={d.id}>{d.companyName} ({d.fullName || 'Partner'}) — ⭐ {d.rating} {d.premiumPartner ? '[PREMIUM]' : ''}</option>)}
                   </select>
                 </div>
               </div>
@@ -7982,7 +7486,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 <div>
                   <label style={{ display: 'block', fontWeight: 700, fontSize: '0.8rem', marginBottom: '8px', color: '#475569', fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" }}>ASSIGN BROKER</label>
                   <select value={editingFranchise.dealerId} onChange={e => setEditingFranchise({ ...editingFranchise, dealerId: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #E2E8F0' }}>
-                    {dealersDb.map(d => <option key={d.id} value={d.id}>{d.companyName} ({d.fullName || 'Partner'}) — ⭐ {d.rating} {d.premiumPartner ? '👑 [PREMIUM]' : ''}</option>)}
+                    {dealersDb.map(d => <option key={d.id} value={d.id}>{d.companyName} ({d.fullName || 'Partner'}) — ⭐ {d.rating} {d.premiumPartner ? '[PREMIUM]' : ''}</option>)}
                   </select>
                 </div>
               </div>
@@ -8068,7 +7572,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '1.5rem' }}>
-                    {statModalTopic === 'properties' ? '🏠' : statModalTopic === 'franchises' ? '🏪' : statModalTopic === 'businesses' ? '💼' : statModalTopic === 'enquiries' ? '📥' : statModalTopic === 'users' ? '👥' : '🏷️'}
+                    {statModalTopic === 'properties' ? 'Properties' : statModalTopic === 'franchises' ? 'Store' : statModalTopic === 'businesses' ? 'Businesses' : statModalTopic === 'enquiries' ? 'Inquiries' : statModalTopic === 'users' ? 'Users' : 'Listings'}
                   </span>
                   <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
                     {statModalTopic === 'properties' ? 'Properties Database Analytics & Graphs' : statModalTopic === 'franchises' ? 'Franchises Database Analytics & Graphs' : statModalTopic === 'businesses' ? 'Businesses Database Analytics & Graphs' : statModalTopic === 'enquiries' ? 'Lead Enquiries Analytics & Graphs' : statModalTopic === 'users' ? 'Registered Customers Analytics & Graphs' : 'Sold Deals & Transaction Analytics'}
@@ -8083,19 +7587,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                 onClick={() => setStatModalTopic(null)}
                 style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #CBD5E1', backgroundColor: '#F8FAFC', color: '#0F172A', fontWeight: 800, cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                ✕
+                &times;
               </button>
             </div>
 
             {/* Slidable Top Nav Tabs for 6 Topics */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#F8FAFC', padding: '8px', borderRadius: '16px', marginBottom: '28px', overflowX: 'auto' }}>
               {[
-                { id: 'properties', label: '🏠 Properties', count: propertiesDb.length },
-                { id: 'franchises', label: '🏪 Franchises', count: franchiseDb.length },
-                { id: 'businesses', label: '💼 Businesses', count: businessDb.length },
-                { id: 'enquiries', label: '📥 Lead Enquiries', count: enquiriesDb.length },
-                { id: 'users', label: '👥 Registered Users', count: registeredCustomers.length },
-                { id: 'sold', label: '🏷️ Sold Data', count: (propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length + franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length + businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length) },
+                { id: 'properties', label: 'Properties', count: propertiesDb.length },
+                { id: 'franchises', label: 'Franchises: Franchises', count: franchiseDb.length },
+                { id: 'businesses', label: 'Businesses', count: businessDb.length },
+                { id: 'enquiries', label: 'Inquiries Lead Enquiries', count: enquiriesDb.length },
+                { id: 'users', label: 'Registered Users', count: registeredCustomers.length },
+                { id: 'sold', label: 'Sold Data', count: (propertiesDb.filter((p: any) => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold').length + franchiseDb.filter((f: any) => f.sold || f.listingStatus === 'Sold' || f.status === 'Sold').length + businessDb.filter((b: any) => b.sold || b.listingStatus === 'Sold' || b.status === 'Sold').length) },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -8231,7 +7735,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                             <td style={{ padding: '12px 20px', fontWeight: 700, color: '#0F172A' }}>{p.title}</td>
                             <td style={{ padding: '12px 16px', color: '#475569' }}>{p.category}</td>
                             <td style={{ padding: '12px 16px', fontWeight: 800, color: (p.sold || p.listingStatus === 'Sold' || p.status === 'Sold') ? '#16A34A' : '#2563EB' }}>
-                              {(p.sold || p.listingStatus === 'Sold' || p.status === 'Sold') ? '🏷️ SOLD OUT' : '🟢 Active'}
+                              {(p.sold || p.listingStatus === 'Sold' || p.status === 'Sold') ? 'SOLD OUT' : 'Active'}
                             </td>
                           </tr>
                         ))}

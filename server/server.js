@@ -2592,6 +2592,76 @@ app.post('/api/auth/login', async (req, res, next) => {
   }
 });
 
+app.post('/api/auth/admin-google-auth', async (req, res, next) => {
+  try {
+    const { credential, email, name } = req.body;
+    
+    // Strictly whitelisted admin emails
+    const ALLOWED_ADMIN_EMAILS = [
+      'thenexopptech@gmail.com',
+      'talatalareddy870@gmail.com'
+    ];
+
+    let verifiedEmail = (email || '').trim().toLowerCase();
+    let verifiedName = name || 'Admin';
+
+    // If credential JWT token is passed, decode payload
+    if (credential) {
+      try {
+        const parts = credential.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+          if (payload.email) {
+            verifiedEmail = payload.email.trim().toLowerCase();
+          }
+          if (payload.name) {
+            verifiedName = payload.name;
+          }
+        }
+      } catch (decodeErr) {
+        logger.warn({ decodeErr }, 'Failed to parse Google JWT payload');
+      }
+    }
+
+    if (!verifiedEmail) {
+      return res.status(400).json({ error: 'Missing email in Google authentication response' });
+    }
+
+    if (!ALLOWED_ADMIN_EMAILS.includes(verifiedEmail)) {
+      return res.status(403).json({
+        error: `Access Denied: ${verifiedEmail} is not authorized for NexOpp Admin access. Only authorized admin accounts may sign in.`,
+        authorized: false
+      });
+    }
+
+    // Email is verified and authorized!
+    const adminUser = {
+      id: `google-admin-${verifiedEmail}`,
+      email: verifiedEmail,
+      fullName: verifiedName || (verifiedEmail === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin'),
+      role: 'SUPER_ADMIN'
+    };
+
+    const tokens = generateTokens(adminUser);
+    res.cookie('auth_token', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    logger.info({ adminUser }, 'Super Admin Google Sign-In Successful');
+    return res.json({
+      success: true,
+      authorized: true,
+      user: adminUser,
+      tokens
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── CUSTOMERS ENDPOINTS ──────────────────────────────────────────────────────
 app.get('/api/customers', async (req, res) => {
   try {

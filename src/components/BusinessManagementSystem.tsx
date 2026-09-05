@@ -816,7 +816,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                             </select>
                             {assignedD && (
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.72rem', color: '#059669', fontWeight: 600 }}>
-                                <span>⭐ {assignedD.rating || 4.8} • 📞 {assignedD.mobile || assignedD.phone || assignedD.contactNumber}</span>
+                                <span>{assignedD.rating || 4.8} • Tel: {assignedD.mobile || assignedD.phone || assignedD.contactNumber}</span>
                               </div>
                             )}
                           </div>
@@ -853,10 +853,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                               outline: 'none'
                             }}
                           >
-                            <option value="Available">🟢 Available</option>
-                            <option value="Under_Review">🟡 Under Review</option>
-                            <option value="Sold">🏷️ Sold / Acquired</option>
-                            <option value="Unavailable">⚪ Unavailable</option>
+                            <option value="Available">Available</option>
+                            <option value="Under_Review">Under Review</option>
+                            <option value="Sold">Sold / Acquired</option>
+                            <option value="Unavailable">Unavailable</option>
                           </select>
                         </td>
                         <td style={{ padding: '14px 20px', textAlign: 'right' }}>
@@ -905,7 +905,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h2 style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", margin: '0 0 6px 0', fontSize: '1.4rem', color: '#0F172A', fontWeight: 800 }}>
-                🏷️ Sold Out &amp; Acquired Businesses
+                Sold Out &amp; Acquired Businesses
               </h2>
               <p style={{ color: '#64748B', margin: 0, fontSize: '0.88rem' }}>
                 Manage businesses marked as Sold/Acquired. You can restore them back to active marketplace listings or push them to the Recently Sold / Closed Deals showcase on the main website.
@@ -953,7 +953,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                     </td>
                     <td style={{ padding: '16px' }}>
                       <span style={{ padding: '5px 12px', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #FECACA', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        🏷️ Sold Out / Acquired
+                        Sold Out / Acquired
                       </span>
                     </td>
                     <td style={{ padding: '16px', textAlign: 'right' }}>
@@ -985,7 +985,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                             transition: 'all 0.2s'
                           }}
                         >
-                          🔄 Restore to Active
+                          Restore to Active
                         </button>
 
                         {/* Option 2: Push to Recently Sold Showcase on Main Page */}
@@ -1022,7 +1022,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                             boxShadow: biz.recentlySold ? 'none' : '0 2px 8px rgba(5, 150, 105, 0.25)'
                           }}
                         >
-                          {biz.recentlySold ? '✓ Pushed to Main Page' : '🚀 Push to Main Page'}
+                          {biz.recentlySold ? 'Published on Main Page' : 'Push to Main Page'}
                         </button>
                       </div>
                     </td>
@@ -1053,7 +1053,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                 <div key={r.id} style={{ padding: '16px', border: '1px solid #E2E8F0', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0F172A' }}>{r.name} — {r.businessCategory}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>👤 {r.name} • 📞 {r.mobile} • ✉️ {r.email || 'N/A'} • 📍 {r.city}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>Name: {r.name} • Tel: {r.mobile} • Email: {r.email || 'N/A'} • {r.city}</div>
                     <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, marginTop: '4px' }}>Preferred Contact: {r.preferredContactMethod || 'Phone Call'}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -1092,7 +1092,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
               {buyEnquiries.map(e => (
                 <div key={e.id} style={{ padding: '16px', border: '1px solid #E2E8F0', borderRadius: '12px' }}>
                   <div style={{ fontWeight: 800, color: '#0F172A' }}>{e.name} <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#059669' }}>({e.businessName})</span></div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>📞 {e.mobile} • ✉️ {e.email}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Tel: {e.mobile} • Email: {e.email}</div>
                   <div style={{ fontSize: '0.85rem', color: '#334155', marginTop: '6px' }}>{e.message}</div>
                 </div>
               ))}
@@ -1279,7 +1279,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                                           }}
                                           style={{ padding: '6px 14px', backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: '16px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
                                         >
-                                          📍 {cName}
+                                          {cName}
                                         </button>
                                       );
                                     })}
@@ -1311,7 +1311,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                                   </div>
                                   <div style={{ flexShrink: 0, textAlign: 'right' }}>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', padding: '3px 8px', borderRadius: '6px' }}>
-                                      📍 {place.latitude?.toFixed(4)}, {place.longitude?.toFixed(4)}
+                                      {place.latitude?.toFixed(4)}, {place.longitude?.toFixed(4)}
                                     </div>
                                   </div>
                                 </div>
@@ -1819,7 +1819,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                                     title="Set as Cover Photo"
                                     style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#FFFFFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '10px', color: '#059669' }}
                                   >
-                                    ★
+                                    
                                   </button>
                                 )}
                                 <button
@@ -1922,11 +1922,11 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                                   <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {d.companyName || d.fullName}
                                   </div>
-                                  <div style={{ fontSize: '0.72rem', color: '#64748B' }}>📍 {d.city || 'AP/TS'}</div>
+                                  <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{d.city || 'AP/TS'}</div>
                                 </div>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', marginTop: '4px' }}>
-                                <span style={{ color: '#059669', fontWeight: 700 }}>⭐ {d.rating || 4.8}</span>
+                                <span style={{ color: '#059669', fontWeight: 700 }}>{d.rating || 4.8}</span>
                                 <span style={{
                                   padding: '3px 8px',
                                   borderRadius: '6px',
@@ -1935,7 +1935,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                                   backgroundColor: isSelected ? '#059669' : '#F1F5F9',
                                   color: isSelected ? '#FFFFFF' : '#475569'
                                 }}>
-                                  {isSelected ? '✓ Assigned' : 'Assign'}
+                                  {isSelected ? 'Assigned' : 'Assign'}
                                 </span>
                               </div>
                             </div>
@@ -1957,10 +1957,10 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A' }}>{assignedBroker.companyName || assignedBroker.fullName}</div>
                           <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '2px' }}>
-                            📞 {assignedBroker.mobile || assignedBroker.phone || assignedBroker.contactNumber || 'N/A'} • ✉️ {assignedBroker.email || 'N/A'}
+                            Tel: {assignedBroker.mobile || assignedBroker.phone || assignedBroker.contactNumber || 'N/A'} • Email: {assignedBroker.email || 'N/A'}
                           </div>
                           <div style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 700, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <FaShieldAlt /> Verified Partner Broker • ⭐ {assignedBroker.rating || 4.8} Rating
+                            <FaShieldAlt /> Verified Partner Broker • {assignedBroker.rating || 4.8} Rating
                           </div>
                         </div>
                       </div>
