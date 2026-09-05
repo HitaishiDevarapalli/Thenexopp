@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { authenticator } from 'otplib';
+import { generateSecret, generateURI, verifySync } from 'otplib';
 import QRCode from 'qrcode';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,10 +12,8 @@ const DATA_DIR = path.join(__dirname, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'admin_2fa_store.json');
 
 // Configure TOTP tolerance (allows +/- 1 step of 30 seconds for clock drift)
-authenticator.options = {
-  window: 1,
-  step: 30,
-};
+// authenticator.options is no longer used directly as we are using discrete functions
+// We will use standard options where needed
 
 // Strictly authorized administrator emails
 export const AUTHORIZED_ADMIN_EMAILS = [
@@ -86,7 +84,7 @@ export async function generateAdminTotpSetup(email) {
 
   // If secret doesn't exist or not yet configured, create a new secret
   if (!record || !record.secret) {
-    const secret = authenticator.generateSecret();
+    const secret = generateSecret();
     record = {
       email: clean,
       secret,
@@ -99,7 +97,11 @@ export async function generateAdminTotpSetup(email) {
   }
 
   // Format label for Google Authenticator app: TheNexopp (email)
-  const otpauthUrl = authenticator.keyuri(clean, 'TheNexopp Admin', record.secret);
+  const otpauthUrl = generateURI({
+    issuer: 'TheNexopp Admin',
+    label: clean,
+    secret: record.secret,
+  });
   const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl, {
     margin: 2,
     width: 260,
@@ -139,10 +141,17 @@ export function verifyAdminTotp(email, code) {
     return { success: false, error: 'Invalid code format. Enter a 6-digit number.' };
   }
 
-  const isValid = authenticator.verify({
-    token: cleanCode,
-    secret: record.secret,
-  });
+  let isValid = false;
+  try {
+    const verifyResult = verifySync({
+      token: cleanCode,
+      secret: record.secret,
+    });
+    isValid = verifyResult === true || (verifyResult && verifyResult.valid === true);
+  } catch (err) {
+    console.error('TOTP verification error:', err);
+    isValid = false;
+  }
 
   if (!isValid) {
     return { success: false, error: 'Incorrect 6-digit code. Check your Google Authenticator app and try again.' };
