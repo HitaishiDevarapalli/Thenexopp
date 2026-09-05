@@ -6,13 +6,11 @@ import {
   ArrowLeft,
   AlertCircle,
   Smartphone,
-  KeyRound,
   CheckCircle2,
   RefreshCw,
   QrCode,
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
-import { AdminButton } from './ui/AdminButton';
 
 const ALLOWED_ADMIN_EMAILS = [
   'thenexopptech@gmail.com',
@@ -22,8 +20,8 @@ const ALLOWED_ADMIN_EMAILS = [
 
 interface AdminLoginScreenProps {
   onLoginSuccess: (user: { role: string; fullName: string; email: string }) => void;
-  employeeUsersDb: any[];
-  rolesDb: any[];
+  employeeUsersDb?: any[];
+  rolesDb?: any[];
 }
 
 export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
@@ -39,7 +37,6 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
   
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [googleInitialised, setGoogleInitialised] = useState(false);
 
   const otpInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,33 +49,7 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
     }
   }, [authStage]);
 
-  // Initialize Google Identity Services if available
-  useEffect(() => {
-    const initGoogle = () => {
-      if ((window as any).google?.accounts?.id) {
-        try {
-          (window as any).google.accounts.id.initialize({
-            client_id: '91283838472-mock-placeholder.apps.googleusercontent.com',
-            callback: handleGoogleCredentialResponse,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-          });
-          setGoogleInitialised(true);
-        } catch (e) {
-          console.warn('Google Identity initialization notice:', e);
-        }
-      }
-    };
-
-    if ((window as any).google?.accounts?.id) {
-      initGoogle();
-    } else {
-      const timer = setTimeout(initGoogle, 800);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  // Handle Google Credential Callback (GIS)
+  // Handle Google Credential Callback (GIS) if active
   const handleGoogleCredentialResponse = async (response: any) => {
     setLoading(true);
     setError(null);
@@ -100,6 +71,31 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
       setLoading(false);
     }
   };
+
+  // Initialize Google Identity Services if available
+  useEffect(() => {
+    const initGoogle = () => {
+      if ((window as any).google?.accounts?.id) {
+        try {
+          (window as any).google.accounts.id.initialize({
+            client_id: '91283838472-mock-placeholder.apps.googleusercontent.com',
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+        } catch (e) {
+          console.warn('Google Identity initialization notice:', e);
+        }
+      }
+    };
+
+    if ((window as any).google?.accounts?.id) {
+      initGoogle();
+    } else {
+      const timer = setTimeout(initGoogle, 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // Direct Google Sign-In with Whitelisted Admin Account
   const handleDirectGoogleLogin = async (email: string) => {
@@ -205,87 +201,257 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
-      {/* Background Subtle Gradient Mesh */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div 
+      className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 font-sans select-none"
+      style={{
+        backgroundColor: '#090D16',
+        backgroundImage: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(16, 185, 129, 0.08) 0%, rgba(9, 13, 22, 1) 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       {/* Main Authentication Card */}
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/80 p-8 sm:p-10 relative z-10 transition-all">
-        {/* Header Branding */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="mb-4">
-            <Logo size="lg" showTagline={false} />
+      <div 
+        className="w-full relative z-10 shadow-2xl transition-all"
+        style={{
+          maxWidth: '450px',
+          backgroundColor: '#111827',
+          border: '1px solid #1F2937',
+          borderRadius: '16px',
+          padding: '32px 28px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04)',
+        }}
+      >
+        {/* Subtle Top Accent Border */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: '24px',
+            right: '24px',
+            height: '2px',
+            background: 'linear-gradient(90deg, #059669, #10B981, #059669)',
+            borderRadius: '9999px',
+          }} 
+        />
+
+        {/* Header Section */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <Logo size="md" dark={true} />
           </div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-              Control Center Access
-            </h1>
+
+          <div 
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '9999px',
+              backgroundColor: 'rgba(6, 78, 59, 0.5)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              color: '#34D399',
+              fontSize: '12px',
+              fontWeight: 600,
+              marginBottom: '10px',
+            }}
+          >
+            <ShieldCheck style={{ width: '14px', height: '14px' }} />
+            <span>Admin Control Center</span>
           </div>
-          <p className="text-xs text-slate-500 max-w-xs">
-            Restricted to authorized administrators via Google SSO and Google Authenticator 2FA.
+
+          <h1 
+            style={{
+              fontSize: '20px',
+              fontWeight: 700,
+              color: '#F9FAFB',
+              letterSpacing: '-0.02em',
+              margin: '0 0 6px 0',
+            }}
+          >
+            Restricted Access
+          </h1>
+          <p 
+            style={{
+              fontSize: '12px',
+              color: '#9CA3AF',
+              lineHeight: '1.4',
+              margin: '0 auto',
+              maxWidth: '320px',
+            }}
+          >
+            Restricted to authorized administrators via Google SSO and 2FA.
           </p>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Notification Alert */}
         {error && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200/80 flex items-start gap-2.5 text-xs text-rose-700 animate-in fade-in duration-200">
-            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-            <span className="leading-relaxed font-semibold">{error}</span>
+          <div 
+            style={{
+              marginBottom: '18px',
+              padding: '12px 14px',
+              borderRadius: '10px',
+              backgroundColor: 'rgba(127, 29, 29, 0.4)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              color: '#FCA5A5',
+              fontSize: '12px',
+            }}
+          >
+            <AlertCircle style={{ width: '16px', height: '16px', color: '#F87171', flexShrink: 0, marginTop: '1px' }} />
+            <span style={{ lineHeight: '1.4', fontWeight: 500 }}>{error}</span>
           </div>
         )}
 
         {/* ================= STAGE 1: GOOGLE SIGN-IN ================= */}
         {authStage === 'google_signin' && (
-          <div className="space-y-4 animate-in fade-in duration-200">
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-center">
-              <p className="text-xs font-semibold text-slate-800 mb-1">
+          <div>
+            <div 
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                backgroundColor: '#0F172A',
+                border: '1px solid #1E293B',
+                marginBottom: '14px',
+              }}
+            >
+              <p 
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#E2E8F0',
+                  textAlign: 'center',
+                  marginBottom: '4px',
+                }}
+              >
                 Authorized Administrator Accounts
               </p>
-              <p className="text-[11px] text-slate-500 mb-4">
-                Select your verified Google account to initiate 2-factor authentication:
+              <p 
+                style={{
+                  fontSize: '11px',
+                  color: '#94A3B8',
+                  textAlign: 'center',
+                  marginBottom: '14px',
+                }}
+              >
+                Select your verified Google account to authenticate:
               </p>
 
-              <div className="space-y-2.5">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {ALLOWED_ADMIN_EMAILS.map((adminEmail) => (
                   <button
                     key={adminEmail}
                     type="button"
                     disabled={loading}
                     onClick={() => handleDirectGoogleLogin(adminEmail)}
-                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 transition-all hover:border-indigo-400 hover:shadow-xs disabled:opacity-50 cursor-pointer group"
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      backgroundColor: '#1E293B',
+                      border: '1px solid #334155',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.15s ease',
+                      textAlign: 'left',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!loading) {
+                        e.currentTarget.style.backgroundColor = '#26354A';
+                        e.currentTarget.style.borderColor = '#10B981';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#1E293B';
+                      e.currentTarget.style.borderColor = '#334155';
+                    }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                        />
-                      </svg>
-                      <span className="truncate">{adminEmail}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                      {/* Google G Logo Badge */}
+                      <div 
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          backgroundColor: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                        }}
+                      >
+                        <svg style={{ width: '16px', height: '16px' }} viewBox="0 0 24 24">
+                          <path
+                            fill="#4285F4"
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                          />
+                        </svg>
+                      </div>
+
+                      <div style={{ overflow: 'hidden' }}>
+                        <div 
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            color: '#F1F5F9',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {adminEmail}
+                        </div>
+                        <div 
+                          style={{
+                            fontSize: '10px',
+                            color: '#94A3B8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            marginTop: '2px',
+                          }}
+                        >
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
+                          <span>Authorized Administrator</span>
+                        </div>
+                      </div>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+
+                    <ArrowRight style={{ width: '15px', height: '15px', color: '#64748B', flexShrink: 0, marginLeft: '8px' }} />
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2 pt-2 text-slate-500 text-xs">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            <div 
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                fontSize: '11px',
+                color: '#64748B',
+                marginTop: '12px',
+              }}
+            >
+              <Lock style={{ width: '13px', height: '13px', color: '#10B981' }} />
               <span>Step 1 of 2: Google Identity Verification</span>
             </div>
           </div>
@@ -293,35 +459,78 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
 
         {/* ================= STAGE 2A: GOOGLE AUTHENTICATOR SETUP (FIRST TIME) ================= */}
         {authStage === '2fa_setup' && (
-          <form onSubmit={handleTotpSubmit} className="space-y-4 animate-in fade-in duration-200">
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-600 mb-2">
-                <QrCode className="w-5 h-5" />
+          <form onSubmit={handleTotpSubmit}>
+            <div 
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                backgroundColor: '#0F172A',
+                border: '1px solid #1E293B',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <div 
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(6, 78, 59, 0.5)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#34D399',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '10px',
+                }}
+              >
+                <QrCode style={{ width: '18px', height: '18px' }} />
               </div>
-              <h2 className="text-sm font-bold text-slate-900 mb-1">
+
+              <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#F9FAFB', margin: '0 0 4px 0' }}>
                 Set Up Google Authenticator
               </h2>
-              <p className="text-[11px] text-slate-500 mb-4 leading-relaxed">
+              <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 14px 0', lineHeight: '1.4' }}>
                 Scan this QR code with the <strong>Google Authenticator</strong> app on your mobile device:
               </p>
 
               {qrCodeUrl && (
-                <div className="flex justify-center mb-3">
-                  <div className="p-2 bg-white rounded-xl border border-slate-200 shadow-xs">
-                    <img src={qrCodeUrl} alt="Google Authenticator QR Code" className="w-48 h-48 rounded-lg" />
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                  <div 
+                    style={{
+                      padding: '8px',
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: '10px',
+                      border: '1px solid #334155',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <img src={qrCodeUrl} alt="Google Authenticator QR Code" style={{ width: '160px', height: '160px', display: 'block' }} />
                   </div>
                 </div>
               )}
 
               {totpSecret && (
-                <div className="bg-white p-2 rounded-lg border border-slate-200 text-[10px] text-slate-600 font-mono select-all">
-                  Manual Key: <span className="font-bold text-slate-900">{totpSecret}</span>
+                <div 
+                  style={{
+                    backgroundColor: '#0B0F19',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid #1E293B',
+                    fontSize: '11px',
+                    color: '#94A3B8',
+                    fontFamily: 'monospace',
+                    userSelect: 'all',
+                  }}
+                >
+                  <span style={{ color: '#64748B', display: 'block', fontSize: '10px', marginBottom: '2px' }}>Manual Entry Key:</span>
+                  <span style={{ fontWeight: 700, color: '#34D399', letterSpacing: '0.05em' }}>{totpSecret}</span>
                 </div>
               )}
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5 text-center">
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#E2E8F0', marginBottom: '6px', textAlign: 'center' }}>
                 Enter the 6-digit code from Google Authenticator
               </label>
               <input
@@ -333,25 +542,69 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                 required
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="123456"
-                className="w-full text-center tracking-[0.4em] text-xl font-bold py-3 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                placeholder="000000"
+                style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  letterSpacing: '0.4em',
+                  fontSize: '22px',
+                  fontWeight: 800,
+                  padding: '12px',
+                  backgroundColor: '#0F172A',
+                  border: '1px solid #334155',
+                  borderRadius: '10px',
+                  color: '#FFFFFF',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
               />
             </div>
 
-            <AdminButton
+            <button
               type="submit"
-              variant="primary"
-              size="lg"
-              loading={loading}
-              className="w-full justify-center shadow-md shadow-indigo-600/20"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '13px',
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.4)',
+                transition: 'background-color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.backgroundColor = '#10B981';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#059669';
+              }}
             >
-              Verify and continue
-            </AdminButton>
+              {loading ? <RefreshCw style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> : <CheckCircle2 style={{ width: '16px', height: '16px' }} />}
+              <span>Verify and Finish Setup</span>
+            </button>
 
             <button
               type="button"
               onClick={handleResetAuth}
-              className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors pt-1 cursor-pointer"
+              style={{
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#94A3B8',
+                backgroundColor: 'transparent',
+                border: 'none',
+                marginTop: '12px',
+                cursor: 'pointer',
+              }}
             >
               ← Back to Google Sign-In
             </button>
@@ -360,24 +613,61 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
 
         {/* ================= STAGE 2B: GOOGLE AUTHENTICATOR LOGIN ================= */}
         {authStage === '2fa_verify' && (
-          <form onSubmit={handleTotpSubmit} className="space-y-4 animate-in fade-in duration-200">
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 mb-2">
-                <Smartphone className="w-5 h-5" />
+          <form onSubmit={handleTotpSubmit}>
+            <div 
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                backgroundColor: '#0F172A',
+                border: '1px solid #1E293B',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <div 
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(6, 78, 59, 0.5)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#34D399',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '10px',
+                }}
+              >
+                <Smartphone style={{ width: '18px', height: '18px' }} />
               </div>
-              <h2 className="text-sm font-bold text-slate-900 mb-1">
-                Two-factor authentication
+
+              <h2 style={{ fontSize: '14px', fontWeight: 700, color: '#F9FAFB', margin: '0 0 4px 0' }}>
+                Two-Factor Authentication
               </h2>
-              <p className="text-xs text-slate-500 mb-2">
+              <p style={{ fontSize: '11px', color: '#94A3B8', margin: '0 0 10px 0', lineHeight: '1.4' }}>
                 Enter the 6-digit code from your Google Authenticator app.
               </p>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[11px] font-semibold text-slate-700">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="truncate max-w-[200px]">{selectedAdminEmail}</span>
+
+              <div 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '4px 12px',
+                  borderRadius: '9999px',
+                  backgroundColor: '#1E293B',
+                  border: '1px solid #334155',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#34D399',
+                }}
+              >
+                <CheckCircle2 style={{ width: '13px', height: '13px' }} />
+                <span>{selectedAdminEmail}</span>
               </div>
             </div>
 
-            <div>
+            <div style={{ marginBottom: '14px' }}>
               <input
                 ref={otpInputRef}
                 type="text"
@@ -388,24 +678,68 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="000 000"
-                className="w-full text-center tracking-[0.4em] text-2xl font-extrabold py-3 bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  letterSpacing: '0.4em',
+                  fontSize: '24px',
+                  fontWeight: 800,
+                  padding: '12px',
+                  backgroundColor: '#0F172A',
+                  border: '1px solid #334155',
+                  borderRadius: '10px',
+                  color: '#FFFFFF',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
               />
             </div>
 
-            <AdminButton
+            <button
               type="submit"
-              variant="primary"
-              size="lg"
-              loading={loading}
-              className="w-full justify-center shadow-md shadow-indigo-600/20"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                backgroundColor: '#059669',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '13px',
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.4)',
+                transition: 'background-color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.backgroundColor = '#10B981';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#059669';
+              }}
             >
-              Verify and continue
-            </AdminButton>
+              {loading ? <RefreshCw style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} /> : <ShieldCheck style={{ width: '16px', height: '16px' }} />}
+              <span>Verify & Enter Admin Console</span>
+            </button>
 
             <button
               type="button"
               onClick={handleResetAuth}
-              className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors pt-1 cursor-pointer"
+              style={{
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#94A3B8',
+                backgroundColor: 'transparent',
+                border: 'none',
+                marginTop: '12px',
+                cursor: 'pointer',
+              }}
             >
               ← Back to Google Sign-In
             </button>
@@ -413,15 +747,43 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({
         )}
 
         {/* Footer Navigation */}
-        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div 
+          style={{
+            marginTop: '20px',
+            paddingTop: '16px',
+            borderTop: '1px solid #1F2937',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '11px',
+            color: '#64748B',
+          }}
+        >
           <a
             href="/"
-            className="inline-flex items-center gap-1.5 font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontWeight: 600,
+              color: '#94A3B8',
+              textDecoration: 'none',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#34D399';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#94A3B8';
+            }}
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft style={{ width: '13px', height: '13px' }} />
             <span>Public Website</span>
           </a>
-          <span className="text-[11px] text-slate-400 font-mono">2FA Security</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'monospace', color: '#64748B' }}>
+            <Lock style={{ width: '12px', height: '12px', color: '#10B981' }} />
+            <span>2FA Security</span>
+          </span>
         </div>
       </div>
     </div>
