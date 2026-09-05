@@ -70,14 +70,11 @@ const routeMap: Record<string, PageType> = {
   '/finance/advisory': 'financeServicePage',
   '/finance/insurance': 'insurancePage',
   '/favourites': 'wishlist',
-  '/admin': 'adminPortal',
+  '/secure-control-x7k9p2': 'adminPortal',
   '/about': 'aboutUsPage',
   '/contact': 'contactUsPage',
   '/enquiry': 'enquiryPage',
   '/book-slot': 'bookSlotPage',
-  '/secret-admin': 'adminPortal',
-  '/portal': 'adminPortal',
-  '/nexopp-admin': 'adminPortal',
 };
 
 const getPathForPage = (page: PageType): string => {
@@ -86,12 +83,18 @@ const getPathForPage = (page: PageType): string => {
 };
 
 const parseUrl = (path: string) => {
-  if (window.location.search.includes('admin=true') || window.location.search.includes('portal=true')) {
-    return { page: 'adminPortal' as PageType };
-  }
   let cleanPath = (path || '').split('?')[0].split('#')[0];
   if (cleanPath !== '/' && cleanPath.endsWith('/')) {
     cleanPath = cleanPath.slice(0, -1);
+  }
+
+  // Block old admin URLs and redirect to home
+  const oldAdminPaths = ['/admin', '/admin-login', '/administrator', '/admin-panel', '/portal', '/secret-admin', '/nexopp-admin'];
+  if (oldAdminPaths.includes(cleanPath)) {
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', '/');
+    }
+    return { page: 'home' as PageType };
   }
   if (cleanPath.startsWith('/property/')) {
     const rawId = cleanPath.split('/')[2];

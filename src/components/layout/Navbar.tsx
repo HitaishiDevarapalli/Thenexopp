@@ -778,7 +778,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         onClick={() => {
                           setOpenDropdown(null);
                           if (onNavigateToPage) onNavigateToPage('adminPortal');
-                          else window.location.href = '/admin';
+                          else window.location.href = '/secure-control-x7k9p2';
                         }}
                         style={{
                           width: '100%',

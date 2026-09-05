@@ -10,9 +10,17 @@ import { fileURLToPath } from 'url';
 import pinoHttp from 'pino-http';
 import pino from 'pino';
 import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
 
 import { prisma, checkDatabaseConnection } from './db.js';
-import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole, optionalAuthMiddleware } from './auth.js';
+import { hashPassword, verifyPassword, generateTokens, authMiddleware, requireRole, optionalAuthMiddleware, JWT_SECRET } from './auth.js';
+import {
+  AUTHORIZED_ADMIN_EMAILS,
+  isAuthorizedAdminEmail,
+  getAdmin2FARecord,
+  generateAdminTotpSetup,
+  verifyAdminTotp
+} from './admin2fa.js';
 import { optimizeAndSaveImage } from './imageProcessor.js';
 import { verifyWidgetToken } from './services/msg91WidgetService.js';
 import {
@@ -2596,16 +2604,10 @@ app.post('/api/auth/admin-google-auth', async (req, res, next) => {
   try {
     const { credential, email, name } = req.body;
     
-    // Strictly whitelisted admin emails
-    const ALLOWED_ADMIN_EMAILS = [
-      'thenexopptech@gmail.com',
-      'talatalareddy870@gmail.com'
-    ];
-
     let verifiedEmail = (email || '').trim().toLowerCase();
     let verifiedName = name || 'Admin';
 
-    // If credential JWT token is passed, decode payload
+    // If credential JWT token is passed from Google Identity Services, decode payload
     if (credential) {
       try {
         const parts = credential.split('.');
@@ -2627,18 +2629,104 @@ app.post('/api/auth/admin-google-auth', async (req, res, next) => {
       return res.status(400).json({ error: 'Missing email in Google authentication response' });
     }
 
-    if (!ALLOWED_ADMIN_EMAILS.includes(verifiedEmail)) {
+    // Strictly enforce the 2 authorized email accounts
+    if (!isAuthorizedAdminEmail(verifiedEmail)) {
+      logger.warn({ attemptedEmail: verifiedEmail }, 'Unauthorized Google Admin login attempt');
       return res.status(403).json({
-        error: `Access Denied: ${verifiedEmail} is not authorized for NexOpp Admin access. Only authorized admin accounts may sign in.`,
+        error: `ACCESS DENIED: ${verifiedEmail} is not authorized for NexOpp Admin access. Only approved administrator accounts may sign in.`,
         authorized: false
       });
     }
 
-    // Email is verified and authorized!
+    // Step 1 Successful: User verified with authorized Google Account!
+    // Issue a 5-minute temporary session token requiring Step 2 (Google Authenticator TOTP)
+    const tempSessionToken = jwt.sign(
+      {
+        email: verifiedEmail,
+        fullName: verifiedName || (verifiedEmail === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin'),
+        type: 'admin_2fa_temp',
+      },
+      JWT_SECRET,
+      { expiresIn: '5m' }
+    );
+
+    const record = getAdmin2FARecord(verifiedEmail);
+
+    if (record && record.isConfigured) {
+      // Administrator has already configured Google Authenticator
+      logger.info({ email: verifiedEmail }, 'Admin Step 1 Google Auth verified. Requesting 6-digit TOTP code.');
+      return res.json({
+        success: true,
+        step: '2fa_verify',
+        email: verifiedEmail,
+        fullName: verifiedName,
+        tempSessionToken,
+        message: 'Google authentication successful. Enter the 6-digit code from your Google Authenticator app.'
+      });
+    } else {
+      // First-time setup: Generate new TOTP secret & QR Code for Google Authenticator app
+      const setup = await generateAdminTotpSetup(verifiedEmail);
+      logger.info({ email: verifiedEmail }, 'Admin Step 1 Google Auth verified. Initializing Google Authenticator setup.');
+      return res.json({
+        success: true,
+        step: '2fa_setup',
+        email: verifiedEmail,
+        fullName: verifiedName,
+        qrCode: setup.qrCodeDataUrl,
+        secret: setup.secret,
+        tempSessionToken,
+        message: 'Scan the QR code with Google Authenticator on your phone to complete setup.'
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/auth/admin-verify-2fa', async (req, res, next) => {
+  try {
+    const { tempSessionToken, code } = req.body;
+
+    if (!tempSessionToken) {
+      return res.status(401).json({ error: 'ACCESS DENIED: Missing temporary authentication token. Please sign in with Google first.' });
+    }
+
+    if (!code) {
+      return res.status(400).json({ error: 'Please enter the 6-digit verification code from Google Authenticator.' });
+    }
+
+    // Verify tempSessionToken
+    let decoded;
+    try {
+      decoded = jwt.verify(tempSessionToken, JWT_SECRET);
+    } catch (jwtErr) {
+      return res.status(401).json({ error: 'ACCESS DENIED: Authentication session expired. Please sign in with Google again.' });
+    }
+
+    if (!decoded || decoded.type !== 'admin_2fa_temp' || !decoded.email) {
+      return res.status(401).json({ error: 'ACCESS DENIED: Invalid temporary session token.' });
+    }
+
+    const email = (decoded.email || '').trim().toLowerCase();
+
+    // Verify email is in the authorized whitelist
+    if (!isAuthorizedAdminEmail(email)) {
+      return res.status(403).json({ error: `ACCESS DENIED: ${email} is not authorized for Admin access.` });
+    }
+
+    // Verify the 6-digit TOTP code against this administrator's secret
+    const verifyResult = verifyAdminTotp(email, code);
+
+    if (!verifyResult.success) {
+      logger.warn({ email }, 'Failed 6-digit Google Authenticator code attempt');
+      return res.status(401).json({ error: verifyResult.error || 'ACCESS DENIED: Incorrect 6-digit code. Check your Google Authenticator app and try again.' });
+    }
+
+    // Both Step 1 (Google Auth) and Step 2 (Google Authenticator) verified!
     const adminUser = {
-      id: `google-admin-${verifiedEmail}`,
-      email: verifiedEmail,
-      fullName: verifiedName || (verifiedEmail === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin'),
+      id: `google-admin-${email}`,
+      email: email,
+      fullName: decoded.fullName || (email === 'thenexopptech@gmail.com' ? 'NexOpp Tech Admin' : 'Talatalareddy Admin'),
       role: 'SUPER_ADMIN'
     };
 
@@ -2650,7 +2738,7 @@ app.post('/api/auth/admin-google-auth', async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    logger.info({ adminUser }, 'Super Admin Google Sign-In Successful');
+    logger.info({ adminUser }, 'Super Admin 2FA Authentication Successful');
     return res.json({
       success: true,
       authorized: true,

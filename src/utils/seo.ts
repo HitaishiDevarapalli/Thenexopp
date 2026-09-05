@@ -252,7 +252,7 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
   adminPortal: {
     title: "Management Console | TheNexopp",
     description: "Enterprise administration portal for listing management, dealer approvals, and customer analytics.",
-    canonicalPath: '/admin',
+    canonicalPath: '/secure-control-x7k9p2',
     robots: 'noindex, nofollow'
   },
   notFound: {
