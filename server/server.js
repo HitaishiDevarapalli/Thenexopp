@@ -107,7 +107,7 @@ app.use(cookieParser());
 
 // ── FILE STORAGE SUBDIRECTORIES ──────────────────────────────────────────────
 const uploadDir = path.join(__dirname, '../uploads');
-const subDirs = ['property-images', 'broker-images', 'profile-images'];
+const subDirs = ['property-images', 'broker-images', 'profile-images', 'lead-photos'];
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -529,6 +529,81 @@ app.post('/api/upload', async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+});
+
+// ── UNCOMPRESSED / LOSSLESS LEAD PHOTO UPLOAD ENDPOINT ──────────────────────
+app.post('/api/upload-lead-photo', async (req, res, next) => {
+  try {
+    const { fileName, fileData, mimeType } = req.body;
+    if (!fileData) {
+      return res.status(400).json({ error: 'No file data provided' });
+    }
+
+    const cleanBase64 = fileData.replace(/^data:([A-Za-z-+\/]+);base64,/, '');
+    const buffer = Buffer.from(cleanBase64, 'base64');
+
+    // Determine extension preserving original clarity
+    let ext = path.extname(fileName || '').toLowerCase();
+    if (!ext || ext.length > 5) {
+      if (mimeType?.includes('png')) ext = '.png';
+      else if (mimeType?.includes('webp')) ext = '.webp';
+      else ext = '.jpg';
+    }
+
+    const safeBaseName = (fileName || 'lead_photo')
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .replace(/\.[^/.]+$/, '');
+    const savedFileName = `${Date.now()}_${safeBaseName}${ext}`;
+    const targetDir = path.join(uploadDir, 'lead-photos');
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    const targetPath = path.join(targetDir, savedFileName);
+
+    // Write original uncompressed buffer directly to disk
+    fs.writeFileSync(targetPath, buffer);
+
+    const protocol = req.protocol;
+    const host = req.headers.host;
+    const fileUrl = `/uploads/lead-photos/${savedFileName}`;
+    const fullUrl = `${protocol}://${host}${fileUrl}`;
+
+    logger.info({ savedFileName, sizeBytes: buffer.length }, 'Lead property photo saved uncompressed at 100% original clarity');
+
+    return res.status(201).json({
+      success: true,
+      url: fileUrl,
+      fullUrl: fullUrl,
+      fileName: savedFileName,
+      originalName: fileName || savedFileName,
+      size: buffer.length,
+      mimeType: mimeType || 'image/jpeg',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── 1-CLICK LOSSLESS FILE DOWNLOAD ENDPOINT ─────────────────────────────────
+app.get('/api/download-lead-file', (req, res) => {
+  try {
+    const { file, name } = req.query;
+    if (!file) return res.status(400).send('Missing file parameter');
+
+    // Prevent directory traversal
+    const sanitized = String(file).replace(/^(\/uploads\/|uploads\/)/, '').replace(/\.\.\//g, '');
+    const filePath = path.join(uploadDir, sanitized);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('File not found');
+    }
+
+    const downloadName = name ? String(name) : path.basename(filePath);
+    return res.download(filePath, downloadName);
+  } catch (err) {
+    logger.error({ err }, 'Error downloading lead file');
+    return res.status(500).send('Error downloading file');
   }
 });
 
@@ -3835,12 +3910,40 @@ app.delete('/api/sell-business-requests/:id', async (req, res, next) => {
   }
 });
 
-// ── SELL PROPERTY REQUESTS ENDPOINTS ─────────────────────────────────────────
+// ── SELL PROPERTY REQUESTS & NEW SELLING LEADS ENDPOINTS ───────────────────
 app.get('/api/sell-requests', async (req, res) => {
   try {
     const requests = await prisma.sellRequest.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []);
-    return res.json(requests || []);
+    
+    const parsed = (requests || []).map(r => {
+      let extra = {};
+      if (r.message && typeof r.message === 'string') {
+        const trimmed = r.message.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          try {
+            extra = JSON.parse(trimmed);
+          } catch (e) {}
+        }
+      }
+      return {
+        id: r.id,
+        name: r.sellerName,
+        sellerName: r.sellerName,
+        mobile: r.mobile,
+        email: r.email || '',
+        city: r.city,
+        propertyType: r.propertyType,
+        status: r.status || 'PENDING_REVIEW',
+        adminNotes: r.adminNotes || '',
+        createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+        updatedAt: r.updatedAt ? new Date(r.updatedAt).toISOString() : new Date().toISOString(),
+        ...extra,
+      };
+    });
+
+    return res.json(parsed);
   } catch (err) {
+    logger.error({ err }, 'Error fetching sell requests');
     return res.json([]);
   }
 });
@@ -3848,24 +3951,68 @@ app.get('/api/sell-requests', async (req, res) => {
 app.post('/api/sell-requests', async (req, res, next) => {
   try {
     const r = req.body;
-    if (!r.sellerName || !r.mobile) {
+    const sellerName = (r.sellerName || r.name || '').trim();
+    const mobile = (r.mobile || '').trim();
+
+    if (!sellerName || !mobile) {
       return res.status(400).json({ error: 'Seller name and mobile number are required' });
     }
+
+    const extraPayload = {
+      title: r.title || `${r.bedrooms ? r.bedrooms + ' ' : ''}${r.propertyType || 'Property'} in ${r.locality || r.city || ''}`.trim(),
+      propertyPurpose: r.propertyPurpose || 'Sale',
+      expectedPrice: r.expectedPrice || '',
+      priceDisplay: r.priceDisplay || '',
+      isPriceNegotiable: !!r.isPriceNegotiable,
+      sellerType: r.sellerType || 'Owner',
+      preferredContactMethod: r.preferredContactMethod || 'Phone Call',
+      bestTimeToContact: r.bestTimeToContact || 'Anytime',
+      locality: r.locality || '',
+      address: r.address || '',
+      pincode: r.pincode || '',
+      bedrooms: r.bedrooms || '',
+      bathrooms: r.bathrooms || '',
+      balconies: r.balconies || '',
+      areaSqFt: r.areaSqFt || '',
+      carpetArea: r.carpetArea || '',
+      facing: r.facing || '',
+      furnishing: r.furnishing || 'Unfurnished',
+      propertyAge: r.propertyAge || 'Ready to Move',
+      floorNumber: r.floorNumber || '',
+      totalFloors: r.totalFloors || '',
+      parkingSlots: r.parkingSlots || '',
+      amenities: Array.isArray(r.amenities) ? r.amenities : [],
+      description: r.description || '',
+      photos: Array.isArray(r.photos) ? r.photos : [],
+      primaryPhoto: r.primaryPhoto || (r.photos && r.photos[0] ? (typeof r.photos[0] === 'string' ? r.photos[0] : r.photos[0].url) : ''),
+    };
+
+    const messagePayload = JSON.stringify(extraPayload);
+    const leadId = r.id || `sr-${Date.now()}`;
+
     const created = await prisma.sellRequest.create({
       data: {
-        id: r.id || `sr-${Date.now()}`,
-        sellerName: String(r.sellerName),
-        mobile: String(r.mobile),
-        email: r.email || null,
+        id: leadId,
+        sellerName: String(sellerName),
+        mobile: String(mobile),
+        email: r.email ? String(r.email) : null,
         city: String(r.city || ''),
         propertyType: String(r.propertyType || 'Residential'),
-        message: r.message || null,
-        status: 'PENDING_REVIEW',
-        adminNotes: null,
+        message: messagePayload,
+        status: r.status || 'PENDING_REVIEW',
+        adminNotes: r.adminNotes || null,
       },
     });
-    return res.status(201).json(created);
+
+    logger.info({ id: created.id, sellerName, photosCount: extraPayload.photos.length }, 'New Selling Lead created successfully');
+
+    return res.status(201).json({
+      ...created,
+      name: created.sellerName,
+      ...extraPayload,
+    });
   } catch (err) {
+    logger.error({ err }, 'Error saving sell request');
     next(err);
   }
 });
@@ -3875,14 +4022,38 @@ app.put('/api/sell-requests/:id', async (req, res, next) => {
     const { id } = req.params;
     const r = req.body;
     const updateData = {};
+
     if (r.status !== undefined) updateData.status = String(r.status);
     if (r.adminNotes !== undefined) updateData.adminNotes = String(r.adminNotes);
-    if (r.sellerName !== undefined) updateData.sellerName = String(r.sellerName);
+    if (r.sellerName !== undefined || r.name !== undefined) updateData.sellerName = String(r.sellerName || r.name);
     if (r.mobile !== undefined) updateData.mobile = String(r.mobile);
     if (r.email !== undefined) updateData.email = r.email;
     if (r.city !== undefined) updateData.city = String(r.city);
     if (r.propertyType !== undefined) updateData.propertyType = String(r.propertyType);
-    if (r.message !== undefined) updateData.message = r.message;
+
+    // If updating message payload or extra fields
+    if (r.message !== undefined && typeof r.message === 'string') {
+      updateData.message = r.message;
+    } else if (r.photos !== undefined || r.title !== undefined || r.expectedPrice !== undefined) {
+      // Re-encode extra payload into message
+      const existing = await prisma.sellRequest.findUnique({ where: { id } }).catch(() => null);
+      let existingExtra = {};
+      if (existing && existing.message && existing.message.startsWith('{')) {
+        try { existingExtra = JSON.parse(existing.message); } catch (e) {}
+      }
+      const mergedExtra = { ...existingExtra, ...r };
+      delete mergedExtra.id;
+      delete mergedExtra.sellerName;
+      delete mergedExtra.name;
+      delete mergedExtra.mobile;
+      delete mergedExtra.email;
+      delete mergedExtra.city;
+      delete mergedExtra.propertyType;
+      delete mergedExtra.status;
+      delete mergedExtra.adminNotes;
+      updateData.message = JSON.stringify(mergedExtra);
+    }
+
     const updated = await prisma.sellRequest.update({ where: { id }, data: updateData });
     return res.json(updated);
   } catch (err) {

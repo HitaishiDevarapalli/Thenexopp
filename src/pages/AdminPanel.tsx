@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminLoginScreen } from '../components/admin/AdminLoginScreen';
+import { SellingLeadsPanel } from '../components/admin/SellingLeadsPanel';
 import { 
   FaBars,
   FaBuilding, 
@@ -126,6 +127,7 @@ import {
   addAdminModule,
   isModuleActive,
   clearAllLocalEnquiries,
+  sellPropertyRequestsDb,
   API_BASE_URL
 } from '../db/marketplaceDb';
 import type { ContactDetails } from '../db/marketplaceDb';
@@ -530,7 +532,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newPropOwnershipInput, setNewPropOwnershipInput] = useState('');
 
   // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'inquiries' | 'contact_settings' | 'media_manager' | 'ai_assistant'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'selling_leads' | 'inquiries' | 'contact_settings' | 'media_manager' | 'ai_assistant'>('overview');
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -1340,6 +1342,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     }
     if (currentUserRole === 'Super Admin' || activePermissions.includes('all')) return true;
     if (activePermissions.includes(permKey)) return true;
+    if (permKey === 'selling_leads' && (activePermissions.includes('properties') || activePermissions.includes('inquiries') || activePermissions.includes('leads'))) return true;
 
     // Check category prefix (e.g. 'properties' for 'properties:editProperty')
     const category = permKey.split(':')[0];
@@ -1397,6 +1400,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
       case 'hero_cms': return { title: 'Homepage Builder Studio & Stats', sub: 'Customize Hero Sections, Stats, Backgrounds & Visible Elements' };
       case 'customization': return { title: 'Website Settings & Customization', sub: 'Configure Showcase Feeds, Brand Interactions & Stats' };
       case 'contact_settings': return { title: 'Contact Us Details CMS', sub: 'Edit Company Address, Priority Phones, Emails, Working Hours & Location Map' };
+      case 'selling_leads': return { title: 'New Selling Leads & Property Submissions', sub: 'Inspect seller submissions, verify specs & download 100% original lossless photos' };
       case 'inquiries': return { title: 'Contact Inquiries & Leads Inbox', sub: 'Manage and respond to Contact Us messages, buyer leads & consultation requests' };
       case 'team': return { title: 'Team Members Manager', sub: 'Manage Internal Staff, Roles & Portal Access' };
       case 'media_manager': return { title: 'Main Page Settings', sub: 'Manage videos and settings displayed on the homepage carousel' };
@@ -1486,6 +1490,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         counts={{
           pendingProperties: propertiesDb.filter(p => p.approvalStatus === 'Pending Approval').length,
+          sellingLeads: (sellPropertyRequestsDb || []).filter(r => r.status === 'PENDING_REVIEW' || !r.status).length,
           inquiries: enquiriesDb.filter(e => e.status === 'New').length,
           users: registeredCustomers.length,
           brokers: dealersDb.length,
@@ -4411,6 +4416,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             </form>
 
           </div>
+        )}
+
+        {/* ================= CATEGORY 5.4: SELLING LEADS & POST PROPERTY SUBMISSIONS ================= */}
+        {activeTab === 'selling_leads' && (
+          <SellingLeadsPanel
+            showNotification={(msg, type) => showNotification(msg, type === 'error' ? 'warning' : type)}
+          />
         )}
 
         {/* ================= CATEGORY 5.5: CONTACT INQUIRIES & LEADS INBOX ================= */}

@@ -22,6 +22,7 @@ import {
   LogOut,
   ExternalLink,
   ChevronLeft,
+  Sparkles,
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
 
@@ -37,6 +38,7 @@ export interface AdminSidebarProps {
     inquiries?: number;
     users?: number;
     brokers?: number;
+    sellingLeads?: number;
   };
   currentUserRole: string;
   currentUserName: string;
@@ -218,6 +220,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     {
       title: 'COMMUNICATIONS & LEADS',
       items: [
+        {
+          id: 'selling_leads',
+          label: 'New Selling Leads',
+          icon: <Sparkles size={17} />,
+          permKey: 'selling_leads',
+          badgeCount: counts.sellingLeads,
+          badgeVariant: 'success',
+        },
         {
           id: 'inquiries',
           label: 'Contact & Lead Inbox',

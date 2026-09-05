@@ -786,13 +786,44 @@ export const syncWithBackend = async () => {
         if (Array.isArray(sprData)) {
           sellPropertyRequestsDb = sprData.map((d: any) => ({
             id: d.id,
-            name: d.sellerName,
+            name: d.sellerName || d.name,
+            sellerName: d.sellerName || d.name,
             mobile: d.mobile,
             email: d.email || '',
-            city: d.city,
-            propertyType: d.propertyType,
-            preferredContactMethod: d.message ? d.message.replace('Contact via ', '') : 'Phone Call',
-            status: d.status,
+            sellerType: d.sellerType || 'Owner',
+            preferredContactMethod: d.preferredContactMethod || (d.message && !d.message.startsWith('{') ? d.message.replace('Contact via ', '') : 'Phone Call'),
+            bestTimeToContact: d.bestTimeToContact || 'Anytime',
+            
+            title: d.title || `${d.bedrooms ? d.bedrooms + ' ' : ''}${d.propertyType || 'Property'} in ${d.locality || d.city || ''}`.trim(),
+            propertyPurpose: d.propertyPurpose || 'Sale',
+            propertyType: d.propertyType || 'Residential',
+            expectedPrice: d.expectedPrice || '',
+            priceDisplay: d.priceDisplay || '',
+            isPriceNegotiable: !!d.isPriceNegotiable,
+
+            city: d.city || '',
+            locality: d.locality || '',
+            address: d.address || '',
+            pincode: d.pincode || '',
+
+            bedrooms: d.bedrooms || '',
+            bathrooms: d.bathrooms || '',
+            balconies: d.balconies || '',
+            areaSqFt: d.areaSqFt || '',
+            carpetArea: d.carpetArea || '',
+            facing: d.facing || '',
+            furnishing: d.furnishing || 'Unfurnished',
+            propertyAge: d.propertyAge || 'Ready to Move',
+            floorNumber: d.floorNumber || '',
+            totalFloors: d.totalFloors || '',
+            parkingSlots: d.parkingSlots || '',
+            amenities: Array.isArray(d.amenities) ? d.amenities : [],
+            description: d.description || '',
+
+            photos: Array.isArray(d.photos) ? d.photos : [],
+            primaryPhoto: d.primaryPhoto || (Array.isArray(d.photos) && d.photos[0] ? (typeof d.photos[0] === 'string' ? d.photos[0] : d.photos[0].url) : ''),
+
+            status: d.status || 'PENDING_REVIEW',
             adminNotes: d.adminNotes || '',
             createdAt: d.createdAt,
             updatedAt: d.updatedAt,
@@ -2337,15 +2368,56 @@ export const deleteSellBusinessRequest = (id: string) => {
   }).catch(err => console.error('API Sync Error:', err));
 };
 
-// ── SELL PROPERTY REQUESTS ──────────────────────────────────────────────────
+// ── SELL PROPERTY REQUESTS & NEW SELLING LEADS ─────────────────────────────
+export interface SellPropertyPhoto {
+  url: string;
+  name?: string;
+  originalName?: string;
+  isCover?: boolean;
+  size?: number;
+  mimeType?: string;
+  fullUrl?: string;
+}
+
 export interface SellPropertyRequest {
   id: string;
   name: string;
+  sellerName?: string;
   mobile: string;
   email?: string;
-  city: string;
+  sellerType?: string;
+  preferredContactMethod?: string;
+  bestTimeToContact?: string;
+
+  title?: string;
+  propertyPurpose?: string;
   propertyType: string;
-  preferredContactMethod: string;
+  expectedPrice?: number | string;
+  priceDisplay?: string;
+  isPriceNegotiable?: boolean;
+
+  city: string;
+  locality?: string;
+  address?: string;
+  pincode?: string;
+
+  bedrooms?: string | number;
+  bathrooms?: string | number;
+  balconies?: string | number;
+  areaSqFt?: string | number;
+  carpetArea?: string | number;
+  facing?: string;
+  furnishing?: string;
+  propertyAge?: string;
+  floorNumber?: string | number;
+  totalFloors?: string | number;
+  parkingSlots?: string | number;
+  amenities?: string[];
+  description?: string;
+
+  photos?: (SellPropertyPhoto | string)[];
+  primaryPhoto?: string;
+
   status: string;
   adminNotes?: string;
   createdAt?: string;
@@ -2362,13 +2434,45 @@ export const addSellPropertyRequest = (item: SellPropertyRequest) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       id: item.id,
-      sellerName: item.name,
+      sellerName: item.name || item.sellerName,
+      name: item.name || item.sellerName,
       mobile: item.mobile,
       email: item.email,
-      city: item.city,
+      sellerType: item.sellerType,
+      preferredContactMethod: item.preferredContactMethod,
+      bestTimeToContact: item.bestTimeToContact,
+      
+      title: item.title,
+      propertyPurpose: item.propertyPurpose,
       propertyType: item.propertyType,
-      message: `Contact via ${item.preferredContactMethod}`,
+      expectedPrice: item.expectedPrice,
+      priceDisplay: item.priceDisplay,
+      isPriceNegotiable: item.isPriceNegotiable,
+
+      city: item.city,
+      locality: item.locality,
+      address: item.address,
+      pincode: item.pincode,
+
+      bedrooms: item.bedrooms,
+      bathrooms: item.bathrooms,
+      balconies: item.balconies,
+      areaSqFt: item.areaSqFt,
+      carpetArea: item.carpetArea,
+      facing: item.facing,
+      furnishing: item.furnishing,
+      propertyAge: item.propertyAge,
+      floorNumber: item.floorNumber,
+      totalFloors: item.totalFloors,
+      parkingSlots: item.parkingSlots,
+      amenities: item.amenities,
+      description: item.description,
+
+      photos: item.photos,
+      primaryPhoto: item.primaryPhoto,
+
       status: item.status,
+      adminNotes: item.adminNotes,
     })
   }).catch(err => console.error('API Sync Error:', err));
 };
@@ -2380,11 +2484,6 @@ export const updateSellPropertyRequest = (id: string, updated: Partial<SellPrope
   const backendUpdate: any = { ...updated };
   if (updated.name !== undefined) {
     backendUpdate.sellerName = updated.name;
-    delete backendUpdate.name;
-  }
-  if (updated.preferredContactMethod !== undefined) {
-    backendUpdate.message = `Contact via ${updated.preferredContactMethod}`;
-    delete backendUpdate.preferredContactMethod;
   }
 
   fetch(`${API_BASE_URL}/api/sell-requests/${id}`, {

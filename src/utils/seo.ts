@@ -45,14 +45,14 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   sellPropertyPage: {
-    title: "Sell Your Property Online | TheNexopp",
-    description: "List your residential, commercial, or plot property on TheNexopp to reach verified buyers and investors across India.",
+    title: "Post Your Property Online | TheNexopp",
+    description: "Post your residential, commercial, or plot property on TheNexopp to reach verified buyers and investors across India.",
     canonicalPath: '/properties/sell',
     robots: 'index, follow',
     breadcrumbs: [
       { name: 'Home', path: '/' },
       { name: 'Properties', path: '/properties' },
-      { name: 'Sell Property', path: '/properties/sell' }
+      { name: 'Post Property', path: '/properties/sell' }
     ]
   },
   flatsPage: {
