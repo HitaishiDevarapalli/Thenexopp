@@ -77,11 +77,21 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
 
   useEffect(() => {
     if (activeSubTab) {
-      if (activeSubTab === 'soldOut') setActiveModuleTab('soldOut');
-      else if (activeSubTab === 'buyEnquiries') setActiveModuleTab('enquiries');
-      else if (activeSubTab === 'businessTypes') setActiveModuleTab('types');
+      if (activeSubTab === 'soldOut' || activeSubTab === 'sold') setActiveModuleTab('soldOut');
+      else if (activeSubTab === 'all' || activeSubTab === 'listings') setActiveModuleTab('listings');
+      else if (activeSubTab === 'add') {
+        setActiveModuleTab('listings');
+        setIsModalOpen(true);
+        setModalMode('add');
+        setEditingId(null);
+      }
+      else if (activeSubTab === 'buyEnquiries' || activeSubTab === 'enquiries') setActiveModuleTab('enquiries');
+      else if (activeSubTab === 'businessTypes' || activeSubTab === 'types') setActiveModuleTab('types');
+      else if (activeSubTab === 'sellRequests' || activeSubTab === 'sell_requests') setActiveModuleTab('sellRequests');
       else if (['listings', 'categories', 'types', 'sellRequests', 'enquiries'].includes(activeSubTab)) {
         setActiveModuleTab(activeSubTab as any);
+      } else {
+        setActiveModuleTab('listings');
       }
     }
   }, [activeSubTab]);

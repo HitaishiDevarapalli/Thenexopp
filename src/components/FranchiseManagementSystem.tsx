@@ -70,7 +70,24 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
 
   React.useEffect(() => {
     if (activeSubTab) {
-      setActiveTab(activeSubTab as any);
+      if (activeSubTab === 'all' || activeSubTab === 'listings') {
+        setActiveTab('listings');
+      } else if (activeSubTab === 'add') {
+        setActiveTab('listings');
+        setIsModalOpen(true);
+        setModalMode('add');
+        setEditingFranchise({});
+      } else if (activeSubTab === 'soldOut' || activeSubTab === 'sold') {
+        setActiveTab('soldOut');
+      } else if (activeSubTab === 'resales' || activeSubTab === 'resale_requests') {
+        setActiveTab('reports');
+      } else if (activeSubTab === 'enquiries' || activeSubTab === 'franchise_leads') {
+        setActiveTab('enquiries');
+      } else if (['listings', 'editProperty', 'featured', 'analytics', 'categories', 'locations', 'soldOut', 'reports', 'approvals', 'enquiries', 'gallery'].includes(activeSubTab)) {
+        setActiveTab(activeSubTab as any);
+      } else {
+        setActiveTab('listings');
+      }
     }
   }, [activeSubTab]);
 

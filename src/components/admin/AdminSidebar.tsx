@@ -128,6 +128,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             { id: 'all', label: 'All Properties' },
             { id: 'add', label: 'Add Property' },
             { id: 'pending', label: 'Pending Approvals' },
+            { id: 'soldOut', label: 'Sold Out Properties' },
             { id: 'bulk', label: 'Bulk Operations' },
           ],
           currentSub: propertySubTab,
@@ -142,6 +143,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           subItems: [
             { id: 'all', label: 'All Franchises' },
             { id: 'add', label: 'Add Franchise' },
+            { id: 'soldOut', label: 'Sold Franchises' },
             { id: 'resales', label: 'Resale Requests' },
             { id: 'enquiries', label: 'Franchise Leads' },
           ],
@@ -157,6 +159,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           subItems: [
             { id: 'all', label: 'All Businesses' },
             { id: 'add', label: 'Add Business' },
+            { id: 'soldOut', label: 'Sold Businesses' },
             { id: 'sell_requests', label: 'Sell Requests' },
             { id: 'enquiries', label: 'Business Inquiries' },
           ],

@@ -99,7 +99,22 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
   React.useEffect(() => {
     if (activeSubTab) {
-      setActiveModuleTab(activeSubTab as any);
+      if (activeSubTab === 'all' || activeSubTab === 'listings') {
+        setActiveModuleTab('listings');
+      } else if (activeSubTab === 'add' || activeSubTab === 'editProperty') {
+        setActiveModuleTab('listings');
+        setIsModalOpen(true);
+        setModalMode('add');
+      } else if (activeSubTab === 'pending' || activeSubTab === 'approvals') {
+        setActiveModuleTab('listings');
+        setSelectedStatusFilter('Pending');
+      } else if (activeSubTab === 'sold' || activeSubTab === 'soldOut') {
+        setActiveModuleTab('soldOut');
+      } else if (['listings', 'editProperty', 'featured', 'analytics', 'categories', 'locations', 'soldOut', 'reports', 'sellRequests'].includes(activeSubTab)) {
+        setActiveModuleTab(activeSubTab as any);
+      } else {
+        setActiveModuleTab('listings');
+      }
     }
   }, [activeSubTab]);
 
