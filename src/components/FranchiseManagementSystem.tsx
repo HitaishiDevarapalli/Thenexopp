@@ -37,7 +37,9 @@ import {
   FaCheckCircle,
   FaExternalLinkAlt,
   FaLightbulb,
-  FaUserTie
+  FaUserTie,
+  FaStore,
+  FaChartBar
 } from 'react-icons/fa';
 import { COMPREHENSIVE_INDIA_PLACES_DB, searchLivePlaces, geocodeLocationOnline, reverseGeocodeOnline } from '../utils/locationIntelligence';
 import { LocationPickerMap } from './ui/LocationPickerMap';
@@ -65,7 +67,7 @@ const DEFAULT_CATEGORIES = [
   'Other Business Opportunities'
 ];
 
-export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange: _onSubTabChange, mode = 'franchise' }) => {
+export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps> = ({ showNotification, activeSubTab, onSubTabChange, mode = 'franchise' }) => {
   const [activeTab, setActiveTab] = useState<'listings' | 'editProperty' | 'featured' | 'analytics' | 'categories' | 'locations' | 'soldOut' | 'reports' | 'approvals' | 'enquiries' | 'gallery'>('listings');
 
   React.useEffect(() => {
@@ -443,6 +445,44 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
         </button>
       </div>
 
+      {/* Navigation Subtabs Bar */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E2E8F0', paddingBottom: '2px', marginBottom: '20px', overflowX: 'auto' }}>
+        {[
+          { id: 'listings', label: 'All Franchises', count: franchiseDb.length, icon: FaStore },
+          { id: 'enquiries', label: 'Franchise Leads', count: franchiseEnquiriesDb.length, icon: FaEnvelope },
+          { id: 'categories', label: 'Categories', count: categories.length, icon: FaList },
+          { id: 'reports', label: 'Analytics & Reports', count: stats.total, icon: FaChartBar }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveTab(tab.id as any);
+              onSubTabChange?.(tab.id);
+            }}
+            style={{
+              padding: '10px 18px',
+              border: 'none',
+              borderBottom: activeTab === tab.id ? '3px solid #059669' : '3px solid transparent',
+              backgroundColor: activeTab === tab.id ? '#ECFDF5' : 'transparent',
+              color: activeTab === tab.id ? '#059669' : '#475569',
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              borderRadius: '8px 8px 0 0',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.15s'
+            }}
+          >
+            <tab.icon /> {tab.label}
+            <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: activeTab === tab.id ? '#A7F3D0' : '#F1F5F9', color: activeTab === tab.id ? '#065F46' : '#64748B' }}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {/* ================= MODULE 1: FRANCHISE LISTINGS (Also handles Edit Franchise) ================= */}
       {(activeTab === 'listings' || activeTab === 'editProperty') && (
         <div>
@@ -606,38 +646,34 @@ export const FranchiseManagementSystem: React.FC<FranchiseManagementSystemProps>
                           </span>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'right' }}>
-                          {activeTab === 'editProperty' ? (
-                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                              <button
-                                onClick={() => openEditModal(fran)}
-                                title="Edit Franchise"
-                                style={{ padding: '8px 12px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
-                              >
-                                <FaEdit /> Edit
-                              </button>
-                              <button
-                                onClick={() => handleDuplicate(fran)}
-                                title="Duplicate Listing"
-                                style={{ padding: '8px 12px', backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
-                              >
-                                <FaCopy /> Copy
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (window.confirm(`Delete franchise '${fran.brand}'?`)) {
-                                    deleteFranchise(fran.id);
-                                    showNotification('Franchise deleted.', 'warning');
-                                  }
-                                }}
-                                title="Delete"
-                                style={{ padding: '8px 12px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
-                              >
-                                <FaTrash />
-                              </button>
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>View Only</span>
-                          )}
+                          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={() => openEditModal(fran)}
+                              title="Edit Franchise"
+                              style={{ padding: '8px 12px', backgroundColor: '#ECFDF5', color: '#059669', border: '1px solid #A7F3D0', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <FaEdit /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDuplicate(fran)}
+                              title="Duplicate Listing"
+                              style={{ padding: '8px 12px', backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <FaCopy /> Copy
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to delete franchise '${fran.brand}'?`)) {
+                                  deleteFranchise(fran.id);
+                                  showNotification('Franchise deleted.', 'warning');
+                                }
+                              }}
+                              title="Delete Franchise"
+                              style={{ padding: '8px 12px', backgroundColor: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

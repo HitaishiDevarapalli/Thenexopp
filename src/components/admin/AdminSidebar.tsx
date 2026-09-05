@@ -496,7 +496,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                         }}
                       >
                         {item.subItems.map((sub) => {
-                          const isSubActive = isActive && item.currentSub === sub.id;
+                          const isSubActive = isActive && (
+                            item.currentSub === sub.id ||
+                            (sub.id === 'all' && (item.currentSub === 'listings' || !item.currentSub || item.currentSub === 'all')) ||
+                            (sub.id === 'listings' && (item.currentSub === 'all' || !item.currentSub))
+                          );
                           return (
                             <button
                               key={sub.id}

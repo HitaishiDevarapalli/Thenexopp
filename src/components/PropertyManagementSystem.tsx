@@ -718,21 +718,70 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', fontFamily: "'Inter', 'Plus Jakarta Sans', -apple-system, sans-serif" }}>
       
       {/* Top Action Bar matching user screenshot */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-        <button
-          onClick={exportToCSV}
-          style={{ padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#059669', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}
-        >
-          <FaFileExport /> Export CSV
-        </button>
-        {activeModuleTab === 'listings' && (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <FaBuilding style={{ color: '#059669' }} /> Property Management System
+          </h2>
+          <p style={{ margin: '4px 0 0 0', color: '#64748B', fontSize: '0.85rem' }}>
+            Manage real estate listings, edit property details, adjust view counts, upgrade to premium & mark sold
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={exportToCSV}
+            style={{ padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#059669', border: '1px solid #E2E8F0', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem' }}
+          >
+            <FaFileExport /> Export CSV
+          </button>
           <button
             onClick={openAddModal}
-            style={{ padding: '10px 22px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.88rem', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}
+            style={{ padding: '10px 22px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', boxShadow: '0 2px 8px rgba(5,150,105,0.25)' }}
           >
             <FaPlus /> + Add New Property
           </button>
-        )}
+        </div>
+      </div>
+
+      {/* Navigation Subtabs Bar */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #E2E8F0', paddingBottom: '2px', overflowX: 'auto' }}>
+        {[
+          { id: 'listings', label: 'All Properties', count: propertiesDb.filter(p => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold').length, icon: FaBuilding },
+          { id: 'soldOut', label: 'Sold Out Properties', count: propertiesDb.filter(p => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold').length, icon: FaCheckCircle },
+          { id: 'sellRequests', label: 'Owner Sell Requests', count: sellPropertyRequestsDb.length, icon: FaFileAlt },
+          { id: 'categories', label: 'Categories', count: Object.keys(CATEGORY_SUBTYPES).length, icon: FaList },
+          { id: 'locations', label: 'Locations & Map', count: COMPREHENSIVE_INDIA_PLACES_DB.length, icon: FaMapMarkerAlt }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => {
+              setActiveModuleTab(tab.id as any);
+              if (selectedStatusFilter === 'Pending' && tab.id === 'listings') {
+                setSelectedStatusFilter('All');
+              }
+            }}
+            style={{
+              padding: '10px 18px',
+              border: 'none',
+              borderBottom: activeModuleTab === tab.id ? '3px solid #059669' : '3px solid transparent',
+              backgroundColor: activeModuleTab === tab.id ? '#ECFDF5' : 'transparent',
+              color: activeModuleTab === tab.id ? '#059669' : '#475569',
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              borderRadius: '8px 8px 0 0',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.15s'
+            }}
+          >
+            <tab.icon /> {tab.label}
+            <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px', backgroundColor: activeModuleTab === tab.id ? '#A7F3D0' : '#F1F5F9', color: activeModuleTab === tab.id ? '#065F46' : '#64748B' }}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* 8-Card KPI Summary Strip with Sold Statistics */}
@@ -952,7 +1001,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </span>
                   </th>
                   <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, minWidth: '120px' }}>Status ↕</th>
-                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right', minWidth: '280px' }}>Actions</th>
+                  <th style={{ padding: '16px', fontSize: '0.75rem', color: '#64748B', fontWeight: 700, textAlign: 'right', minWidth: '360px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -960,9 +1009,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <tr>
                     <td colSpan={9} style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
                       <p style={{ fontSize: '1.05rem', fontWeight: 600, margin: '0 0 12px 0' }}>No property listings matched your filters.</p>
-                      {activeModuleTab === 'listings' && (
-                        <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}>+ Add New Property</button>
-                      )}
+                      <button onClick={openAddModal} style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFF', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 6px rgba(5,150,105,0.2)' }}>+ Add New Property</button>
                     </td>
                   </tr>
                 ) : (
@@ -1143,7 +1190,27 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           </select>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button
+                              onClick={() => openEditModal(prop)}
+                              title="Edit Property Details"
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#059669',
+                                color: '#FFFFFF',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                fontSize: '0.78rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                boxShadow: '0 1px 3px rgba(5,150,105,0.25)'
+                              }}
+                            >
+                              <FaEdit /> Edit
+                            </button>
                             <button
                               onClick={() => {
                                 const nextVal = !prop.premium;
@@ -1166,7 +1233,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 transition: 'all 0.2s'
                               }}
                             >
-                              {prop.premium ? 'Premium' : 'Standard'}
+                              <FaCrown style={{ color: prop.premium ? '#D97706' : '#94A3B8' }} /> {prop.premium ? 'Premium' : 'Standard'}
                             </button>
                             <button
                               onClick={() => setViewAnalyticsProperty(prop)}
@@ -1185,14 +1252,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 gap: '4px'
                               }}
                             >
-                              <FaEye /> Views ({(prop.viewsCount || 0).toLocaleString()})
+                              <FaEye /> ({(prop.viewsCount || 0).toLocaleString()})
                             </button>
                             {(prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold') && (
                               <button
                                 onClick={() => togglePropertyRecentlySold(prop.id)}
                                 title={prop.recentlySold ? "Currently published on Main Page under Recently Sold section. Click to remove." : "Push property to Main Page under Recently Sold section"}
                                 style={{
-                                  padding: '6px 12px',
+                                  padding: '6px 10px',
                                   backgroundColor: prop.recentlySold ? '#ECFDF5' : '#FEF3C7',
                                   color: prop.recentlySold ? '#059669' : '#D97706',
                                   border: `1px solid ${prop.recentlySold ? '#6EE7B7' : '#FCD34D'}`,
@@ -1206,18 +1273,33 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                   transition: 'all 0.2s'
                                 }}
                               >
-                                {prop.recentlySold ? 'Pushed to Main (Recently Sold)' : 'Push Property to Main'}
+                                {prop.recentlySold ? '✓ Sold' : 'Push Sold'}
                               </button>
                             )}
-                            {activeModuleTab === 'editProperty' ? (
-                              <button
-                                onClick={() => openEditModal(prop)}
-                                title="Edit Property"
-                                style={{ padding: '6px 10px', backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                              >
-                                <FaEdit /> Edit
-                              </button>
-                            ) : null}
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to permanently delete property "${prop.title}" (${prop.id})?`)) {
+                                  deleteProperty(prop.id);
+                                  showNotification?.(`Property '${prop.title}' has been deleted.`, "warning");
+                                }
+                              }}
+                              title="Delete Property"
+                              style={{
+                                padding: '6px 10px',
+                                backgroundColor: '#FEF2F2',
+                                color: '#DC2626',
+                                border: '1px solid #FECACA',
+                                borderRadius: '8px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <FaTrash />
+                            </button>
                           </div>
                         </td>
                       </tr>

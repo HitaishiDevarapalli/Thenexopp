@@ -873,7 +873,7 @@ export const BusinessManagementSystem: React.FC<BusinessManagementSystemProps> =
                           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
                             <button
                               onClick={() => openEditModal(biz)}
-                              style={{ padding: '6px 10px', backgroundColor: '#F1F5F9', color: '#0F172A', border: 'none', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                              style={{ padding: '6px 12px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 1px 3px rgba(5,150,105,0.2)' }}
                               title="Edit Business"
                             >
                               <FaEdit /> Edit
