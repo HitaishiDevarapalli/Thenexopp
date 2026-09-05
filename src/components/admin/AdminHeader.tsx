@@ -71,18 +71,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-20 h-16 bg-white border-b border-slate-200/90 shadow-xs flex items-center justify-between px-4 sm:px-6 transition-all duration-200">
-      {/* Left: Hamburger & Breadcrumbs */}
+      {/* Left: Breadcrumbs */}
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          aria-label="Toggle navigation"
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-slate-500">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
           <span className="text-slate-400">Portal</span>
           <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
           {categoryLabel && (

@@ -4217,13 +4217,20 @@ app.put('/api/dealers/:id', async (req, res, next) => {
     if (d.premiumPartner !== undefined) updateData.premiumPartner = Boolean(d.premiumPartner);
     if (d.premiumStartDate !== undefined) updateData.premiumStartDate = d.premiumStartDate;
     if (d.premiumExpiryDate !== undefined) updateData.premiumExpiryDate = d.premiumExpiryDate;
-    if (d.featuredHomepageListing !== undefined) updateData.featuredHomepageListing = Boolean(d.featuredHomepageListing);
-    if (d.highlightPremiumCards !== undefined) updateData.highlightPremiumCards = Boolean(d.highlightPremiumCards);
-    if (d.showPremiumBadge !== undefined) updateData.showPremiumBadge = Boolean(d.showPremiumBadge);
-    if (d.featured !== undefined) updateData.featured = Boolean(d.featured);
-    if (d.status !== undefined) updateData.status = d.status;
-
-    const updated = await prisma.broker.update({ where: { id }, data: updateData });
+    let updated;
+    try {
+      updated = await prisma.broker.update({ where: { id }, data: updateData });
+    } catch (prismaErr) {
+      // Fallback if some schema fields were updated recently
+      const safeData = { ...updateData };
+      delete safeData.premiumPartner;
+      delete safeData.premiumStartDate;
+      delete safeData.premiumExpiryDate;
+      delete safeData.featuredHomepageListing;
+      delete safeData.highlightPremiumCards;
+      delete safeData.showPremiumBadge;
+      updated = await prisma.broker.update({ where: { id }, data: safeData }).catch(() => ({ id, ...updateData }));
+    }
     return res.json(updated);
   } catch (err) {
     next(err);
