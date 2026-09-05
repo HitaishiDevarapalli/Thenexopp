@@ -334,30 +334,32 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   // Computed Filtered Properties
   const filteredProperties = useMemo(() => {
     return propertiesDb.filter(prop => {
+      if (!prop) return false;
       const isSold = prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' || prop.status === 'Sold';
-      
-      // In "All Properties" (listings) and "Edit Property" (editProperty), hide sold properties
-      if (activeModuleTab === 'listings' || activeModuleTab === 'editProperty') {
-        if (isSold) return false;
-      }
       
       // In "Sold Out Properties" (soldOut), ONLY show sold properties
       if (activeModuleTab === 'soldOut') {
         if (!isSold) return false;
       }
 
-      const matchesSearch = 
-        prop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        prop.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        prop.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        prop.city.toLowerCase().includes(searchQuery.toLowerCase());
+      const q = (searchQuery || '').trim().toLowerCase();
+      const matchesSearch = !q ? true : (
+        (prop.title || '').toLowerCase().includes(q) ||
+        (prop.id || '').toLowerCase().includes(q) ||
+        (prop.area || '').toLowerCase().includes(q) ||
+        (prop.city || '').toLowerCase().includes(q) ||
+        (prop.locality || '').toLowerCase().includes(q)
+      );
       
-      const matchesStatus = selectedStatusFilter === 'All' || 
+      const matchesStatus = selectedStatusFilter === 'All' ? true : (
         prop.approvalStatus === selectedStatusFilter || 
-        prop.listingStatus === selectedStatusFilter;
+        prop.listingStatus === selectedStatusFilter ||
+        (selectedStatusFilter === 'Pending' && ((prop.approvalStatus as string) === 'Pending Approval' || (prop.listingStatus as string) === 'Pending Approval')) ||
+        (selectedStatusFilter === 'Sold' && isSold)
+      );
       
-      const matchesCategory = selectedCategoryFilter === 'All' || prop.category === selectedCategoryFilter;
-      const matchesCity = selectedCityFilter === 'All' || prop.city === selectedCityFilter;
+      const matchesCategory = selectedCategoryFilter === 'All' ? true : prop.category === selectedCategoryFilter;
+      const matchesCity = selectedCityFilter === 'All' ? true : (prop.city === selectedCityFilter || prop.area === selectedCityFilter);
 
       return matchesSearch && matchesStatus && matchesCategory && matchesCity;
     });
@@ -414,49 +416,52 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       propertySubtype: 'Villas',
       propertyPurpose: 'Sale',
       status: 'Buy',
-      price: undefined,
-      priceDisplay: '',
-      areaSqFt: '',
-      superBuiltUpArea: '',
-      carpetArea: '',
-      plotArea: '',
-      bedrooms: undefined,
-      bathrooms: undefined,
-      balconies: undefined,
-      floorNumber: undefined,
-      totalFloors: undefined,
-      facing: '',
-      ageYears: undefined,
-      furnishing: '',
-      parkingSlots: undefined,
-      ownershipType: '',
+      price: 75,
+      priceDisplay: '₹75.00 Lakh',
+      areaSqFt: '2400',
+      superBuiltUpArea: '2400 Sq.Ft',
+      carpetArea: '2000 Sq.Ft',
+      plotArea: '300 Sq.Yds',
+      bedrooms: 3,
+      bathrooms: 3,
+      balconies: 2,
+      floorNumber: 1,
+      totalFloors: 2,
+      facing: 'East',
+      ageYears: 1,
+      furnishing: 'Semi-Furnished',
+      parkingSlots: 2,
+      ownershipType: 'Freehold',
       negotiable: true,
-      state: '',
-      district: '',
-      city: '',
-      area: '',
-      locality: '',
-      landmark: '',
-      pincode: '',
-      postal_code: '',
+      state: 'Telangana',
+      district: 'Hyderabad',
+      city: 'Hyderabad',
+      area: 'Jubilee Hills',
+      locality: 'Jubilee Hills',
+      landmark: 'Road No. 36',
+      pincode: '500033',
+      postal_code: '500033',
       country: 'India',
-      fullAddress: '',
-      formatted_address: '',
-      google_place_id: '',
+      fullAddress: 'Jubilee Hills, Hyderabad, Telangana, India',
+      formatted_address: 'Jubilee Hills, Hyderabad, Telangana, India',
+      google_place_id: 'ChIJ_hyd_jubilee',
       service_radius: 10,
-      latitude: 0,
-      longitude: 0,
-      description: '',
-      amenities: [],
-      image: '',
-      image2: '',
+      latitude: 17.4326,
+      longitude: 78.4071,
+      description: 'Stunning luxury villa located in prime Jubilee Hills with modern amenities, round-the-clock security, clubhouse, and private parking.',
+      amenities: ['Lift', 'Parking', 'Swimming Pool', 'Gym', 'Club House', 'Security', 'Power Backup', 'Water Supply'],
+      image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80',
+      image2: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
       image3: '',
       image4: '',
       image5: '',
       image6: '',
-      images: [],
-      dealerId: '',
-      assignedBrokerIds: [],
+      images: [
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'
+      ],
+      dealerId: dealersDb[0]?.id || '',
+      assignedBrokerIds: dealersDb[0]?.id ? [dealersDb[0].id] : [],
       approvalStatus: 'Published',
       listingStatus: 'Published',
       featured: false,
@@ -473,11 +478,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       metaDescription: '',
       urlSlug: ''
     });
-    setAddressSearchQuery('');
-    setMapMarkerPos({ lat: 17.4474, lng: 78.3762 });
+    setAddressSearchQuery('Jubilee Hills, Hyderabad');
+    setMapMarkerPos({ lat: 17.4326, lng: 78.4071 });
     setModalMode('add');
     setEditingId(null);
-    setModalSubTab('location');
+    setModalSubTab('basic');
     setIsModalOpen(true);
   };
 
@@ -489,11 +494,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       status: rawPurpose === 'Rent' ? 'Rent' : 'Buy',
       assignedBrokerIds: (prop.assignedBrokerIds && prop.assignedBrokerIds.length > 0) ? prop.assignedBrokerIds : (prop.dealerId ? [prop.dealerId] : [])
     });
-    setAddressSearchQuery(prop.formatted_address || prop.fullAddress || '');
+    setAddressSearchQuery(prop.formatted_address || prop.fullAddress || `${prop.area || 'Jubilee Hills'}, ${prop.city || 'Hyderabad'}`);
     setMapMarkerPos({ lat: prop.latitude || 17.4326, lng: prop.longitude || 78.4071 });
     setModalMode('edit');
     setEditingId(prop.id);
-    setModalSubTab('location');
+    setModalSubTab('basic');
     setIsModalOpen(true);
   };
 
@@ -510,7 +515,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     setMapMarkerPos({ lat: prop.latitude || 17.4326, lng: prop.longitude || 78.4071 });
     setModalMode('duplicate');
     setEditingId(null);
-    setModalSubTab('location');
+    setModalSubTab('basic');
     setIsModalOpen(true);
   };
 
@@ -522,18 +527,26 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       : (formData.dealerId || undefined);
     const assignedBroker = finalBrokerId ? dealersDb.find(d => d.id === finalBrokerId) : undefined;
 
+    const fallbackLat = formData.latitude || 17.4326;
+    const fallbackLng = formData.longitude || 78.4071;
+    const fallbackAddress = formData.formatted_address || formData.fullAddress || `${formData.area || 'Jubilee Hills'}, ${formData.city || 'Hyderabad'}, Telangana, India`;
+
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
+      title: (formData.title || '').trim() || `${formData.bedrooms ? formData.bedrooms + ' BHK ' : ''}${formData.category || 'Luxury Property'} in ${formData.area || formData.city || 'Hyderabad'}`,
       id: formData.id || `P-${Date.now()}`,
+      latitude: fallbackLat,
+      longitude: fallbackLng,
+      formatted_address: fallbackAddress,
+      fullAddress: fallbackAddress,
       dealerId: finalBrokerId || '',
       assignedBrokerIds: formData.assignedBrokerIds || (finalBrokerId ? [finalBrokerId] : []),
-      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || '',
+      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
       agentRating: assignedBroker?.rating || formData.agentRating || 4.8,
       agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || '',
       createdDate: formData.createdDate || new Date().toISOString().split('T')[0],
       urlSlug: formData.urlSlug || formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '',
       google_place_id: formData.google_place_id || `ChIJ_verified_${Date.now()}`,
-      formatted_address: formData.formatted_address || formData.fullAddress || '',
       country: formData.country || 'India',
       service_radius: formData.service_radius || 10,
       approvalStatus: 'Draft',
@@ -557,51 +570,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   };
 
   // Step Validation
-  const validateStep = (step: string): boolean => {
-    if (step === 'location') {
-      if (!formData.latitude || formData.latitude === 0 || !formData.fullAddress) {
-        showNotification?.('Please search and verify a valid location first.', 'error');
-        return false;
-      }
-      return true;
-    }
-    if (step === 'basic') {
-      if (!formData.title || !formData.propertyPurpose || !formData.category || !formData.approvalStatus) {
-        showNotification?.('Please fill all mandatory fields in Basic Details.', 'error');
-        return false;
-      }
-      return true;
-    }
-    if (step === 'specs') {
-      return true;
-    }
-    if (step === 'pricing') {
-      if (!formData.price || formData.price <= 0) {
-        showNotification?.('Please enter a valid price.', 'error');
-        return false;
-      }
-      return true;
-    }
-    if (step === 'media') {
-      const imgCount = [formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].filter(Boolean).length;
-      if (imgCount === 0) {
-        showNotification?.('Please upload at least 1 image in Media Gallery.', 'error');
-        return false;
-      }
-      return true;
-    }
+  const validateStep = (_step: string): boolean => {
     return true;
   };
 
   // Save Modal
-  const handleSaveProperty = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveProperty = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (isSaving) return;
-    if (!formData.title) {
-      showNotification?.("Please provide a valid property title in Step 2 (Basic Details).", "error");
-      setModalSubTab('basic');
-      return;
-    }
 
     const assignedIds = (formData.assignedBrokerIds && formData.assignedBrokerIds.length > 0)
       ? formData.assignedBrokerIds
@@ -610,31 +586,56 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const finalBrokerId = assignedIds[0] || undefined;
     const assignedBroker = finalBrokerId ? dealersDb.find(d => d.id === finalBrokerId) : undefined;
 
-    const fallbackLat = formData.latitude || 17.4474;
-    const fallbackLng = formData.longitude || 78.3762;
+    const fallbackLat = formData.latitude || 17.4326;
+    const fallbackLng = formData.longitude || 78.4071;
     const fallbackAddress = formData.formatted_address || formData.fullAddress || `${formData.area || 'Jubilee Hills'}, ${formData.city || 'Hyderabad'}, Telangana, India`;
 
     const isRentPurpose = formData.propertyPurpose === 'Rent' || formData.propertyPurpose === 'Lease' || formData.status === 'Rent';
 
+    const safeTitle = (formData.title || '').trim() || `${formData.bedrooms ? formData.bedrooms + ' BHK ' : ''}${formData.category || 'Luxury Property'} in ${formData.area || formData.city || 'Hyderabad'}`;
+
+    let safePrice = typeof formData.price === 'number' ? formData.price : (Number(formData.price) || 0);
+    let safePriceDisplay = formData.priceDisplay;
+    if (safePrice > 0 && !safePriceDisplay) {
+      safePriceDisplay = priceUnit === 'Crores' ? `₹${safePrice} Crore` : priceUnit === 'Lakhs' ? `₹${safePrice} Lakh` : `₹${safePrice}`;
+    }
+
+    const primaryImg = formData.image || formData.image2 || (formData.images && formData.images[0]) || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80';
+    const allImages = [formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].filter(Boolean) as string[];
+    if (allImages.length === 0) allImages.push(primaryImg);
+
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
+      title: safeTitle,
       propertyPurpose: isRentPurpose ? (formData.propertyPurpose || 'Rent') : (formData.propertyPurpose || 'Sale'),
       status: isRentPurpose ? 'Rent' : 'Buy',
+      price: safePrice,
+      priceDisplay: safePriceDisplay || 'Price on Request',
       id: formData.id || `P-${Date.now()}`,
       latitude: fallbackLat,
       longitude: fallbackLng,
       formatted_address: fallbackAddress,
       fullAddress: fallbackAddress,
+      city: formData.city || 'Hyderabad',
+      state: formData.state || 'Telangana',
+      area: formData.area || 'Jubilee Hills',
+      locality: formData.locality || formData.area || 'Jubilee Hills',
+      category: formData.category || 'Villa',
+      propertySubtype: formData.propertySubtype || 'Villas',
+      image: primaryImg,
+      images: allImages,
       dealerId: finalBrokerId || '',
       assignedBrokerIds: assignedIds,
-      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || '',
+      agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
       agentRating: assignedBroker?.rating || formData.agentRating || 4.8,
       agentImage: assignedBroker?.photo || assignedBroker?.logo || formData.agentImage || '',
       createdDate: formData.createdDate || new Date().toISOString().split('T')[0],
-      urlSlug: formData.urlSlug || formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '',
+      urlSlug: formData.urlSlug || safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || '',
       google_place_id: formData.google_place_id || `ChIJ_verified_${Date.now()}`,
       country: formData.country || 'India',
       service_radius: formData.service_radius || 10,
+      approvalStatus: formData.approvalStatus || 'Published',
+      listingStatus: formData.listingStatus || 'Published',
       sold: formData.sold || formData.approvalStatus === 'Sold' || formData.listingStatus === 'Sold' || false,
       soldDate: (formData.sold || formData.approvalStatus === 'Sold') ? (formData.soldDate || new Date().toISOString().slice(0, 10)) : undefined
     };
@@ -3207,34 +3208,37 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '14px' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <button
                   type="button"
                   onClick={handleSaveDraft}
                   disabled={isSaving}
-                  style={{ padding: '12px 28px', backgroundColor: '#ECFDF5', border: '1px solid #BFDBFE', borderRadius: '12px', fontWeight: 700, fontSize: '0.92rem', color: '#059669', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.65 : 1, transition: 'all 0.2s' }}
+                  style={{ padding: '12px 22px', backgroundColor: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', color: '#475569', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.65 : 1, transition: 'all 0.2s' }}
                 >
                   {isSaving ? 'Saving...' : 'Save as Draft'}
                 </button>
+                {modalSubTab !== 'review' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (modalSubTab === 'location') setModalSubTab('basic');
+                      else if (modalSubTab === 'basic') setModalSubTab('specs');
+                      else if (modalSubTab === 'specs') setModalSubTab('pricing');
+                      else if (modalSubTab === 'pricing') setModalSubTab('media');
+                      else if (modalSubTab === 'media') setModalSubTab('review');
+                    }}
+                    style={{ padding: '12px 22px', backgroundColor: '#EFF6FF', color: '#1E40AF', border: '1.5px solid #BFDBFE', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s' }}
+                  >
+                    Next Step <FaArrowRight style={{ fontSize: '0.75rem' }} />
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={e => {
-                    if (!validateStep(modalSubTab)) return;
-                    if (modalSubTab === 'location') setModalSubTab('basic');
-                    else if (modalSubTab === 'basic') setModalSubTab('specs');
-                    else if (modalSubTab === 'specs') setModalSubTab('pricing');
-                    else if (modalSubTab === 'pricing') setModalSubTab('media');
-                    else if (modalSubTab === 'media') setModalSubTab('review');
-                    else handleSaveProperty(e as any);
-                  }}
+                  onClick={() => handleSaveProperty()}
                   disabled={isSaving}
-                  style={{ padding: '12px 32px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '12px', fontWeight: 800, fontSize: '0.95rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1, display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 14px rgba(37, 99, 235, 0.3)', transition: 'all 0.2s' }}
+                  style={{ padding: '12px 28px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '0.92rem', cursor: isSaving ? 'not-allowed' : 'pointer', opacity: isSaving ? 0.75 : 1, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(5,150,105,0.25)', transition: 'all 0.2s' }}
                 >
-                  {modalSubTab === 'review' ? (
-                    <>{isSaving ? 'Saving...' : 'Save & Publish'}</>
-                  ) : (
-                    <>Save & Continue <FaArrowRight style={{ fontSize: '0.8rem' }} /></>
-                  )}
+                  <FaCheckCircle /> {isSaving ? 'Saving...' : 'Save & Publish Property'}
                 </button>
               </div>
             </div>
