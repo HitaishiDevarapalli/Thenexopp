@@ -63,7 +63,11 @@ import {
   FaCheckDouble,
   FaFolderOpen,
   FaQuoteLeft,
-  FaDownload
+  FaDownload,
+  FaCity,
+  FaCoins,
+  FaSmile,
+  FaHeadset
 } from 'react-icons/fa';
 import { 
   propertiesDb, 
@@ -2696,50 +2700,69 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         )}
 
         {/* ================= CATEGORY: MAIN STATS ONLY ================= */}
+        {/* ================= CATEGORY: MAIN STATS ONLY ================= */}
         {activeTab === 'main_stats' && (
-          <form onSubmit={handleSaveSettings} className="space-y-6 max-w-6xl">
-            {/* Header banner */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1200px' }}>
+            {/* Header Banner */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold mb-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Live Homepage Metrics</span>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', color: '#047857', fontSize: '0.78rem', fontWeight: 700, marginBottom: '8px' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+                  <span>Live Homepage Metrics & Trust Counters</span>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
                   Main Page Stats & Trust Metrics
                 </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Configure the live front-end Hero stats bar (18,500+ Properties, etc.), trust badges and custom metrics.
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#64748B', fontWeight: 500 }}>
+                  Configure the live front-end Hero stats bar (18,500+ Properties, etc.) and Why TheNexopp section trust badges.
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={isSavingSettings}
-                className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center gap-2 shrink-0 disabled:opacity-50"
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#059669',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  cursor: isSavingSettings ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(5, 150, 105, 0.28)',
+                  transition: 'all 0.2s',
+                  opacity: isSavingSettings ? 0.7 : 1
+                }}
               >
-                {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FaCheckCircle className="w-3.5 h-3.5" />}
-                <span>{isSavingSettings ? 'Publishing...' : 'Save & Publish Live Stats'}</span>
+                {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FaCheckCircle style={{ fontSize: '1rem' }} />}
+                <span>{isSavingSettings ? 'Publishing Live...' : 'Save & Publish Live Stats'}</span>
               </button>
             </div>
 
-            {/* 1. MAIN HOMEPAGE STATS BAR & TRUST METRICS (LIVE EDITING) */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 shadow-xs">
-              <div className="mb-5 pb-4 border-b border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider text-emerald-800">
-                  1. Main Homepage Stats Bar (6 Primary Cards)
+            {/* 1. MAIN HOMEPAGE STATS BAR (6 PRIMARY CARDS) */}
+            <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+              <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #F1F5F9' }}>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: '#059669' }}>1.</span> Main Homepage Stats Bar (6 Primary Hero Cards)
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Change any number or text here to immediately update the 6 stat cards displayed at the top of the main home page.
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+                  Edit the live values displayed in the 6 main stat boxes at the top of the homepage.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                 {/* Stat 1: Properties Listed */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                  <label className="block text-xs font-semibold text-emerald-700 mb-1.5">
-                    Properties Listed Stat
-                  </label>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', transition: 'border-color 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaHome /> Properties Listed Stat
+                    </label>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: '#ECFDF5', color: '#047857' }}>Card 1</span>
+                  </div>
                   <input
                     type="text"
                     value={currentMainStats.propertiesListed}
@@ -2754,16 +2777,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       });
                     }}
                     placeholder="e.g. 18,500+"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    style={{ width: '100%', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">Displayed in 1st green stat box on Home.</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '6px', display: 'block' }}>Green box on homepage hero.</span>
                 </div>
 
                 {/* Stat 2: Franchises */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                  <label className="block text-xs font-semibold text-purple-700 mb-1.5">
-                    Franchises Stat
-                  </label>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', transition: 'border-color 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#7C3AED', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaStore /> Franchises Stat
+                    </label>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: '#F5F3FF', color: '#6D28D9' }}>Card 2</span>
+                  </div>
                   <input
                     type="text"
                     value={currentMainStats.franchisesCount}
@@ -2778,16 +2804,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       });
                     }}
                     placeholder="e.g. 950+"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    style={{ width: '100%', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">Displayed in 2nd purple stat box on Home.</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '6px', display: 'block' }}>Purple box on homepage hero.</span>
                 </div>
 
                 {/* Stat 3: Verified Brokers */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                  <label className="block text-xs font-semibold text-amber-700 mb-1.5">
-                    Verified Brokers Stat
-                  </label>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', transition: 'border-color 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#D97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaUsers /> Verified Brokers Stat
+                    </label>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: '#FFFBEB', color: '#B45309' }}>Card 3</span>
+                  </div>
                   <input
                     type="text"
                     value={currentMainStats.verifiedBrokers}
@@ -2802,16 +2831,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       });
                     }}
                     placeholder="e.g. 2,400+"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    style={{ width: '100%', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">Displayed in 3rd orange stat box on Home.</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '6px', display: 'block' }}>Orange box on homepage hero.</span>
                 </div>
 
                 {/* Stat 4: Cities Covered */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                  <label className="block text-xs font-semibold text-blue-700 mb-1.5">
-                    Cities Covered Stat
-                  </label>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', transition: 'border-color 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#2563EB', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaCity /> Cities Covered Stat
+                    </label>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: '#EFF6FF', color: '#1D4ED8' }}>Card 4</span>
+                  </div>
                   <input
                     type="text"
                     value={currentMainStats.citiesCovered}
@@ -2826,16 +2858,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       });
                     }}
                     placeholder="e.g. 32"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    style={{ width: '100%', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">Displayed in 4th blue stat box on Home.</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '6px', display: 'block' }}>Blue box on homepage hero.</span>
                 </div>
 
                 {/* Stat 5: Total Property Value */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                  <label className="block text-xs font-semibold text-rose-700 mb-1.5">
-                    Total Property Value Stat
-                  </label>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', transition: 'border-color 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#E11D48', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaCoins /> Total Property Value Stat
+                    </label>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: '#FFF1F2', color: '#BE123C' }}>Card 5</span>
+                  </div>
                   <input
                     type="text"
                     value={currentMainStats.totalPropertyValue}
@@ -2850,16 +2885,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       });
                     }}
                     placeholder="e.g. ₹850 Cr+"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    style={{ width: '100%', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">Displayed in 5th pink stat box on Home.</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '6px', display: 'block' }}>Pink box on homepage hero.</span>
                 </div>
 
                 {/* Stat 6: Happy Clients */}
-                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-                  <label className="block text-xs font-semibold text-emerald-700 mb-1.5">
-                    Happy Clients Stat
-                  </label>
+                <div style={{ backgroundColor: '#F8FAFC', padding: '18px', borderRadius: '14px', border: '1.5px solid #E2E8F0', transition: 'border-color 0.2s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '0.82rem', fontWeight: 800, color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FaSmile /> Happy Clients Stat
+                    </label>
+                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: '#ECFDF5', color: '#047857' }}>Card 6</span>
+                  </div>
                   <input
                     type="text"
                     value={currentMainStats.happyClients}
@@ -2874,20 +2912,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                       });
                     }}
                     placeholder="e.g. 15K+"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                    style={{ width: '100%', padding: '10px 14px', backgroundColor: '#FFFFFF', border: '1.5px solid #CBD5E1', borderRadius: '8px', fontSize: '0.95rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                   />
-                  <span className="text-[11px] text-slate-500 mt-1 block">Displayed in 6th green stat box on Home.</span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '6px', display: 'block' }}>Green box on homepage hero.</span>
                 </div>
               </div>
 
-              {/* WHY NEXOPP SECTION STATS */}
-              <div className="mt-8 pt-6 border-t border-slate-200">
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
-                  Why NexOpp / Section Stats (Secondary Metrics)
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-                    <label className="block font-semibold text-[11px] text-slate-600 mb-1">Active Listings</label>
+              {/* 2. WHY CHOOSE THENEXOPP SECTION STATS */}
+              <div style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid #E2E8F0' }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#059669' }}>2.</span> Why Choose TheNexopp? Section Stats & Trust Badges
+                  </h4>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.83rem', color: '#64748B' }}>
+                    Values displayed in the "Why Choose TheNexopp?" strip across the homepage.
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', color: '#334155', marginBottom: '6px' }}>
+                      <FaListAlt style={{ color: '#059669' }} /> Active Listings
+                    </label>
                     <input
                       type="text"
                       value={currentMainStats.activeListingsWhy || '10,000+'}
@@ -2901,12 +2947,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           },
                         });
                       }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900"
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                     />
                   </div>
 
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-                    <label className="block font-semibold text-[11px] text-slate-600 mb-1">Happy Customers</label>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', color: '#334155', marginBottom: '6px' }}>
+                      <FaUsers style={{ color: '#2563EB' }} /> Happy Customers
+                    </label>
                     <input
                       type="text"
                       value={currentMainStats.happyCustomersWhy || '5,000+'}
@@ -2920,12 +2968,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           },
                         });
                       }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900"
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                     />
                   </div>
 
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-                    <label className="block font-semibold text-[11px] text-slate-600 mb-1">Cities Covered</label>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', color: '#334155', marginBottom: '6px' }}>
+                      <FaMapMarkerAlt style={{ color: '#D97706' }} /> Cities Covered
+                    </label>
                     <input
                       type="text"
                       value={currentMainStats.citiesCoveredWhy || '50+'}
@@ -2939,12 +2989,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           },
                         });
                       }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900"
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                     />
                   </div>
 
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-                    <label className="block font-semibold text-[11px] text-slate-600 mb-1">Verified %</label>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', color: '#334155', marginBottom: '6px' }}>
+                      <FaCheckCircle style={{ color: '#10B981' }} /> Verified %
+                    </label>
                     <input
                       type="text"
                       value={currentMainStats.verifiedListingsWhy || '100%'}
@@ -2958,12 +3010,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           },
                         });
                       }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900"
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                     />
                   </div>
 
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-                    <label className="block font-semibold text-[11px] text-slate-600 mb-1">Support</label>
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, fontSize: '0.78rem', color: '#334155', marginBottom: '6px' }}>
+                      <FaHeadset style={{ color: '#7C3AED' }} /> Support
+                    </label>
                     <input
                       type="text"
                       value={currentMainStats.customerSupportWhy || '24/7'}
@@ -2977,7 +3031,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           },
                         });
                       }}
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-900"
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', outline: 'none' }}
                     />
                   </div>
                 </div>
@@ -2985,14 +3039,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
             </div>
 
             {/* Bottom Save Action */}
-            <div className="flex justify-end pt-2">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '4px' }}>
               <button
                 type="submit"
                 disabled={isSavingSettings}
-                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-bold shadow-lg shadow-emerald-600/25 transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                style={{
+                  padding: '14px 32px',
+                  backgroundColor: '#059669',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  cursor: isSavingSettings ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  boxShadow: '0 4px 16px rgba(5, 150, 105, 0.32)',
+                  transition: 'all 0.2s',
+                  opacity: isSavingSettings ? 0.7 : 1
+                }}
               >
-                {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FaCheckCircle className="w-4 h-4" />}
-                <span>{isSavingSettings ? 'Publishing Changes...' : 'Save & Publish Live Stats'}</span>
+                {isSavingSettings ? <RefreshCw className="w-4 h-4 animate-spin" /> : <FaCheckCircle style={{ fontSize: '1.1rem' }} />}
+                <span>{isSavingSettings ? 'Publishing Live Stats...' : 'Save & Publish Live Stats'}</span>
               </button>
             </div>
           </form>

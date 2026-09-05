@@ -1616,19 +1616,35 @@ export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'F
 };
 
 export const updateSiteSettings = async (settings: Partial<SiteSettings>) => {
-  siteSettingsDb = { ...siteSettingsDb, ...settings };
+  const mergedMainStats = settings.mainPageStats 
+    ? { ...(siteSettingsDb.mainPageStats || {}), ...settings.mainPageStats } 
+    : siteSettingsDb.mainPageStats;
+
+  siteSettingsDb = { 
+    ...siteSettingsDb, 
+    ...settings,
+    ...(mergedMainStats ? { mainPageStats: mergedMainStats } : {})
+  };
   saveToStorage('nexopp_site_settings', siteSettingsDb);
   notifyDataChanged();
+
   try {
     const res = await fetch(`${API_BASE_URL}/api/settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings)
+      body: JSON.stringify(siteSettingsDb)
     });
     if (res.ok) {
       const data = await res.json();
       if (data && typeof data === 'object') {
-        siteSettingsDb = { ...siteSettingsDb, ...data };
+        const backendStats = (data.mainPageStats && typeof data.mainPageStats === 'object' && Object.keys(data.mainPageStats).length > 0)
+          ? { ...(mergedMainStats || {}), ...data.mainPageStats }
+          : mergedMainStats;
+        siteSettingsDb = { 
+          ...siteSettingsDb, 
+          ...data,
+          ...(backendStats ? { mainPageStats: backendStats } : {})
+        };
         saveToStorage('nexopp_site_settings', siteSettingsDb);
         notifyDataChanged();
       }

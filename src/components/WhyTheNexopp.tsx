@@ -9,6 +9,13 @@ interface StatItem {
 }
 
 export const WhyTheNexopp: React.FC = () => {
+  const [dataUpdated, setDataUpdated] = React.useState(0);
+  React.useEffect(() => {
+    const handleDataChange = () => setDataUpdated(prev => prev + 1);
+    window.addEventListener('nexopp_data_changed', handleDataChange);
+    return () => window.removeEventListener('nexopp_data_changed', handleDataChange);
+  }, []);
+
   const s = siteSettingsDb.mainPageStats || {
     activeListingsWhy: '10,000+',
     happyCustomersWhy: '5,000+',
