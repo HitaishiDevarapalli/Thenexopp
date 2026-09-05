@@ -23,6 +23,7 @@ import {
   ExternalLink,
   ChevronLeft,
   Sparkles,
+  Video,
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
 
@@ -263,6 +264,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           id: 'customization',
           label: 'Website Settings',
           icon: <Settings size={17} />,
+          permKey: 'site_settings',
+        },
+        {
+          id: 'media_manager',
+          label: 'Media & Video Showcase',
+          icon: <Video size={17} />,
           permKey: 'site_settings',
         },
         {
