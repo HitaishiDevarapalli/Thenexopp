@@ -29,6 +29,8 @@ import { RefreshTokenEntity } from './database/entities/refresh-token.entity';
 import { AuditLogEntity } from './database/entities/audit-log.entity';
 import { SupportTicketEntity } from './database/entities/support-ticket.entity';
 
+import { AppController } from './app.controller';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -99,5 +101,7 @@ import { SupportTicketEntity } from './database/entities/support-ticket.entity';
     AdminIntegrationModule,
     SupportModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
+
