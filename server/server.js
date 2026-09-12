@@ -5009,13 +5009,25 @@ const ensureInitialCustomerData = async () => {
   }
 };
 
+// ── AGENT APP ADMIN PORTAL STATIC SERVING ──────────────────────────────────
+const agentAdminDistDir = path.resolve(__dirname, '../thenexopp app/nexopp-app/admin/dist');
+if (fs.existsSync(agentAdminDistDir)) {
+  app.use('/secure-control-x7k9p2/agentadmin', express.static(agentAdminDistDir));
+  app.use('/agentadmin', express.static(agentAdminDistDir));
+  app.use('/agent-admin', express.static(agentAdminDistDir));
+
+  app.get(['/secure-control-x7k9p2/agentadmin', '/secure-control-x7k9p2/agentadmin/*', '/agentadmin', '/agentadmin/*', '/agent-admin', '/agent-admin/*'], (req, res) => {
+    return res.sendFile(path.join(agentAdminDistDir, 'index.html'));
+  });
+}
+
 // ── FRONTEND STATIC ASSET SERVING & ROUTE-SPECIFIC SEO FALLBACK ──────────────
 const distDir = path.join(__dirname, '../dist');
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir));
   app.use((req, res, next) => {
     if (req.method !== 'GET') return next();
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/secure-control-x7k9p2/agentadmin') || req.path.startsWith('/agent-admin')) return next();
     const cleanPath = req.path.replace(/\/$/, '');
     const routeHtmlPath = path.join(distDir, cleanPath, 'index.html');
     if (fs.existsSync(routeHtmlPath)) {

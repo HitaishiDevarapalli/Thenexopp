@@ -462,7 +462,7 @@ export const AgentEcosystemManagement: React.FC<AgentEcosystemManagementProps> =
 
   const agentPortalUrl = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:3001'
-    : '/agent-admin/';
+    : '/secure-control-x7k9p2/agentadmin/';
 
   // Automatic live sync with NestJS backend on mount
   useEffect(() => {
