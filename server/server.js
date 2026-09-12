@@ -1,4 +1,6 @@
 import express from 'express';
+import http from 'http';
+import net from 'net';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -109,6 +111,44 @@ app.use('/api/', apiLimiter);
 
 // Pino HTTP Request Logging Middleware
 app.use(pinoHttp({ logger }));
+
+// ── NESTJS BACKEND REVERSE PROXY (PORT 3000) ─────────────────────────────────
+// Seamlessly proxies Swagger OpenAPI docs & Agent REST APIs from Port 8081 to Port 3000
+const proxyToNest = () => (req, res) => {
+  const proxyReq = http.request(
+    {
+      hostname: '127.0.0.1',
+      port: 3000,
+      path: req.originalUrl,
+      method: req.method,
+      headers: {
+        ...req.headers,
+        host: req.headers.host,
+        'x-forwarded-for': req.ip,
+        'x-forwarded-proto': req.protocol || 'https',
+      },
+    },
+    (proxyRes) => {
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(res, { end: true });
+    }
+  );
+
+  proxyReq.on('error', (err) => {
+    logger.warn({ error: err.message, path: req.originalUrl }, 'NestJS API backend proxy connection error');
+    if (!res.headersSent) {
+      res.status(502).json({
+        success: false,
+        message: 'Agent Backend Service (Port 3000) is initializing. Please retry in a few seconds.',
+      });
+    }
+  });
+
+  req.pipe(proxyReq, { end: true });
+};
+
+app.use(['/api/docs', '/docs'], proxyToNest());
+app.use(['/api/v1'], proxyToNest());
 
 app.use(express.json({ limit: '1000mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1000mb' }));
@@ -5085,4 +5125,27 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 server.on('error', (err) => {
   logger.error({ error: err.message }, `Server failed to start on port ${PORT}`);
+});
+
+// ── WEBSOCKET UPGRADE PROXY (PORT 3000) ──────────────────────────────────────
+server.on('upgrade', (req, socket, head) => {
+  if (req.url && (req.url.startsWith('/ws') || req.url.startsWith('/socket.io'))) {
+    const proxySocket = net.connect(3000, '127.0.0.1', () => {
+      proxySocket.write(
+        `${req.method} ${req.url} HTTP/${req.httpVersion}\r\n` +
+        Object.entries(req.headers)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join('\r\n') +
+        '\r\n\r\n'
+      );
+      proxySocket.write(head);
+      socket.pipe(proxySocket);
+      proxySocket.pipe(socket);
+    });
+
+    proxySocket.on('error', (err) => {
+      logger.warn({ error: err.message }, 'WebSocket upgrade proxy connection error');
+      socket.destroy();
+    });
+  }
 });
