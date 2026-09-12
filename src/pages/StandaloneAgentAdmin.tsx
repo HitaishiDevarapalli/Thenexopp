@@ -2,9 +2,12 @@ import React, { useEffect } from 'react';
 
 export const StandaloneAgentAdmin: React.FC = () => {
   useEffect(() => {
-    // Direct top-level navigation to the standalone Mobile App Admin portal
-    window.location.href = '/secure-control-x7k9p2/agentadmin/';
+    document.title = 'Executive Admin Portal | TheNexopp Agent';
   }, []);
+
+  const adminSrc = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : '/agent-admin/index.html';
 
   return (
     <div style={{
@@ -13,17 +16,18 @@ export const StandaloneAgentAdmin: React.FC = () => {
       left: 0,
       width: '100vw',
       height: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#F7F6F2',
-      color: '#1B211E',
-      fontFamily: 'system-ui, sans-serif',
-      zIndex: 999999
+      margin: 0,
+      padding: 0,
+      zIndex: 999999,
+      overflow: 'hidden',
+      backgroundColor: '#F7F6F2'
     }}>
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: '1.2rem', fontWeight: 600 }}>Redirecting to Agent Admin Portal...</p>
-      </div>
+      <iframe
+        src={adminSrc}
+        title="TheNexopp Agent Production Management Console"
+        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+      />
     </div>
   );
 };

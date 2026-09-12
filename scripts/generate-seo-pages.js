@@ -577,4 +577,33 @@ for (const route of routes) {
   }
 }
 
-console.log(`\n✅ Successfully generated static SEO HTML pages for all ${generatedCount} routes!`);
+// Copy standalone Agent Mobile App Admin dist bundle into web dist paths
+const agentAdminDistDir = path.join(__dirname, '../thenexopp app/nexopp-app/admin/dist');
+if (fs.existsSync(agentAdminDistDir)) {
+  const targetFolders = [
+    path.join(distDir, 'secure-control-x7k9p2/agentadmin'),
+    path.join(distDir, 'agentadmin'),
+    path.join(distDir, 'agent-admin'),
+  ];
+
+  function copyDirRecursive(src, dest) {
+    if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
+      if (entry.isDirectory()) {
+        copyDirRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  }
+
+  for (const target of targetFolders) {
+    copyDirRecursive(agentAdminDistDir, target);
+    console.log(`[SEO Generator] Embedded Standalone Agent Admin into ${path.relative(distDir, target)}/`);
+  }
+}
+
+console.log(`\n✅ Successfully generated static SEO HTML pages and Standalone Admin bundles!`);

@@ -18,25 +18,25 @@ mkdir -p logs
 mkdir -p "thenexopp app/nexopp-app/backend/logs"
 mkdir -p "thenexopp app/nexopp-app/backend/uploads"
 
-# 2. Build Website Frontend & Sync Database
-echo "🗄️ [3/6] Syncing Website Prisma Database & Building Website Bundle..."
-npm install
-npx prisma generate
-npm run build
-
-# 3. Build Agent NestJS Backend
-echo "⚙️ [4/6] Building Agent NestJS Backend API..."
+# 2. Build Agent NestJS Backend
+echo "⚙️ [3/6] Building Agent NestJS Backend API..."
 cd "/opt/Thenexopp/thenexopp app/nexopp-app/backend"
 npm install
 npm run build
 cd /opt/Thenexopp
 
-# 4. Build Agent Admin React Portal
-echo "💻 [5/6] Building Agent Admin Management Portal..."
+# 3. Build Agent Admin React Portal
+echo "💻 [4/6] Building Agent Admin Management Portal..."
 cd "/opt/Thenexopp/thenexopp app/nexopp-app/admin"
 npm install
 npm run build
 cd /opt/Thenexopp
+
+# 4. Build Website Frontend & Sync Database (automatically embeds Agent Admin dist)
+echo "🗄️ [5/6] Syncing Website Prisma Database & Building Website Bundle..."
+npm install
+npx prisma generate
+npm run build
 
 # 5. Restart PM2 Unified Processes Directly
 echo "🔄 [6/6] Reloading PM2 Processes Directly..."
