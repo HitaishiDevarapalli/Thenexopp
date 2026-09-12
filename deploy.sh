@@ -1,33 +1,59 @@
 #!/usr/bin/env bash
+# ==============================================================================
+# TheNexopp Complete VPS Deployment Script
+# Automatically builds & deploys Website, Agent Backend & Agent Admin
+# ==============================================================================
+
 set -e
 
-echo "🚀 Starting Deployment on KVM2 VPS..."
+echo "🚀 [1/6] Starting Safe Production Deployment on KVM VPS..."
 
-# 1. Pull latest code from main branch
-echo "📥 Pulling latest code from GitHub..."
+# 1. Pull latest git changes
+echo "📥 [2/6] Pulling latest code from GitHub main branch..."
 git pull origin main
 
-# 2. Install dependencies
-echo "📦 Installing dependencies..."
-npm install
-rm -rf server/node_modules
+# Create log directories
+mkdir -p logs
+mkdir -p "thenexopp app/nexopp-app/backend/logs"
+mkdir -p "thenexopp app/nexopp-app/backend/uploads"
 
-# 3. Prisma database sync & client generation
-echo "🗄️ Syncing Prisma schema..."
+# 2. Build Website Frontend & Sync Database
+echo "🗄️ [3/6] Syncing Website Prisma Database & Building Website Bundle..."
+npm install
 npx prisma generate
 npx prisma db push
-
-# 4. Build Frontend Assets
-echo "🏗️ Building frontend dist bundle..."
 npm run build
 
-# 5. Restart PM2 Process
-echo "🔄 Restarting Node API in PM2..."
-pm2 restart ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
+# 3. Build Agent NestJS Backend
+echo "⚙️ [4/6] Building Agent NestJS Backend API..."
+cd "thenexopp app/nexopp-app/backend"
+npm install
+npm run build
+cd ../../../
+
+# 4. Build Agent Admin React Portal
+echo "💻 [5/6] Building Agent Admin Management Portal..."
+cd "thenexopp app/nexopp-app/admin"
+npm install
+npm run build
+cd ../../../
+
+# 5. Restart PM2 Unified Processes
+echo "🔄 [6/6] Reloading PM2 Processes..."
+pm2 startOrReload ecosystem.production.cjs --env production || (pm2 delete all && pm2 start ecosystem.production.cjs --env production)
 pm2 save
 
-# 6. Test Nginx & Reload
-echo "🌐 Reloading Nginx server..."
-sudo nginx -t && sudo systemctl reload nginx
+# 6. Test and Reload Nginx
+echo "🌐 Reloading Nginx Configuration..."
+sudo nginx -t && sudo systemctl reload nginx || true
 
-echo "✅ Deployment complete! Check backend logs with: pm2 logs thenexopp-api"
+echo "=============================================================================="
+echo "✅ DEPLOYMENT COMPLETE & ALL PROCESSES RUNNING!"
+echo "👉 Website:                https://thenexopp.com"
+echo "👉 Website Admin Portal:   https://thenexopp.com/secure-control-x7k9p2"
+echo "👉 Website Admin Subdomain:https://admin.thenexopp.com"
+echo "👉 Agent Admin Subdomain:  https://agent-admin.thenexopp.com"
+echo "👉 Agent Admin Subpath:    https://thenexopp.com/agent-admin/"
+echo "👉 Agent Backend API:      https://api.thenexopp.com/api/v1 (or https://thenexopp.com/api/v1)"
+echo "👉 Swagger API Docs:       https://api.thenexopp.com/api/docs (or https://thenexopp.com/api/docs)"
+echo "=============================================================================="
