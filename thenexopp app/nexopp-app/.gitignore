@@ -1,0 +1,48 @@
+# Dependencies & Build Files
+node_modules/
+dist/
+build/
+.dart_tool/
+.pub-cache/
+.pub/
+ephemeral/
+*.pub/
+
+# Mobile Artifacts
+mobile/build/
+mobile/.dart_tool/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/ios/Pods/
+mobile/ios/Podfile.lock
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+
+# Environment & Secrets
+.env
+.env.production
+*.env
+*.pem
+*.crt
+*.key
+google-services.json
+GoogleService-Info.plist
+key.jks
+keystore.p12
+
+# Storage & Containers
+postgres_data/
+redis_data/
+minio_data/
+
+# Logs & System Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

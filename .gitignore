@@ -7,12 +7,17 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies & Build Artifacts
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/build/
+**/.dart_tool/
+**/.pub-cache/
+**/.pub/
 *.local
 
-# Editor directories and files
+# Editor & System files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,12 +27,28 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
+Thumbs.db
 .vercel
 
-# Server Data & Local Stores
+# Server Data, Uploads & Local Stores
 server/*.json
 server/data/
 uploads/
 server/uploads/
+**/uploads/
+**/*.sqlite
+**/*.sqlite-journal
+**/*.sqlite3
+**/postgres_data/
+**/redis_data/
+**/minio_data/
+
+# Secrets & Environment Files
+.env
+.env.production
+.env.local
+**/.env
+**/.env.production
+!**/.env.example
+
 

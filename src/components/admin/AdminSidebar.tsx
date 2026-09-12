@@ -24,6 +24,7 @@ import {
   ChevronLeft,
   Sparkles,
   Video,
+  Smartphone,
 } from 'lucide-react';
 import { Logo } from '../common/Logo';
 
@@ -218,6 +219,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Roles & Permissions',
           icon: <KeyRound size={17} />,
           permKey: 'roles',
+        },
+      ],
+    },
+    {
+      title: 'AGENT ECOSYSTEM',
+      items: [
+        {
+          id: 'agent_admin',
+          label: 'Agent App Admin Portal',
+          icon: <Smartphone size={17} />,
+          permKey: 'overview',
         },
       ],
     },
