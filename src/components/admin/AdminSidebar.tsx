@@ -55,6 +55,8 @@ export interface AdminSidebarProps {
   onSelectBusinessSubTab?: (subId: string) => void;
   brokerSubTab?: string;
   onSelectBrokerSubTab?: (subId: string) => void;
+  agentSubTab?: string;
+  onSelectAgentSubTab?: (subId: string) => void;
 }
 
 export interface AdminSubItem {
@@ -101,6 +103,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   onSelectBusinessSubTab,
   brokerSubTab,
   onSelectBrokerSubTab,
+  agentSubTab,
+  onSelectAgentSubTab,
 }) => {
   const sections: AdminNavSection[] = [
     {
@@ -230,6 +234,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Agent App Admin Portal',
           icon: <Smartphone size={17} />,
           permKey: 'overview',
+          hasSubMenu: true,
+          subItems: [
+            { id: 'overview', label: 'Ecosystem Overview' },
+            { id: 'agents', label: 'Agent Directory & KYC' },
+            { id: 'properties', label: 'Property Submissions' },
+            { id: 'financials', label: 'Earnings & Payouts' },
+            { id: 'tickets', label: 'Helpdesk & Support' },
+            { id: 'portal_view', label: 'Live App Console' },
+          ],
+          currentSub: agentSubTab,
+          onSelectSub: onSelectAgentSubTab,
         },
       ],
     },

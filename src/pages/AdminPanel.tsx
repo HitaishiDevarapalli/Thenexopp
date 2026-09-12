@@ -4,6 +4,7 @@ import { AdminSidebar } from '../components/admin/AdminSidebar';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminLoginScreen } from '../components/admin/AdminLoginScreen';
 import { SellingLeadsPanel } from '../components/admin/SellingLeadsPanel';
+import { AgentEcosystemManagement } from '../components/admin/AgentEcosystemManagement';
 import { 
   FaBars,
   FaBuilding, 
@@ -550,6 +551,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [franchiseSubTab, setFranchiseSubTab] = useState<string>('listings');
   const [businessSubTab, setBusinessSubTab] = useState<string>('listings');
   const [brokerSubTab, setBrokerSubTab] = useState<string>('directory');
+  const [agentSubTab, setAgentSubTab] = useState<string>('overview');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -1543,6 +1545,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
         onSelectBusinessSubTab={setBusinessSubTab}
         brokerSubTab={brokerSubTab}
         onSelectBrokerSubTab={setBrokerSubTab}
+        agentSubTab={agentSubTab}
+        onSelectAgentSubTab={(subId) => {
+          setAgentSubTab(subId);
+          setActiveTab('agent_admin');
+        }}
       />
 
       {/* Main Content Area */}
@@ -7673,194 +7680,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
           );
         })()}
 
-        {/* ================= AGENT ECOSYSTEM ADMIN PORTAL ================= */}
-        {activeTab === 'agent_admin' && (() => {
-          const agentAdminUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000'
-            : 'https://agent-admin.thenexopp.com';
-
-          const agentApiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000/api/v1'
-            : 'https://api.thenexopp.com/api/v1';
-
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {/* Header Banner */}
-              <div style={{ backgroundColor: '#FFFFFF', padding: '24px 28px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'linear-gradient(135deg, #0284C7, #0369A1)', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                    <FaMobileAlt />
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>TheNexopp Agent Admin Portal</h2>
-                      <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800, backgroundColor: '#E0F2FE', color: '#0369A1' }}>
-                        ISOLATED SERVICE
-                      </span>
-                    </div>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#64748B', fontWeight: 500 }}>
-                      Dedicated management portal for ground agents, encrypted KYC verification, property submissions, earnings ledger & mobile app sync
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <a
-                    href={agentAdminUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ padding: '12px 24px', backgroundColor: '#0284C7', color: '#FFFFFF', textDecoration: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(2,132,199,0.25)' }}
-                  >
-                    Launch Agent Admin Portal <FaExternalLinkAlt size={12} />
-                  </a>
-                </div>
-              </div>
-
-              {/* 4 Feature Module Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-                {/* Module 1 */}
-                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', marginBottom: '16px' }}>
-                      <FaUserTie />
-                    </div>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>Agent Directory & KYC</h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', lineHeight: '1.5' }}>
-                      Review onboarding applications, verify AES-256 encrypted Aadhaar & PAN documents, and approve or suspend agent partner accounts.
-                    </p>
-                  </div>
-                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669' }}>AES-256 CBC Encrypted</span>
-                    <a href={`${agentAdminUrl}/agents`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0284C7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      Open <FaExternalLinkAlt size={10} />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Module 2 */}
-                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', marginBottom: '16px' }}>
-                      <FaBuilding />
-                    </div>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>Property Submissions</h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', lineHeight: '1.5' }}>
-                      Inspect property and business listings uploaded by mobile agents, approve verified listings, and set commission payouts upon deal completion.
-                    </p>
-                  </div>
-                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#2563EB' }}>Lossless Photos Pipeline</span>
-                    <a href={`${agentAdminUrl}/properties`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0284C7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      Open <FaExternalLinkAlt size={10} />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Module 3 */}
-                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', marginBottom: '16px' }}>
-                      <FaCoins />
-                    </div>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>Financials & Payouts</h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', lineHeight: '1.5' }}>
-                      Track agent credit balances, disburse commission payouts via UPI / NEFT, and upload transaction receipts directly to the agent's ledger.
-                    </p>
-                  </div>
-                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#D97706' }}>Real-time Sync</span>
-                    <a href={`${agentAdminUrl}/financials`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0284C7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      Open <FaExternalLinkAlt size={10} />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Module 4 */}
-                <div style={{ backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#F3E8FF', color: '#7E22CE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem', marginBottom: '16px' }}>
-                      <FaHeadset />
-                    </div>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>Support Tickets & Helpdesk</h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B', lineHeight: '1.5' }}>
-                      Address agent inquiries, resolve onboarding or payment tickets, and push real-time status notifications directly to the mobile app.
-                    </p>
-                  </div>
-                  <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#7E22CE' }}>Push Notifications</span>
-                    <a href={`${agentAdminUrl}/tickets`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0284C7', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      Open <FaExternalLinkAlt size={10} />
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Architecture & Service Status Table */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-                <div style={{ padding: '18px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>KVM Production Service Map</h3>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
-                      Non-destructive multi-service architecture running on the KVM VPS
-                    </p>
-                  </div>
-                  <span style={{ padding: '6px 14px', borderRadius: '20px', backgroundColor: '#DCFCE7', color: '#15803D', fontWeight: 800, fontSize: '0.8rem' }}>
-                    ● ALL SYSTEMS HEALTHY
-                  </span>
-                </div>
-
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
-                  <thead>
-                    <tr style={{ backgroundColor: '#F8FAFC', borderBottom: '1px solid #E2E8F0', color: '#475569', fontWeight: 700 }}>
-                      <th style={{ padding: '14px 20px' }}>System Component</th>
-                      <th style={{ padding: '14px 20px' }}>Runtime / Stack</th>
-                      <th style={{ padding: '14px 20px' }}>Internal Port / Process</th>
-                      <th style={{ padding: '14px 20px' }}>Public Domain / URL</th>
-                      <th style={{ padding: '14px 20px' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0F172A' }}>TheNexopp Website</td>
-                      <td style={{ padding: '14px 20px', color: '#64748B' }}>React 19 + Express 5 + Prisma</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', fontWeight: 700, color: '#059669' }}>Port 8081 (PM2: thenexopp-api)</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#0284C7' }}>https://thenexopp.com</td>
-                      <td style={{ padding: '14px 20px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>Active</span></td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0F172A' }}>Website Admin Panel</td>
-                      <td style={{ padding: '14px 20px', color: '#64748B' }}>React 19 SPA</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', fontWeight: 700, color: '#059669' }}>Served via Website API / Dist</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#0284C7' }}>https://admin.thenexopp.com</td>
-                      <td style={{ padding: '14px 20px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>Active</span></td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0F172A' }}>Agent Backend API</td>
-                      <td style={{ padding: '14px 20px', color: '#64748B' }}>NestJS 10 + TypeORM + WebSockets</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', fontWeight: 700, color: '#059669' }}>Port 3000 (PM2: thenexopp-backend)</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#0284C7' }}>https://api.thenexopp.com/api/v1</td>
-                      <td style={{ padding: '14px 20px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>Active</span></td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0F172A' }}>Agent Admin Portal</td>
-                      <td style={{ padding: '14px 20px', color: '#64748B' }}>React 18 + Vite SPA</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', fontWeight: 700, color: '#059669' }}>Static Nginx Dist Build</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#0284C7' }}>https://agent-admin.thenexopp.com</td>
-                      <td style={{ padding: '14px 20px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>Active</span></td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0F172A' }}>Agent Mobile App</td>
-                      <td style={{ padding: '14px 20px', color: '#64748B' }}>Flutter 3.19+ (Android / iOS)</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', fontWeight: 700, color: '#059669' }}>Native Client Engine</td>
-                      <td style={{ padding: '14px 20px', fontFamily: 'monospace', color: '#0284C7' }}>Android APK / Google Play AAB</td>
-                      <td style={{ padding: '14px 20px' }}><span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800, backgroundColor: '#DCFCE7', color: '#15803D' }}>Active</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          );
-        })()}
+        {/* ================= AGENT ECOSYSTEM ADMIN CONTROL CENTER ================= */}
+        {activeTab === 'agent_admin' && (
+          <AgentEcosystemManagement
+            activeSubTab={agentSubTab}
+            onSubTabChange={setAgentSubTab}
+            showNotification={showNotification}
+          />
+        )}
 
       </div>
 
