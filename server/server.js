@@ -147,8 +147,31 @@ const proxyToNest = () => (req, res) => {
   req.pipe(proxyReq, { end: true });
 };
 
+// Direct Agent API index and health map
+app.get(['/api/v1', '/api/v1/'], (req, res) => {
+  return res.json({
+    status: 'online',
+    service: 'TheNexopp Agent Mobile Application REST API Gateway',
+    version: '1.0.0',
+    documentation: 'https://thenexopp.com/api/docs',
+    websocket: 'wss://thenexopp.com/ws',
+    endpoints: {
+      auth: '/api/v1/auth',
+      agentProfile: '/api/v1/agent/profile',
+      kyc: '/api/v1/agent/kyc',
+      bank: '/api/v1/agent/bank-details',
+      properties: '/api/v1/properties',
+      earnings: '/api/v1/earnings',
+      payments: '/api/v1/payments',
+      support: '/api/v1/support/tickets',
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use(['/api/docs', '/docs'], proxyToNest());
 app.use(['/api/v1'], proxyToNest());
+
 
 app.use(express.json({ limit: '1000mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1000mb' }));
