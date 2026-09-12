@@ -48,7 +48,7 @@ pm2 start server/server.js --name "thenexopp-api"
 
 # Start Agent Backend API (Port 3000)
 cd "/opt/Thenexopp/thenexopp app/nexopp-app/backend"
-pm2 start dist/main.js --name "thenexopp-backend"
+pm2 start dist/main.js --name "thenexopp-backend" --interpreter node
 
 cd /opt/Thenexopp
 pm2 save
