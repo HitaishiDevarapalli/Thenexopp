@@ -114,6 +114,27 @@ app.use(express.json({ limit: '1000mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1000mb' }));
 app.use(cookieParser());
 
+// ── ROOT API HEALTH & SERVICE MAP ───────────────────────────────────────────
+app.get(['/api', '/api/'], (req, res) => {
+  return res.json({
+    status: 'ok',
+    service: 'TheNexopp Core Platform API',
+    version: '1.0.0',
+    endpoints: {
+      properties: '/api/properties',
+      franchises: '/api/franchises',
+      businesses: '/api/businesses',
+      customers: '/api/customers',
+      bookings: '/api/bookings',
+      enquiries: '/api/enquiries',
+      agentApiDocs: '/api/docs',
+      agentApiV1: '/api/v1/',
+    },
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // ── FILE STORAGE SUBDIRECTORIES ──────────────────────────────────────────────
 const uploadDir = path.join(__dirname, '../uploads');
 const subDirs = ['property-images', 'broker-images', 'profile-images', 'lead-photos'];
