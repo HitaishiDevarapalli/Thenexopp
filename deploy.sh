@@ -44,11 +44,11 @@ pm2 delete all || true
 
 # Start Website Backend (Port 8081)
 cd /opt/Thenexopp
-pm2 start server/server.js --name "thenexopp-api"
+PORT=8081 pm2 start server/server.js --name "thenexopp-api" --update-env
 
 # Start Agent Backend API (Port 3000)
 cd "/opt/Thenexopp/thenexopp app/nexopp-app/backend"
-pm2 start dist/main.js --name "thenexopp-backend" --interpreter node
+PORT=3000 AGENT_PORT=3000 pm2 start dist/main.js --name "thenexopp-backend" --interpreter node --update-env
 
 cd /opt/Thenexopp
 pm2 save
