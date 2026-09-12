@@ -8,11 +8,12 @@ set -e
 
 echo "🚀 [1/6] Starting Safe Production Deployment on KVM VPS..."
 
+cd /opt/Thenexopp
+
 # 1. Pull latest git changes
 echo "📥 [2/6] Pulling latest code from GitHub main branch..."
 git pull origin main
 
-# Create log directories
 mkdir -p logs
 mkdir -p "thenexopp app/nexopp-app/backend/logs"
 mkdir -p "thenexopp app/nexopp-app/backend/uploads"
@@ -21,26 +22,38 @@ mkdir -p "thenexopp app/nexopp-app/backend/uploads"
 echo "🗄️ [3/6] Syncing Website Prisma Database & Building Website Bundle..."
 npm install
 npx prisma generate
-npx prisma db push
 npm run build
 
 # 3. Build Agent NestJS Backend
 echo "⚙️ [4/6] Building Agent NestJS Backend API..."
-cd "thenexopp app/nexopp-app/backend"
+cd "/opt/Thenexopp/thenexopp app/nexopp-app/backend"
 npm install
 npm run build
-cd ../../../
+cd /opt/Thenexopp
 
 # 4. Build Agent Admin React Portal
 echo "💻 [5/6] Building Agent Admin Management Portal..."
-cd "thenexopp app/nexopp-app/admin"
+cd "/opt/Thenexopp/thenexopp app/nexopp-app/admin"
 npm install
 npm run build
-cd ../../../
+cd /opt/Thenexopp
 
-# 5. Restart PM2 Unified Processes
-echo "🔄 [6/6] Reloading PM2 Processes..."
-pm2 startOrReload ecosystem.production.cjs --env production || (pm2 delete all && pm2 start ecosystem.production.cjs --env production)
+# 5. Restart PM2 Unified Processes Directly
+echo "🔄 [6/6] Reloading PM2 Processes Directly..."
+pm2 delete all || true
+
+pm2 start server/server.js \
+  --name "thenexopp-api" \
+  --cwd "/opt/Thenexopp" \
+  --max-memory-restart 1G \
+  --time
+
+pm2 start "/opt/Thenexopp/thenexopp app/nexopp-app/backend/dist/main.js" \
+  --name "thenexopp-backend" \
+  --cwd "/opt/Thenexopp/thenexopp app/nexopp-app/backend" \
+  --max-memory-restart 1G \
+  --time
+
 pm2 save
 
 # 6. Test and Reload Nginx
@@ -51,9 +64,6 @@ echo "==========================================================================
 echo "✅ DEPLOYMENT COMPLETE & ALL PROCESSES RUNNING!"
 echo "👉 Website:                https://thenexopp.com"
 echo "👉 Website Admin Portal:   https://thenexopp.com/secure-control-x7k9p2"
-echo "👉 Website Admin Subdomain:https://admin.thenexopp.com"
-echo "👉 Agent Admin Subdomain:  https://agent-admin.thenexopp.com"
-echo "👉 Agent Admin Subpath:    https://thenexopp.com/agent-admin/"
 echo "👉 Agent Backend API:      https://api.thenexopp.com/api/v1 (or https://thenexopp.com/api/v1)"
-echo "👉 Swagger API Docs:       https://api.thenexopp.com/api/docs (or https://thenexopp.com/api/docs)"
 echo "=============================================================================="
+pm2 status
