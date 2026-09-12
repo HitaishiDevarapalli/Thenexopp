@@ -461,8 +461,43 @@ export const AgentEcosystemManagement: React.FC<AgentEcosystemManagementProps> =
   }, [agents, properties, payouts, tickets]);
 
   const agentPortalUrl = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3000'
-    : 'https://agent-admin.thenexopp.com';
+    ? 'http://localhost:3001'
+    : '/agent-admin/';
+
+  // Automatic live sync with NestJS backend on mount
+  useEffect(() => {
+    const fetchBackendData = async () => {
+      try {
+        const token = localStorage.getItem('admin_token') || sessionStorage.getItem('nexopp_admin_token');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const apiBase = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? 'http://localhost:3000/api/v1'
+          : '/api/v1';
+
+        // Attempt agents fetch
+        const resAgents = await fetch(`${apiBase}/admin/agents`, { headers }).catch(() => null);
+        if (resAgents && resAgents.ok) {
+          const json = await resAgents.json();
+          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+            setAgents(json.data);
+          }
+        }
+
+        // Attempt properties fetch
+        const resProps = await fetch(`${apiBase}/admin/properties`, { headers }).catch(() => null);
+        if (resProps && resProps.ok) {
+          const json = await resProps.json();
+          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+            setProperties(json.data);
+          }
+        }
+      } catch (_) {}
+    };
+
+    fetchBackendData();
+  }, []);
 
   const subNavTabs = [
     { id: 'overview', label: 'Ecosystem Overview', icon: <Smartphone size={16} /> },
