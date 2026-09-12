@@ -41,11 +41,19 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'TheNexopp Agent API Documentation',
     swaggerOptions: { persistAuthorization: true },
+    useGlobalPrefix: false,
   });
   SwaggerModule.setup('docs', app, document, {
     customSiteTitle: 'TheNexopp Agent API Documentation',
     swaggerOptions: { persistAuthorization: true },
+    useGlobalPrefix: false,
   });
+  SwaggerModule.setup('api/v1/docs', app, document, {
+    customSiteTitle: 'TheNexopp Agent API Documentation',
+    swaggerOptions: { persistAuthorization: true },
+    useGlobalPrefix: false,
+  });
+
 
   const port = process.env.AGENT_PORT || (process.env.PORT && process.env.PORT !== '8081' ? process.env.PORT : 3000);
   await app.listen(port, '0.0.0.0');
