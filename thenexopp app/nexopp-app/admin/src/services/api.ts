@@ -4,7 +4,9 @@ import { AgentSummary, AgentStatus, PropertyListing, PropertyStatus, PaymentReco
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}${window.location.port === '3000' || window.location.port === '80' || window.location.port === '' ? '' : ':3000'}/api/v1`
+    ? (window.location.hostname.includes('thenexopp.com')
+        ? `${window.location.protocol}//${window.location.hostname}/api/v1`
+        : `http://${window.location.hostname || 'localhost'}:3000/api/v1`)
     : 'http://localhost:3000/api/v1');
 
 export const api = axios.create({
@@ -27,10 +29,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401 && !error.config.url.includes('/auth/admin/login')) {
+    if (error.response && error.response.status === 401 && !error.config?.url?.includes('/auth/admin/login')) {
       localStorage.removeItem('admin_token');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        window.location.hash = '#/login';
       }
     }
     return Promise.reject(error);

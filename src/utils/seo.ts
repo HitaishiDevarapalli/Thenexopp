@@ -255,6 +255,12 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     canonicalPath: '/secure-control-x7k9p2',
     robots: 'noindex, nofollow'
   },
+  standaloneAgentAdmin: {
+    title: "Executive Admin Portal | TheNexopp Agent",
+    description: "TheNexopp Agent Production Management Console.",
+    canonicalPath: '/secure-control-x7k9p2/agentadmin',
+    robots: 'noindex, nofollow'
+  },
   notFound: {
     title: "404 - Page Not Found | TheNexopp",
     description: "The page you are looking for does not exist or has been moved. Explore our verified properties, franchises, and business opportunities.",

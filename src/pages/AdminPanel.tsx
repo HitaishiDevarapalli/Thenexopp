@@ -542,19 +542,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newPropStatusInput, setNewPropStatusInput] = useState('');
   const [newPropOwnershipInput, setNewPropOwnershipInput] = useState('');
 
-  // Main Category Tabs with direct URL deep linking support (/secure-control-x7k9p2/agentadmin, etc.)
+  // Main Category Tabs
   const initialUrlInfo = useMemo(() => {
-    if (typeof window === 'undefined') return { tab: 'overview' as const, sub: 'overview' };
-    const p = window.location.pathname.toLowerCase();
-    if (p.includes('/agentadmin') || p.includes('/agent-admin') || p.includes('/agent_admin')) {
-      let sub = 'overview';
-      if (p.includes('/agents')) sub = 'agents';
-      else if (p.includes('/properties') || p.includes('/listings')) sub = 'properties';
-      else if (p.includes('/financials') || p.includes('/payouts')) sub = 'financials';
-      else if (p.includes('/tickets') || p.includes('/helpdesk')) sub = 'tickets';
-      else if (p.includes('/console') || p.includes('/portal')) sub = 'portal_view';
-      return { tab: 'agent_admin' as const, sub };
-    }
     return { tab: 'overview' as const, sub: 'overview' };
   }, []);
 
@@ -575,18 +564,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     crm: true,
     website: true,
   });
-
-  useEffect(() => {
-    if (activeTab === 'agent_admin') {
-      const subPath = agentSubTab && agentSubTab !== 'overview' ? `/${agentSubTab}` : '';
-      const targetUrl = `/secure-control-x7k9p2/agentadmin${subPath}`;
-      if (window.location.pathname !== targetUrl) {
-        window.history.replaceState(null, '', targetUrl);
-      }
-    } else if (window.location.pathname.includes('/agentadmin') || window.location.pathname.includes('/agent-admin')) {
-      window.history.replaceState(null, '', '/secure-control-x7k9p2');
-    }
-  }, [activeTab, agentSubTab]);
 
   const handleToggleGroup = (groupId: string) => {
     setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));

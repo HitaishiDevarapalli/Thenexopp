@@ -53,8 +53,12 @@ pm2 start dist/main.js --name "thenexopp-backend" --interpreter node
 cd /opt/Thenexopp
 pm2 save
 
-# 6. Test and Reload Nginx
-echo "🌐 Reloading Nginx Configuration..."
+# 6. Apply & Reload Nginx
+echo "🌐 Updating & Reloading Nginx Configuration..."
+if [ -d "/etc/nginx/sites-available" ]; then
+    sudo cp "/opt/Thenexopp/thenexopp app/nexopp-app/deploy/nginx-thenexopp-production.conf" /etc/nginx/sites-available/thenexopp.conf || true
+    sudo ln -sf /etc/nginx/sites-available/thenexopp.conf /etc/nginx/sites-enabled/thenexopp.conf || true
+fi
 sudo nginx -t && sudo systemctl reload nginx || true
 
 echo "=============================================================================="

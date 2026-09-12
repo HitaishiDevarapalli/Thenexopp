@@ -3,7 +3,9 @@ import { io, Socket } from 'socket.io-client';
 const WS_URL =
   import.meta.env.VITE_WS_URL ||
   (typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}${window.location.port === '3000' || window.location.port === '80' || window.location.port === '' ? '' : ':3000'}/ws`
+    ? (window.location.hostname.includes('thenexopp.com')
+        ? `${window.location.protocol}//${window.location.hostname}/ws`
+        : `http://${window.location.hostname || 'localhost'}:3000/ws`)
     : 'http://localhost:3000/ws');
 
 export class AdminWebSocketService {

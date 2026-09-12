@@ -29,12 +29,13 @@ const PropertyDetailsPage = lazy(() => import('./components/PropertyDetailsPage'
 const EnquiryPage = lazy(() => import('./components/EnquiryPage'));
 const CloseDealPage = lazy(() => import('./components/CloseDealPage'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const StandaloneAgentAdmin = lazy(() => import('./pages/StandaloneAgentAdmin'));
 const SellBusinessPage = lazy(() => import('./components/forms/SellBusinessPage').then(m => ({ default: m.SellBusinessPage })));
 const SellPropertyPage = lazy(() => import('./components/forms/SellPropertyPage').then(m => ({ default: m.SellPropertyPage })));
 const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const NexOppAiAssistant = lazy(() => import('./components/NexOppAiAssistant'));
 
-type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
+type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'standaloneAgentAdmin' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -120,6 +121,16 @@ const parseUrl = (path: string) => {
     const rawId = cleanPath.split('/')[2];
     return { page: 'bookSlotPage' as PageType, propertyId: rawId ? decodeURIComponent(rawId) : undefined };
   }
+  if (
+    cleanPath === '/secure-control-x7k9p2/agentadmin' ||
+    cleanPath.startsWith('/secure-control-x7k9p2/agentadmin/') ||
+    cleanPath === '/agentadmin' ||
+    cleanPath.startsWith('/agentadmin/') ||
+    cleanPath === '/agent-admin' ||
+    cleanPath.startsWith('/agent-admin/')
+  ) {
+    return { page: 'standaloneAgentAdmin' as PageType };
+  }
   if (cleanPath === '/secure-control-x7k9p2' || cleanPath.startsWith('/secure-control-x7k9p2/')) {
     return { page: 'adminPortal' as PageType };
   }
@@ -196,7 +207,7 @@ export const App: React.FC = () => {
   const activeFranchiseId = routeData.franchiseId || selectedFranchiseId;
   const activeBusinessIndustry = routeData.industry || selectedBusinessIndustry;
 
-  const publicPages: PageType[] = ['home', 'aboutUsPage', 'adminPortal'];
+  const publicPages: PageType[] = ['home', 'aboutUsPage', 'adminPortal', 'standaloneAgentAdmin'];
 
   const navigateToUrl = (url: string) => {
     window.history.pushState({}, '', url);
@@ -211,100 +222,75 @@ export const App: React.FC = () => {
     }
   };
 
-  const navigateTo = (page: PageType, params?: { propertyId?: string, franchiseId?: string, industry?: string } | string) => {
-    if (!publicPages.includes(page) && !user) {
-      openLoginModal();
+  const navigateTo = (page: PageType, data?: { propertyId?: string; buyPropertyId?: string; franchiseId?: string; industry?: string }) => {
+    if (page === 'adminPortal') {
+      navigateToUrl('/secure-control-x7k9p2');
       return;
     }
-
-    let url = getPathForPage(page);
-    let queryParams = '';
-
-    if (typeof params === 'string') {
-      queryParams = params;
+    if (page === 'standaloneAgentAdmin') {
+      navigateToUrl('/secure-control-x7k9p2/agentadmin');
+      return;
+    }
+    const path = getPathForPage(page);
+    if (page === 'propertyDetails' && data?.propertyId) {
+      navigateToUrl(`/property/${encodeURIComponent(data.propertyId)}`);
+    } else if (page === 'closeDeal' && data?.buyPropertyId) {
+      navigateToUrl(`/buy/${encodeURIComponent(data.buyPropertyId)}`);
+    } else if (page === 'franchiseDetails' && data?.franchiseId) {
+      navigateToUrl(`/franchise/details/${encodeURIComponent(data.franchiseId)}`);
+    } else if (page === 'businessListings' && data?.industry) {
+      navigateToUrl(`/business/listings/${encodeURIComponent(data.industry)}`);
+    } else if (page === 'enquiryPage' && data?.propertyId) {
+      navigateToUrl(`/enquiry/${encodeURIComponent(data.propertyId)}`);
+    } else if (page === 'bookSlotPage' && data?.propertyId) {
+      navigateToUrl(`/book-slot/${encodeURIComponent(data.propertyId)}`);
     } else {
-      if (page === 'propertyDetails') {
-        const pid = params?.propertyId || activePropertyId;
-        if (pid) url = `/property/${pid}`;
-      }
-      if (page === 'closeDeal') {
-        const bid = params?.propertyId || activeBuyPropertyId;
-        if (bid) url = `/buy/${bid}`;
-      }
-      if (page === 'franchiseDetails') {
-        const fid = params?.franchiseId || activeFranchiseId;
-        if (fid) url = `/franchise/details/${fid}`;
-      }
-      if (page === 'businessListings') {
-        const ind = params?.industry || activeBusinessIndustry;
-        if (ind) url = `/business/listings/${encodeURIComponent(ind)}`;
-      }
-      if (page === 'enquiryPage') {
-        const pid = params?.propertyId || enquiryTargetId || activePropertyId;
-        if (pid) url = `/enquiry/${pid}`;
-        else url = '/enquiry';
-      }
-      if (page === 'bookSlotPage') {
-        const pid = params?.propertyId || enquiryTargetId || activePropertyId;
-        if (pid) url = `/book-slot/${pid}`;
-        else url = '/book-slot';
-      }
+      navigateToUrl(path);
     }
-    
-    if (queryParams && !url.includes('?')) {
-       url += queryParams.startsWith('?') ? queryParams : `?${queryParams}`;
-    }
-    navigateToUrl(url);
   };
 
   const navigateBack = () => {
-    window.history.back();
-    setTimeout(() => {
-      const lenis = (window as any).lenis;
-      if (lenis) {
-        lenis.scrollTo(0, { immediate: true });
-      } else {
-        window.scrollTo(0, 0);
-      }
-    }, 100);
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigateTo('home');
+    }
   };
 
+  // SEO updates on route change
   useEffect(() => {
-    if (currentPage === 'adminPortal') {
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+    updateSEO(currentPage);
+  }, [currentPage]);
+
+  // Lenis smooth scroll initialization
+  useEffect(() => {
+    if (currentPage === 'adminPortal' || currentPage === 'standaloneAgentAdmin') {
       return;
     }
 
-    document.documentElement.classList.add('lenis', 'lenis-smooth');
-
-    // Initialize Lenis Smooth Scroll
     const lenis = new Lenis({
-      duration: 0.9,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1,
-      touchMultiplier: 1,
-      syncTouch: false,
+      touchMultiplier: 2,
     });
-    
+
     (window as any).lenis = lenis;
 
-    let rafId: number;
     function raf(time: number) {
       lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
+      requestAnimationFrame(raf);
     }
-    rafId = requestAnimationFrame(raf);
+
+    const animationFrameId = requestAnimationFrame(raf);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(animationFrameId);
       lenis.destroy();
       (window as any).lenis = null;
-      document.documentElement.classList.remove('lenis', 'lenis-smooth');
     };
   }, [currentPage]);
 
@@ -314,7 +300,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {currentPage !== 'adminPortal' && (
+      {currentPage !== 'adminPortal' && currentPage !== 'standaloneAgentAdmin' && (
         <Navbar 
           currentPage={currentPage}
           isSubpage={currentPage !== 'home'}
@@ -339,7 +325,9 @@ export const App: React.FC = () => {
       {currentPage !== 'home' ? (
         <ErrorBoundary>
           <Suspense fallback={<LoadingScreen message="Loading page..." />}>
-            {currentPage === 'adminPortal' ? (
+            {currentPage === 'standaloneAgentAdmin' ? (
+              <StandaloneAgentAdmin />
+            ) : currentPage === 'adminPortal' ? (
               <AdminPanel onDataChange={() => {}} />
             ) : currentPage === 'franchiseResales' ? (
               <FranchiseResalesPage 
@@ -631,7 +619,7 @@ export const App: React.FC = () => {
         </>
       )}
 
-      {currentPage !== 'adminPortal' && (
+      {currentPage !== 'adminPortal' && currentPage !== 'standaloneAgentAdmin' && (
         <Footer 
           onNavigate={(page) => navigateTo(page as PageType)} 
           onScrollToSection={(sectionId) => {
@@ -645,7 +633,7 @@ export const App: React.FC = () => {
           }}
         />
       )}
-      {currentPage !== 'adminPortal' && (
+      {currentPage !== 'adminPortal' && currentPage !== 'standaloneAgentAdmin' && (
         <Suspense fallback={null}>
           <NexOppAiAssistant 
             onNavigate={(page) => navigateTo(page as PageType)}
