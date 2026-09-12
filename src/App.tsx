@@ -120,6 +120,9 @@ const parseUrl = (path: string) => {
     const rawId = cleanPath.split('/')[2];
     return { page: 'bookSlotPage' as PageType, propertyId: rawId ? decodeURIComponent(rawId) : undefined };
   }
+  if (cleanPath === '/secure-control-x7k9p2' || cleanPath.startsWith('/secure-control-x7k9p2/')) {
+    return { page: 'adminPortal' as PageType };
+  }
   if (routeMap[cleanPath]) {
     return { page: routeMap[cleanPath] };
   }

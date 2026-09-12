@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
 import { AdminHeader } from '../components/admin/AdminHeader';
@@ -542,8 +542,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [newPropStatusInput, setNewPropStatusInput] = useState('');
   const [newPropOwnershipInput, setNewPropOwnershipInput] = useState('');
 
-  // Main Category Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'selling_leads' | 'inquiries' | 'contact_settings' | 'media_manager' | 'ai_assistant' | 'seo' | 'agent_admin'>('overview');
+  // Main Category Tabs with direct URL deep linking support (/secure-control-x7k9p2/agentadmin, etc.)
+  const initialUrlInfo = useMemo(() => {
+    if (typeof window === 'undefined') return { tab: 'overview' as const, sub: 'overview' };
+    const p = window.location.pathname.toLowerCase();
+    if (p.includes('/agentadmin') || p.includes('/agent-admin') || p.includes('/agent_admin')) {
+      let sub = 'overview';
+      if (p.includes('/agents')) sub = 'agents';
+      else if (p.includes('/properties') || p.includes('/listings')) sub = 'properties';
+      else if (p.includes('/financials') || p.includes('/payouts')) sub = 'financials';
+      else if (p.includes('/tickets') || p.includes('/helpdesk')) sub = 'tickets';
+      else if (p.includes('/console') || p.includes('/portal')) sub = 'portal_view';
+      return { tab: 'agent_admin' as const, sub };
+    }
+    return { tab: 'overview' as const, sub: 'overview' };
+  }, []);
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'main_stats' | 'customization' | 'hero_cms' | 'properties' | 'franchises' | 'businesses' | 'demand_regions' | 'master_filters' | 'brokers' | 'users' | 'users_data' | 'team' | 'roles' | 'selling_leads' | 'inquiries' | 'contact_settings' | 'media_manager' | 'ai_assistant' | 'seo' | 'agent_admin'>(initialUrlInfo.tab);
   const [expandedMenu, setExpandedMenu] = useState<string | null>('brokers');
   const [analyticsDateRange, setAnalyticsDateRange] = useState<'This Week' | 'This Month' | 'Last 30 Days' | 'This Year'>('This Week');
   const [activeAnalyticsSlide, setActiveAnalyticsSlide] = useState<'property' | 'franchise' | 'business'>('property');
@@ -551,7 +566,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
   const [franchiseSubTab, setFranchiseSubTab] = useState<string>('listings');
   const [businessSubTab, setBusinessSubTab] = useState<string>('listings');
   const [brokerSubTab, setBrokerSubTab] = useState<string>('directory');
-  const [agentSubTab, setAgentSubTab] = useState<string>('overview');
+  const [agentSubTab, setAgentSubTab] = useState<string>(initialUrlInfo.sub);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -560,6 +575,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
     crm: true,
     website: true,
   });
+
+  useEffect(() => {
+    if (activeTab === 'agent_admin') {
+      const subPath = agentSubTab && agentSubTab !== 'overview' ? `/${agentSubTab}` : '';
+      const targetUrl = `/secure-control-x7k9p2/agentadmin${subPath}`;
+      if (window.location.pathname !== targetUrl) {
+        window.history.replaceState(null, '', targetUrl);
+      }
+    } else if (window.location.pathname.includes('/agentadmin') || window.location.pathname.includes('/agent-admin')) {
+      window.history.replaceState(null, '', '/secure-control-x7k9p2');
+    }
+  }, [activeTab, agentSubTab]);
 
   const handleToggleGroup = (groupId: string) => {
     setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
