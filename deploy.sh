@@ -42,18 +42,15 @@ cd /opt/Thenexopp
 echo "🔄 [6/6] Reloading PM2 Processes Directly..."
 pm2 delete all || true
 
-pm2 start server/server.js \
-  --name "thenexopp-api" \
-  --cwd "/opt/Thenexopp" \
-  --max-memory-restart 1G \
-  --time
+# Start Website Backend (Port 8081)
+cd /opt/Thenexopp
+pm2 start server/server.js --name "thenexopp-api"
 
-pm2 start "/opt/Thenexopp/thenexopp app/nexopp-app/backend/dist/main.js" \
-  --name "thenexopp-backend" \
-  --cwd "/opt/Thenexopp/thenexopp app/nexopp-app/backend" \
-  --max-memory-restart 1G \
-  --time
+# Start Agent Backend API (Port 3000)
+cd "/opt/Thenexopp/thenexopp app/nexopp-app/backend"
+pm2 start dist/main.js --name "thenexopp-backend"
 
+cd /opt/Thenexopp
 pm2 save
 
 # 6. Test and Reload Nginx
@@ -64,6 +61,7 @@ echo "==========================================================================
 echo "✅ DEPLOYMENT COMPLETE & ALL PROCESSES RUNNING!"
 echo "👉 Website:                https://thenexopp.com"
 echo "👉 Website Admin Portal:   https://thenexopp.com/secure-control-x7k9p2"
+echo "👉 Direct Agent Admin Link:https://thenexopp.com/secure-control-x7k9p2/agentadmin"
 echo "👉 Agent Backend API:      https://api.thenexopp.com/api/v1 (or https://thenexopp.com/api/v1)"
 echo "=============================================================================="
 pm2 status
