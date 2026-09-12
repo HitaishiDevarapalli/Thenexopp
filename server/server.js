@@ -5012,22 +5012,16 @@ const ensureInitialCustomerData = async () => {
 // ── AGENT APP ADMIN PORTAL STATIC SERVING ──────────────────────────────────
 const agentAdminDistDir = path.resolve(__dirname, '../thenexopp app/nexopp-app/admin/dist');
 if (fs.existsSync(agentAdminDistDir)) {
-  // Ensure trailing slash redirect so relative assets (./assets/...) resolve properly in browsers
-  app.get(['/secure-control-x7k9p2/agentadmin', '/agentadmin', '/agent-admin'], (req, res) => {
-    const qs = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
-    return res.redirect(301, `${req.path}/${qs}`);
-  });
-
   app.use('/secure-control-x7k9p2/agentadmin', express.static(agentAdminDistDir));
   app.use('/agentadmin', express.static(agentAdminDistDir));
   app.use('/agent-admin', express.static(agentAdminDistDir));
 
-  app.get([
-    '/secure-control-x7k9p2/agentadmin/*',
-    '/agentadmin/*',
-    '/agent-admin/*',
-  ], (req, res) => {
-    return res.sendFile(path.join(agentAdminDistDir, 'index.html'));
+  // Safe SPA fallback for Agent Admin subpaths in Express 5
+  app.use(['/secure-control-x7k9p2/agentadmin', '/agentadmin', '/agent-admin'], (req, res, next) => {
+    if (req.method === 'GET' && !req.path.includes('.')) {
+      return res.sendFile(path.join(agentAdminDistDir, 'index.html'));
+    }
+    next();
   });
 }
 
