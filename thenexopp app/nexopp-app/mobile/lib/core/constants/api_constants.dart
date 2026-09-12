@@ -31,8 +31,9 @@ class ApiConstants {
   }
 
   // Production fallback domain
-  static const String prodBaseUrl = 'https://api.thenexopp.com/api/v1';
-  static const String prodWebSocketUrl = 'https://api.thenexopp.com/ws';
+  static const String prodBaseUrl = 'https://thenexopp.com/api/v1';
+  static const String prodWebSocketUrl = 'wss://thenexopp.com/ws';
+
 
   // Auth Endpoints
   static const String sendOtp = '/auth/send-otp';
