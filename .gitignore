@@ -35,7 +35,8 @@ server/*.json
 server/data/
 uploads/
 server/uploads/
-**/uploads/
+thenexopp app/nexopp-app/backend/uploads/
+!**/src/**/uploads/
 **/*.sqlite
 **/*.sqlite-journal
 **/*.sqlite3
