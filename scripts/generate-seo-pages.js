@@ -446,6 +446,24 @@ const routes = [
       { name: 'Home', path: '/' },
       { name: 'Contact Us', path: '/contact' }
     ]
+  },
+  {
+    path: '/secure-control-x7k9p2',
+    title: "Executive Admin Portal | TheNexopp",
+    description: "TheNexopp Enterprise Administration Console.",
+    keywords: "admin portal, thenexopp management console",
+    canonicalUrl: "https://thenexopp.com/secure-control-x7k9p2",
+    h1: "TheNexopp Enterprise Administration Console",
+    crawlerBody: `
+      <section>
+        <h1 style="font-size: 2.2rem; font-weight: 900; color: #0F172A; margin-bottom: 16px;">TheNexopp Enterprise Administration Console</h1>
+        <p style="font-size: 1.1rem; color: #475569; margin-bottom: 24px;">Secure management portal for authorized platform operators, broker verification, listing approvals, and transaction audit trails.</p>
+      </section>
+    `,
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Admin Console', path: '/secure-control-x7k9p2' }
+    ]
   }
 ];
 
