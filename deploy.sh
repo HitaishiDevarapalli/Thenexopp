@@ -38,19 +38,11 @@ npm install
 npx prisma generate
 npm run build
 
-# 5. Restart PM2 Unified Processes Directly
-echo "🔄 [6/6] Reloading PM2 Processes Directly..."
+# 5. Restart PM2 Unified Processes
+echo "🔄 [6/6] Reloading PM2 Processes..."
+cd /opt/Thenexopp
 pm2 delete all || true
-
-# Start Website Backend (Port 8081)
-cd /opt/Thenexopp
-PORT=8081 pm2 start server/server.js --name "thenexopp-api" --update-env
-
-# Start Agent Backend API (Port 3000)
-cd "/opt/Thenexopp/thenexopp app/nexopp-app/backend"
-PORT=3000 AGENT_PORT=3000 pm2 start dist/main.js --name "thenexopp-backend" --interpreter node --update-env
-
-cd /opt/Thenexopp
+pm2 start ecosystem.config.cjs --env production
 pm2 save
 
 # 6. Apply & Reload Nginx

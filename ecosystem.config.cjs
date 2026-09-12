@@ -30,12 +30,14 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
+        AGENT_PORT: 3000,
         DATABASE_TYPE: 'sqlite',
         DATABASE_STORAGE: '/opt/Thenexopp/thenexopp app/nexopp-app/backend/thenexopp_agent_dev.sqlite',
       },
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,
+        AGENT_PORT: 3000,
         DATABASE_TYPE: 'sqlite',
         DATABASE_STORAGE: '/opt/Thenexopp/thenexopp app/nexopp-app/backend/thenexopp_agent_dev.sqlite',
       },
