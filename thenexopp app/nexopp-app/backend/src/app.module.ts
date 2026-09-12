@@ -29,7 +29,7 @@ import { RefreshTokenEntity } from './database/entities/refresh-token.entity';
 import { AuditLogEntity } from './database/entities/audit-log.entity';
 import { SupportTicketEntity } from './database/entities/support-ticket.entity';
 
-import { AppController } from './app.controller';
+import { AppController, ApiV1Controller } from './app.controller';
 
 @Module({
   imports: [
@@ -101,7 +101,8 @@ import { AppController } from './app.controller';
     AdminIntegrationModule,
     SupportModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ApiV1Controller],
 })
 export class AppModule {}
+
 
