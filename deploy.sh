@@ -36,6 +36,7 @@ cd /opt/Thenexopp
 echo "🗄️ [5/6] Syncing Website Prisma Database & Building Website Bundle..."
 npm install
 npx prisma generate
+npx prisma db push --accept-data-loss || true
 npm run build
 
 # 5. Restart PM2 Unified Processes

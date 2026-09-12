@@ -44,6 +44,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
+
+// Global Process Crash Protection
+process.on('uncaughtException', (err) => {
+  logger.error({ err: err.message, stack: err.stack }, 'CRITICAL: Caught uncaughtException to prevent process crash');
+});
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error({ reason, promise }, 'CRITICAL: Caught unhandledRejection to prevent process crash');
+});
+
 const app = express();
 const PORT = process.env.PORT || 8081;
 
