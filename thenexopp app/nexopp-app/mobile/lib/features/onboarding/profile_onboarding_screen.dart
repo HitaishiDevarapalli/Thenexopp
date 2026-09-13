@@ -234,12 +234,20 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
     } catch (e) {
       debugPrint('[ProfileOnboarding] Error: $e');
       String errorMsg = 'Failed to submit profile. Please verify your details.';
-      if (e is DioException && e.response?.data is Map) {
-        final backendMsg = e.response?.data['message'];
-        if (backendMsg is List) {
-          errorMsg = backendMsg.join(', ');
-        } else if (backendMsg != null) {
-          errorMsg = backendMsg.toString();
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.sendTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
+          errorMsg = 'Request timed out. Please check your network connection and try again.';
+        } else if (e.response?.statusCode == 413) {
+          errorMsg = 'Photo size is too large. Please choose a smaller photo.';
+        } else if (e.response?.data is Map) {
+          final backendMsg = e.response?.data['message'];
+          if (backendMsg is List) {
+            errorMsg = backendMsg.join(', ');
+          } else if (backendMsg != null) {
+            errorMsg = backendMsg.toString();
+          }
         }
       }
       if (mounted) {

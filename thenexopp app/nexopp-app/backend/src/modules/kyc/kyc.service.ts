@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { KycDocumentEntity, KycStatus } from '../../database/entities/kyc-document.entity';
 import { AgentEntity, AgentStatus } from '../../database/entities/agent.entity';
 import { UserEntity, UserRole } from '../../database/entities/user.entity';
-import { CryptoUtil } from '../../common/utils/crypto.util';
+import { CryptoUtil, FileStorageUtil } from '../../common/utils/crypto.util';
 import { SubmitKycDto } from './dto/submit-kyc.dto';
 import { AgentWebSocketGateway } from '../websocket/agent-websocket.gateway';
 
@@ -83,6 +83,14 @@ export class KycService {
 
   async submitKyc(userId: string, dto: SubmitKycDto) {
     const agent = await this.findOrCreateAgent(userId);
+
+    // If documents are base64, save them to disk and keep clean key
+    if (dto.aadhaarDocKey && dto.aadhaarDocKey.startsWith('data:')) {
+      dto.aadhaarDocKey = FileStorageUtil.saveBase64File(dto.aadhaarDocKey, 'private-kyc') || dto.aadhaarDocKey;
+    }
+    if (dto.panDocKey && dto.panDocKey.startsWith('data:')) {
+      dto.panDocKey = FileStorageUtil.saveBase64File(dto.panDocKey, 'private-kyc') || dto.panDocKey;
+    }
 
     // Encrypt sensitive numbers with AES-256
     const aadhaarEncrypted = CryptoUtil.encrypt(dto.aadhaarNumber.replace(/\D/g, ''));

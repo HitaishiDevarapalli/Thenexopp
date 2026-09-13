@@ -6,6 +6,7 @@ import { AgentProfileEntity } from '../../database/entities/agent-profile.entity
 import { UserEntity, UserRole } from '../../database/entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { AgentWebSocketGateway } from '../websocket/agent-websocket.gateway';
+import { FileStorageUtil } from '../../common/utils/crypto.util';
 
 @Injectable()
 export class AgentsService {
@@ -73,6 +74,11 @@ export class AgentsService {
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const agent = await this.findOrCreateAgent(userId);
+
+    // If profilePhotoUrl is base64, save it to disk and keep clean key
+    if (dto.profilePhotoUrl && dto.profilePhotoUrl.startsWith('data:')) {
+      dto.profilePhotoUrl = FileStorageUtil.saveBase64File(dto.profilePhotoUrl, 'private-kyc') || dto.profilePhotoUrl;
+    }
 
     let profile = agent.profile;
     if (!profile) {

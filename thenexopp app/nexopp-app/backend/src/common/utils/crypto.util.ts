@@ -50,3 +50,45 @@ export class CryptoUtil {
     return `XXXX XXXX ${clean.slice(-4)}`;
   }
 }
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+export class FileStorageUtil {
+  public static saveBase64File(base64Data?: string, bucket: string = 'common'): string | undefined {
+    if (!base64Data) return base64Data;
+    if (!base64Data.startsWith('data:image/') && !base64Data.startsWith('data:application/pdf') && !base64Data.startsWith('data:')) {
+      return base64Data; // Already a key or URL
+    }
+
+    try {
+      const uploadDir = path.resolve('uploads', bucket);
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      let ext = '.jpg';
+      let cleanData = base64Data;
+      if (base64Data.includes(';base64,')) {
+        const parts = base64Data.split(';base64,');
+        const mime = parts[0].replace('data:', '').toLowerCase();
+        if (mime.includes('png')) ext = '.png';
+        else if (mime.includes('webp')) ext = '.webp';
+        else if (mime.includes('pdf')) ext = '.pdf';
+        else if (mime.includes('svg')) ext = '.svg';
+        cleanData = parts[1];
+      }
+
+      const buffer = Buffer.from(cleanData, 'base64');
+      const fileKey = `${Date.now()}-${Math.floor(Math.random() * 1000000)}${ext}`;
+      const filePath = path.join(uploadDir, fileKey);
+      fs.writeFileSync(filePath, buffer);
+
+      return fileKey;
+    } catch (err) {
+      console.error('[FileStorageUtil] Error saving base64 to disk:', err);
+      return `file-${Date.now()}.jpg`;
+    }
+  }
+}
+
