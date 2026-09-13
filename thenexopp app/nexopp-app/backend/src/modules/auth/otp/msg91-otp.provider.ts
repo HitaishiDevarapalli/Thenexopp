@@ -29,7 +29,7 @@ export class Msg91OtpProvider implements IOtpProvider {
       this.logger.log(`Dispatching MSG91 OTP to ${formattedMobile.slice(-4)} using Template ID ${templateId}`);
 
       // Official MSG91 Send OTP API v5
-      const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}&otp=${otp}&authkey=${authKey}`;
+      const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}&otp=${otp}&authkey=${authKey}&sender=${senderId}&otp_length=6&otp_expiry=5`;
       const response = await axios.post(
         url,
         {},
@@ -38,7 +38,7 @@ export class Msg91OtpProvider implements IOtpProvider {
             authkey: authKey,
             'Content-Type': 'application/json',
           },
-          timeout: 6000,
+          timeout: 8000,
         },
       );
 
