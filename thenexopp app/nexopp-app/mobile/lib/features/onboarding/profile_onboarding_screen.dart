@@ -160,6 +160,17 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
   }
 
   Future<void> _detectLiveLocation() async {
+    final hasPermission = await PermissionService.checkAndRequestLocationPermission(context);
+    if (!hasPermission && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location permission is required to detect your operating area.'),
+          backgroundColor: AppColors.statusError,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isDetectingLocation = true);
     final loc = await _locationService.fetchLiveOpenStreetMapLocation();
     setState(() => _isDetectingLocation = false);
@@ -168,13 +179,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
       _areaController.text = loc;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Detected OSM Location: $loc'), backgroundColor: AppColors.primaryEmerald),
+          SnackBar(content: Text('Detected Area: $loc'), backgroundColor: AppColors.primaryEmerald),
         );
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Location permission denied or unavailable. Please enter area manually.'),
+          content: Text('Could not determine exact location. Please verify GPS is enabled or enter area manually.'),
           backgroundColor: AppColors.statusError,
         ),
       );

@@ -28,24 +28,70 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage(bool isAadhaar) async {
-    final hasPermission = await PermissionService.checkAndRequestStoragePermission(context);
-    if (!hasPermission && mounted) return;
-
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-      maxWidth: 1024,
-      maxHeight: 1024,
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: Text(
+                isAadhaar ? 'Upload Aadhaar Card Photo' : 'Upload PAN Card Photo',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.textDark),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primaryEmerald),
+              title: const Text('Take Photo with Camera', style: TextStyle(fontWeight: FontWeight.w500)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final hasPerm = await PermissionService.checkAndRequestCameraPermission(context);
+                if (!hasPerm && mounted) return;
+                final XFile? image = await _picker.pickImage(
+                  source: ImageSource.camera,
+                  imageQuality: 70,
+                  maxWidth: 1280,
+                  maxHeight: 1280,
+                );
+                if (image != null && mounted) {
+                  setState(() {
+                    if (isAadhaar) _aadhaarFile = image;
+                    else _panFile = image;
+                  });
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded, color: AppColors.primaryEmerald),
+              title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w500)),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final hasPerm = await PermissionService.checkAndRequestStoragePermission(context);
+                if (!hasPerm && mounted) return;
+                final XFile? image = await _picker.pickImage(
+                  source: ImageSource.gallery,
+                  imageQuality: 70,
+                  maxWidth: 1280,
+                  maxHeight: 1280,
+                );
+                if (image != null && mounted) {
+                  setState(() {
+                    if (isAadhaar) _aadhaarFile = image;
+                    else _panFile = image;
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
-    if (image != null) {
-      setState(() {
-        if (isAadhaar) {
-          _aadhaarFile = image;
-        } else {
-          _panFile = image;
-        }
-      });
-    }
   }
 
   Future<String> _uploadFile(XFile file, String bucketType) async {
