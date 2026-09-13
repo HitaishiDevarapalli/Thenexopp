@@ -71,14 +71,15 @@ export class UploadsService implements OnModuleInit {
         },
       };
     } catch (err) {
+    } catch (err) {
       this.logger.log(`MinIO offline; using local storage engine for: ${fileKey}`);
-      const apiBase = this.configService.get<string>('API_BASE_URL', 'http://localhost:3000/api/v1');
+      const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
       return {
         success: true,
         data: {
           fileKey,
           bucket: bucketType,
-          uploadUrl: `${apiBase}/uploads/local-mock-upload?key=${fileKey}&bucket=${bucketType}`,
+          uploadUrl: `${apiBase}/uploads/local-mock-upload?key=${encodeURIComponent(fileKey)}&bucket=${bucketType}`,
           expiresInSeconds: 900,
         },
       };
@@ -87,14 +88,14 @@ export class UploadsService implements OnModuleInit {
 
   async getPresignedReadUrl(bucketType: BucketType, fileKey: string) {
     if (!fileKey) return null;
-    if (fileKey.startsWith('http') || fileKey.startsWith('data:image/')) {
+    if (fileKey.startsWith('http://') || fileKey.startsWith('https://') || fileKey.startsWith('data:image/') || fileKey.startsWith('data:application/pdf')) {
       return fileKey;
     }
     try {
       return await this.minioClient.presignedGetObject(bucketType, fileKey, 30 * 60); // 30 mins
     } catch (err) {
-      const apiBase = this.configService.get<string>('API_BASE_URL', 'http://localhost:3000/api/v1');
-      return `${apiBase}/uploads/local-mock-view?key=${fileKey}&bucket=${bucketType}`;
+      const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
+      return `${apiBase}/uploads/local-mock-view?key=${encodeURIComponent(fileKey)}&bucket=${bucketType}`;
     }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AdminApiService, API_BASE_URL } from '../services/api';
+import { AdminApiService, API_BASE_URL, resolveImageUrl } from '../services/api';
 import { AgentSummary } from '../types';
 import {
   FileCheck,
@@ -66,14 +66,7 @@ export const KycReview: React.FC = () => {
   const openPreview = (doc: { title: string; key: string; url?: string | null; type?: string; number?: string; name?: string }) => {
     setZoomScale(1);
     setRotation(0);
-    let resolvedUrl = doc.url;
-    if (!resolvedUrl && doc.key) {
-      if (doc.key.startsWith('http') || doc.key.startsWith('data:image/')) {
-        resolvedUrl = doc.key;
-      } else {
-        resolvedUrl = `${API_BASE_URL}/uploads/local-mock-view?key=${encodeURIComponent(doc.key)}&bucket=private-kyc`;
-      }
-    }
+    const resolvedUrl = resolveImageUrl(doc.url || doc.key, 'private-kyc');
     setPreviewDoc({ ...doc, url: resolvedUrl });
   };
 
@@ -390,14 +383,14 @@ export const KycReview: React.FC = () => {
                   <div className="flex items-center space-x-3.5">
                     {agent.profilePhotoUrl ? (
                       <img
-                        src={agent.profilePhotoUrl}
+                        src={resolveImageUrl(agent.profilePhotoUrl, 'private-kyc')}
                         alt="Selfie"
                         className="h-16 w-16 rounded-2xl object-cover border-2 border-emerald-500 shadow-md cursor-pointer hover:scale-105 transition-transform"
                         onClick={() =>
                           openPreview({
                             title: `Selfie Photo - ${agent.fullName || 'Agent'}`,
                             key: agent.profilePhotoUrl!,
-                            url: agent.profilePhotoUrl,
+                            url: resolveImageUrl(agent.profilePhotoUrl, 'private-kyc'),
                             type: 'SELFIE',
                           })
                         }
@@ -486,7 +479,7 @@ export const KycReview: React.FC = () => {
                             openPreview({
                               title: `Aadhaar Card Document Photo - ${agent.fullName || 'Agent'}`,
                               key: agent.aadhaarDocKey || '',
-                              url: agent.aadhaarDocUrl,
+                              url: resolveImageUrl(agent.aadhaarDocUrl || agent.aadhaarDocKey, 'private-kyc'),
                               type: 'AADHAAR',
                               number: aadhaarNumber,
                               name: agent.fullName || 'Agent',
@@ -525,7 +518,7 @@ export const KycReview: React.FC = () => {
                             openPreview({
                               title: `PAN Card Document Photo - ${agent.fullName || 'Agent'}`,
                               key: agent.panDocKey || '',
-                              url: agent.panDocUrl,
+                              url: resolveImageUrl(agent.panDocUrl || agent.panDocKey, 'private-kyc'),
                               type: 'PAN',
                               number: panNumber,
                               name: agent.fullName || 'Agent',

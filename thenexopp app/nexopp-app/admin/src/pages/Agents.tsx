@@ -703,7 +703,7 @@ export const Agents: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       {agent.profilePhotoUrl ? (
                         <img
-                          src={agent.profilePhotoUrl}
+                          src={resolveImageUrl(agent.profilePhotoUrl, 'private-kyc') || agent.profilePhotoUrl}
                           alt={agent.fullName || 'Agent'}
                           className="h-10 w-10 rounded-xl object-cover border border-slate-200 shadow-sm"
                         />

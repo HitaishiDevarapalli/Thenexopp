@@ -5,9 +5,27 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined'
     ? (window.location.hostname.includes('thenexopp.com')
-        ? `${window.location.protocol}//${window.location.hostname}/api/v1`
-        : `http://${window.location.hostname || 'localhost'}:3000/api/v1`)
-    : 'http://localhost:3000/api/v1');
+        ? `${window.location.protocol}//${window.location.hostname}/api/v2`
+        : `http://${window.location.hostname || 'localhost'}:3000/api/v2`)
+    : '/api/v2');
+
+export const resolveImageUrl = (keyOrUrl?: string | null, bucket: string = 'private-kyc') => {
+  if (!keyOrUrl) return '';
+  if (keyOrUrl.startsWith('data:image/') || keyOrUrl.startsWith('data:application/pdf') || keyOrUrl.startsWith('data:')) {
+    return keyOrUrl;
+  }
+  if (keyOrUrl.startsWith('http://') || keyOrUrl.startsWith('https://')) {
+    if (keyOrUrl.includes('localhost:3000') || keyOrUrl.includes('127.0.0.1:3000')) {
+      const parts = keyOrUrl.split(':3000');
+      if (parts.length > 1) {
+        const rootOrigin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}` : '';
+        return `${rootOrigin}${parts[1]}`;
+      }
+    }
+    return keyOrUrl;
+  }
+  return `${API_BASE_URL}/uploads/local-mock-view?key=${encodeURIComponent(keyOrUrl)}&bucket=${bucket}`;
+};
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
