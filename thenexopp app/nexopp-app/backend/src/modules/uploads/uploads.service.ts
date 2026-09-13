@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, Logger, OnModuleInit } from '@nestjs/c
 import { ConfigService } from '@nestjs/config';
 import * as Minio from 'minio';
 import { v4 as uuidv4 } from 'uuid';
+import { FileStorageUtil } from '../../common/utils/crypto.util';
 
 export enum BucketType {
   KYC = 'private-kyc',
@@ -95,16 +96,7 @@ export class UploadsService implements OnModuleInit {
       return fileKey;
     }
 
-    // Extract clean key if URL was passed
-    let cleanKey = fileKey;
-    if (cleanKey.includes(':9000/') || cleanKey.includes('localhost:9000') || cleanKey.includes('127.0.0.1:9000')) {
-      cleanKey = cleanKey.split('?')[0].split('/').pop() || fileKey;
-    } else if (cleanKey.startsWith('http://') || cleanKey.startsWith('https://')) {
-      if (!cleanKey.includes('localhost:3000') && !cleanKey.includes('127.0.0.1:3000')) {
-        return cleanKey;
-      }
-      cleanKey = cleanKey.split('?')[0].split('/').pop() || fileKey;
-    }
+    const cleanKey = FileStorageUtil.extractCleanFileKey(fileKey) || fileKey;
 
     const useMinioEnv = this.configService.get<string>('USE_MINIO', 'false') === 'true';
     if (useMinioEnv) {

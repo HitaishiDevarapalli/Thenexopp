@@ -90,5 +90,38 @@ export class FileStorageUtil {
       return `file-${Date.now()}.jpg`;
     }
   }
+
+  public static extractCleanFileKey(input?: string | null): string {
+    if (!input) return '';
+    let str = String(input).trim();
+    if (str.startsWith('data:') || str.startsWith('blob:')) {
+      return str;
+    }
+
+    // 1. If it contains a query parameter key=..., extract that parameter value!
+    const keyMatch = str.match(/[?&]key=([^&#]+)/i);
+    if (keyMatch && keyMatch[1]) {
+      try {
+        const decoded = decodeURIComponent(keyMatch[1]).trim();
+        if (decoded && decoded !== 'local-mock-view' && decoded !== 'undefined' && decoded !== 'null') {
+          return FileStorageUtil.extractCleanFileKey(decoded);
+        }
+      } catch (_) {}
+    }
+
+    // 2. Strip any query string or hash
+    str = str.split('?')[0].split('#')[0];
+
+    // 3. Take the basename
+    const parts = str.split('/');
+    const lastPart = parts[parts.length - 1] || '';
+
+    // If last part is an endpoint name, return empty string
+    if (lastPart === 'local-mock-view' || lastPart === 'secure-view-url' || lastPart === 'direct-upload') {
+      return '';
+    }
+
+    return lastPart;
+  }
 }
 

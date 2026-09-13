@@ -9,6 +9,7 @@ import { Request, Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { FileStorageUtil } from '../../common/utils/crypto.util';
 
 class PresignedUrlDto {
   @ApiProperty({ enum: BucketType, example: BucketType.KYC })
@@ -162,7 +163,13 @@ export class UploadsController {
     @Res() res: Response,
   ) {
     if (!key) return res.status(404).send('No file key provided');
-    const cleanKey = path.basename(key.split('?')[0]);
+    let cleanKey = FileStorageUtil.extractCleanFileKey(key);
+    if (!cleanKey) {
+      cleanKey = path.basename(key.split('?')[0]);
+    }
+    if (cleanKey === 'local-mock-view') {
+      cleanKey = '';
+    }
 
     // Search across all candidate directories
     const searchBuckets = [bucket, 'private-kyc', 'property-images', 'payment-proofs', 'common'].filter(Boolean);
@@ -171,26 +178,59 @@ export class UploadsController {
       path.resolve(process.cwd(), 'uploads'),
       path.resolve(__dirname, '..', '..', '..', 'uploads'),
       path.resolve(__dirname, '..', '..', '..', '..', 'uploads'),
+      '/opt/Thenexopp/thenexopp app/nexopp-app/backend/uploads',
+      '/opt/Thenexopp/uploads',
     ];
 
     let foundFilePath: string | null = null;
-    for (const root of searchRoots) {
-      for (const b of searchBuckets) {
-        const candidate = path.join(root, b, cleanKey);
-        if (fs.existsSync(candidate)) {
-          const stats = fs.statSync(candidate);
-          if (stats.size > 0) {
-            foundFilePath = candidate;
-            break;
+    if (cleanKey) {
+      for (const root of searchRoots) {
+        if (!fs.existsSync(root)) continue;
+        for (const b of searchBuckets) {
+          const candidate = path.join(root, b, cleanKey);
+          if (fs.existsSync(candidate)) {
+            const stats = fs.statSync(candidate);
+            if (stats.size > 0) {
+              foundFilePath = candidate;
+              break;
+            }
           }
         }
+        if (foundFilePath) break;
+        // Check direct key in root
+        const directCandidate = path.join(root, cleanKey);
+        if (fs.existsSync(directCandidate) && fs.statSync(directCandidate).size > 0) {
+          foundFilePath = directCandidate;
+          break;
+        }
       }
-      if (foundFilePath) break;
-      // Also check direct key in root
-      const directCandidate = path.join(root, cleanKey);
-      if (fs.existsSync(directCandidate) && fs.statSync(directCandidate).size > 0) {
-        foundFilePath = directCandidate;
-        break;
+
+      // If exact file not found, try timestamp / prefix match in bucket directories
+      if (!foundFilePath) {
+        const timeMatch = cleanKey.match(/^(\d{10,13})/);
+        const prefix = timeMatch ? timeMatch[1] : (cleanKey.length > 8 ? cleanKey.slice(0, 12) : null);
+        if (prefix) {
+          for (const root of searchRoots) {
+            if (!fs.existsSync(root)) continue;
+            for (const b of searchBuckets) {
+              const bucketDir = path.join(root, b);
+              if (fs.existsSync(bucketDir)) {
+                try {
+                  const files = fs.readdirSync(bucketDir);
+                  const matched = files.find((f) => f.includes(prefix));
+                  if (matched) {
+                    const full = path.join(bucketDir, matched);
+                    if (fs.statSync(full).size > 0) {
+                      foundFilePath = full;
+                      break;
+                    }
+                  }
+                } catch (_) {}
+              }
+            }
+            if (foundFilePath) break;
+          }
+        }
       }
     }
 
