@@ -44,6 +44,9 @@ npm run build
 echo "🔄 [6/6] Reloading PM2 Processes..."
 cd /opt/Thenexopp
 pm2 delete all || true
+sudo fuser -k 3000/tcp || true
+sudo fuser -k 8081/tcp || true
+sleep 1
 pm2 start ecosystem.config.cjs --env production
 pm2 save
 
