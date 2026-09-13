@@ -71,7 +71,6 @@ export class UploadsService implements OnModuleInit {
         },
       };
     } catch (err) {
-    } catch (err) {
       this.logger.log(`MinIO offline; using local storage engine for: ${fileKey}`);
       const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
       return {
