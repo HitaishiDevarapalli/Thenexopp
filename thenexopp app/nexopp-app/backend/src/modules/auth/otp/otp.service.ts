@@ -51,7 +51,7 @@ export class OtpService {
 
     // Always generate secure real 6-digit random OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    this.logger.log(`Generated OTP for ${cleanMobile.slice(-4)}: ${otp}`);
+    this.logger.log(`🔑 [OTP DISPATCH] Mobile: ${cleanMobile} | Generated Code: [${otp}] | Test Bypass: [123456]`);
 
     const expirySeconds = Number(this.configService.get('OTP_EXPIRY_SECONDS', 300));
     const cooldownSeconds = Number(this.configService.get('OTP_RESEND_COOLDOWN_SECONDS', 60));
@@ -66,30 +66,35 @@ export class OtpService {
     try {
       const dispatched = await this.provider.sendOtp(cleanMobile, otp);
       if (!dispatched) {
-        this.logger.warn(`MSG91 SMS dispatch returned false for ${cleanMobile.slice(-4)}. OTP stored in memory: ${otp}`);
+        this.logger.warn(`MSG91 SMS dispatch was not delivered for ${cleanMobile.slice(-4)}. You can enter either OTP [${otp}] or test code [123456]`);
       }
-    } catch (err) {
-      this.logger.error(`Error attempting to dispatch SMS: ${err.message}. OTP stored in memory: ${otp}`);
+    } catch (err: any) {
+      this.logger.error(`Error attempting to dispatch SMS: ${err?.message}. OTP stored: ${otp}`);
     }
 
     return {
       success: true,
-      message: 'OTP sent successfully',
+      message: 'OTP sent successfully. (You can also use demo code 123456)',
       cooldownSeconds,
     };
   }
 
   async verifyOtp(mobileNumber: string, otpInput: string): Promise<boolean> {
     const cleanMobile = this.normalizeMobile(mobileNumber);
+    const trimmedOtp = otpInput.trim();
+
+    // Universal Test/Demo OTP bypass (123456)
+    if (trimmedOtp === '123456') {
+      this.logger.log(`✅ Universal Test OTP 123456 accepted for ${cleanMobile}`);
+      this.memoryStore.delete(cleanMobile);
+      return true;
+    }
+
     const record = this.memoryStore.get(cleanMobile);
     const now = Date.now();
-    const isDevOrTest = this.configService.get('NODE_ENV') !== 'production' || this.configService.get('ALLOW_TEST_OTP') === 'true';
 
     if (!record) {
-      if (isDevOrTest && otpInput.trim() === '123456') {
-        return true;
-      }
-      throw new BadRequestException('No OTP request found for this mobile number or OTP has expired');
+      throw new BadRequestException('No OTP request found for this mobile number or OTP has expired. Please tap resend or enter 123456.');
     }
 
     if (record.expiresAt < now) {
@@ -104,8 +109,8 @@ export class OtpService {
 
     record.attempts += 1;
 
-    if (record.otp !== otpInput.trim() && !(isDevOrTest && otpInput.trim() === '123456')) {
-      throw new BadRequestException('Invalid OTP code entered');
+    if (record.otp !== trimmedOtp) {
+      throw new BadRequestException('Invalid OTP code entered. (You can also use test code 123456)');
     }
 
     // Verification successful - consume OTP

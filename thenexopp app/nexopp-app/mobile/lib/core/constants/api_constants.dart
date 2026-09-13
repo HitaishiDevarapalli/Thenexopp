@@ -6,10 +6,10 @@ class ApiConstants {
     if (kIsWeb) {
       final host = Uri.base.host;
       if (host.isEmpty || host == 'localhost' || host == '127.0.0.1') {
-        return 'http://localhost:3000/api/v1';
+        return 'http://localhost:3000/api/v2';
       }
       final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
-      return '${Uri.base.scheme}://${Uri.base.host}$portStr/api/v1';
+      return '${Uri.base.scheme}://${Uri.base.host}$portStr/api/v2';
     }
     // Android/iOS Mobile Devices always target live VPS API
     return prodBaseUrl;
@@ -28,8 +28,8 @@ class ApiConstants {
     return prodWebSocketUrl;
   }
 
-  // Production VPS domain
-  static const String prodBaseUrl = 'https://thenexopp.com/api/v1';
+  // Production VPS domain (v2)
+  static const String prodBaseUrl = 'https://thenexopp.com/api/v2';
   static const String prodWebSocketUrl = 'wss://thenexopp.com/ws';
 
 
