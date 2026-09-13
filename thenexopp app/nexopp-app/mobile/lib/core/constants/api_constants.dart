@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  // Base URLs (Dynamically resolves to localhost:3000 in local dev/web and live VPS in prod)
+  // Base URLs (Dynamically resolves to localhost in browser dev, and VPS on mobile/prod)
   static String get baseUrl {
     if (kIsWeb) {
       final host = Uri.base.host;
@@ -11,10 +11,8 @@ class ApiConstants {
       final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
       return '${Uri.base.scheme}://${Uri.base.host}$portStr/api/v1';
     }
-    if (kReleaseMode) {
-      return prodBaseUrl;
-    }
-    return 'http://localhost:3000/api/v1';
+    // Android/iOS Mobile Devices always target live VPS API
+    return prodBaseUrl;
   }
 
   static String get webSocketUrl {
@@ -26,13 +24,11 @@ class ApiConstants {
       final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
       return '${Uri.base.scheme}://${Uri.base.host}$portStr/ws';
     }
-    if (kReleaseMode) {
-      return prodWebSocketUrl;
-    }
-    return 'http://localhost:3000/ws';
+    // Android/iOS Mobile Devices always target live VPS WebSocket
+    return prodWebSocketUrl;
   }
 
-  // Production fallback domain
+  // Production VPS domain
   static const String prodBaseUrl = 'https://thenexopp.com/api/v1';
   static const String prodWebSocketUrl = 'wss://thenexopp.com/ws';
 

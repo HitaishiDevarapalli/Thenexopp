@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AgentsService } from './agents.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -18,8 +18,14 @@ export class AgentsController {
   }
 
   @Put('profile')
-  @ApiOperation({ summary: 'Update agent profile details' })
+  @ApiOperation({ summary: 'Update agent profile details (PUT)' })
   async updateProfile(@Req() req: any, @Body() dto: UpdateProfileDto) {
+    return this.agentsService.updateProfile(req.user.sub, dto);
+  }
+
+  @Post('profile')
+  @ApiOperation({ summary: 'Update agent profile details (POST)' })
+  async updateProfilePost(@Req() req: any, @Body() dto: UpdateProfileDto) {
     return this.agentsService.updateProfile(req.user.sub, dto);
   }
 }
