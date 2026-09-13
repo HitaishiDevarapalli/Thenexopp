@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AdminApiService } from '../services/api';
+import { AdminApiService, resolveImageUrl } from '../services/api';
 import { PropertyListing, PropertyStatus, AgentSummary } from '../types';
 import { ImageLightbox } from '../components/ImageLightbox';
 import {
@@ -474,9 +474,11 @@ export const Properties: React.FC = () => {
   ) => {
     let validUrls: string[] = [];
     if (images.length > 0 && typeof images[0] === 'string') {
-      validUrls = (images as string[]).filter(Boolean);
+      validUrls = (images as string[]).map((u) => resolveImageUrl(u, 'property-images')).filter(Boolean);
     } else {
-      validUrls = (images as { url: string | null }[]).map((img) => img.url).filter((u): u is string => !!u);
+      validUrls = (images as { url: string | null; imageKey?: string }[])
+        .map((img) => resolveImageUrl(img.url || img.imageKey, 'property-images'))
+        .filter((u): u is string => !!u);
     }
     if (validUrls.length > 0) {
       setLightboxImages(validUrls);
@@ -798,11 +800,11 @@ export const Properties: React.FC = () => {
                     >
                       {/* Image Preview Banner */}
                       <div className="relative h-48 bg-slate-100 overflow-hidden group">
-                        {primaryImg?.url && !failedImageMap[primaryImg.url] ? (
+                        {primaryImg && (primaryImg.url || primaryImg.imageKey) && !failedImageMap[primaryImg.url || primaryImg.imageKey] ? (
                           <img
-                            src={primaryImg.url}
+                            src={resolveImageUrl(primaryImg.url || primaryImg.imageKey, 'property-images')}
                             alt={prop.title}
-                            onError={() => setFailedImageMap((prev) => ({ ...prev, [primaryImg.url!]: true }))}
+                            onError={() => setFailedImageMap((prev) => ({ ...prev, [(primaryImg.url || primaryImg.imageKey)!]: true }))}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer"
                             onClick={() => openLightbox(prop.images || [])}
                           />
@@ -1107,11 +1109,11 @@ export const Properties: React.FC = () => {
                 <tr key={prop.id} className="hover:bg-slate-50 transition-colors">
                   <td className="p-4 whitespace-nowrap">
                     <div className="flex items-center space-x-3">
-                      {prop.images?.[0]?.url && !failedImageMap[prop.images[0].url] ? (
+                      {prop.images?.[0] && (prop.images[0].url || prop.images[0].imageKey) && !failedImageMap[prop.images[0].url || prop.images[0].imageKey] ? (
                         <img
-                          src={prop.images[0].url}
+                          src={resolveImageUrl(prop.images[0].url || prop.images[0].imageKey, 'property-images')}
                           alt={prop.title}
-                          onError={() => setFailedImageMap((prev) => ({ ...prev, [prop.images![0].url!]: true }))}
+                          onError={() => setFailedImageMap((prev) => ({ ...prev, [(prop.images![0].url || prop.images![0].imageKey)!]: true }))}
                           className="h-10 w-10 rounded-lg object-cover cursor-pointer"
                           onClick={() => openLightbox(prop.images)}
                         />
@@ -1267,15 +1269,15 @@ export const Properties: React.FC = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {inspectProperty.images.filter(i => i.url && !failedImageMap[i.url]).map((img, idx) => (
+                  {inspectProperty.images.filter(i => (i.url || i.imageKey) && !failedImageMap[i.url || i.imageKey]).map((img, idx) => (
                     <div
                       key={img.id}
                       className="relative h-24 rounded-xl overflow-hidden border border-slate-200 group bg-slate-100"
                     >
                       <img
-                        src={img.url!}
+                        src={resolveImageUrl(img.url || img.imageKey, 'property-images')}
                         alt="prop"
-                        onError={() => setFailedImageMap((prev) => ({ ...prev, [img.url!]: true }))}
+                        onError={() => setFailedImageMap((prev) => ({ ...prev, [(img.url || img.imageKey)!]: true }))}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform cursor-pointer"
                         onClick={() => openLightbox(inspectProperty.images, idx)}
                       />

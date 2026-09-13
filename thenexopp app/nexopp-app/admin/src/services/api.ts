@@ -11,9 +11,35 @@ export const API_BASE_URL =
 
 export const resolveImageUrl = (keyOrUrl?: string | null, bucket: string = 'private-kyc') => {
   if (!keyOrUrl) return '';
-  if (keyOrUrl.startsWith('data:image/') || keyOrUrl.startsWith('data:application/pdf') || keyOrUrl.startsWith('data:')) {
+  // Data URLs (base64) or blobs
+  if (keyOrUrl.startsWith('data:') || keyOrUrl.startsWith('blob:')) {
     return keyOrUrl;
   }
+  
+  // If it's a localhost:9000 or MinIO URL, strip host and convert to API view endpoint
+  if (keyOrUrl.includes(':9000/') || keyOrUrl.includes('localhost:9000') || keyOrUrl.includes('127.0.0.1:9000')) {
+    const rawKey = keyOrUrl.split('?')[0].split('/').pop() || '';
+    if (rawKey) {
+      return `${API_BASE_URL}/uploads/local-mock-view?key=${encodeURIComponent(rawKey)}&bucket=${bucket}`;
+    }
+  }
+
+  // If it already points to local-mock-view
+  if (keyOrUrl.includes('/uploads/local-mock-view')) {
+    if (keyOrUrl.startsWith('http://') || keyOrUrl.startsWith('https://')) {
+      if (keyOrUrl.includes('localhost:3000') || keyOrUrl.includes('127.0.0.1:3000')) {
+        const parts = keyOrUrl.split(':3000');
+        if (parts.length > 1) {
+          const rootOrigin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}` : '';
+          return `${rootOrigin}${parts[1]}`;
+        }
+      }
+      return keyOrUrl;
+    }
+    return keyOrUrl;
+  }
+
+  // If it's an external http/https URL
   if (keyOrUrl.startsWith('http://') || keyOrUrl.startsWith('https://')) {
     if (keyOrUrl.includes('localhost:3000') || keyOrUrl.includes('127.0.0.1:3000')) {
       const parts = keyOrUrl.split(':3000');
@@ -24,6 +50,13 @@ export const resolveImageUrl = (keyOrUrl?: string | null, bucket: string = 'priv
     }
     return keyOrUrl;
   }
+
+  // Plain relative API path
+  if (keyOrUrl.startsWith('/api/')) {
+    return keyOrUrl;
+  }
+
+  // Plain file key (e.g. 1789301135939-uuid.jpg)
   return `${API_BASE_URL}/uploads/local-mock-view?key=${encodeURIComponent(keyOrUrl)}&bucket=${bucket}`;
 };
 

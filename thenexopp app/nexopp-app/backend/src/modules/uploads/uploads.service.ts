@@ -59,42 +59,61 @@ export class UploadsService implements OnModuleInit {
     const sanitizedExt = fileExt.toLowerCase().replace(/[^a-z0-9]/g, '');
     const fileKey = `${Date.now()}-${uuidv4()}.${sanitizedExt}`;
 
-    try {
-      const presignedUrl = await this.minioClient.presignedPutObject(bucketType, fileKey, 15 * 60); // 15 mins expiry
-      return {
-        success: true,
-        data: {
-          fileKey,
-          bucket: bucketType,
-          uploadUrl: presignedUrl,
-          expiresInSeconds: 900,
-        },
-      };
-    } catch (err) {
-      this.logger.log(`MinIO offline; using local storage engine for: ${fileKey}`);
-      const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
-      return {
-        success: true,
-        data: {
-          fileKey,
-          bucket: bucketType,
-          uploadUrl: `${apiBase}/uploads/local-mock-upload?key=${encodeURIComponent(fileKey)}&bucket=${bucketType}`,
-          expiresInSeconds: 900,
-        },
-      };
+    const useMinioEnv = this.configService.get<string>('USE_MINIO', 'false') === 'true';
+    if (useMinioEnv) {
+      try {
+        const presignedUrl = await this.minioClient.presignedPutObject(bucketType, fileKey, 15 * 60); // 15 mins expiry
+        return {
+          success: true,
+          data: {
+            fileKey,
+            bucket: bucketType,
+            uploadUrl: presignedUrl,
+            expiresInSeconds: 900,
+          },
+        };
+      } catch (err) {
+        this.logger.warn(`MinIO presign failed; falling back to local: ${err.message}`);
+      }
     }
+
+    const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
+    return {
+      success: true,
+      data: {
+        fileKey,
+        bucket: bucketType,
+        uploadUrl: `${apiBase}/uploads/local-mock-upload?key=${encodeURIComponent(fileKey)}&bucket=${bucketType}`,
+        expiresInSeconds: 900,
+      },
+    };
   }
 
   async getPresignedReadUrl(bucketType: BucketType, fileKey: string) {
     if (!fileKey) return null;
-    if (fileKey.startsWith('http://') || fileKey.startsWith('https://') || fileKey.startsWith('data:image/') || fileKey.startsWith('data:application/pdf')) {
+    if (fileKey.startsWith('data:image/') || fileKey.startsWith('data:application/pdf') || fileKey.startsWith('data:')) {
       return fileKey;
     }
-    try {
-      return await this.minioClient.presignedGetObject(bucketType, fileKey, 30 * 60); // 30 mins
-    } catch (err) {
-      const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
-      return `${apiBase}/uploads/local-mock-view?key=${encodeURIComponent(fileKey)}&bucket=${bucketType}`;
+
+    // Extract clean key if URL was passed
+    let cleanKey = fileKey;
+    if (cleanKey.includes(':9000/') || cleanKey.includes('localhost:9000') || cleanKey.includes('127.0.0.1:9000')) {
+      cleanKey = cleanKey.split('?')[0].split('/').pop() || fileKey;
+    } else if (cleanKey.startsWith('http://') || cleanKey.startsWith('https://')) {
+      if (!cleanKey.includes('localhost:3000') && !cleanKey.includes('127.0.0.1:3000')) {
+        return cleanKey;
+      }
+      cleanKey = cleanKey.split('?')[0].split('/').pop() || fileKey;
     }
+
+    const useMinioEnv = this.configService.get<string>('USE_MINIO', 'false') === 'true';
+    if (useMinioEnv) {
+      try {
+        return await this.minioClient.presignedGetObject(bucketType, cleanKey, 30 * 60); // 30 mins
+      } catch (_) {}
+    }
+
+    const apiBase = this.configService.get<string>('API_BASE_URL', '/api/v2');
+    return `${apiBase}/uploads/local-mock-view?key=${encodeURIComponent(cleanKey)}&bucket=${bucketType}`;
   }
 }
