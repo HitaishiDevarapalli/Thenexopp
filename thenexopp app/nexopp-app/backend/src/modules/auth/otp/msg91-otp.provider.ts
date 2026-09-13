@@ -10,23 +10,26 @@ export class Msg91OtpProvider implements IOtpProvider {
   constructor(private readonly configService: ConfigService) {}
 
   async sendOtp(mobileNumber: string, otp: string): Promise<boolean> {
-    const authKey = this.configService.get<string>('MSG91_AUTH_KEY') || this.configService.get<string>('OTP_API_KEY');
-    const templateId = this.configService.get<string>('MSG91_TEMPLATE_ID');
-    const senderId = this.configService.get<string>('OTP_SENDER_ID', 'THNXOP');
+    const authKey =
+      this.configService.get<string>('MSG91_AUTH_KEY') ||
+      this.configService.get<string>('MSG91_TOKEN_AUTH') ||
+      this.configService.get<string>('OTP_API_KEY') ||
+      '557093Aca5G41bF6a7d8d93P1';
+    const templateId =
+      this.configService.get<string>('MSG91_TEMPLATE_ID') ||
+      '6a95648afdf721447f020ac2';
+    const senderId =
+      this.configService.get<string>('OTP_SENDER_ID') ||
+      'THNXPP';
 
     const cleanMobile = mobileNumber.replace(/\D/g, '');
     const formattedMobile = cleanMobile.length === 10 ? `91${cleanMobile}` : cleanMobile;
-
-    if (!authKey || !templateId) {
-      this.logger.warn(`MSG91 AuthKey or TemplateID missing in environment variables. Falling back to log simulation for ${formattedMobile.slice(-4)}`);
-      return true;
-    }
 
     try {
       this.logger.log(`Dispatching MSG91 OTP to ${formattedMobile.slice(-4)} using Template ID ${templateId}`);
 
       // Official MSG91 Send OTP API v5
-      const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}&otp=${otp}`;
+      const url = `https://control.msg91.com/api/v5/otp?template_id=${templateId}&mobile=${formattedMobile}&otp=${otp}&authkey=${authKey}`;
       const response = await axios.post(
         url,
         {},
@@ -35,7 +38,7 @@ export class Msg91OtpProvider implements IOtpProvider {
             authkey: authKey,
             'Content-Type': 'application/json',
           },
-          timeout: 4000,
+          timeout: 6000,
         },
       );
 
@@ -47,9 +50,10 @@ export class Msg91OtpProvider implements IOtpProvider {
         this.logger.error(`MSG91 API error response: ${JSON.stringify(response.data)}`);
         return false;
       }
-    } catch (err) {
-      this.logger.error(`Failed to send MSG91 OTP: ${err.message}`);
+    } catch (err: any) {
+      this.logger.error(`Failed to send MSG91 OTP: ${err?.message}`);
       return false;
     }
   }
 }
+
