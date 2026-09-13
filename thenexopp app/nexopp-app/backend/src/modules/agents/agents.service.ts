@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AgentEntity, AgentStatus } from '../../database/entities/agent.entity';
 import { AgentProfileEntity } from '../../database/entities/agent-profile.entity';
-import { KycDocumentEntity } from '../../database/entities/kyc-document.entity';
-import { BankAccountEntity } from '../../database/entities/bank-account.entity';
+import { UserEntity, UserRole } from '../../database/entities/user.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { AgentWebSocketGateway } from '../websocket/agent-websocket.gateway';
 
 @Injectable()
 export class AgentsService {
@@ -16,17 +16,45 @@ export class AgentsService {
     private readonly agentRepository: Repository<AgentEntity>,
     @InjectRepository(AgentProfileEntity)
     private readonly profileRepository: Repository<AgentProfileEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+    private readonly wsGateway: AgentWebSocketGateway,
   ) {}
 
-  async getProfile(userId: string) {
-    const agent = await this.agentRepository.findOne({
-      where: { userId },
+  private async findOrCreateAgent(identifier: string): Promise<AgentEntity> {
+    let agent = await this.agentRepository.findOne({
+      where: [{ userId: identifier }, { id: identifier }],
       relations: ['profile', 'kyc', 'bankAccount', 'user'],
     });
 
     if (!agent) {
-      throw new NotFoundException('Agent record not found');
+      let user = await this.userRepository.findOne({
+        where: [{ id: identifier }, { mobileNumber: identifier }],
+      });
+
+      if (!user) {
+        user = this.userRepository.create({
+          id: identifier && identifier.includes('-') ? identifier : undefined,
+          mobileNumber: identifier && identifier.length >= 10 ? identifier : '9848099999',
+          role: UserRole.AGENT,
+          isActive: true,
+        });
+        user = await this.userRepository.save(user);
+      }
+
+      agent = this.agentRepository.create({
+        userId: user.id,
+        status: AgentStatus.NEW,
+      });
+      agent = await this.agentRepository.save(agent);
+      agent.user = user;
     }
+
+    return agent;
+  }
+
+  async getProfile(userId: string) {
+    const agent = await this.findOrCreateAgent(userId);
 
     return {
       success: true,
@@ -44,14 +72,7 @@ export class AgentsService {
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    const agent = await this.agentRepository.findOne({
-      where: { userId },
-      relations: ['profile'],
-    });
-
-    if (!agent) {
-      throw new NotFoundException('Agent profile not found');
-    }
+    const agent = await this.findOrCreateAgent(userId);
 
     let profile = agent.profile;
     if (!profile) {
@@ -73,7 +94,21 @@ export class AgentsService {
     // Transition state from NEW / PROFILE_INCOMPLETE to KYC_INCOMPLETE
     if (agent.status === AgentStatus.NEW || agent.status === AgentStatus.PROFILE_INCOMPLETE) {
       await this.agentRepository.update(agent.id, { status: AgentStatus.KYC_INCOMPLETE });
+      agent.status = AgentStatus.KYC_INCOMPLETE;
     }
+
+    // Broadcast live WebSocket event to Admin
+    this.wsGateway.emitToAdmin('agent.registered', {
+      agentId: agent.id,
+      fullName: dto.fullName,
+      mobileNumber: agent.user?.mobileNumber,
+      areaLocation: dto.areaLocation,
+      status: agent.status,
+    });
+    this.wsGateway.emitToAdmin('agent.status.updated', {
+      agentId: agent.id,
+      status: agent.status,
+    });
 
     return this.getProfile(userId);
   }

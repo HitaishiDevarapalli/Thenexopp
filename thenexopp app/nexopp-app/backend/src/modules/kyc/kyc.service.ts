@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KycDocumentEntity, KycStatus } from '../../database/entities/kyc-document.entity';
 import { AgentEntity, AgentStatus } from '../../database/entities/agent.entity';
+import { UserEntity, UserRole } from '../../database/entities/user.entity';
 import { CryptoUtil } from '../../common/utils/crypto.util';
 import { SubmitKycDto } from './dto/submit-kyc.dto';
 import { AgentWebSocketGateway } from '../websocket/agent-websocket.gateway';
@@ -16,18 +17,42 @@ export class KycService {
     private readonly kycRepository: Repository<KycDocumentEntity>,
     @InjectRepository(AgentEntity)
     private readonly agentRepository: Repository<AgentEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly wsGateway: AgentWebSocketGateway,
   ) {}
 
-  async getKycDetails(userId: string) {
-    const agent = await this.agentRepository.findOne({
-      where: { userId },
-      relations: ['kyc'],
+  private async findOrCreateAgent(identifier: string): Promise<AgentEntity> {
+    let agent = await this.agentRepository.findOne({
+      where: [{ userId: identifier }, { id: identifier }],
+      relations: ['kyc', 'user'],
     });
 
     if (!agent) {
-      throw new NotFoundException('Agent record not found');
+      let user = await this.userRepository.findOne({
+        where: [{ id: identifier }, { mobileNumber: identifier }],
+      });
+      if (!user) {
+        user = this.userRepository.create({
+          id: identifier && identifier.includes('-') ? identifier : undefined,
+          mobileNumber: identifier && identifier.length >= 10 ? identifier : '9848099999',
+          role: UserRole.AGENT,
+          isActive: true,
+        });
+        user = await this.userRepository.save(user);
+      }
+      agent = this.agentRepository.create({
+        userId: user.id,
+        status: AgentStatus.KYC_INCOMPLETE,
+      });
+      agent = await this.agentRepository.save(agent);
+      agent.user = user;
     }
+    return agent;
+  }
+
+  async getKycDetails(userId: string) {
+    const agent = await this.findOrCreateAgent(userId);
 
     if (!agent.kyc) {
       return {
@@ -57,14 +82,7 @@ export class KycService {
   }
 
   async submitKyc(userId: string, dto: SubmitKycDto) {
-    const agent = await this.agentRepository.findOne({
-      where: { userId },
-      relations: ['kyc'],
-    });
-
-    if (!agent) {
-      throw new NotFoundException('Agent record not found');
-    }
+    const agent = await this.findOrCreateAgent(userId);
 
     // Encrypt sensitive numbers with AES-256
     const aadhaarEncrypted = CryptoUtil.encrypt(dto.aadhaarNumber.replace(/\D/g, ''));

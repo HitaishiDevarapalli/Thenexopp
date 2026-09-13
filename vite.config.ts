@@ -15,6 +15,16 @@ export default defineConfig({
         target: 'http://localhost:8081',
         changeOrigin: true,
       },
+      '/ws': {
+        target: 'http://localhost:8081',
+        ws: true,
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:8081',
+        ws: true,
+        changeOrigin: true,
+      },
     },
   },
   build: {

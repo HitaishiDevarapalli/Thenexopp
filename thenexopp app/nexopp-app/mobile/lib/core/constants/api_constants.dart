@@ -5,10 +5,11 @@ class ApiConstants {
   static String get baseUrl {
     if (kIsWeb) {
       final host = Uri.base.host;
-      if (host.isNotEmpty && host != 'localhost' && host != '127.0.0.1') {
-        final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
-        return '${Uri.base.scheme}://${Uri.base.host}$portStr/api/v1';
+      if (host.isEmpty || host == 'localhost' || host == '127.0.0.1') {
+        return 'http://localhost:3000/api/v1';
       }
+      final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
+      return '${Uri.base.scheme}://${Uri.base.host}$portStr/api/v1';
     }
     if (kReleaseMode) {
       return prodBaseUrl;
@@ -19,10 +20,11 @@ class ApiConstants {
   static String get webSocketUrl {
     if (kIsWeb) {
       final host = Uri.base.host;
-      if (host.isNotEmpty && host != 'localhost' && host != '127.0.0.1') {
-        final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
-        return '${Uri.base.scheme}://${Uri.base.host}$portStr/ws';
+      if (host.isEmpty || host == 'localhost' || host == '127.0.0.1') {
+        return 'http://localhost:3000/ws';
       }
+      final portStr = (Uri.base.port == 3000 || Uri.base.port == 80 || Uri.base.port == 443 || Uri.base.port == 0) ? '' : ':3000';
+      return '${Uri.base.scheme}://${Uri.base.host}$portStr/ws';
     }
     if (kReleaseMode) {
       return prodWebSocketUrl;
