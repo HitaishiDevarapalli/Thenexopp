@@ -49,7 +49,7 @@ pm2 save
 
 # 6. Apply & Reload Nginx
 echo "🌐 Updating & Reloading Nginx Configuration..."
-echo "client_max_body_size 250M;" | sudo tee /etc/nginx/conf.d/body_limits.conf > /dev/null || true
+sudo rm -f /etc/nginx/conf.d/body_limits.conf || true
 if [ -f "/etc/nginx/sites-enabled/default" ]; then
     sudo rm -f /etc/nginx/sites-enabled/default || true
 fi
@@ -57,7 +57,7 @@ if [ -d "/etc/nginx/sites-available" ]; then
     sudo cp "/opt/Thenexopp/thenexopp app/nexopp-app/deploy/nginx-thenexopp-production.conf" /etc/nginx/sites-available/thenexopp.conf || true
     sudo ln -sf /etc/nginx/sites-available/thenexopp.conf /etc/nginx/sites-enabled/thenexopp.conf || true
 fi
-sudo nginx -t && sudo systemctl reload nginx || sudo systemctl restart nginx || true
+sudo nginx -t && (sudo systemctl reload nginx || sudo systemctl restart nginx)
 
 echo "=============================================================================="
 echo "✅ DEPLOYMENT COMPLETE & ALL PROCESSES RUNNING!"
