@@ -73,7 +73,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                         Navigator.pop(ctx);
                         final hasPerm = await PermissionService.checkAndRequestCameraPermission(context);
                         if (!hasPerm && mounted) return;
-                        final XFile? photo = await _picker.pickImage(source: ImageSource.camera, preferredCameraDevice: CameraDevice.front, imageQuality: 80);
+                        final XFile? photo = await _picker.pickImage(
+                          source: ImageSource.camera,
+                          preferredCameraDevice: CameraDevice.front,
+                          imageQuality: 70,
+                          maxWidth: 1024,
+                          maxHeight: 1024,
+                        );
                         if (photo != null && mounted) {
                           final bytes = await photo.readAsBytes();
                           setState(() {
@@ -97,7 +103,12 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                         Navigator.pop(ctx);
                         final hasPerm = await PermissionService.checkAndRequestStoragePermission(context);
                         if (!hasPerm && mounted) return;
-                        final XFile? photo = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+                        final XFile? photo = await _picker.pickImage(
+                          source: ImageSource.gallery,
+                          imageQuality: 70,
+                          maxWidth: 1024,
+                          maxHeight: 1024,
+                        );
                         if (photo != null && mounted) {
                           final bytes = await photo.readAsBytes();
                           setState(() {

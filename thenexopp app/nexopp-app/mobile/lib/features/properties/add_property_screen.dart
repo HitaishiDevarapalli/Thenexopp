@@ -155,7 +155,11 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
     final hasPermission = await PermissionService.checkAndRequestStoragePermission(context);
     if (!hasPermission && mounted) return;
 
-    final List<XFile> images = await _picker.pickMultiImage();
+    final List<XFile> images = await _picker.pickMultiImage(
+      imageQuality: 70,
+      maxWidth: 1280,
+      maxHeight: 1280,
+    );
     if (images.isNotEmpty) {
       final List<PropertyPhotoItem> newPhotos = [];
       for (final img in images) {

@@ -31,7 +31,12 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
     final hasPermission = await PermissionService.checkAndRequestStoragePermission(context);
     if (!hasPermission && mounted) return;
 
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 75);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
     if (image != null) {
       setState(() {
         if (isAadhaar) {

@@ -9,8 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Increase payload size limit to support high-resolution property photos and KYC documents
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ limit: '50mb', extended: true }));
+  app.use(json({ limit: '250mb' }));
+  app.use(urlencoded({ limit: '250mb', extended: true }));
 
   app.enableCors({
     origin: true,
