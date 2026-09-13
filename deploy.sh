@@ -10,9 +10,10 @@ echo "🚀 [1/6] Starting Safe Production Deployment on KVM VPS..."
 
 cd /opt/Thenexopp
 
-# 1. Pull latest git changes
+# 1. Pull latest git changes cleanly
 echo "📥 [2/6] Pulling latest code from GitHub main branch..."
-git pull origin main
+git fetch origin main
+git reset --hard origin/main
 
 mkdir -p logs
 mkdir -p "thenexopp app/nexopp-app/backend/logs"
