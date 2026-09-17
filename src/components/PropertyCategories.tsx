@@ -763,14 +763,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       (p) => !p.sold && 
              String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
              String(p.listingStatus || '').toLowerCase() !== 'sold' && 
-             String(p.status || '').toLowerCase() !== 'sold' && 
-             (
-               String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
-               String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
-               String(p.approvalStatus || '').toLowerCase() === 'approved' ||
-               String(p.listingStatus || '').toLowerCase() === 'approved' ||
-               p.published !== false
-             )
+             String(p.status || '').toLowerCase() !== 'sold' &&
+             String(p.approvalStatus || '').toLowerCase() !== 'draft' &&
+             String(p.listingStatus || '').toLowerCase() !== 'draft' &&
+             String(p.approvalStatus || '').toLowerCase() !== 'hidden' &&
+             String(p.listingStatus || '').toLowerCase() !== 'hidden'
     );
     const baseList = activeListings.map((p) => {
       const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
@@ -1093,10 +1090,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
 
       // 6. Budget Slider Min / Max
-      if (item.rawPrice < minBudget) {
+      if (minBudget > 0.01 && item.rawPrice > 0 && item.rawPrice < minBudget) {
         return false;
       }
-      if (maxBudget < sliderMax && item.rawPrice > maxBudget) {
+      if (maxBudget < sliderMax && item.rawPrice > 0 && item.rawPrice > maxBudget) {
         return false;
       }
 
