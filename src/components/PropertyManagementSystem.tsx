@@ -2556,10 +2556,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         value={formData.propertyPurpose || (String(formData.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale')} 
                         onChange={e => {
                           const val = e.target.value;
+                          const isRent = val === 'Rent' || val === 'Lease';
                           setFormData({ 
                             ...formData, 
                             propertyPurpose: val as any, 
-                            status: val === 'Rent' ? 'Rent' : 'Buy' 
+                            status: isRent ? 'Rent' : 'Buy' 
                           });
                         }} 
                         style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
@@ -2882,13 +2883,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           value={formData.price || ''}
                           onChange={e => {
                             const val = parseFloat(e.target.value) || 0;
+                            const isRent = formData.propertyPurpose === 'Rent' || formData.propertyPurpose === 'Lease' || formData.status === 'Rent';
                             let label = '';
                             if (priceUnit === 'Crores') {
-                              label = `₹${val.toFixed(2)} Crore`;
+                              label = `₹${val.toFixed(2)} Crore${isRent ? '/month' : ''}`;
                             } else if (priceUnit === 'Lakhs') {
-                              label = `₹${val.toFixed(2)} Lakh`;
+                              label = `₹${val.toFixed(2)} Lakh${isRent ? '/month' : ''}`;
                             } else {
-                              label = `₹${val.toLocaleString('en-IN')}`;
+                              const numStr = val < 1000 ? `${val} Thousand` : val.toLocaleString('en-IN');
+                              label = `₹${numStr}${isRent ? '/month' : ''}`;
                             }
                             setFormData({ ...formData, price: val, priceDisplay: label });
                           }}
@@ -2902,13 +2905,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             const unit = e.target.value as any;
                             setPriceUnit(unit);
                             const val = formData.price || 0;
+                            const isRent = formData.propertyPurpose === 'Rent' || formData.propertyPurpose === 'Lease' || formData.status === 'Rent';
                             let label = '';
                             if (unit === 'Crores') {
-                              label = `₹${val.toFixed(2)} Crore`;
+                              label = `₹${val.toFixed(2)} Crore${isRent ? '/month' : ''}`;
                             } else if (unit === 'Lakhs') {
-                              label = `₹${val.toFixed(2)} Lakh`;
+                              label = `₹${val.toFixed(2)} Lakh${isRent ? '/month' : ''}`;
                             } else {
-                              label = `₹${val.toLocaleString('en-IN')}`;
+                              const numStr = val < 1000 ? `${val} Thousand` : val.toLocaleString('en-IN');
+                              label = `₹${numStr}${isRent ? '/month' : ''}`;
                             }
                             setFormData({ ...formData, priceDisplay: label });
                           }}

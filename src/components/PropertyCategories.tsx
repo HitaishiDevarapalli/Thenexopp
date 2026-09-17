@@ -120,16 +120,25 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const currentGlobalCity = location?.city || location?.displayName || selectedCity || '';
     if (currentGlobalCity) {
       setLocationText(currentGlobalCity);
-      // Auto-select city if it matches available cities
+      // Auto-select city if it matches available cities and has properties
       const matchedCity = availableCities.find(c => c.is_active && (currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(currentGlobalCity.toLowerCase())));
       if (lastSyncedGlobalCityRef.current !== currentGlobalCity) {
         if (matchedCity) {
-          setSelectedCityId(matchedCity.id);
+          const hasPropsInCity = propertiesDb.some(p => {
+            const pCity = (p.city || '').toLowerCase();
+            const mName = matchedCity.name.toLowerCase();
+            return pCity.includes(mName) || mName.includes(pCity);
+          });
+          if (hasPropsInCity) {
+            setSelectedCityId(matchedCity.id);
+          } else {
+            setSelectedCityId('');
+          }
         }
         lastSyncedGlobalCityRef.current = currentGlobalCity;
       }
     }
-  }, [location?.city, location?.displayName, selectedCity, availableCities]);
+  }, [location?.city, location?.displayName, selectedCity, availableCities, propertiesDb]);
 
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -195,6 +204,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         setPropertyType('Farm Land');
         setActiveTab('Plots');
       } else if (_initialCategory === 'Rent') {
+        setSelectedTypes([]);
+        setPropertyType('All Types');
         setActiveTab('Rent');
       }
     }
@@ -597,7 +608,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const cityName = selectedCityObj ? selectedCityObj.name.toLowerCase().trim() : '';
 
     const activeListings = propertiesDb.filter(
-      (p) => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'
+      (p) => !p.sold && 
+             String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
+             String(p.listingStatus || '').toLowerCase() !== 'sold' && 
+             String(p.status || '').toLowerCase() !== 'sold' && 
+             (
+               String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
+               String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
+               String(p.approvalStatus || '').toLowerCase() === 'approved' ||
+               String(p.listingStatus || '').toLowerCase() === 'approved' ||
+               p.published !== false
+             )
     );
 
     const areaSet = new Set<string>();
@@ -626,7 +647,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const areaName = selectedAreaObj ? selectedAreaObj.name.toLowerCase().trim() : '';
 
     const activeListings = propertiesDb.filter(
-      (p) => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'
+      (p) => !p.sold && 
+             String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
+             String(p.listingStatus || '').toLowerCase() !== 'sold' && 
+             String(p.status || '').toLowerCase() !== 'sold' && 
+             (
+               String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
+               String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
+               String(p.approvalStatus || '').toLowerCase() === 'approved' ||
+               String(p.listingStatus || '').toLowerCase() === 'approved' ||
+               p.published !== false
+             )
     );
 
     const locSet = new Set<string>();
@@ -719,7 +750,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   // Rich screenshot-matching properties list
   const displayProperties = useMemo(() => {
     const activeListings = propertiesDb.filter(
-      (p) => !p.sold && p.approvalStatus !== 'Sold' && p.listingStatus !== 'Sold' && p.status !== 'Sold' && (p.approvalStatus || 'Published') === 'Published'
+      (p) => !p.sold && 
+             String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
+             String(p.listingStatus || '').toLowerCase() !== 'sold' && 
+             String(p.status || '').toLowerCase() !== 'sold' && 
+             (
+               String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
+               String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
+               String(p.approvalStatus || '').toLowerCase() === 'approved' ||
+               String(p.listingStatus || '').toLowerCase() === 'approved' ||
+               p.published !== false
+             )
     );
     const baseList = activeListings.map((p) => {
       const assignedBroker = dealersDb.find(d => d.id === p.dealerId || (p.assignedBrokerIds && p.assignedBrokerIds.includes(d.id)));
@@ -803,12 +844,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
               calcPrice = numValue;
             } else if (lowerDisplay.includes('k') || lowerDisplay.includes('thousand')) {
               calcPrice = numValue / 100;
-            } else if (numValue > 1000) {
+            } else if (numValue >= 1000) {
               calcPrice = numValue / 100000;
             } else if (numValue > 0) {
-              calcPrice = numValue; // if they just entered a small number and no unit
+              calcPrice = numValue < 100 ? numValue : numValue / 100000;
             }
-          } else if (calcPrice > 10000) {
+          } else if (calcPrice >= 1000) {
             calcPrice = calcPrice / 100000;
           }
           return calcPrice;
@@ -819,11 +860,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           String(p.status || '').toLowerCase().includes('lease') ||
           String(p.propertyPurpose || '').toLowerCase().includes('rent') ||
           String(p.propertyPurpose || '').toLowerCase().includes('lease') ||
+          String((p as any).category || '').toLowerCase().includes('rent') ||
+          String((p as any).propertySubtype || '').toLowerCase().includes('rent') ||
           String(p.title || '').toLowerCase().includes('for rent') ||
           String(p.title || '').toLowerCase().includes('for lease') ||
           String(p.title || '').toLowerCase().includes('rent/lease') ||
           String(p.priceDisplay || '').toLowerCase().includes('/mo') ||
-          String(p.priceDisplay || '').toLowerCase().includes('/month')
+          String(p.priceDisplay || '').toLowerCase().includes('/month') ||
+          String(p.priceDisplay || '').toLowerCase().includes('/yr') ||
+          String(p.priceDisplay || '').toLowerCase().includes('/year')
         ) ? 'Rent' : (p.status || 'Buy'),
         availabilityCount: p.availabilityCount || 0,
         trending: p.trending || false,
@@ -959,15 +1004,21 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       (item as any).distanceTier = distanceTier;
 
       // 3. Tab Categorization
-      const isItemRent = item.status.toLowerCase() === 'rent' ||
-                         String((item as any).propertyPurpose || '').toLowerCase() === 'rent' ||
-                         String((item as any).propertyPurpose || '').toLowerCase() === 'lease' ||
-                         item.title.toLowerCase().includes('for rent') ||
-                         item.title.toLowerCase().includes('for lease') ||
-                         String(item.priceDisplay || '').toLowerCase().includes('/mo') ||
-                         String(item.priceDisplay || '').toLowerCase().includes('/month') ||
-                         String(item.priceDisplay || '').toLowerCase().includes('/yr') ||
-                         String(item.priceDisplay || '').toLowerCase().includes('/year');
+      const isItemRent = (
+        String(item.status || '').toLowerCase() === 'rent' ||
+        String(item.status || '').toLowerCase().includes('rent') ||
+        String((item as any).propertyPurpose || '').toLowerCase() === 'rent' ||
+        String((item as any).propertyPurpose || '').toLowerCase() === 'lease' ||
+        String((item as any).category || '').toLowerCase().includes('rent') ||
+        String((item as any).propertySubtype || '').toLowerCase().includes('rent') ||
+        String(item.title || '').toLowerCase().includes('for rent') ||
+        String(item.title || '').toLowerCase().includes('for lease') ||
+        String(item.title || '').toLowerCase().includes('rent/lease') ||
+        String(item.priceDisplay || '').toLowerCase().includes('/mo') ||
+        String(item.priceDisplay || '').toLowerCase().includes('/month') ||
+        String(item.priceDisplay || '').toLowerCase().includes('/yr') ||
+        String(item.priceDisplay || '').toLowerCase().includes('/year')
+      );
 
       if (activeTab === 'Buy') {
         if (isItemRent) return false;
