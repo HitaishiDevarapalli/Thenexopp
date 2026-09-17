@@ -99,6 +99,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPurposeFilter, setSelectedPurposeFilter] = useState<string>('All');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('All');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('All');
@@ -284,10 +285,10 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
   // Auto-generate Property ID in Add Mode
   useEffect(() => {
-    if (modalMode === 'add') {
-      const num = propertiesDb.length + 1;
-      const stateCode = formData.state ? formData.state.substring(0, 2).toUpperCase() : 'XX';
-      const typeCode = formData.propertyPurpose === 'Rent' ? 'R' : 'S';
+    if (modalMode === 'add' && !editingId) {
+      const stateCode = formData.state ? formData.state.substring(0, 2).toUpperCase() : 'TE';
+      const isRent = formData.propertyPurpose === 'Rent' || formData.status === 'Rent';
+      const typeCode = isRent ? 'R' : 'S';
       let catCode = 'O';
       if (formData.category?.includes('Apartment') || formData.category?.includes('Flat')) catCode = 'F';
       else if (formData.category?.includes('Villa')) catCode = 'V';
@@ -295,12 +296,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       else if (formData.category?.includes('Plot') || formData.category?.includes('Land')) catCode = 'P';
       else if (formData.category?.includes('Commercial')) catCode = 'C';
       
-      const newId = `nexopp-${num}-${stateCode}-${typeCode}-${catCode}`;
-      if (formData.id !== newId) {
+      // If current ID is missing, generate a unique random ID
+      if (!formData.id) {
+        const uniqueRand = `${Date.now().toString(36).slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
+        const newId = `nexopp-${uniqueRand}-${stateCode}-${typeCode}-${catCode}`;
         setFormData(prev => ({ ...prev, id: newId }));
       }
     }
-  }, [formData.state, formData.propertyPurpose, formData.category, modalMode, propertiesDb.length]);
+  }, [formData.state, formData.propertyPurpose, formData.status, formData.category, modalMode, editingId]);
 
 
   // Location Hierarchy Manager State
@@ -330,6 +333,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         (prop.locality || '').toLowerCase().includes(q)
       );
       
+      const isRentProp = (
+        String(prop.status || '').toLowerCase() === 'rent' ||
+        String(prop.propertyPurpose || '').toLowerCase() === 'rent' ||
+        String(prop.propertyPurpose || '').toLowerCase() === 'lease'
+      );
+
+      const matchesPurpose = selectedPurposeFilter === 'All' ? true : (
+        selectedPurposeFilter === 'Rent' ? isRentProp : !isRentProp
+      );
+
       const matchesStatus = selectedStatusFilter === 'All' ? true : (
         prop.approvalStatus === selectedStatusFilter || 
         prop.listingStatus === selectedStatusFilter ||
@@ -340,9 +353,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       const matchesCategory = selectedCategoryFilter === 'All' ? true : prop.category === selectedCategoryFilter;
       const matchesCity = selectedCityFilter === 'All' ? true : (prop.city === selectedCityFilter || prop.area === selectedCityFilter);
 
-      return matchesSearch && matchesStatus && matchesCategory && matchesCity;
+      return matchesSearch && matchesPurpose && matchesStatus && matchesCategory && matchesCity;
     });
-  }, [propertiesDb, activeModuleTab, searchQuery, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter, dataUpdated]);
+  }, [propertiesDb, activeModuleTab, searchQuery, selectedPurposeFilter, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter, dataUpdated]);
 
   // Analytics KPIs
   const stats = useMemo(() => {
@@ -388,8 +401,11 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   }, [propertiesDb, dataUpdated]);
 
   const openAddModal = () => {
+    const uniqueRand = `${Date.now().toString(36).slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
+    const freshId = `nexopp-${uniqueRand}-TE-S-V`;
     setPriceUnit('Lakhs');
     setFormData({
+      id: freshId,
       title: '',
       category: 'Villa',
       propertySubtype: 'Villas',
@@ -563,10 +579,25 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const fallbackLng = formData.longitude || 78.4071;
     const fallbackAddress = formData.formatted_address || formData.fullAddress || `${formData.area || 'Jubilee Hills'}, ${formData.city || 'Hyderabad'}, Telangana, India`;
 
+    const stateCode = (formData.state || 'XX').slice(0, 2).toUpperCase();
+    const isRentPurpose = formData.propertyPurpose === 'Rent' || formData.propertyPurpose === 'Lease' || formData.status === 'Rent';
+    const typeCode = isRentPurpose ? 'R' : 'S';
+    let catCode = 'O';
+    if (formData.category?.includes('Apartment') || formData.category?.includes('Flat')) catCode = 'F';
+    else if (formData.category?.includes('Villa')) catCode = 'V';
+    else if (formData.category?.includes('House')) catCode = 'H';
+    else if (formData.category?.includes('Plot') || formData.category?.includes('Land')) catCode = 'P';
+    else if (formData.category?.includes('Commercial')) catCode = 'C';
+
+    const uniqueRandomPart = `${Date.now().toString(36).slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
+    const finalPropId = (modalMode === 'edit' && editingId)
+      ? editingId
+      : (formData.id && !propertiesDb.some(p => p.id === formData.id) ? formData.id : `nexopp-${uniqueRandomPart}-${stateCode}-${typeCode}-${catCode}`);
+
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
       title: (formData.title || '').trim() || `${formData.bedrooms ? formData.bedrooms + ' BHK ' : ''}${formData.category || 'Luxury Property'} in ${formData.area || formData.city || 'Hyderabad'}`,
-      id: formData.id || `P-${Date.now()}`,
+      id: finalPropId,
       latitude: fallbackLat,
       longitude: fallbackLng,
       formatted_address: fallbackAddress,
@@ -594,6 +625,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       }
       showNotification?.(`Property '${preparedProperty.title}' saved as Draft in database!`, "success");
       setIsModalOpen(false);
+      setEditingId(null);
+      setSelectedStatusFilter('All');
+      setSelectedCategoryFilter('All');
+      setSelectedCityFilter('All');
+      setSelectedPurposeFilter('All');
+      onSubTabChange?.('all');
     } catch (err: any) {
       showNotification?.(`Property draft was not saved: ${err?.message || 'database request failed'}`, "error");
     } finally {
@@ -636,6 +673,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     const allImages = [formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].filter(Boolean) as string[];
     if (allImages.length === 0) allImages.push(primaryImg);
 
+    const stateCode = (formData.state || 'XX').slice(0, 2).toUpperCase();
+    const typeCode = isRentPurpose ? 'R' : 'S';
+    let catCode = 'O';
+    if (formData.category?.includes('Apartment') || formData.category?.includes('Flat')) catCode = 'F';
+    else if (formData.category?.includes('Villa')) catCode = 'V';
+    else if (formData.category?.includes('House')) catCode = 'H';
+    else if (formData.category?.includes('Plot') || formData.category?.includes('Land')) catCode = 'P';
+    else if (formData.category?.includes('Commercial')) catCode = 'C';
+
+    const uniqueRandomPart = `${Date.now().toString(36).slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
+    const finalPropId = (modalMode === 'edit' && editingId)
+      ? editingId
+      : (formData.id && !propertiesDb.some(p => p.id === formData.id) ? formData.id : `nexopp-${uniqueRandomPart}-${stateCode}-${typeCode}-${catCode}`);
+
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
       title: safeTitle,
@@ -643,7 +694,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       status: isRentPurpose ? 'Rent' : 'Buy',
       price: safePrice,
       priceDisplay: safePriceDisplay || 'Price on Request',
-      id: formData.id || `P-${Date.now()}`,
+      id: finalPropId,
       latitude: fallbackLat,
       longitude: fallbackLng,
       formatted_address: fallbackAddress,
@@ -687,6 +738,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
         showNotification?.(`Property '${preparedProperty.title}' created in database!`, "success");
       }
       setIsModalOpen(false);
+      setEditingId(null);
+      setSelectedStatusFilter('All');
+      setSelectedCategoryFilter('All');
+      setSelectedCityFilter('All');
+      setSelectedPurposeFilter('All');
+      onSubTabChange?.('all');
     } catch (err: any) {
       showNotification?.(`Property was not saved: ${err?.message || 'database request failed'}`, "error");
     } finally {
@@ -937,6 +994,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
               <button
                 onClick={() => {
                   setSearchQuery('');
+                  setSelectedPurposeFilter('All');
                   setSelectedStatusFilter('All');
                   setSelectedCategoryFilter('All');
                   setSelectedCityFilter('All');
@@ -949,6 +1007,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
             {/* Row 2: Dropdown filters */}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <select
+                value={selectedPurposeFilter}
+                onChange={e => setSelectedPurposeFilter(e.target.value)}
+                style={{ padding: '10px 14px', border: '1px solid #CBD5E1', borderRadius: '8px', fontWeight: 700, color: '#0F172A', fontSize: '0.85rem', backgroundColor: '#F8FAFC', outline: 'none' }}
+              >
+                <option value="All">All Types (Sale &amp; Rent)</option>
+                <option value="Sale">🏷️ For Sale</option>
+                <option value="Rent">🔑 For Rent</option>
+              </select>
+
               <select
                 value={selectedCategoryFilter}
                 onChange={e => setSelectedCategoryFilter(e.target.value)}
@@ -1055,6 +1123,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   filteredProperties.map(prop => {
                     const assignedBroker = dealersDb.find(d => d.id === prop.dealerId);
                     const isSelected = selectedIds.includes(prop.id);
+                    const isRent = prop.propertyPurpose === 'Rent' || prop.propertyPurpose === 'Lease' || prop.status === 'Rent';
                     return (
                       <tr key={prop.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: isSelected ? '#FEF9C3' : '#FFFFFF', transition: 'background 0.15s' }}>
                         <td style={{ padding: '16px' }}>
@@ -1075,7 +1144,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{prop.title}</div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{prop.id}</div>
                               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <span style={{ padding: '2px 6px', backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
+                                {isRent ? (
+                                  <span style={{ padding: '2px 7px', backgroundColor: '#F3E8FF', color: '#7E22CE', fontSize: '0.7rem', fontWeight: 800, borderRadius: '4px', border: '1px solid #D8B4FE' }}>
+                                    FOR RENT
+                                  </span>
+                                ) : (
+                                  <span style={{ padding: '2px 7px', backgroundColor: '#ECFDF5', color: '#059669', fontSize: '0.7rem', fontWeight: 800, borderRadius: '4px', border: '1px solid #A7F3D0' }}>
+                                    FOR SALE
+                                  </span>
+                                )}
+                                <span style={{ padding: '2px 6px', backgroundColor: '#F1F5F9', color: '#475569', fontSize: '0.7rem', fontWeight: 600, borderRadius: '4px' }}>
                                   {prop.category}
                                 </span>
                                 {prop.premium ? (

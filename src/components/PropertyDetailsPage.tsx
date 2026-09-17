@@ -714,7 +714,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   const typeDisplay = isPlot ? 'Plots & Land' : isCommercial ? 'Commercial Property' : (catLower.includes('villa') || catLower.includes('house')) ? 'House & Villa' : 'Flats & Apartments';
 
   return (
-    <div className="prop-details-page animation-fade-in" style={{ padding: '115px 0 3rem', background: 'var(--bg-main)', minHeight: '100vh' }}>
+    <div className="prop-details-page animation-fade-in" style={{ background: 'var(--bg-main)', minHeight: '100vh' }}>
       <div className="container" style={{ position: 'relative' }}>
         
         {/* Demand Region Badge */}
@@ -726,7 +726,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         </button>
 
         {/* Location Hierarchy Breadcrumbs */}
-        <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', padding: '12px 20px', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '0.85rem', fontWeight: 600, color: '#475569', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+        <div className="prop-breadcrumbs-bar">
           <span style={{ color: '#1E40AF', display: 'flex', alignItems: 'center', gap: '4px' }}><FaMapMarkerAlt /> India</span>
           <span>→</span>
           <span>{property.state || 'Telangana'}</span>
@@ -751,7 +751,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             
             {/* Gallery Slider */}
             <div className="prop-gallery-container">
-              <div className="prop-gallery-main" style={{ position: 'relative', overflow: 'hidden', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '16px' }}>
+              <div className="prop-gallery-main">
                 <div 
                   style={{
                     position: 'absolute',
@@ -776,27 +776,9 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 <button
                   onClick={() => setImageFitMode(prev => prev === 'cover' ? 'contain' : 'cover')}
                   title={imageFitMode === 'cover' ? 'Click to view full uncropped photo' : 'Click to fill container'}
-                  style={{
-                    position: 'absolute',
-                    top: '16px',
-                    right: '16px',
-                    zIndex: 12,
-                    backgroundColor: 'rgba(15, 23, 42, 0.78)',
-                    backdropFilter: 'blur(8px)',
-                    color: '#FFFFFF',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                  }}
+                  className="gallery-mode-btn"
                 >
-                  {imageFitMode === 'cover' ? '🔍 View Full Uncropped Photo' : '🖼️ Fill Gallery Container'}
+                  {imageFitMode === 'cover' ? '🔍 Full Photo' : '🖼️ Fit Screen'}
                 </button>
 
                 <img 
@@ -965,17 +947,12 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                         <div key={idx} className="prop-spec-row">
                           <div className="spec-col">
                             <span className="spec-lbl">{item.label}</span>
-                            <span className="spec-val" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{item.value}</span>
+                            <span className="spec-val" title={item.value}>{item.value}</span>
                           </div>
-                          {next ? (
+                          {next && (
                             <div className="spec-col">
                               <span className="spec-lbl">{next.label}</span>
-                              <span className="spec-val" style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{next.value}</span>
-                            </div>
-                          ) : (
-                            <div className="spec-col">
-                              <span className="spec-lbl"></span>
-                              <span className="spec-val"></span>
+                              <span className="spec-val" title={next.value}>{next.value}</span>
                             </div>
                           )}
                         </div>
@@ -990,22 +967,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             {/* Description Section */}
             <div className="prop-section-block" style={{ marginTop: '2rem' }}>
               <h3 className="section-block-title">Description</h3>
-              <div 
-                className="prop-desc-text"
-                style={{
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word',
-                  lineHeight: '1.85',
-                  fontSize: '1rem',
-                  color: '#334155',
-                  backgroundColor: '#FFFFFF',
-                  padding: '24px',
-                  borderRadius: '16px',
-                  border: '1px solid #E2E8F0',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
-                }}
-              >
+              <div className="prop-desc-text">
                 {property.description || 'No description provided.'}
               </div>
             </div>
@@ -1036,10 +998,10 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
             )}
 
             {/* Interactive Location Intelligence & Nearby Places Amenity Discovery Section */}
-            <div className="prop-section-block" style={{ marginTop: '2.5rem', backgroundColor: '#FFFFFF', padding: '24px', borderRadius: '20px', border: '1px solid #E2E8F0', boxShadow: '0 10px 30px rgba(0,0,0,0.04)' }}>
+            <div className="prop-section-block prop-map-section" style={{ marginTop: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
-                  <h3 className="section-block-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#0F172A' }}>
+                  <h3 className="section-block-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#0F172A', borderBottom: 'none', paddingBottom: 0 }}>
                     🗺️ Google Maps Location
                   </h3>
                   <span style={{ fontSize: '0.85rem', color: '#64748B' }}>
@@ -1064,15 +1026,15 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
                 />
 
                 {/* Map Bottom Bar */}
-                <div style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1000 }}>
-                  <span style={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', color: '#FFFFFF', padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, border: '1px solid #334155' }}>
+                <div className="prop-map-bottom-bar">
+                  <span className="prop-map-gps-pill">
                     GPS: {(property.latitude || 17.4326).toFixed(4)}° N, {(property.longitude || 78.4071).toFixed(4)}° E
                   </span>
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(property.formatted_address || (property.area + ', ' + property.city))}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ backgroundColor: '#2563EB', color: '#FFFFFF', padding: '8px 16px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)' }}
+                    className="prop-map-nav-btn"
                   >
                     📍 Get Google Maps Navigation →
                   </a>
@@ -1261,7 +1223,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               </h3>
               <span style={{ fontSize: '0.85rem', color: '#64748B' }}>Showing properties within {nearbyRadiusFilter} KM of {property.area}, {property.city}</span>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {[2, 5, 10, 25].map(rad => (
                 <button
                   key={rad}
@@ -1290,7 +1252,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>Try expanding your distance filter to 10 KM or 25 KM to see more listings.</p>
             </div>
           ) : (
-            <div className="other-listings-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+            <div className="other-listings-grid">
               {nearbyPropertiesWithDistance.map(invProp => (
                 <div 
                   key={invProp.id} 
@@ -1336,7 +1298,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
         {otherProperties.length > 0 && (
           <div className="prop-other-listings-section" style={{ marginTop: '4rem', borderTop: '1px solid var(--border-color)', paddingTop: '3rem' }}>
             <h3 className="section-block-title" style={{ marginBottom: '2rem' }}>Other Properties by this Seller</h3>
-            <div className="other-listings-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+            <div className="other-listings-grid">
               {otherProperties.map(invProp => (
                 <div 
                   key={invProp.id} 

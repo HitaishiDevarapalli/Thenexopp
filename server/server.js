@@ -3273,7 +3273,20 @@ app.post('/api/properties', async (req, res, next) => {
     if (req.body.title && req.body.price) {
       try { propertyValidationSchema.partial().parse(req.body); } catch (_) {}
     }
-    const newProp = { id: req.body.id || `prop-pg-${Date.now()}`, createdDate: new Date().toLocaleDateString(), ...req.body };
+    
+    // Allocate guaranteed unique ID for newly created properties to prevent overwriting existing listings
+    let propId = req.body.id;
+    if (propId) {
+      const existing = await prisma.property.findUnique({ where: { id: propId } }).catch(() => null);
+      if (existing) {
+        // If an ID collision happens on CREATE, generate a fresh unique ID
+        propId = `prop-pg-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+    } else {
+      propId = `prop-pg-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+
+    const newProp = { ...req.body, id: propId, createdDate: req.body.createdDate || new Date().toLocaleDateString() };
 
     let listingStatus = 'PUBLISHED';
     if (newProp.listingStatus) {
@@ -3349,27 +3362,23 @@ app.post('/api/properties', async (req, res, next) => {
 
     let created;
     try {
-      created = await prisma.property.upsert({
-        where: { id: newProp.id },
-        update: propPayload,
-        create: {
-          id: newProp.id,
+      created = await prisma.property.create({
+        data: {
+          id: propId,
           ...propPayload,
           createdDate: newProp.createdDate || new Date().toLocaleDateString(),
         },
       });
     } catch (err) {
-      console.warn('Property upsert initial attempt warning:', err.message);
-      // Clean fallback using the spread operator to preserve all payload fields (like amenities) while safety-nullifying brokerId
+      console.warn('Property create initial attempt warning:', err.message);
+      // Clean fallback using the spread operator to preserve all payload fields while safety-nullifying brokerId
       const cleanFallback = {
         ...propPayload,
         brokerId: null
       };
-      created = await prisma.property.upsert({
-        where: { id: newProp.id },
-        update: cleanFallback,
-        create: {
-          id: newProp.id,
+      created = await prisma.property.create({
+        data: {
+          id: propId,
           ...cleanFallback,
           createdDate: newProp.createdDate || new Date().toLocaleDateString(),
         },
