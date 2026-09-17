@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb, isDemandRegionsEnabled } from '../db/marketplaceDb';
+import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb, isDemandRegionsEnabled, syncWithBackend } from '../db/marketplaceDb';
 import { parseIndiaLocation } from '../utils/locationIntelligence';
 import { useWishlist } from '../context/WishlistContext';
 import {
@@ -142,6 +142,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   const [tick, setTick] = useState(0);
   useEffect(() => {
+    syncWithBackend();
     const handler = () => setTick(t => t + 1);
     window.addEventListener('nexopp_data_changed', handler);
     return () => window.removeEventListener('nexopp_data_changed', handler);
