@@ -243,6 +243,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const sliderMin = 0.01;
   const sliderMax = isRent ? 10 : 100;
 
+  useEffect(() => {
+    if (isRent) {
+      setMinBudget(0.01);
+      setMaxBudget(10);
+    } else {
+      setMinBudget(0.01);
+      setMaxBudget(100);
+    }
+  }, [isRent]);
+
   const formatPriceVal = useCallback((valLakhs: number) => {
     if (valLakhs < 1) {
       const thousand = Math.round(valLakhs * 100);
