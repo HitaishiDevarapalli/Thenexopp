@@ -135,7 +135,6 @@ export interface PropertyListing {
   badge?: string;
   badgeType?: string;
   published?: boolean;
-  approvalStatus?: string;
   listingStatus?: 'Draft' | 'Pending' | 'Published' | 'Hidden' | 'Reserved' | 'Sold' | 'Expired' | 'Archived' | string;
   urgent?: boolean;
   luxury?: boolean;
@@ -205,8 +204,7 @@ export interface PropertyListing {
   // Multi-Broker Assignment
   assignedBrokerIds?: string[];
 
-  // Approval Workflow & Publishing
-  approvalStatus?: 'Draft' | 'Pending Approval' | 'Approved' | 'Rejected' | 'Published' | 'Archived' | 'Sold' | 'Reserved' | 'Available';
+  approvalStatus?: 'Draft' | 'Pending Approval' | 'Approved' | 'Rejected' | 'Published' | 'Archived' | 'Sold' | 'Reserved' | 'Available' | string;
   reviewComments?: string[];
   scheduledPublishDate?: string;
 
