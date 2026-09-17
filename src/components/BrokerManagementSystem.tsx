@@ -7,14 +7,16 @@ import {
   propertiesDb, 
   franchiseDb, 
   businessDb,
-  enquiriesDb
+  enquiriesDb,
+  masterLocationsDb
 } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
+import { parseIndiaLocation } from '../utils/locationIntelligence';
 import { 
   FaUserTie, FaSearch, FaFilter, FaPlus, FaEdit, FaTrash, FaCheckCircle, 
   FaFileExport, 
   FaCrown, FaStar, FaBuilding, 
-  FaMedal, FaChartPie, FaChartLine, FaCheck, FaTimes
+  FaMedal, FaChartPie, FaChartLine, FaCheck, FaTimes, FaMapMarkerAlt
 } from 'react-icons/fa';
 
 interface BrokerManagementSystemProps {
@@ -59,6 +61,10 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     fullName: '',
     mobileNumber: '',
     email: '',
+    city: '',
+    state: '',
+    district: '',
+    officeAddress: '',
     dob: '1985-06-15',
     gender: 'Male',
     photo: '',
@@ -70,10 +76,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     areasOfExpertise: ['Apartments', 'Villas'],
     propertyCategories: ['Flats', 'Apartments', 'Villas'],
     franchiseCategories: ['Food', 'Retail'],
-    serviceAreas: [
-      { state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Banjara Hills', pincode: '500034' }
-    ],
-    officeAddress: '',
+    serviceAreas: [],
     googleMapsLink: '',
     phone: '',
     whatsapp: '',
@@ -91,7 +94,7 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     successRate: 92,
     totalLeadsHandled: 80,
     responseTime: 'Within 30 mins',
-    coverage: { 'Hyderabad': 1 }
+    coverage: {}
   });
 
   // Leaderboard filters
@@ -119,6 +122,10 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       mobileNumber: '',
       phone: '',
       email: '',
+      city: '',
+      state: '',
+      district: '',
+      officeAddress: '',
       dob: '',
       gender: 'Male',
       photo: '',
@@ -131,7 +138,6 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       propertyCategories: ['Flats', 'Apartments', 'Villas'],
       franchiseCategories: ['Food', 'Retail'],
       serviceAreas: [],
-      officeAddress: '',
       whatsapp: '',
       rating: 4.8,
       reviewCount: 25,
@@ -180,6 +186,9 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
   // Open modal to edit broker
   const openEditBrokerModal = (broker: Dealer) => {
     setEditingBrokerId(broker.id);
+    const brokerCity = broker.city || broker.serviceAreas?.[0]?.city || '';
+    const brokerState = broker.state || broker.serviceAreas?.[0]?.state || '';
+    const brokerDistrict = broker.district || broker.serviceAreas?.[0]?.district || '';
     setFormData({
       ...broker,
       fullName: broker.fullName || broker.name || broker.companyName || '',
@@ -187,13 +196,17 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       companyName: broker.companyName || broker.fullName || '',
       mobileNumber: broker.mobileNumber || broker.phone || '',
       phone: broker.phone || broker.mobileNumber || '',
+      city: brokerCity,
+      state: brokerState,
+      district: brokerDistrict,
+      officeAddress: broker.officeAddress || '',
       rating: typeof broker.rating === 'number' ? broker.rating : (parseFloat(String(broker.rating)) || 4.8),
       reviewCount: typeof broker.reviewCount === 'number' ? broker.reviewCount : (parseInt(String(broker.reviewCount), 10) || 0),
       propertyCategories: broker.propertyCategories || ['Flats', 'Apartments'],
       franchiseCategories: broker.franchiseCategories || ['Food'],
-      serviceAreas: broker.serviceAreas && broker.serviceAreas.length > 0 ? broker.serviceAreas : [
-        { state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Jubilee Hills', pincode: '500033' }
-      ]
+      serviceAreas: Array.isArray(broker.serviceAreas) && broker.serviceAreas.length > 0 ? broker.serviceAreas : (brokerCity ? [
+        { state: brokerState || '', district: brokerDistrict || brokerCity, city: brokerCity, area: broker.officeAddress || brokerCity, pincode: '' }
+      ] : [])
     });
     setModalTab('personal');
     setIsModalOpen(true);
@@ -213,6 +226,14 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
     const ratingNum = formData.rating !== undefined && formData.rating !== null && String(formData.rating) !== '' ? parseFloat(String(formData.rating)) : 4.8;
     const cleanRating = isNaN(ratingNum) ? 4.8 : Math.max(0, Math.min(5, Number(ratingNum.toFixed(1))));
 
+    const primaryCity = (formData.city || formData.serviceAreas?.[0]?.city || '').trim();
+    const primaryState = (formData.state || formData.serviceAreas?.[0]?.state || '').trim();
+    const primaryDistrict = (formData.district || formData.serviceAreas?.[0]?.district || '').trim();
+
+    let finalServiceAreas = Array.isArray(formData.serviceAreas) && formData.serviceAreas.length > 0
+      ? formData.serviceAreas
+      : (primaryCity ? [{ state: primaryState || 'Andhra Pradesh', district: primaryDistrict || primaryCity, city: primaryCity, area: formData.officeAddress || primaryCity, pincode: '' }] : []);
+
     const finalBrokerData: Partial<Dealer> = {
       ...formData,
       fullName: fullName || companyName,
@@ -220,6 +241,11 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
       companyName: companyName || fullName,
       phone: formData.phone || formData.mobileNumber || '',
       mobileNumber: formData.mobileNumber || formData.phone || '',
+      city: primaryCity,
+      state: primaryState,
+      district: primaryDistrict,
+      officeAddress: formData.officeAddress || '',
+      serviceAreas: finalServiceAreas,
       rating: cleanRating,
       reviewCount: Number(formData.reviewCount) || 0,
       yearsExperience: Number(formData.yearsExperience) || 0,
@@ -343,11 +369,16 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
   // Location ranked brokers
   const locationRankedBrokers = useMemo(() => {
     return dealersDb.filter(b => {
-      const areas = b.serviceAreas || [];
-      const matchState = filterState === 'All' || areas.some(a => a.state.toLowerCase() === filterState.toLowerCase());
-      const matchDistrict = filterDistrict === 'All' || areas.some(a => a.district.toLowerCase() === filterDistrict.toLowerCase());
-      const matchCity = filterCity === 'All' || areas.some(a => a.city.toLowerCase() === filterCity.toLowerCase());
-      const matchArea = filterAreaSearch === '' || areas.some(a => a.area.toLowerCase().includes(filterAreaSearch.toLowerCase()));
+      const areas = Array.isArray(b.serviceAreas) && b.serviceAreas.length > 0 ? b.serviceAreas : (b.city ? [{ state: b.state || '', district: b.district || '', city: b.city, area: b.officeAddress || b.city }] : []);
+      const bState = (b.state || '').toLowerCase();
+      const bDistrict = (b.district || '').toLowerCase();
+      const bCity = (b.city || '').toLowerCase();
+      const bArea = (b.officeAddress || '').toLowerCase();
+
+      const matchState = filterState === 'All' || bState === filterState.toLowerCase() || areas.some(a => a.state.toLowerCase() === filterState.toLowerCase());
+      const matchDistrict = filterDistrict === 'All' || bDistrict === filterDistrict.toLowerCase() || areas.some(a => a.district.toLowerCase() === filterDistrict.toLowerCase());
+      const matchCity = filterCity === 'All' || bCity === filterCity.toLowerCase() || areas.some(a => a.city.toLowerCase() === filterCity.toLowerCase());
+      const matchArea = filterAreaSearch === '' || bArea.includes(filterAreaSearch.toLowerCase()) || areas.some(a => a.area.toLowerCase().includes(filterAreaSearch.toLowerCase()));
       return matchState && matchDistrict && matchCity && matchArea;
     }).sort((a, b) => (b.totalPropertiesSold || 0) - (a.totalPropertiesSold || 0));
   }, [dealersDb, filterState, filterDistrict, filterCity, filterAreaSearch, dataUpdated]);
@@ -613,6 +644,10 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                       </div>
 
                       <div style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 8px 0', lineHeight: 1.5 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#0F172A', fontWeight: 700, marginBottom: '2px' }}>
+                          <FaMapMarkerAlt style={{ color: '#1E40AF', fontSize: '0.85rem' }} />
+                          <span>{broker.city || broker.serviceAreas?.[0]?.city || 'All India'}{broker.state ? `, ${broker.state}` : ''}</span>
+                        </div>
                         <div>Phone: {broker.phone || broker.mobileNumber}</div>
                         <div>Email: {broker.email || 'N/A'}</div>
                       </div>
@@ -1315,6 +1350,71 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
                       <option value="Other">Other</option>
                     </select>
                   </div>
+
+                  {/* Dynamic Location Details */}
+                  <div style={{ gridColumn: '1 / -1', padding: '16px', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', color: '#1E40AF', fontWeight: 800, fontSize: '0.92rem' }}>
+                      <FaMapMarkerAlt /> Primary Location & Operating City
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '6px', color: '#334155' }}>Operating City *</label>
+                        <input
+                          list="broker-cities-datalist"
+                          type="text"
+                          value={formData.city || ''}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const geo = parseIndiaLocation(val);
+                            setFormData({
+                              ...formData,
+                              city: val,
+                              state: geo?.state || formData.state || '',
+                              district: geo?.district || formData.district || ''
+                            });
+                          }}
+                          placeholder="e.g. Hyderabad, Bengaluru, Vizag..."
+                          style={{ width: '100%', padding: '10px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', backgroundColor: '#FFFFFF' }}
+                        />
+                        <datalist id="broker-cities-datalist">
+                          {masterLocationsDb.map(c => (
+                            <option key={c.id} value={c.name} />
+                          ))}
+                        </datalist>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '6px', color: '#334155' }}>State</label>
+                        <input
+                          type="text"
+                          value={formData.state || ''}
+                          onChange={e => setFormData({ ...formData, state: e.target.value })}
+                          placeholder="e.g. Telangana, Andhra Pradesh"
+                          style={{ width: '100%', padding: '10px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', backgroundColor: '#FFFFFF' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '6px', color: '#334155' }}>District / Region</label>
+                        <input
+                          type="text"
+                          value={formData.district || ''}
+                          onChange={e => setFormData({ ...formData, district: e.target.value })}
+                          placeholder="e.g. Hyderabad District"
+                          style={{ width: '100%', padding: '10px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', backgroundColor: '#FFFFFF' }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginTop: '12px' }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '6px', color: '#334155' }}>Office Address / Hub</label>
+                      <input
+                        type="text"
+                        value={formData.officeAddress || ''}
+                        onChange={e => setFormData({ ...formData, officeAddress: e.target.value })}
+                        placeholder="e.g. Plot 42, Road No 12, Banjara Hills"
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #CBD5E1', borderRadius: '6px', backgroundColor: '#FFFFFF' }}
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '6px' }}>Profile Photo</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -1473,53 +1573,125 @@ export const BrokerManagementSystem: React.FC<BrokerManagementSystemProps> = ({ 
               {modalTab === 'service_areas' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 700 }}>Service Locations</span>
+                    <div>
+                      <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0F172A' }}>Service & Coverage Locations</span>
+                      <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748B' }}>Add all cities and localities where this broker actively operates.</p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
                         const curr = formData.serviceAreas || [];
-                        setFormData({ ...formData, serviceAreas: [...curr, { state: 'Telangana', district: 'Hyderabad', city: 'Hyderabad', area: 'Gachibowli', pincode: '500032' }] });
+                        const defaultCity = formData.city || 'Hyderabad';
+                        const geo = parseIndiaLocation(defaultCity);
+                        setFormData({
+                          ...formData,
+                          serviceAreas: [
+                            ...curr,
+                            {
+                              state: formData.state || geo?.state || 'Telangana',
+                              district: formData.district || geo?.district || defaultCity,
+                              city: defaultCity,
+                              area: '',
+                              pincode: ''
+                            }
+                          ]
+                        });
                       }}
-                      style={{ padding: '6px 12px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '4px', fontWeight: 700, cursor: 'pointer' }}
+                      style={{ padding: '8px 16px', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
-                      + Add Location
+                      <FaPlus /> Add Location
                     </button>
                   </div>
 
-                  {(formData.serviceAreas || []).map((area, idx) => (
-                    <div key={idx} style={{ padding: '16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '10px', alignItems: 'center' }}>
-                      <input type="text" value={area.state} onChange={e => {
-                        const next = [...(formData.serviceAreas || [])];
-                        next[idx].state = e.target.value;
-                        setFormData({ ...formData, serviceAreas: next });
-                      }} placeholder="State" style={{ padding: '8px', border: '1px solid #CBD5E1', borderRadius: '4px' }} />
-                      <input type="text" value={area.district} onChange={e => {
-                        const next = [...(formData.serviceAreas || [])];
-                        next[idx].district = e.target.value;
-                        setFormData({ ...formData, serviceAreas: next });
-                      }} placeholder="District" style={{ padding: '8px', border: '1px solid #CBD5E1', borderRadius: '4px' }} />
-                      <input type="text" value={area.city} onChange={e => {
-                        const next = [...(formData.serviceAreas || [])];
-                        next[idx].city = e.target.value;
-                        setFormData({ ...formData, serviceAreas: next });
-                      }} placeholder="City" style={{ padding: '8px', border: '1px solid #CBD5E1', borderRadius: '4px' }} />
-                      <input type="text" value={area.area} onChange={e => {
-                        const next = [...(formData.serviceAreas || [])];
-                        next[idx].area = e.target.value;
-                        setFormData({ ...formData, serviceAreas: next });
-                      }} placeholder="Locality / Area" style={{ padding: '8px', border: '1px solid #CBD5E1', borderRadius: '4px' }} />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = (formData.serviceAreas || []).filter((_, i) => i !== idx);
-                          setFormData({ ...formData, serviceAreas: next });
-                        }}
-                        style={{ color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
-                      >
-                        &times;
-                      </button>
+                  {(formData.serviceAreas || []).length === 0 ? (
+                    <div style={{ padding: '30px', textAlign: 'center', backgroundColor: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: '8px' }}>
+                      <p style={{ margin: 0, color: '#64748B', fontSize: '0.88rem' }}>No additional service areas configured. The broker's primary operating city ({formData.city || 'Not specified'}) will be used as default.</p>
                     </div>
-                  ))}
+                  ) : (
+                    (formData.serviceAreas || []).map((area, idx) => (
+                      <div key={idx} style={{ padding: '16px', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1.2fr auto', gap: '10px', alignItems: 'center' }}>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '2px' }}>City</label>
+                          <input
+                            list="broker-service-cities-datalist"
+                            type="text"
+                            value={area.city}
+                            onChange={e => {
+                              const val = e.target.value;
+                              const geo = parseIndiaLocation(val);
+                              const next = [...(formData.serviceAreas || [])];
+                              next[idx].city = val;
+                              if (geo?.state && !next[idx].state) next[idx].state = geo.state;
+                              if (geo?.district && !next[idx].district) next[idx].district = geo.district;
+                              setFormData({ ...formData, serviceAreas: next });
+                            }}
+                            placeholder="City name"
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #CBD5E1', borderRadius: '4px', backgroundColor: '#FFFFFF' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '2px' }}>State</label>
+                          <input
+                            type="text"
+                            value={area.state}
+                            onChange={e => {
+                              const next = [...(formData.serviceAreas || [])];
+                              next[idx].state = e.target.value;
+                              setFormData({ ...formData, serviceAreas: next });
+                            }}
+                            placeholder="State"
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #CBD5E1', borderRadius: '4px', backgroundColor: '#FFFFFF' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '2px' }}>District</label>
+                          <input
+                            type="text"
+                            value={area.district}
+                            onChange={e => {
+                              const next = [...(formData.serviceAreas || [])];
+                              next[idx].district = e.target.value;
+                              setFormData({ ...formData, serviceAreas: next });
+                            }}
+                            placeholder="District"
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #CBD5E1', borderRadius: '4px', backgroundColor: '#FFFFFF' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', display: 'block', marginBottom: '2px' }}>Locality / Area</label>
+                          <input
+                            type="text"
+                            value={area.area}
+                            onChange={e => {
+                              const next = [...(formData.serviceAreas || [])];
+                              next[idx].area = e.target.value;
+                              setFormData({ ...formData, serviceAreas: next });
+                            }}
+                            placeholder="Locality / Area"
+                            style={{ width: '100%', padding: '8px 10px', border: '1px solid #CBD5E1', borderRadius: '4px', backgroundColor: '#FFFFFF' }}
+                          />
+                        </div>
+                        <div style={{ paddingTop: '16px' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = (formData.serviceAreas || []).filter((_, i) => i !== idx);
+                              setFormData({ ...formData, serviceAreas: next });
+                            }}
+                            style={{ color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem', padding: '4px' }}
+                            title="Remove Location"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <datalist id="broker-service-cities-datalist">
+                    {masterLocationsDb.map(c => (
+                      <option key={c.id} value={c.name} />
+                    ))}
+                  </datalist>
                 </div>
               )}
 

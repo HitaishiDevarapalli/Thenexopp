@@ -727,6 +727,9 @@ export const syncWithBackend = async () => {
         companyName: d.companyName || d.fullName || d.name || 'Independent Realty',
         phone: d.phone || d.mobileNumber || '',
         mobileNumber: d.mobileNumber || d.phone || '',
+        city: d.city || (Array.isArray(d.serviceAreas) && d.serviceAreas[0] && d.serviceAreas[0].city) || '',
+        state: d.state || (Array.isArray(d.serviceAreas) && d.serviceAreas[0] && d.serviceAreas[0].state) || '',
+        district: d.district || (Array.isArray(d.serviceAreas) && d.serviceAreas[0] && d.serviceAreas[0].district) || '',
         rating: typeof d.rating === 'number' ? d.rating : (parseFloat(String(d.rating)) || 4.8),
         reviewCount: typeof d.reviewCount === 'number' ? d.reviewCount : (parseInt(String(d.reviewCount), 10) || 0)
       }));
