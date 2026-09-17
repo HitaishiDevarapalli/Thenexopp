@@ -32,7 +32,10 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   const [detectingGps, setDetectingGps] = useState(false);
   const [demandFilter, setDemandFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
-  const [isSearchingArea, setIsSearchingArea] = useState(false);
+  // Reset userGps whenever navbarLocation or localSearchLocation changes so user selection reflects immediately
+  useEffect(() => {
+    setUserGps(null);
+  }, [navbarLocation?.city, navbarLocation?.area, navbarLocation?.lat, navbarLocation?.lng, localSearchLocation]);
 
   // Compute map center dynamically from Navbar LocationContext, localSearchLocation, or default
   const mapCenter = useMemo(() => {
@@ -76,8 +79,8 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       keyboard: false,
     });
 
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom',
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>',
       maxZoom: 19,
     }).addTo(map);
 
