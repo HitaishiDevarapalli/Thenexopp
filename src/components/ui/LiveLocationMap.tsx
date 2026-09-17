@@ -32,6 +32,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
   const [detectingGps, setDetectingGps] = useState(false);
   const [demandFilter, setDemandFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
   const [showSearchThisArea, setShowSearchThisArea] = useState(false);
+  const [isSearchingArea, setIsSearchingArea] = useState(false);
   // Reset userGps whenever navbarLocation or localSearchLocation changes so user selection reflects immediately
   useEffect(() => {
     setUserGps(null);
