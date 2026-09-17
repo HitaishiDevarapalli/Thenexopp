@@ -134,7 +134,9 @@ export interface PropertyListing {
   recentlySold?: boolean;
   badge?: string;
   badgeType?: string;
-  listingStatus?: 'Draft' | 'Pending' | 'Published' | 'Hidden' | 'Reserved' | 'Sold' | 'Expired' | 'Archived';
+  published?: boolean;
+  approvalStatus?: string;
+  listingStatus?: 'Draft' | 'Pending' | 'Published' | 'Hidden' | 'Reserved' | 'Sold' | 'Expired' | 'Archived' | string;
   urgent?: boolean;
   luxury?: boolean;
   hotDeal?: boolean;
