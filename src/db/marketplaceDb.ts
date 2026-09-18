@@ -698,8 +698,37 @@ export const syncWithBackend = async () => {
     if (propsRes.status === 'fulfilled' && Array.isArray(propsRes.value)) {
       propertiesDb = propsRes.value.map((p: any) => {
         const brokerId = p.dealerId || p.brokerId || (p.broker ? p.broker.id : undefined);
+        const isDemoUnsplash = (url: any) => 
+          typeof url === 'string' && (
+            url.includes('photo-1600596542815-ffad4c1539a9') || 
+            url.includes('photo-1600585154340-be6161a56a0c') ||
+            url.includes('photo-1554118811-1e0d58224f24')
+          );
+        
+        const rawList = [
+          p.image,
+          p.image2,
+          p.image3,
+          p.image4,
+          p.image5,
+          p.image6,
+          ...(Array.isArray(p.images) ? p.images : [])
+        ].filter(Boolean) as string[];
+
+        const deduped = Array.from(new Set(rawList));
+        const realPhotos = deduped.filter(u => !isDemoUnsplash(u));
+        const finalPhotos = realPhotos.length > 0 ? realPhotos : deduped.filter(u => !isDemoUnsplash(u));
+        const primary = finalPhotos[0] || (isDemoUnsplash(p.image) ? '' : (p.image || ''));
+
         return {
           ...p,
+          image: primary,
+          image2: finalPhotos[1] || null,
+          image3: finalPhotos[2] || null,
+          image4: finalPhotos[3] || null,
+          image5: finalPhotos[4] || null,
+          image6: finalPhotos[5] || null,
+          images: finalPhotos,
           dealerId: brokerId,
           assignedBrokerIds: p.assignedBrokerIds?.length ? p.assignedBrokerIds : (brokerId ? [brokerId] : [])
         };
@@ -1629,6 +1658,26 @@ export const updateEnquiryStatus = (id: string, status: 'New' | 'Contacted' | 'F
   }).catch(err => console.error('API Sync Error:', err));
 };
 
+export const trackVisitor = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/analytics/track-visitor`, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.totalVisitors) {
+        siteSettingsDb = {
+          ...siteSettingsDb,
+          analytics: {
+            ...(siteSettingsDb.analytics || {}),
+            totalVisitors: data.totalVisitors
+          }
+        };
+        saveToStorage('nexopp_site_settings', siteSettingsDb);
+        notifyDataChanged();
+      }
+    }
+  } catch (_) {}
+};
+
 export const updateSiteSettings = async (settings: Partial<SiteSettings>) => {
   const mergedMainStats = settings.mainPageStats 
     ? { ...(siteSettingsDb.mainPageStats || {}), ...settings.mainPageStats } 
@@ -1643,10 +1692,14 @@ export const updateSiteSettings = async (settings: Partial<SiteSettings>) => {
   notifyDataChanged();
 
   try {
+    const payloadToSend: Partial<SiteSettings> = {
+      ...settings,
+      ...(settings.mainPageStats ? { mainPageStats: settings.mainPageStats } : {})
+    };
     const res = await fetch(`${API_BASE_URL}/api/settings`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(siteSettingsDb)
+      body: JSON.stringify(payloadToSend)
     });
     if (res.ok) {
       const data = await res.json();

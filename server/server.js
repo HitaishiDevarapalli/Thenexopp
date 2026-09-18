@@ -3162,6 +3162,40 @@ app.delete('/api/customers/:id', async (req, res) => {
 });
 
 // ── PROPERTY ENDPOINTS ────────────────────────────────────────────────────────
+const isDemoUnsplashUrl = (url) => 
+  typeof url === 'string' && (
+    url.includes('photo-1600596542815-ffad4c1539a9') || 
+    url.includes('photo-1600585154340-be6161a56a0c') ||
+    url.includes('photo-1554118811-1e0d58224f24')
+  );
+
+const sanitizePropertyPhotos = (p) => {
+  const rawList = [
+    p.image,
+    p.image2,
+    p.image3,
+    p.image4,
+    p.image5,
+    p.image6,
+    ...(Array.isArray(p.images) ? p.images : [])
+  ].filter(Boolean);
+
+  const deduped = Array.from(new Set(rawList));
+  const realPhotos = deduped.filter(u => !isDemoUnsplashUrl(u));
+  const finalPhotos = realPhotos.length > 0 ? realPhotos : deduped.filter(u => !isDemoUnsplashUrl(u));
+  const primary = finalPhotos[0] || (isDemoUnsplashUrl(p.image) ? '' : (p.image || ''));
+
+  return {
+    image: primary,
+    image2: finalPhotos[1] || null,
+    image3: finalPhotos[2] || null,
+    image4: finalPhotos[3] || null,
+    image5: finalPhotos[4] || null,
+    image6: finalPhotos[5] || null,
+    images: finalPhotos
+  };
+};
+
 app.get('/api/properties', async (req, res) => {
   try {
     let props = await prisma.property.findMany({ 
@@ -3175,8 +3209,10 @@ app.get('/api/properties', async (req, res) => {
     const normalized = (props || []).map(p => {
       const isSold = p.listingStatus === 'SOLD' || p.status === 'Sold';
       const bId = p.brokerId || (p.broker ? p.broker.id : undefined);
+      const photoPayload = sanitizePropertyPhotos(p);
       return {
         ...p,
+        ...photoPayload,
         id: String(p.id),
         dealerId: bId,
         assignedBrokerIds: bId ? [bId] : [],
@@ -3225,8 +3261,10 @@ app.get('/api/properties/:id', async (req, res) => {
     
     const isSold = prop.listingStatus === 'SOLD' || prop.status === 'Sold' || Boolean(prop.sold);
     const bId = prop.brokerId || (prop.broker ? prop.broker.id : undefined);
+    const photoPayload = sanitizePropertyPhotos(prop);
     return res.json({
       ...prop,
+      ...photoPayload,
       id: String(prop.id),
       dealerId: bId,
       assignedBrokerIds: bId ? [bId] : [],
@@ -4416,24 +4454,41 @@ app.delete('/api/showcase-videos/:id', async (req, res, next) => {
 // ── SETTINGS ENDPOINTS ────────────────────────────────────────────────────────
 const siteSettingsStorePath = path.join(__dirname, 'site_settings_store.json');
 
+const getEffectiveSiteSettings = async () => {
+  let fileSettings = {};
+  if (fs.existsSync(siteSettingsStorePath)) {
+    try {
+      fileSettings = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')) || {};
+    } catch (_) {}
+  }
+  let dbSettings = null;
+  try {
+    dbSettings = await prisma.siteSettings.findUnique({ where: { id: 'default' } });
+  } catch (_) {}
+
+  // Merge DB on top of fileSettings
+  const merged = { ...fileSettings, ...(dbSettings || {}) };
+
+  // Prioritize non-empty mainPageStats
+  if (dbSettings && dbSettings.mainPageStats && typeof dbSettings.mainPageStats === 'object' && Object.keys(dbSettings.mainPageStats).length > 0) {
+    merged.mainPageStats = dbSettings.mainPageStats;
+  } else if (fileSettings.mainPageStats && typeof fileSettings.mainPageStats === 'object' && Object.keys(fileSettings.mainPageStats).length > 0) {
+    merged.mainPageStats = fileSettings.mainPageStats;
+  }
+
+  // Prioritize non-empty analytics
+  if (dbSettings && dbSettings.analytics && typeof dbSettings.analytics === 'object' && Object.keys(dbSettings.analytics).length > 0) {
+    merged.analytics = dbSettings.analytics;
+  } else if (fileSettings.analytics && typeof fileSettings.analytics === 'object') {
+    merged.analytics = fileSettings.analytics;
+  }
+
+  return { merged, fileSettings, dbSettings };
+};
+
 app.get('/api/settings', async (req, res) => {
   try {
-    let fileSettings = {};
-    if (fs.existsSync(siteSettingsStorePath)) {
-      try {
-        fileSettings = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')) || {};
-      } catch (_) {}
-    }
-    let dbSettings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
-    
-    // Merge DB settings onto fileSettings
-    const merged = { ...fileSettings, ...(dbSettings || {}) };
-    
-    // Defensive check: if DB had null/empty mainPageStats but file store has it, keep file store's version
-    if ((!merged.mainPageStats || typeof merged.mainPageStats !== 'object' || Object.keys(merged.mainPageStats).length === 0) && fileSettings.mainPageStats) {
-      merged.mainPageStats = fileSettings.mainPageStats;
-    }
-    
+    const { merged } = await getEffectiveSiteSettings();
     return res.json(merged);
   } catch (err) {
     if (fs.existsSync(siteSettingsStorePath)) {
@@ -4448,23 +4503,31 @@ app.get('/api/settings', async (req, res) => {
 app.put('/api/settings', async (req, res) => {
   try {
     const rawData = req.body || {};
+    const { merged: currentSettings } = await getEffectiveSiteSettings();
     
-    // 1. Save to file store immediately
-    let mergedStore = {};
+    // 1. Build updated merged settings object
+    const updated = { ...currentSettings, ...rawData };
+
+    if (rawData.mainPageStats && typeof rawData.mainPageStats === 'object' && Object.keys(rawData.mainPageStats).length > 0) {
+      updated.mainPageStats = { ...(currentSettings.mainPageStats || {}), ...rawData.mainPageStats };
+    } else if (currentSettings.mainPageStats) {
+      updated.mainPageStats = currentSettings.mainPageStats;
+    }
+
+    if (rawData.analytics && typeof rawData.analytics === 'object' && Object.keys(rawData.analytics).length > 0) {
+      updated.analytics = { ...(currentSettings.analytics || {}), ...rawData.analytics };
+    } else if (currentSettings.analytics) {
+      updated.analytics = currentSettings.analytics;
+    }
+
+    // 2. Save to file store immediately
     try {
-      if (fs.existsSync(siteSettingsStorePath)) {
-        try { mergedStore = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')) || {}; } catch (_) {}
-      }
-      mergedStore = { ...mergedStore, ...rawData };
-      if (rawData.mainPageStats) {
-        mergedStore.mainPageStats = { ...(mergedStore.mainPageStats || {}), ...rawData.mainPageStats };
-      }
-      fs.writeFileSync(siteSettingsStorePath, JSON.stringify(mergedStore, null, 2), 'utf8');
+      fs.writeFileSync(siteSettingsStorePath, JSON.stringify(updated, null, 2), 'utf8');
     } catch (fsErr) {
       logger.warn({ error: fsErr.message }, 'Failed to write site_settings_store.json');
     }
 
-    // 2. Clean Prisma fields
+    // 3. Save to PostgreSQL database
     const validFields = [
       'heroTitle', 'heroHighlightText', 'heroSubtitle', 'heroBgUrl', 'heroMediaType',
       'heroVideoUrl', 'heroPopularTags', 'heroBadge1Text', 'heroBadge2Text', 'primaryColor',
@@ -4473,14 +4536,14 @@ app.put('/api/settings', async (req, res) => {
     ];
     const updateData = {};
     for (const key of validFields) {
-      if (rawData[key] !== undefined) {
-        updateData[key] = rawData[key];
+      if (updated[key] !== undefined) {
+        updateData[key] = updated[key];
       }
     }
 
-    let settings = null;
+    let savedDb = null;
     try {
-      settings = await prisma.siteSettings.upsert({
+      savedDb = await prisma.siteSettings.upsert({
         where: { id: 'default' },
         update: updateData,
         create: { id: 'default', ...updateData },
@@ -4491,15 +4554,42 @@ app.put('/api/settings', async (req, res) => {
 
     const finalResponse = { 
       id: 'default', 
-      ...mergedStore, 
-      ...(settings || {}), 
-      ...rawData,
-      ...(rawData.mainPageStats ? { mainPageStats: rawData.mainPageStats } : {})
+      ...updated,
+      ...(savedDb || {})
     };
     return res.json(finalResponse);
   } catch (err) {
     logger.error({ error: err.message }, 'Error in PUT /api/settings');
     return res.json({ id: 'default', ...req.body });
+  }
+});
+
+// Dedicated Analytics & Visitor Tracking Endpoint
+app.post('/api/analytics/track-visitor', async (req, res) => {
+  try {
+    const { merged: currentSettings } = await getEffectiveSiteSettings();
+    const currentAnalytics = (currentSettings && currentSettings.analytics && typeof currentSettings.analytics === 'object') ? currentSettings.analytics : {};
+    const prevVisitors = parseInt(currentAnalytics.totalVisitors, 10) || 0;
+    const newTotalVisitors = prevVisitors + 1;
+    const updatedAnalytics = { ...currentAnalytics, totalVisitors: newTotalVisitors };
+
+    const updatedSettings = { ...currentSettings, analytics: updatedAnalytics };
+
+    try {
+      fs.writeFileSync(siteSettingsStorePath, JSON.stringify(updatedSettings, null, 2), 'utf8');
+    } catch (_) {}
+
+    try {
+      await prisma.siteSettings.upsert({
+        where: { id: 'default' },
+        update: { analytics: updatedAnalytics },
+        create: { id: 'default', analytics: updatedAnalytics },
+      });
+    } catch (_) {}
+
+    return res.json({ success: true, totalVisitors: newTotalVisitors });
+  } catch (err) {
+    return res.json({ success: false });
   }
 });
 
@@ -5149,8 +5239,54 @@ if (fs.existsSync(distDir)) {
   });
 }
 
+const ensureSiteSettingsSync = async () => {
+  try {
+    let fileSettings = {};
+    if (fs.existsSync(siteSettingsStorePath)) {
+      try { fileSettings = JSON.parse(fs.readFileSync(siteSettingsStorePath, 'utf8')) || {}; } catch (_) {}
+    }
+    const dbSettings = await prisma.siteSettings.findUnique({ where: { id: 'default' } }).catch(() => null);
+
+    if (dbSettings) {
+      // DB has settings, ensure file store is synced with DB
+      const merged = { ...fileSettings, ...dbSettings };
+      if (dbSettings.mainPageStats && typeof dbSettings.mainPageStats === 'object' && Object.keys(dbSettings.mainPageStats).length > 0) {
+        merged.mainPageStats = dbSettings.mainPageStats;
+      }
+      if (dbSettings.analytics && typeof dbSettings.analytics === 'object' && Object.keys(dbSettings.analytics).length > 0) {
+        merged.analytics = dbSettings.analytics;
+      }
+      try {
+        fs.writeFileSync(siteSettingsStorePath, JSON.stringify(merged, null, 2), 'utf8');
+      } catch (_) {}
+    } else if (fileSettings && Object.keys(fileSettings).length > 0) {
+      // DB is empty/fresh, seed DB from fileSettings
+      const validFields = [
+        'heroTitle', 'heroHighlightText', 'heroSubtitle', 'heroBgUrl', 'heroMediaType',
+        'heroVideoUrl', 'heroPopularTags', 'heroBadge1Text', 'heroBadge2Text', 'primaryColor',
+        'themeStyle', 'availableCities', 'defaultCity', 'promotionalVideoUrl',
+        'showFranchiseSection', 'showDemandRegions', 'showVideoShowcase', 'analytics', 'mainPageStats'
+      ];
+      const createData = { id: 'default' };
+      for (const key of validFields) {
+        if (fileSettings[key] !== undefined) {
+          createData[key] = fileSettings[key];
+        }
+      }
+      await prisma.siteSettings.upsert({
+        where: { id: 'default' },
+        update: createData,
+        create: createData,
+      }).catch(() => {});
+    }
+  } catch (err) {
+    logger.warn({ error: err.message }, 'SiteSettings startup sync notice');
+  }
+};
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`[NEXOPP Enterprise API] Server running on http://0.0.0.0:${PORT} and http://127.0.0.1:${PORT} (${process.env.NODE_ENV || 'production'})`);
+  ensureSiteSettingsSync().catch(() => {});
   purgeSeedData().catch(() => {});
   ensureInitialCustomerData().catch(() => {});
 });

@@ -400,10 +400,101 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     };
   }, [propertiesDb, dataUpdated]);
 
+  const [directImageUrlInput, setDirectImageUrlInput] = useState('');
+
+  const handlePropertyPhotoFiles = async (files: FileList | File[]) => {
+    const fileArr = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (fileArr.length === 0) return;
+
+    const currentImages = [
+      formData.image,
+      formData.image2,
+      formData.image3,
+      formData.image4,
+      formData.image5,
+      formData.image6
+    ].filter(Boolean) as string[];
+
+    const slotsAvailable = 6 - currentImages.length;
+    if (slotsAvailable <= 0) {
+      showNotification?.('Maximum 6 photos allowed. Please remove a photo first.', 'warning');
+      return;
+    }
+
+    const filesToProcess = fileArr.slice(0, slotsAvailable);
+    const compressedList: string[] = [];
+
+    for (const file of filesToProcess) {
+      try {
+        const compressed = await compressImageFile(file);
+        if (compressed) compressedList.push(compressed);
+      } catch (err) {
+        console.error('Failed to compress image:', err);
+      }
+    }
+
+    if (compressedList.length === 0) return;
+
+    const updated = [...currentImages, ...compressedList];
+    setFormData(prev => ({
+      ...prev,
+      image: updated[0] || '',
+      image2: updated[1] || '',
+      image3: updated[2] || '',
+      image4: updated[3] || '',
+      image5: updated[4] || '',
+      image6: updated[5] || '',
+      images: updated
+    }));
+
+    showNotification?.(`Uploaded ${compressedList.length} photo(s) successfully!`, 'success');
+  };
+
+  const handleRemovePhoto = (slotKey: 'image' | 'image2' | 'image3' | 'image4' | 'image5' | 'image6') => {
+    const keyMap = ['image', 'image2', 'image3', 'image4', 'image5', 'image6'] as const;
+    const remaining = keyMap
+      .filter(k => k !== slotKey)
+      .map(k => formData[k])
+      .filter(Boolean) as string[];
+
+    setFormData(prev => ({
+      ...prev,
+      image: remaining[0] || '',
+      image2: remaining[1] || '',
+      image3: remaining[2] || '',
+      image4: remaining[3] || '',
+      image5: remaining[4] || '',
+      image6: remaining[5] || '',
+      images: remaining
+    }));
+  };
+
+  const handleSetPrimaryPhoto = (index: number) => {
+    const keyMap = ['image', 'image2', 'image3', 'image4', 'image5', 'image6'] as const;
+    const current = keyMap.map(k => formData[k]).filter(Boolean) as string[];
+    if (index < 0 || index >= current.length) return;
+    
+    const [selected] = current.splice(index, 1);
+    const reordered = [selected, ...current];
+
+    setFormData(prev => ({
+      ...prev,
+      image: reordered[0] || '',
+      image2: reordered[1] || '',
+      image3: reordered[2] || '',
+      image4: reordered[3] || '',
+      image5: reordered[4] || '',
+      image6: reordered[5] || '',
+      images: reordered
+    }));
+    showNotification?.('Cover hero photo updated!', 'success');
+  };
+
   const openAddModal = () => {
     const uniqueRand = `${Date.now().toString(36).slice(-4)}${Math.floor(100 + Math.random() * 900)}`;
     const freshId = `nexopp-${uniqueRand}-TE-S-V`;
     setPriceUnit('Lakhs');
+    setDirectImageUrlInput('');
     setFormData({
       id: freshId,
       title: '',
@@ -411,50 +502,47 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       propertySubtype: 'Villas',
       propertyPurpose: 'Sale',
       status: 'Buy',
-      price: 75,
-      priceDisplay: '₹75.00 Lakh',
-      areaSqFt: '2400',
-      superBuiltUpArea: '2400 Sq.Ft',
-      carpetArea: '2000 Sq.Ft',
-      plotArea: '300 Sq.Yds',
-      bedrooms: 3,
-      bathrooms: 3,
-      balconies: 2,
-      floorNumber: 1,
-      totalFloors: 2,
+      price: undefined,
+      priceDisplay: '',
+      areaSqFt: '',
+      superBuiltUpArea: '',
+      carpetArea: '',
+      plotArea: '',
+      bedrooms: undefined,
+      bathrooms: undefined,
+      balconies: undefined,
+      floorNumber: undefined,
+      totalFloors: undefined,
       facing: 'East',
-      ageYears: 1,
-      furnishing: 'Semi-Furnished',
-      parkingSlots: 2,
+      ageYears: undefined,
+      furnishing: 'Unfurnished',
+      parkingSlots: undefined,
       ownershipType: 'Freehold',
       negotiable: true,
       state: 'Telangana',
       district: 'Hyderabad',
       city: 'Hyderabad',
-      area: 'Jubilee Hills',
-      locality: 'Jubilee Hills',
-      landmark: 'Road No. 36',
-      pincode: '500033',
-      postal_code: '500033',
+      area: '',
+      locality: '',
+      landmark: '',
+      pincode: '',
+      postal_code: '',
       country: 'India',
-      fullAddress: 'Jubilee Hills, Hyderabad, Telangana, India',
-      formatted_address: 'Jubilee Hills, Hyderabad, Telangana, India',
-      google_place_id: 'ChIJ_hyd_jubilee',
+      fullAddress: '',
+      formatted_address: '',
+      google_place_id: '',
       service_radius: 10,
       latitude: 17.4326,
       longitude: 78.4071,
-      description: 'Stunning luxury villa located in prime Jubilee Hills with modern amenities, round-the-clock security, clubhouse, and private parking.',
-      amenities: ['Lift', 'Parking', 'Swimming Pool', 'Gym', 'Club House', 'Security', 'Power Backup', 'Water Supply'],
-      image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80',
-      image2: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
+      description: '',
+      amenities: [],
+      image: '',
+      image2: '',
       image3: '',
       image4: '',
       image5: '',
       image6: '',
-      images: [
-        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80'
-      ],
+      images: [],
       dealerId: dealersDb[0]?.id || '',
       assignedBrokerIds: dealersDb[0]?.id ? [dealersDb[0].id] : [],
       approvalStatus: 'Published',
@@ -466,14 +554,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       sponsoredListing: false,
       prioritySearchPlacement: false,
       rating: 4.8,
-      reviewCount: 5,
+      reviewCount: 0,
       verified: true,
       premium: false,
       seoTitle: '',
       metaDescription: '',
       urlSlug: ''
     });
-    setAddressSearchQuery('Jubilee Hills, Hyderabad');
+    setAddressSearchQuery('');
     setMapMarkerPos({ lat: 17.4326, lng: 78.4071 });
     setModalMode('add');
     setEditingId(null);
@@ -483,8 +571,20 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
 
   const openEditModal = (prop: PropertyListing) => {
     const rawPurpose = prop.propertyPurpose || (String(prop.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale');
+    const existingImgs = (prop.images && prop.images.length > 0)
+      ? prop.images
+      : [prop.image, prop.image2, prop.image3, prop.image4, prop.image5, prop.image6].filter(Boolean) as string[];
+
+    setDirectImageUrlInput('');
     setFormData({
       ...prop,
+      image: prop.image || existingImgs[0] || '',
+      image2: prop.image2 || existingImgs[1] || '',
+      image3: prop.image3 || existingImgs[2] || '',
+      image4: prop.image4 || existingImgs[3] || '',
+      image5: prop.image5 || existingImgs[4] || '',
+      image6: prop.image6 || existingImgs[5] || '',
+      images: existingImgs,
       propertyPurpose: rawPurpose as any,
       status: rawPurpose === 'Rent' ? 'Rent' : 'Buy',
       assignedBrokerIds: (prop.assignedBrokerIds && prop.assignedBrokerIds.length > 0) ? prop.assignedBrokerIds : (prop.dealerId ? [prop.dealerId] : [])
@@ -594,6 +694,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       ? editingId
       : (formData.id && !propertiesDb.some(p => p.id === formData.id) ? formData.id : `nexopp-${uniqueRandomPart}-${stateCode}-${typeCode}-${catCode}`);
 
+    const allImages = [
+      formData.image,
+      formData.image2,
+      formData.image3,
+      formData.image4,
+      formData.image5,
+      formData.image6
+    ].filter(Boolean) as string[];
+    const primaryImg = allImages[0] || formData.image || '';
+
     const preparedProperty: PropertyListing = {
       ...formData as PropertyListing,
       title: (formData.title || '').trim() || `${formData.bedrooms ? formData.bedrooms + ' BHK ' : ''}${formData.category || 'Luxury Property'} in ${formData.area || formData.city || 'Hyderabad'}`,
@@ -602,6 +712,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       longitude: fallbackLng,
       formatted_address: fallbackAddress,
       fullAddress: fallbackAddress,
+      image: primaryImg,
+      images: allImages,
       dealerId: finalBrokerId || '',
       assignedBrokerIds: formData.assignedBrokerIds || (finalBrokerId ? [finalBrokerId] : []),
       agentName: assignedBroker?.companyName || assignedBroker?.fullName || formData.agentName || 'RealtyPlus Advisors',
@@ -669,9 +781,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       safePriceDisplay = priceUnit === 'Crores' ? `₹${safePrice} Crore` : priceUnit === 'Lakhs' ? `₹${safePrice} Lakh` : `₹${safePrice}`;
     }
 
-    const primaryImg = formData.image || formData.image2 || (formData.images && formData.images[0]) || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80';
-    const allImages = [formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].filter(Boolean) as string[];
-    if (allImages.length === 0) allImages.push(primaryImg);
+    const allImages = [
+      formData.image,
+      formData.image2,
+      formData.image3,
+      formData.image4,
+      formData.image5,
+      formData.image6
+    ].filter(Boolean) as string[];
+    const primaryImg = allImages[0] || formData.image || '';
 
     const stateCode = (formData.state || 'XX').slice(0, 2).toUpperCase();
     const typeCode = isRentPurpose ? 'R' : 'S';
@@ -1139,7 +1257,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         </td>
                         <td style={{ padding: '16px' }}>
                           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                            <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '64px', height: '52px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
+                            <div style={{ width: '64px', height: '52px', backgroundColor: '#F1F5F9', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {prop.image || prop.images?.[0] ? (
+                                <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <FaBuilding style={{ color: '#94A3B8', fontSize: '1.2rem' }} />
+                              )}
+                            </div>
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.9rem', marginBottom: '3px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{prop.title}</div>
                               <div style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 500, marginBottom: '4px' }}>{prop.id}</div>
@@ -1475,7 +1599,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   </span>
                 )}
                 <div style={{ display: 'flex', gap: '12px' }}>
-                  <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '100px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                  <div style={{ width: '100px', height: '80px', backgroundColor: '#F1F5F9', borderRadius: '4px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {prop.image || prop.images?.[0] ? (
+                      <img src={prop.image || prop.images?.[0]} alt={prop.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <FaBuilding style={{ color: '#94A3B8', fontSize: '1.5rem' }} />
+                    )}
+                  </div>
                   <div>
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#059669' }}>{prop.id} • {prop.area}</div>
                     <h4 style={{ margin: '2px 0', fontSize: '1rem', color: '#0F172A' }}>{prop.title}</h4>
@@ -1648,7 +1778,13 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <tr key={prop.id} style={{ borderBottom: '1px solid #F1F5F9', transition: 'background 0.15s' }}>
                     <td style={{ padding: '14px 20px' }}>
                       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <img src={prop.image || prop.images?.[0]} alt="" style={{ width: '48px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                        <div style={{ width: '48px', height: '40px', backgroundColor: '#F1F5F9', borderRadius: '6px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {prop.image || prop.images?.[0] ? (
+                            <img src={prop.image || prop.images?.[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <FaBuilding style={{ color: '#94A3B8', fontSize: '1rem' }} />
+                          )}
+                        </div>
                         <div>
                           <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.85rem' }}>{prop.title}</div>
                           <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{prop.id}</div>
@@ -1910,8 +2046,12 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <tr key={prop.id} style={{ borderBottom: '1px solid #E2E8F0', backgroundColor: '#F8FAFC' }}>
                     <td style={{ padding: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '64px', height: '48px', backgroundColor: '#E2E8F0', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-                          <img src={prop.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=200&q=80"} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div style={{ width: '64px', height: '48px', backgroundColor: '#E2E8F0', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {prop.image || prop.images?.[0] ? (
+                            <img src={prop.image || prop.images?.[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <FaBuilding style={{ color: '#94A3B8', fontSize: '1.2rem' }} />
+                          )}
                         </div>
                         <div>
                           <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.95rem' }}>{prop.title}</div>
@@ -3027,128 +3167,139 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                   <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '32px', boxShadow: '0 4px 12px rgba(0,0,0,0.02)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', paddingBottom: '16px', marginBottom: '24px' }}>
                       <div>
-                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>5. Media Gallery *</h4>
-                        <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Drag & drop or upload showcase images for your property listing (Mandatory)</p>
+                        <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669', margin: 0 }}>5. Media Gallery</h4>
+                        <p style={{ color: '#64748B', fontSize: '0.88rem', margin: '4px 0 0 0' }}>Upload showcase images for your property. Only the photos you choose will appear on your listing.</p>
                       </div>
                       <span style={{ padding: '6px 14px', backgroundColor: '#ECFDF5', color: '#059669', borderRadius: '16px', fontWeight: 700, fontSize: '0.8rem' }}>
-                        {((formData.image ? 1 : 0) + (formData.image2 ? 1 : 0) + (formData.image3 ? 1 : 0) + (formData.image4 ? 1 : 0) + (formData.image5 ? 1 : 0) + (formData.image6 ? 1 : 0))} / 6 Photos Uploaded
+                        {[formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].filter(Boolean).length} / 6 Photos Uploaded
                       </span>
                     </div>
 
-                    {/* Single Optional Drag & Drop Zone */}
+                    {/* Multi-file Drag & Drop Zone */}
                     <div
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={async (e) => {
                         e.preventDefault();
-                        const file = e.dataTransfer.files?.[0];
-                        if (file) {
-                          const base64 = await compressImageFile(file);
-                          if (!formData.image) setFormData({ ...formData, image: base64 });
-                          else if (!formData.image2) setFormData({ ...formData, image2: base64 });
-                          else if (!formData.image3) setFormData({ ...formData, image3: base64 });
-                          else if (!formData.image4) setFormData({ ...formData, image4: base64 });
-                          else if (!formData.image5) setFormData({ ...formData, image5: base64 });
-                          else if (!formData.image6) setFormData({ ...formData, image6: base64 });
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          await handlePropertyPhotoFiles(e.dataTransfer.files);
                         }
                       }}
                       onClick={() => {
-                        if (!formData.image) document.getElementById('optional-file-input-0')?.click();
-                        else if (!formData.image2) document.getElementById('optional-file-input-1')?.click();
-                        else if (!formData.image3) document.getElementById('optional-file-input-2')?.click();
-                        else if (!formData.image4) document.getElementById('optional-file-input-3')?.click();
-                        else if (!formData.image5) document.getElementById('optional-file-input-4')?.click();
-                        else if (!formData.image6) document.getElementById('optional-file-input-5')?.click();
+                        document.getElementById('property-multi-file-input')?.click();
                       }}
                       style={{
                         border: '2.5px dashed #059669',
                         borderRadius: '16px',
-                        padding: '40px',
+                        padding: '36px 20px',
                         textAlign: 'center',
                         cursor: 'pointer',
                         backgroundColor: '#F8FAFC',
                         transition: 'all 0.2s',
-                        marginBottom: '24px',
+                        marginBottom: '20px',
                         boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
                       }}
                     >
                       <FaCamera style={{ fontSize: '2.5rem', color: '#059669', marginBottom: '12px' }} />
-                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#059669' }}>Drag & Drop or Click to Upload Image</div>
-                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>Supports any photo size (PNG, JPG, WEBP - Auto optimized)</div>
-                      <div style={{ display: 'none' }}>
-                        <input id="optional-file-input-0" type="file" accept="image/*" onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const compressed = await compressImageFile(file);
-                            setFormData({ ...formData, image: compressed });
+                      <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#059669' }}>Click to Browse or Drag & Drop Photos</div>
+                      <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '6px' }}>Select single or multiple photos (PNG, JPG, WEBP - Auto optimized)</div>
+                      <input
+                        id="property-multi-file-input"
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            await handlePropertyPhotoFiles(e.target.files);
+                            e.target.value = '';
                           }
-                        }} />
-                        <input id="optional-file-input-1" type="file" accept="image/*" onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const compressed = await compressImageFile(file);
-                            setFormData({ ...formData, image2: compressed });
+                        }}
+                      />
+                    </div>
+
+                    {/* Direct Image URL input */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+                      <input
+                        type="url"
+                        value={directImageUrlInput}
+                        onChange={e => setDirectImageUrlInput(e.target.value)}
+                        placeholder="Or paste an image URL directly (e.g. https://...)"
+                        style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #CBD5E1', outline: 'none', fontSize: '0.88rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!directImageUrlInput.trim()) return;
+                          const currentImages = [
+                            formData.image,
+                            formData.image2,
+                            formData.image3,
+                            formData.image4,
+                            formData.image5,
+                            formData.image6
+                          ].filter(Boolean) as string[];
+                          if (currentImages.length >= 6) {
+                            showNotification?.('Maximum 6 photos allowed. Please remove one first.', 'warning');
+                            return;
                           }
-                        }} />
-                        <input id="optional-file-input-2" type="file" accept="image/*" onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const compressed = await compressImageFile(file);
-                            setFormData({ ...formData, image3: compressed });
-                          }
-                        }} />
-                        <input id="optional-file-input-3" type="file" accept="image/*" onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const compressed = await compressImageFile(file);
-                            setFormData({ ...formData, image4: compressed });
-                          }
-                        }} />
-                        <input id="optional-file-input-4" type="file" accept="image/*" onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const compressed = await compressImageFile(file);
-                            setFormData({ ...formData, image5: compressed });
-                          }
-                        }} />
-                        <input id="optional-file-input-5" type="file" accept="image/*" onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const compressed = await compressImageFile(file);
-                            setFormData({ ...formData, image6: compressed });
-                          }
-                        }} />
-                      </div>
+                          const updated = [...currentImages, directImageUrlInput.trim()];
+                          setFormData(prev => ({
+                            ...prev,
+                            image: updated[0] || '',
+                            image2: updated[1] || '',
+                            image3: updated[2] || '',
+                            image4: updated[3] || '',
+                            image5: updated[4] || '',
+                            image6: updated[5] || '',
+                            images: updated
+                          }));
+                          setDirectImageUrlInput('');
+                          showNotification?.('Photo URL added!', 'success');
+                        }}
+                        style={{ padding: '10px 20px', backgroundColor: '#059669', color: '#FFFFFF', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                      >
+                        Add URL
+                      </button>
                     </div>
 
                     {/* Previews of Uploaded Images */}
-                    {(formData.image || formData.image2 || formData.image3 || formData.image4 || formData.image5 || formData.image6) ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                    {([formData.image, formData.image2, formData.image3, formData.image4, formData.image5, formData.image6].some(Boolean)) ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                         {[
-                          { key: 'image', val: formData.image, label: 'COVER HERO IMAGE' },
-                          { key: 'image2', val: formData.image2, label: 'SHOWCASE SLIDE #2' },
-                          { key: 'image3', val: formData.image3, label: 'SHOWCASE SLIDE #3' },
-                          { key: 'image4', val: formData.image4, label: 'SHOWCASE SLIDE #4' },
-                          { key: 'image5', val: formData.image5, label: 'SHOWCASE SLIDE #5' },
-                          { key: 'image6', val: formData.image6, label: 'SHOWCASE SLIDE #6' }
+                          { key: 'image' as const, val: formData.image, label: 'COVER HERO IMAGE' },
+                          { key: 'image2' as const, val: formData.image2, label: 'SHOWCASE SLIDE #2' },
+                          { key: 'image3' as const, val: formData.image3, label: 'SHOWCASE SLIDE #3' },
+                          { key: 'image4' as const, val: formData.image4, label: 'SHOWCASE SLIDE #4' },
+                          { key: 'image5' as const, val: formData.image5, label: 'SHOWCASE SLIDE #5' },
+                          { key: 'image6' as const, val: formData.image6, label: 'SHOWCASE SLIDE #6' }
                         ].map((item, idx) => {
                           if (!item.val) return null;
                           return (
-                            <div key={idx} style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 10px rgba(0,0,0,0.01)' }}>
+                            <div key={idx} style={{ backgroundColor: '#FFFFFF', border: idx === 0 ? '2px solid #059669' : '1.5px solid #E2E8F0', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: idx === 0 ? '0 4px 12px rgba(5,150,105,0.08)' : '0 2px 6px rgba(0,0,0,0.02)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: idx === 0 ? '#059669' : '#334155' }}>
-                                  {item.label}
+                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: idx === 0 ? '#059669' : '#334155' }}>
+                                  {idx === 0 ? '★ COVER HERO IMAGE' : item.label}
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setFormData({ ...formData, [item.key]: '' });
-                                  }}
-                                  style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', borderRadius: '6px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                                >
-                                  Remove
-                                </button>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  {idx !== 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSetPrimaryPhoto(idx)}
+                                      style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', borderRadius: '6px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                                    >
+                                      Set Cover
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemovePhoto(item.key)}
+                                    style={{ background: '#FEE2E2', border: 'none', color: '#EF4444', borderRadius: '6px', padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
                               </div>
-                              <div style={{ width: '100%', height: '180px', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#E2E8F0' }}>
+                              <div style={{ width: '100%', height: '150px', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#E2E8F0' }}>
                                 <img src={item.val} alt={item.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               </div>
                             </div>
@@ -3156,8 +3307,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         })}
                       </div>
                     ) : (
-                      <div style={{ textAlign: 'center', padding: '24px', color: '#94A3B8', fontStyle: 'italic', fontSize: '0.9rem' }}>
-                        No images uploaded yet.
+                      <div style={{ textAlign: 'center', padding: '32px 20px', backgroundColor: '#F8FAFC', borderRadius: '12px', border: '1px dashed #CBD5E1', color: '#94A3B8', fontSize: '0.88rem' }}>
+                        No images uploaded yet. Only the photos you upload will appear on your property listing.
                       </div>
                     )}
                   </div>

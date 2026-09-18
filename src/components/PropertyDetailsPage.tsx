@@ -560,23 +560,33 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   // Generate dynamic gallery images based on category
   const galleryImages = useMemo(() => {
     if (!property) return [];
-    if (Array.isArray(property.images) && property.images.length > 0) {
-      return property.images.filter(Boolean);
-    }
-    const imagesList = [
+
+    const isDemoUnsplash = (url: string) => 
+      typeof url === 'string' && (
+        url.includes('photo-1600596542815-ffad4c1539a9') || 
+        url.includes('photo-1600585154340-be6161a56a0c') ||
+        url.includes('photo-1554118811-1e0d58224f24')
+      );
+
+    const rawList = [
       property.image,
       property.image2,
       property.image3,
       property.image4,
       property.image5,
-      property.image6
+      property.image6,
+      ...(Array.isArray(property.images) ? property.images : [])
     ].filter(Boolean) as string[];
-    
+
+    const deduped = Array.from(new Set(rawList));
+    const realPhotos = deduped.filter(url => !isDemoUnsplash(url));
+    const finalList = realPhotos.length > 0 ? realPhotos : deduped.filter(url => !isDemoUnsplash(url));
+
     // Fallback if absolutely no photos were uploaded
-    if (imagesList.length === 0) {
+    if (finalList.length === 0) {
       return ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'%3E%3Crect fill='%23F1F5F9' width='800' height='500'/%3E%3Ctext fill='%2394A3B8' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='20'%3ENo Photo Available%3C/text%3E%3C/svg%3E"];
     }
-    return imagesList;
+    return finalList;
   }, [property]);
 
   // Fetch other properties of the same dealer

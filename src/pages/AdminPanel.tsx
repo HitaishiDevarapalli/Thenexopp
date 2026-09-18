@@ -2207,7 +2207,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
                           <tr key={idx} style={{ borderBottom: idx === 4 ? 'none' : '1px solid #F8FAFC' }}>
                             <td style={{ padding: '12px 8px 12px 0' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <img src={row.image || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=150&auto=format&fit=crop&q=80'} alt={row.title} style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'cover' }} />
+                                <div style={{ width: '42px', height: '42px', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  {row.image || row.images?.[0] ? (
+                                    <img src={row.image || row.images?.[0]} alt={row.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    <FaBuilding style={{ color: '#94A3B8', fontSize: '1rem' }} />
+                                  )}
+                                </div>
                                 <div>
                                   <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.82rem' }}>{row.title}</div>
                                   <div style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{row.id}</div>
