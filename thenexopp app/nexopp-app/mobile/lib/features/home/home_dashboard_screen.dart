@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/state_widgets.dart';
+import '../../core/widgets/app_network_image.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/services/permission_service.dart';
 import '../../shared/providers/dio_provider.dart';
@@ -624,7 +626,6 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
   // --- Agent Submitted Property Card ---
   Widget _buildAgentPropertyCard(dynamic prop) {
     final images = prop['images'] as List? ?? [];
-    final imageUrl = images.isNotEmpty ? images.first['url'] : null;
     final status = (prop['status'] ?? 'SUBMITTED').toString().toUpperCase();
     final category = prop['category']?.toString().replaceAll('_', ' ') ?? 'Property';
 
@@ -669,24 +670,12 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
         child: Row(
           children: [
             // Property Thumbnail
-            ClipRRect(
+            AppNetworkImage(
+              imageSource: images.isNotEmpty ? images.first : null,
+              width: 72,
+              height: 72,
               borderRadius: BorderRadius.circular(12),
-              child: Container(
-                height: 72,
-                width: 72,
-                color: AppColors.secondaryBg,
-                child: imageUrl != null
-                    ? Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(Icons.apartment_rounded, color: AppColors.secondaryText, size: 28),
-                        ),
-                      )
-                    : const Center(
-                        child: Icon(Icons.apartment_rounded, color: AppColors.secondaryText, size: 28),
-                      ),
-              ),
+              fallbackIconSize: 28,
             ),
             const SizedBox(width: 12),
             // Details

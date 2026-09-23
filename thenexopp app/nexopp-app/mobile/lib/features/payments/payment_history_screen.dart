@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/widgets/state_widgets.dart';
+import '../../core/widgets/app_network_image.dart';
 import '../../shared/providers/dio_provider.dart';
 import '../../shared/providers/websocket_provider.dart';
 
@@ -89,17 +90,12 @@ class _PaymentHistoryScreenState extends ConsumerState<PaymentHistoryScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
+            AppNetworkImage(
+              imageSource: url,
+              bucket: 'payment-proofs',
+              height: 250,
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                url,
-                height: 250,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Text(
-                  'Proof image preview unavailable',
-                  style: GoogleFonts.plusJakartaSans(color: AppColors.secondaryText),
-                ),
-              ),
+              fallbackIcon: Icons.receipt_long_rounded,
             ),
           ],
         ),

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/widgets/animated_spring_button.dart';
+import '../../core/widgets/app_network_image.dart';
 import '../../shared/providers/dio_provider.dart';
 
 class PropertyDetailsScreen extends ConsumerStatefulWidget {
@@ -160,12 +161,12 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
                                           itemCount: images.length,
                                           onPageChanged: (idx) => setState(() => _activeImageIndex = idx),
                                           itemBuilder: (context, index) {
-                                            final imgUrl = images[index]['url'];
-                                            return Image.network(
-                                              imgUrl,
-                                              fit: BoxFit.cover,
+                                            return AppNetworkImage(
+                                              imageSource: images[index],
                                               width: double.infinity,
-                                              errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+                                              height: 240,
+                                              fit: BoxFit.cover,
+                                              errorWidget: _buildImagePlaceholder(),
                                             );
                                           },
                                         )

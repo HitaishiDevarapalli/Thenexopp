@@ -10,6 +10,8 @@ import '../../core/widgets/animated_spring_button.dart';
 import '../../core/widgets/state_widgets.dart';
 import '../../shared/providers/dio_provider.dart';
 
+import '../../core/widgets/app_network_image.dart';
+
 class PropertiesListScreen extends ConsumerStatefulWidget {
   const PropertiesListScreen({super.key});
 
@@ -212,7 +214,6 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
 
   Widget _buildPropertyCard(dynamic prop) {
     final images = prop['images'] as List? ?? [];
-    final imageUrl = images.isNotEmpty ? images.first['url'] : null;
 
     Map<String, dynamic> specs = {};
     if (prop['specifications'] != null) {
@@ -248,24 +249,12 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
           child: Row(
             children: [
               // Property Thumbnail with Radius
-              ClipRRect(
+              AppNetworkImage(
+                imageSource: images.isNotEmpty ? images.first : null,
+                width: 96,
+                height: 96,
                 borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  width: 96,
-                  height: 96,
-                  color: AppColors.secondaryBg,
-                  child: imageUrl != null
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.apartment_rounded, color: AppColors.secondaryText, size: 32),
-                          ),
-                        )
-                      : const Center(
-                          child: Icon(Icons.apartment_rounded, color: AppColors.secondaryText, size: 32),
-                        ),
-                ),
+                fallbackIconSize: 32,
               ),
               const SizedBox(width: 14),
 
