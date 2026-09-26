@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { businessDb, dealersDb, propertiesDb, franchiseDb, API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
+import { businessDb, dealersDb, propertiesDb, franchiseDb, API_BASE_URL, enquiriesDb, addEnquiry, notifyDataChanged } from '../db/marketplaceDb';
 import { FaArrowLeft, FaMapMarkerAlt, FaBriefcase, FaChartLine, FaShoppingCart, FaHeart, FaRegHeart, FaUserTie } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
