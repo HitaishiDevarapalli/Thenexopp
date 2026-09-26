@@ -178,10 +178,13 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
 
     const newEnquiry = {
       id: `ENQ-${Date.now()}`,
+      customerId: user?.id,
+      userId: user?.id,
       customerName: contactName,
       phone: contactPhone,
-      email: '',
+      email: user?.email && !user.email.includes('@nexopp.in') && !user.email.includes('@thenexopp') ? user.email : '',
       listingTitle: property ? property.title : 'Unknown Property',
+      listingId: propertyId,
       brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'Not Assigned',
       status: 'New' as const,
       priority: 'High' as const,

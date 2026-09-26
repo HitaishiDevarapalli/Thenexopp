@@ -71,7 +71,10 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
 
       // 2. Enquiries from PostgreSQL merged with matching local enquiriesDb
       let serverEnqs: any[] = [];
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      let enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      if (!enqRes || !enqRes.ok) {
+        enqRes = await fetch(`/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      }
       if (enqRes && enqRes.ok) {
         const enqs = await enqRes.json().catch(() => null);
         if (Array.isArray(enqs)) {
@@ -87,7 +90,7 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
         if (!localEnq) return;
         const ePhone = String(localEnq.phone || '').replace(/\D/g, '');
         const normEPhone = ePhone.length >= 10 ? ePhone.slice(-10) : ePhone;
-        const phoneMatch = normUserPhone && normEPhone && normEPhone.includes(normUserPhone);
+        const phoneMatch = normUserPhone && normEPhone && (normEPhone.includes(normUserPhone) || normUserPhone.includes(normEPhone));
         const emailMatch = userEmail && localEnq.email && localEnq.email.toLowerCase() === userEmail.toLowerCase();
         const idMatch = userId && ((localEnq as any).customerId === userId || (localEnq as any).userId === userId);
         const nameMatch = userName && userName !== 'User' && localEnq.customerName && localEnq.customerName.toLowerCase().includes(userName.toLowerCase());
@@ -105,7 +108,10 @@ export const WishlistPage: React.FC<WishlistPageProps> = ({
       setDbEnquiries(finalEnquiries);
 
       // 3. Bookings from PostgreSQL
-      const bookRes = await fetch(`${API_BASE_URL}/api/bookings?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      let bookRes = await fetch(`${API_BASE_URL}/api/bookings?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      if (!bookRes || !bookRes.ok) {
+        bookRes = await fetch(`/api/bookings?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      }
       if (bookRes && bookRes.ok) {
         const books = await bookRes.json().catch(() => null);
         if (Array.isArray(books)) {

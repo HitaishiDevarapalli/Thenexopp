@@ -95,10 +95,13 @@ export const ContactUs: React.FC = () => {
     try {
       addEnquiry({
         id: `ENQ-CU-${Date.now()}`,
+        customerId: user?.id,
+        userId: user?.id,
         customerName: formData.name.trim(),
         phone: formData.phone.trim(),
-        email: formData.email.trim(),
+        email: formData.email.trim() || user?.email || '',
         listingTitle: `Contact Us: ${formData.category}`,
+        listingId: 'contact-page-inquiry',
         brokerName: 'Senior Portfolio Director',
         status: 'New' as const,
         priority: 'High' as const,

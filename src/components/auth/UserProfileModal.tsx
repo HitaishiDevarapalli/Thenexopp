@@ -61,7 +61,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       if (userName) params.set('name', userName);
 
       let serverEnqs: any[] = [];
-      const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      let enqRes = await fetch(`${API_BASE_URL}/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      if (!enqRes || !enqRes.ok) {
+        enqRes = await fetch(`/api/enquiries?${params.toString()}&mine=true`, { credentials: 'include' }).catch(() => null);
+      }
       if (enqRes && enqRes.ok) {
         const enqs = await enqRes.json().catch(() => null);
         if (Array.isArray(enqs)) {
@@ -77,7 +80,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         if (!localEnq) return;
         const ePhone = String(localEnq.phone || '').replace(/\D/g, '');
         const normEPhone = ePhone.length >= 10 ? ePhone.slice(-10) : ePhone;
-        const phoneMatch = normUserPhone && normEPhone && normEPhone.includes(normUserPhone);
+        const phoneMatch = normUserPhone && normEPhone && (normEPhone.includes(normUserPhone) || normUserPhone.includes(normEPhone));
         const emailMatch = userEmail && localEnq.email && localEnq.email.toLowerCase() === userEmail.toLowerCase();
         const idMatch = userId && (localEnq.customerId === userId || localEnq.userId === userId);
         const nameMatch = userName && userName !== 'User' && localEnq.customerName && localEnq.customerName.toLowerCase().includes(userName.toLowerCase());
@@ -103,6 +106,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   useEffect(() => {
     if (isOpen && user) {
       fetchUserEnquiries();
+      const handler = () => fetchUserEnquiries();
+      window.addEventListener('nexopp_data_changed', handler);
+      return () => window.removeEventListener('nexopp_data_changed', handler);
     }
   }, [isOpen, user?.id, user?.phone, user?.email]);
 

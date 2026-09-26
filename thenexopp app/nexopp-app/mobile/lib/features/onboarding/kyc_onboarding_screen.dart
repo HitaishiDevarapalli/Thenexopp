@@ -21,11 +21,22 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _aadhaarController = TextEditingController();
   final _panController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _addressController = TextEditingController();
 
   XFile? _aadhaarFile;
   XFile? _panFile;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void dispose() {
+    _aadhaarController.dispose();
+    _panController.dispose();
+    _areaController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickImage(bool isAadhaar) async {
     showModalBottomSheet(
@@ -150,6 +161,8 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
         'panNumber': _panController.text.trim().toUpperCase(),
         'aadhaarDocKey': aadhaarKey,
         'panDocKey': panKey,
+        'area': _areaController.text.trim(),
+        'addressDetails': _addressController.text.trim(),
       };
 
       final response = await dio.post(ApiConstants.submitKyc, data: payload);
@@ -168,7 +181,7 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
       }
     } catch (e) {
       debugPrint('[KYC] Error: $e');
-      String errorMsg = 'Failed to submit KYC. Please check your document numbers and photos.';
+      String errorMsg = 'Failed to submit KYC. Please check your document numbers, address details, and photos.';
       if (e is DioException && e.response?.data is Map) {
         final backendMsg = e.response?.data['message'];
         if (backendMsg is List) {
@@ -204,8 +217,43 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
                 const SizedBox(height: 24),
                 const Text('KYC Verification', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                 const SizedBox(height: 8),
-                const Text('Documents are encrypted and stored in private storage.', style: TextStyle(fontSize: 14, color: AppColors.textMedium)),
+                const Text('Documents & mandatory address are encrypted and stored in private storage.', style: TextStyle(fontSize: 14, color: AppColors.textMedium)),
                 const SizedBox(height: 28),
+                TextFormField(
+                  controller: _areaController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Area / Colony / Locality *',
+                    hintText: 'e.g. SVN Colony, Madhapur, Brodipet',
+                    helperText: 'Mandatory field: Enter your locality or colony name',
+                    prefixIcon: Icon(Icons.location_city_rounded),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'Area / Colony / Locality is a mandatory field';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _addressController,
+                  maxLines: 2,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Address Details *',
+                    hintText: 'Door No / House Name, Street, Landmark, Pincode',
+                    helperText: 'Mandatory field: Enter complete street address',
+                    prefixIcon: Icon(Icons.home_work_rounded),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'Full Address Details is a mandatory field';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: _aadhaarController,
                   keyboardType: TextInputType.number,
@@ -214,7 +262,7 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
                     LengthLimitingTextInputFormatter(12),
                   ],
                   decoration: const InputDecoration(
-                    labelText: 'Aadhaar Number (12 Digits)',
+                    labelText: 'Aadhaar Number (12 Digits) *',
                     hintText: 'e.g. 123456789012',
                     helperText: 'Must be exactly 12 numeric digits',
                     prefixIcon: Icon(Icons.badge_rounded),
@@ -237,7 +285,7 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
                     FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
                   ],
                   decoration: const InputDecoration(
-                    labelText: 'PAN Number (10 Characters)',
+                    labelText: 'PAN Number (10 Characters) *',
                     hintText: 'e.g. ABCDE1234F',
                     helperText: '5 letters, 4 numbers, 1 letter (10 chars)',
                     prefixIcon: Icon(Icons.credit_card_rounded),

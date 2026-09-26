@@ -13,6 +13,15 @@ class LocationService {
 
   /// Obtains current device GPS coordinates with high accuracy and reverse-geocodes via OpenStreetMap Nominatim
   Future<String?> fetchLiveOpenStreetMapLocation() async {
+    final details = await fetchLiveLocationDetails();
+    if (details != null && details['formattedAddress'] != null) {
+      return details['formattedAddress'];
+    }
+    return null;
+  }
+
+  /// Obtains current device GPS coordinates with high accuracy and returns structured location data map
+  Future<Map<String, String>?> fetchLiveLocationDetails() async {
     try {
       // 1. Check if location services (GPS hardware) are enabled on the device
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -68,14 +77,15 @@ class LocationService {
         final address = data['address'];
 
         if (address is Map) {
+          // Priority for locality: specific neighborhood/colony/suburb before coarse city_district
           final locality = (address['suburb'] ??
                   address['neighbourhood'] ??
                   address['residential'] ??
                   address['quarter'] ??
-                  address['city_district'] ??
                   address['road'] ??
                   address['building'] ??
                   address['hamlet'] ??
+                  address['city_district'] ??
                   '').toString().trim();
 
           final city = (address['city'] ??
@@ -99,22 +109,89 @@ class LocationService {
             }
           }
 
-          if (parts.isNotEmpty) {
-            return parts.join(', ');
-          }
+          final formattedAddress = parts.isNotEmpty
+              ? parts.join(', ')
+              : (data['display_name'] ?? '$lat, $lon').toString();
+
+          final fullAddressDetails = (data['display_name'] ?? formattedAddress).toString();
+
+          return {
+            'area': locality.isNotEmpty ? locality : (city.isNotEmpty ? city : 'Local Area'),
+            'address': fullAddressDetails,
+            'formattedAddress': formattedAddress,
+            'city': city,
+            'state': state,
+            'pincode': postcode,
+            'latitude': lat.toStringAsFixed(6),
+            'longitude': lon.toStringAsFixed(6),
+          };
         }
 
-        // Fallback to OSM display_name if structured fields are missing
-        if (data['display_name'] != null && data['display_name'].toString().isNotEmpty) {
-          final displayName = data['display_name'].toString();
-          final segments = displayName.split(', ').take(4).join(', ');
-          return segments;
-        }
-
-        return '${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}';
+        final displayName = (data['display_name'] ?? '$lat, $lon').toString();
+        return {
+          'area': displayName.split(', ').first,
+          'address': displayName,
+          'formattedAddress': displayName,
+          'city': '',
+          'state': '',
+          'pincode': '',
+          'latitude': lat.toStringAsFixed(6),
+          'longitude': lon.toStringAsFixed(6),
+        };
       }
     } catch (_) {}
 
     return null;
+  }
+
+  /// Searches area/location suggestions across India using Nominatim OpenStreetMap API
+  Future<List<Map<String, String>>> searchAreaSuggestions(String query) async {
+    if (query.trim().length < 2) return [];
+    try {
+      final encodedQuery = Uri.encodeComponent('${query.trim()}, India');
+      final url = 'https://nominatim.openstreetmap.org/search?format=json&q=$encodedQuery&countrycodes=in&addressdetails=1&limit=8';
+      final response = await _dio.get(url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        final List results = response.data;
+        final List<Map<String, String>> suggestions = [];
+
+        for (final item in results) {
+          if (item is Map) {
+            final address = item['address'] ?? {};
+            final locality = (address['suburb'] ??
+                    address['neighbourhood'] ??
+                    address['residential'] ??
+                    address['quarter'] ??
+                    address['road'] ??
+                    address['city_district'] ??
+                    item['name'] ??
+                    '').toString().trim();
+
+            final city = (address['city'] ??
+                    address['town'] ??
+                    address['village'] ??
+                    address['county'] ??
+                    '').toString().trim();
+
+            final state = (address['state'] ?? '').toString().trim();
+            final postcode = (address['postcode'] ?? '').toString().trim();
+            final displayName = (item['display_name'] ?? '').toString();
+
+            suggestions.add({
+              'area': locality.isNotEmpty ? locality : (city.isNotEmpty ? city : query),
+              'address': displayName,
+              'city': city,
+              'state': state,
+              'pincode': postcode,
+              'lat': (item['lat'] ?? '').toString(),
+              'lon': (item['lon'] ?? '').toString(),
+            });
+          }
+        }
+        return suggestions;
+      }
+    } catch (_) {}
+    return [];
   }
 }

@@ -1582,10 +1582,13 @@ export const updateShowcaseSettings = (updated: Partial<ShowcaseSettings>) => {
 export const addEnquiry = (enquiry: any) => {
   const normalized: CustomerEnquiry = {
     id: enquiry.id || `ENQ-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    customerId: enquiry.customerId || enquiry.userId || undefined,
+    userId: enquiry.userId || enquiry.customerId || undefined,
     customerName: enquiry.customerName || enquiry.name || 'Guest User',
     phone: enquiry.phone || enquiry.mobile || '',
     email: enquiry.email || '',
     listingTitle: enquiry.listingTitle || enquiry.title || 'General Enquiry',
+    listingId: enquiry.listingId || enquiry.propertyId || enquiry.businessId || undefined,
     brokerName: enquiry.brokerName || 'NEXOPP Advisor',
     status: (enquiry.status as any) || 'New',
     priority: (enquiry.priority as any) || 'High',
@@ -1607,7 +1610,7 @@ export const addEnquiry = (enquiry: any) => {
   if (normalized.listingType === 'BUSINESS' || normalized.source?.toLowerCase().includes('business')) {
     businessEnquiriesDb = [{
       id: normalized.id,
-      businessId: normalized.id,
+      businessId: normalized.listingId || normalized.id,
       businessName: normalized.listingTitle,
       name: normalized.customerName,
       mobile: normalized.phone,
@@ -1621,12 +1624,47 @@ export const addEnquiry = (enquiry: any) => {
 
   notifyDataChanged();
 
+  // Primary API sync with relative fallback
+  const syncPayload = JSON.stringify(normalized);
   fetch(`${API_BASE_URL}/api/enquiries`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify(normalized)
-  }).catch(err => console.error('API Sync Error:', err));
+    body: syncPayload
+  }).catch(() => {
+    return fetch('/api/enquiries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: syncPayload
+    });
+  }).catch(err => console.warn('API Sync Warning:', err));
+
+  if (normalized.enquiryType === 'SLOT_BOOKING' || normalized.preferredTime) {
+    const bookingPayload = JSON.stringify({
+      listingType: normalized.listingType || 'PROPERTY',
+      listingId: normalized.listingId || 'general',
+      bookingDate: normalized.preferredMoveInDate || normalized.date,
+      bookingTime: normalized.preferredTime || '10:00 AM',
+      notes: normalized.message,
+      customerName: normalized.customerName,
+      phone: normalized.phone,
+      email: normalized.email
+    });
+    fetch(`${API_BASE_URL}/api/bookings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: bookingPayload
+    }).catch(() => {
+      return fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: bookingPayload
+      });
+    }).catch(() => {});
+  }
 
   return normalized;
 };

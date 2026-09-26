@@ -7,10 +7,11 @@ import {
 import { 
   propertiesDb, franchiseDb, businessDb, demandRegionsDb, 
   dealersDb, siteSettingsDb, getDistance, isModuleActive,
-  enquiriesDb, notifyDataChanged, API_BASE_URL
+  enquiriesDb, addEnquiry, notifyDataChanged, API_BASE_URL
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 
 interface NexOppAiAssistantProps {
   onNavigate?: (page: string, queryParams?: string) => void;
@@ -126,6 +127,7 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
   const [userMemory, setUserMemory] = useState<UserMemoryState>({ recentSearches: [] });
 
   // Guided Flow State
+  const { user } = useAuth();
   const [guidedStep, setGuidedStep] = useState<'idle' | 'intent' | 'budget' | 'city' | 'custom_city' | 'type' | 'purpose' | 'complete'>('idle');
   const [customCityInput, setCustomCityInput] = useState('');
 
@@ -601,44 +603,24 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       const visitTimeText = opt.value || 'Upcoming Slot';
       const activePropertyTitle = propertiesDb[0]?.title || 'Featured Listing';
 
-      enquiriesDb.push({
+      addEnquiry({
         id: `ENQ-AI-${Date.now()}`,
-        customerName: 'AI Assistant User',
-        phone: 'Direct Inquiry',
-        email: 'ai-lead@nexopp.in',
+        customerId: user?.id,
+        userId: user?.id,
+        customerName: user?.name || 'AI Assistant User',
+        phone: user?.phone || '',
+        email: user?.email || '',
         listingTitle: activePropertyTitle,
-        brokerName: 'Senior Portfolio Advisor',
-        status: 'New',
-        priority: 'High',
+        listingType: 'PROPERTY',
+        listingId: propertiesDb[0]?.id || 'P1',
+        enquiryType: 'SLOT_BOOKING',
+        message: `Booked via AI Assistant for ${visitTimeText}`,
+        preferredTime: visitTimeText,
+        preferredMoveInDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         source: 'NexOpp AI Assistant',
         date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-        name: 'AI Lead',
-        interest: `Requested Visit: ${visitTimeText}`,
-        message: `Booked via AI Assistant for ${visitTimeText}`
+        brokerName: 'Senior Portfolio Advisor'
       });
-      notifyDataChanged();
-
-      try {
-        fetch(`${API_BASE_URL}/api/enquiries`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            customerName: 'AI Assistant User',
-            phone: '',
-            email: '',
-            listingTitle: activePropertyTitle,
-            listingType: 'PROPERTY',
-            listingId: propertiesDb[0]?.id || 'P1',
-            enquiryType: 'SLOT_BOOKING',
-            message: `Booked via AI Assistant for ${visitTimeText}`,
-            date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-            preferredTime: visitTimeText,
-            source: 'NexOpp AI Assistant',
-            mode: 'book'
-          })
-        }).catch(() => {});
-      } catch (_) {}
 
       setMessages(prev => [
         ...prev,

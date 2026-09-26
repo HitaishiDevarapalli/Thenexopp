@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
+import { API_BASE_URL, enquiriesDb, addEnquiry, notifyDataChanged } from '../db/marketplaceDb';
+import { useAuth } from '../context/AuthContext';
 import { 
   FaHandHoldingUsd, 
   FaShieldAlt, 
@@ -14,6 +15,7 @@ interface FinanceSectionProps {
 }
 
 export const FinanceSection: React.FC<FinanceSectionProps> = ({ onCategorySelect, initialCategory }) => {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState<'loans' | 'insurance'>(
     initialCategory === 'insurance' ? 'insurance' : 'loans'
   );
@@ -49,10 +51,13 @@ export const FinanceSection: React.FC<FinanceSectionProps> = ({ onCategorySelect
       return;
     }
 
-    const newEnquiry = {
+    addEnquiry({
+      id: `ENQ-FIN-${Date.now()}`,
+      customerId: user?.id,
+      userId: user?.id,
       customerName: formData.name.trim(),
       phone: formData.phone.trim(),
-      email: formData.email.trim(),
+      email: formData.email.trim() || user?.email || '',
       listingTitle: `Financial Service: ${showForm || 'Loans & Insurance'}`,
       listingType: 'FINANCE',
       listingId: 'finance-service',
@@ -62,30 +67,14 @@ export const FinanceSection: React.FC<FinanceSectionProps> = ({ onCategorySelect
       priority: 'High' as const,
       brokerName: 'Senior Financial Advisor',
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    };
+    });
 
-    try {
-      await fetch(`${API_BASE_URL}/api/enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(newEnquiry)
-      });
-    } catch (err) {
-      console.warn('API sync warning:', err);
-    } finally {
-      enquiriesDb.unshift({
-        id: `ENQ-FIN-${Date.now()}`,
-        ...newEnquiry,
-        status: 'New' as const
-      });
-      notifyDataChanged();
-      setFormSubmitted(true);
-      setTimeout(() => {
-        setShowForm(null);
-        setFormSubmitted(false);
-        setFormData({ name: '', phone: '', email: '', requirements: '' });
-      }, 3000);
+    setFormSubmitted(true);
+    setTimeout(() => {
+      setShowForm(null);
+      setFormSubmitted(false);
+      setFormData({ name: '', phone: '', email: '', requirements: '' });
+    }, 3000);
     }
   };
 

@@ -121,10 +121,13 @@ const EnquiryPage: React.FC<EnquiryPageProps> = ({ propertyId, mode, onBack }) =
     try {
       addEnquiry({
         id: `ENQ-${Date.now()}`,
+        customerId: user?.id,
+        userId: user?.id,
         customerName: contactName.trim(),
         phone: contactPhone.trim(),
-        email: contactEmail.trim(),
+        email: contactEmail.trim() || user?.email || '',
         listingTitle: property ? property.title : 'Unknown Property',
+        listingId: propertyId,
         brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'NEXOPP Advisor',
         status: 'New' as const,
         priority: 'High' as const,

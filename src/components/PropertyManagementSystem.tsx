@@ -760,6 +760,17 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     if (e) e.preventDefault();
     if (isSaving) return;
 
+    if (!formData.area || !formData.area.trim()) {
+      showNotification?.('Area / Locality is a mandatory field. Please enter or select area.', 'error');
+      setModalSubTab('location');
+      return;
+    }
+    if (!formData.fullAddress && !formData.formatted_address) {
+      showNotification?.('Full Address Details is a mandatory field. Please enter address.', 'error');
+      setModalSubTab('location');
+      return;
+    }
+
     const assignedIds = (formData.assignedBrokerIds && formData.assignedBrokerIds.length > 0)
       ? formData.assignedBrokerIds
       : (formData.dealerId ? [formData.dealerId] : []);
@@ -2550,23 +2561,23 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.city || '-'}</div>
                             </div>
                           </div>
-                          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                          <div style={{ backgroundColor: '#ECFDF5', border: '1.5px solid #A7F3D0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaCompass style={{ fontSize: '1.1rem', color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                             <div style={{ width: '100%' }}>
-                              <label style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700, display: 'block', marginBottom: '2px' }}>Area / Locality</label>
+                              <label style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 800, display: 'block', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Area / Locality * (Mandatory)</label>
                               <input 
                                 type="text" 
                                 value={formData.area || ''} 
                                 onChange={e => setFormData({ ...formData, area: e.target.value, locality: e.target.value })} 
-                                placeholder="Enter Area / Locality" 
-                                style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1px solid #CBD5E1', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, outline: 'none' }} 
+                                placeholder="Enter Area / Locality (e.g. SVN Colony)" 
+                                style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1.5px solid #059669', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#064E3B', fontWeight: 800, outline: 'none' }} 
                               />
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#ECFDF5', border: '1.5px solid #A7F3D0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaMapMarkerAlt style={{ fontSize: '1.1rem', color: '#059669', marginTop: '2px', flexShrink: 0 }} />
                             <div style={{ width: '100%' }}>
-                              <label style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 800, display: 'block', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Sub-Location / Landmark (Manual Entry)</label>
+                              <label style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 800, display: 'block', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Full Address / Landmark * (Mandatory)</label>
                               <input 
                                 type="text" 
                                 value={formData.subLocation || formData.sub_location || ''} 
@@ -2579,7 +2590,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                     landmark: subLoc
                                   });
                                 }} 
-                                placeholder="e.g. Phase 2, Near Mindspace, Plot 45" 
+                                placeholder="e.g. Door 4-12, Phase 2, Near Mindspace" 
                                 style={{ width: '100%', padding: '4px 0', border: 'none', borderBottom: '1.5px solid #059669', backgroundColor: 'transparent', fontSize: '0.92rem', color: '#064E3B', fontWeight: 800, outline: 'none' }} 
                               />
                             </div>

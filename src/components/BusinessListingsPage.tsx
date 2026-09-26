@@ -497,7 +497,10 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                           return;
                         }
                         setPortfolioSending(true);
-                        const payload = {
+                        addEnquiry({
+                          id: `ENQ-BIZ-${Date.now()}`,
+                          customerId: user?.id,
+                          userId: user?.id,
                           customerName: user?.name || 'User',
                           phone: user?.phone || 'Direct Inquiry',
                           email: user?.email || '',
@@ -509,28 +512,10 @@ export const BusinessListingsPage: React.FC<BusinessListingsPageProps> = ({ indu
                           source: 'Business Page',
                           brokerName: showSellerPortfolio.companyName || showSellerPortfolio.fullName || 'NEXOPP Advisor',
                           date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                        };
-                        try {
-                          await fetch(`${API_BASE_URL}/api/enquiries`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify(payload)
-                          });
-                        } catch (e) {
-                          console.warn('API sync warning:', e);
-                        } finally {
-                          enquiriesDb.unshift({
-                            id: `ENQ-BIZ-${Date.now()}`,
-                            ...payload,
-                            status: 'New' as const,
-                            priority: 'High' as const
-                          });
-                          notifyDataChanged();
-                          setPortfolioSending(false);
-                          setPortfolioMsg('');
-                          alert(`Your inquiry has been successfully sent to ${showSellerPortfolio.companyName}!`);
-                        }
+                        });
+                        setPortfolioSending(false);
+                        setPortfolioMsg('');
+                        alert(`Your inquiry has been successfully sent to ${showSellerPortfolio.companyName}!`);
                       }}
                     >
                       {portfolioSending ? 'Sending Inquiry...' : 'Submit Inquiry'}

@@ -38,6 +38,8 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
   final _locationController = TextEditingController();
+  final _areaController = TextEditingController();
+  final _addressDetailsController = TextEditingController();
 
   String _category = 'RESIDENTIAL_RENT';
 
@@ -85,6 +87,8 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
   final List<PropertyPhotoItem> _selectedImages = [];
   bool _isLoading = false;
   bool _isDetectingLocation = false;
+  List<Map<String, String>> _areaSuggestions = [];
+  bool _isSearchingArea = false;
   final ImagePicker _picker = ImagePicker();
   final LocationService _locationService = LocationService();
 
@@ -102,6 +106,8 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
     _descController.dispose();
     _priceController.dispose();
     _locationController.dispose();
+    _areaController.dispose();
+    _addressDetailsController.dispose();
 
     _rentDepositController.dispose();
     _rentAreaSqFtController.dispose();
@@ -131,14 +137,24 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
     if (!hasPermission && mounted) return;
 
     setState(() => _isDetectingLocation = true);
-    final loc = await _locationService.fetchLiveOpenStreetMapLocation();
+    final details = await _locationService.fetchLiveLocationDetails();
     setState(() => _isDetectingLocation = false);
 
-    if (loc != null && loc.isNotEmpty) {
-      _locationController.text = loc;
+    if (details != null) {
+      if (details['area'] != null && details['area']!.isNotEmpty) {
+        _areaController.text = details['area']!;
+      }
+      if (details['address'] != null && details['address']!.isNotEmpty) {
+        _addressDetailsController.text = details['address']!;
+      }
+      if (details['formattedAddress'] != null && details['formattedAddress']!.isNotEmpty) {
+        _locationController.text = details['formattedAddress']!;
+      } else if (details['city'] != null && details['city']!.isNotEmpty) {
+        _locationController.text = details['city']!;
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Detected OSM Location: $loc'), backgroundColor: AppColors.primaryEmerald),
+          SnackBar(content: Text('Detected Live Location: ${details['area']}, ${details['city']}'), backgroundColor: AppColors.primaryEmerald),
         );
       }
     } else if (mounted) {
@@ -148,6 +164,24 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
           backgroundColor: AppColors.statusError,
         ),
       );
+    }
+  }
+
+  Future<void> _onAreaChanged(String query) async {
+    if (query.trim().length < 2) {
+      if (_areaSuggestions.isNotEmpty) {
+        setState(() => _areaSuggestions = []);
+      }
+      return;
+    }
+
+    setState(() => _isSearchingArea = true);
+    final results = await _locationService.searchAreaSuggestions(query);
+    if (mounted) {
+      setState(() {
+        _areaSuggestions = results;
+        _isSearchingArea = false;
+      });
     }
   }
 
@@ -279,6 +313,8 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
         'description': _descController.text.trim(),
         'price': double.parse(_priceController.text.trim()),
         'category': _category,
+        'area': _areaController.text.trim(),
+        'addressDetails': _addressDetailsController.text.trim(),
         'specifications': specifications,
         'location': _locationController.text.trim(),
         'imageKeys': uploadedKeys,
@@ -417,12 +453,89 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
                 _buildCategorySpecificFields(),
                 const SizedBox(height: 20),
 
-                // 4. Location Details
+                // 4. Location & Address Details (Mandatory Fields)
+                TextFormField(
+                  controller: _areaController,
+                  onChanged: _onAreaChanged,
+                  decoration: InputDecoration(
+                    labelText: 'Area / Locality * (Mandatory)',
+                    hintText: 'e.g. SVN Colony, Madhapur, Jubilee Hills',
+                    prefixIcon: const Icon(Icons.explore_rounded, color: AppColors.primaryEmerald),
+                    suffixIcon: _isSearchingArea
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                          )
+                        : null,
+                  ),
+                  validator: (val) => val == null || val.trim().isEmpty ? 'Area / Locality is a mandatory field' : null,
+                ),
+                if (_areaSuggestions.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    maxHeight: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.borderLight),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: _areaSuggestions.length,
+                      itemBuilder: (context, index) {
+                        final sug = _areaSuggestions[index];
+                        return ListTile(
+                          dense: true,
+                          leading: const Icon(Icons.location_on_outlined, color: AppColors.primaryEmerald, size: 20),
+                          title: Text(sug['area'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          subtitle: Text(sug['address'] ?? '', style: const TextStyle(fontSize: 11, color: AppColors.textMedium), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          onTap: () {
+                            setState(() {
+                              _areaController.text = sug['area'] ?? '';
+                              if (sug['address'] != null && sug['address']!.isNotEmpty) {
+                                _addressDetailsController.text = sug['address']!;
+                              }
+                              if (sug['city'] != null && sug['city']!.isNotEmpty) {
+                                _locationController.text = '${sug['area']}, ${sug['city']}';
+                              } else {
+                                _locationController.text = sug['address'] ?? sug['area'] ?? '';
+                              }
+                              _areaSuggestions = [];
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: _addressDetailsController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Address Details * (Mandatory)',
+                    hintText: 'e.g. Door No. 4-12, Street 3, Near Water Tank',
+                    prefixIcon: Icon(Icons.home_work_rounded, color: AppColors.primaryEmerald),
+                    alignLabelWithHint: true,
+                  ),
+                  validator: (val) => val == null || val.trim().isEmpty ? 'Full Address Details are mandatory' : null,
+                ),
+                const SizedBox(height: 16),
+
                 TextFormField(
                   controller: _locationController,
                   decoration: InputDecoration(
-                    labelText: 'Location / Operating Area *',
-                    prefixIcon: const Icon(Icons.location_on_rounded, color: AppColors.primaryEmerald),
+                    labelText: 'City / Region *',
+                    hintText: 'e.g. Guntur, Andhra Pradesh',
+                    prefixIcon: const Icon(Icons.location_city_rounded, color: AppColors.primaryEmerald),
                     suffixIcon: _isDetectingLocation
                         ? const Padding(
                             padding: EdgeInsets.all(12),
@@ -430,18 +543,18 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
                           )
                         : IconButton(
                             icon: const Icon(Icons.my_location_rounded, color: AppColors.primaryEmerald),
-                            tooltip: 'Detect Live Location (OpenStreetMap)',
+                            tooltip: 'Detect Live GPS Location',
                             onPressed: _detectLiveLocation,
                           ),
                   ),
-                  validator: (val) => val == null || val.trim().isEmpty ? 'Enter location or use live GPS' : null,
+                  validator: (val) => val == null || val.trim().isEmpty ? 'City / Region is a mandatory field' : null,
                 ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
                     const Expanded(
                       child: Text(
-                        'Type location or use live GPS',
+                        'Type city/region or tap live GPS button to auto-detect area and address',
                         style: TextStyle(fontSize: 11, color: AppColors.textMedium),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -451,12 +564,12 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
                     InkWell(
                       onTap: _isDetectingLocation ? null : _detectLiveLocation,
                       child: const Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize: MinAxisSize.min,
                         children: [
                           Icon(Icons.my_location_rounded, size: 13, color: AppColors.primaryEmerald),
                           SizedBox(width: 4),
                           Text(
-                            'Live OpenStreetMap',
+                            'Live GPS Auto-Detect',
                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryEmeraldDark),
                           ),
                         ],

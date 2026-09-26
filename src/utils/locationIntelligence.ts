@@ -1254,46 +1254,47 @@ export const geocodeLocationOnline = async (query: string): Promise<LocationInte
   return parseIndiaLocation(query);
 };
 
-// 5. High-Precision Reverse Geocoding Engine for Dragged Markers & Live GPS
+// Helper distance function in kilometers
+const getLocalityDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+// 5. High-Precision Universal Reverse Geocoding Engine for Dragged Markers & Live GPS
 export const reverseGeocodeOnline = async (lat: number, lng: number): Promise<LocationIntelligenceResult> => {
   const latitude = Number(lat);
   const longitude = Number(lng);
 
-  // 1. First attempt: BigDataCloud ultra-fast high-accuracy client reverse geocoder (100% free, no rate limit)
-  try {
-    const bdcRes = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-    );
-    if (bdcRes.ok) {
-      const bdcData = await bdcRes.json();
-      if (bdcData && (bdcData.city || bdcData.locality || bdcData.principalSubdivision)) {
-        const city = bdcData.city || bdcData.locality || (bdcData.localityInfo?.administrative?.[2]?.name) || 'City';
-        const area = bdcData.locality || bdcData.localityInfo?.administrative?.[3]?.name || city;
-        const state = bdcData.principalSubdivision || 'Andhra Pradesh';
-        const district = bdcData.localityInfo?.administrative?.[2]?.name || city;
-        const postal_code = bdcData.postcode || '';
-        const formatted_address = [area, city, district !== city ? district : '', state, postal_code, 'India'].filter(Boolean).join(', ');
+  // Step 1: Proximity check against curated locality database (< 1.5 km distance)
+  let bestMatch: LocationIntelligenceResult | null = null;
+  let minDistance = 1.5; // Threshold in kilometers
 
-        return {
-          formatted_address,
-          google_place_id: `bdc_rev_${Date.now()}`,
+  for (const place of COMPREHENSIVE_INDIA_PLACES_DB) {
+    if (place.latitude && place.longitude) {
+      const dist = getLocalityDistanceKm(latitude, longitude, place.latitude, place.longitude);
+      if (dist < minDistance) {
+        minDistance = dist;
+        bestMatch = {
+          ...place,
           latitude,
           longitude,
-          country: bdcData.countryName || 'India',
-          state,
-          district,
-          city,
-          area,
-          postal_code,
-          fullAddress: formatted_address
+          fullAddress: `${place.area}, ${place.city}, ${place.state} ${place.postal_code}`,
+          formatted_address: `${place.area}, ${place.city}, ${place.state} ${place.postal_code}, India`
         };
       }
     }
-  } catch (err) {
-    console.warn('BigDataCloud reverse geocode error, trying Nominatim:', err);
   }
 
-  // 2. Second attempt: OpenStreetMap Nominatim reverse geocode
+  if (bestMatch) {
+    return bestMatch;
+  }
+
+  // Step 2: OpenStreetMap Nominatim High-Precision Reverse Geocoding
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`,
@@ -1306,9 +1307,21 @@ export const reverseGeocodeOnline = async (lat: number, lng: number): Promise<Lo
         const state = addr.state || addr.region || 'Andhra Pradesh';
         const district = addr.state_district || addr.county || addr.district || addr.city || '';
         const city = addr.city || addr.town || addr.municipality || addr.suburb || addr.village || district || 'City';
-        const area = addr.suburb || addr.neighbourhood || addr.road || addr.residential || addr.quarter || addr.village || addr.amenity || city;
+        
+        // Prioritize specific sub-locality/colony/road OVER broad city_district
+        const area = addr.suburb || 
+                     addr.neighbourhood || 
+                     addr.residential || 
+                     addr.quarter || 
+                     addr.road || 
+                     addr.building || 
+                     addr.amenity || 
+                     addr.village || 
+                     addr.city_district || 
+                     city;
+
         const postal_code = addr.postcode || '';
-        const displayName = data.display_name || `${area}, ${city}, ${state} ${postal_code}, India`;
+        const displayName = `${area}, ${city}, ${state}${postal_code ? ' ' + postal_code : ''}`;
 
         return {
           formatted_address: displayName,
@@ -1326,21 +1339,55 @@ export const reverseGeocodeOnline = async (lat: number, lng: number): Promise<Lo
       }
     }
   } catch (err) {
-    console.warn('Nominatim reverse geocode error, using coordinate label:', err);
+    console.warn('Nominatim reverse geocode error, checking BigDataCloud:', err);
+  }
+
+  // Step 3: BigDataCloud fallback
+  try {
+    const bdcRes = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+    );
+    if (bdcRes.ok) {
+      const bdcData = await bdcRes.json();
+      if (bdcData && (bdcData.city || bdcData.locality || bdcData.principalSubdivision)) {
+        const city = bdcData.city || bdcData.locality || (bdcData.localityInfo?.administrative?.[2]?.name) || 'City';
+        const area = bdcData.locality || bdcData.localityInfo?.administrative?.[3]?.name || city;
+        const state = bdcData.principalSubdivision || 'Andhra Pradesh';
+        const district = bdcData.localityInfo?.administrative?.[2]?.name || city;
+        const postal_code = bdcData.postcode || '';
+        const formatted_address = [area, city, state, postal_code, 'India'].filter(Boolean).join(', ');
+
+        return {
+          formatted_address,
+          google_place_id: `bdc_rev_${Date.now()}`,
+          latitude,
+          longitude,
+          country: bdcData.countryName || 'India',
+          state,
+          district,
+          city,
+          area,
+          postal_code,
+          fullAddress: formatted_address
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('BigDataCloud reverse geocode fallback note:', err);
   }
 
   return {
-    formatted_address: `Pinned Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`,
+    formatted_address: `Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
     google_place_id: `custom_rev_${Date.now()}`,
     latitude,
     longitude,
     country: 'India',
-    state: '',
-    district: '',
-    city: '',
+    state: 'Andhra Pradesh',
+    district: 'Guntur',
+    city: 'Guntur',
     area: 'Current Location',
-    postal_code: '',
-    fullAddress: `Pinned Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`
+    postal_code: '522006',
+    fullAddress: `Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
   };
 };
 

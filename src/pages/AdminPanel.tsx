@@ -795,33 +795,89 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onDataChange, onRefresh 
 
   const fetchAllEnquiriesAndBookings = async () => {
     try {
+      let serverEnqs: any[] = [];
       const enqRes = await fetch(`${API_BASE_URL}/api/enquiries?all=true`, { credentials: 'include' }).catch(() => null);
       if (enqRes && enqRes.ok) {
         const data = await enqRes.json().catch(() => null);
-        if (Array.isArray(data)) {
-          setAllEnquiries(data);
-        }
+        if (Array.isArray(data)) serverEnqs = data;
       } else {
         const fallbackEnqRes = await fetch('/api/enquiries?all=true').catch(() => null);
         if (fallbackEnqRes && fallbackEnqRes.ok) {
           const data = await fallbackEnqRes.json().catch(() => null);
-          if (Array.isArray(data)) setAllEnquiries(data);
+          if (Array.isArray(data)) serverEnqs = data;
         }
       }
 
+      // Merge server enquiries with local enquiriesDb & franchiseEnquiriesDb
+      const mergedEnqMap = new Map<string, any>();
+      serverEnqs.forEach(e => { if (e && e.id) mergedEnqMap.set(e.id, e); });
+      (enquiriesDb || []).forEach(localEnq => {
+        if (localEnq && localEnq.id && !mergedEnqMap.has(localEnq.id)) {
+          mergedEnqMap.set(localEnq.id, localEnq);
+        }
+      });
+      const finalEnqs = Array.from(mergedEnqMap.values()).sort((a, b) => 
+        new Date(b.createdAt || b.date || 0).getTime() - new Date(a.createdAt || a.date || 0).getTime()
+      );
+      setAllEnquiries(finalEnqs);
+
+      let serverBooks: any[] = [];
       const bookRes = await fetch(`${API_BASE_URL}/api/bookings?all=true`, { credentials: 'include' }).catch(() => null);
       if (bookRes && bookRes.ok) {
         const data = await bookRes.json().catch(() => null);
-        if (Array.isArray(data)) {
-          setAllBookings(data);
-        }
+        if (Array.isArray(data)) serverBooks = data;
       } else {
         const fallbackBookRes = await fetch('/api/bookings?all=true').catch(() => null);
         if (fallbackBookRes && fallbackBookRes.ok) {
           const data = await fallbackBookRes.json().catch(() => null);
-          if (Array.isArray(data)) setAllBookings(data);
+          if (Array.isArray(data)) serverBooks = data;
         }
       }
+
+      // Derive slot bookings from all enquiries (local + server)
+      const isSlotBooking = (e: any) => {
+        if (!e) return false;
+        if (e.enquiryType === 'SLOT_BOOKING' || e.mode === 'book' || (e.preferredTime && String(e.preferredTime).trim().length > 0)) return true;
+        const msg = (e.message || '').toLowerCase();
+        const interest = (e.interest || '').toLowerCase();
+        return interest.includes('requested visit') || msg.includes('requested visit') || msg.includes('visit slot') || msg.includes('scheduled visit');
+      };
+
+      const derivedBooksFromEnq = finalEnqs.filter(isSlotBooking).map(e => ({
+        id: e.id ? `bk-${e.id}` : `bk-${Date.now()}`,
+        customerId: e.customerId || e.userId,
+        customerName: e.customerName || e.name || 'Guest User',
+        phone: e.phone || '',
+        email: e.email || '',
+        customer: { name: e.customerName || e.name || 'Guest User', phone: e.phone, mobile: e.phone },
+        listingTitle: e.listingTitle || 'Property Visit Booking',
+        listingType: e.listingType || 'PROPERTY',
+        listingId: e.listingId || 'general',
+        bookingDate: e.preferredMoveInDate || e.date || new Date().toLocaleDateString('en-IN'),
+        bookingTime: e.preferredTime || '10:00 AM',
+        notes: e.message || e.interest || 'Requested Visit Slot',
+        status: e.status === 'Closed' ? 'COMPLETED' : e.status === 'Contacted' ? 'CONFIRMED' : 'REQUESTED',
+        createdAt: e.createdAt || e.date
+      }));
+
+      const mergedBookMap = new Map<string, any>();
+      serverBooks.forEach(b => { if (b && b.id) mergedBookMap.set(b.id, b); });
+      derivedBooksFromEnq.forEach(db => {
+        if (db && db.id && !mergedBookMap.has(db.id)) {
+          const dup = serverBooks.find(sb => 
+            sb.listingId === db.listingId && 
+            (sb.bookingDate === db.bookingDate || (sb.customer && sb.customer.phone === db.phone))
+          );
+          if (!dup) {
+            mergedBookMap.set(db.id, db);
+          }
+        }
+      });
+
+      const finalBooks = Array.from(mergedBookMap.values()).sort((a, b) => 
+        new Date(b.createdAt || b.bookingDate || 0).getTime() - new Date(a.createdAt || a.bookingDate || 0).getTime()
+      );
+      setAllBookings(finalBooks);
     } catch (e) {
       console.error('Failed to fetch enquiries/bookings:', e);
     }

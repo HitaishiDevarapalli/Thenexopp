@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, API_BASE_URL, enquiriesDb, notifyDataChanged } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, API_BASE_URL, enquiriesDb, addEnquiry, notifyDataChanged } from '../db/marketplaceDb';
+import { useAuth } from '../context/AuthContext';
 import { 
   FaArrowLeft, FaMapMarkerAlt, FaShoppingCart, 
   FaPhone, FaEnvelope, FaCheckCircle, FaLock, FaBuilding 
@@ -11,9 +12,10 @@ interface CloseDealPageProps {
 }
 
 export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack }) => {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const { user } = useAuth();
+  const [name, setName] = useState(user?.name || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [contactMode, setContactMode] = useState<'Call' | 'WhatsApp' | 'Email'>('Call');
   const [visitDate, setVisitDate] = useState('');
   const [inquiry, setInquiry] = useState('');
@@ -89,10 +91,13 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
       return;
     }
 
-    const newEnquiry = {
+    addEnquiry({
+      id: `ENQ-OFFER-${Date.now()}`,
+      customerId: user?.id,
+      userId: user?.id,
       customerName: name.trim(),
       phone: phone.trim(),
-      email: email.trim(),
+      email: email.trim() || user?.email || '',
       listingTitle: `Offer / Deal Close: ${property.title}`,
       listingType: property.category || 'PROPERTY',
       listingId: property.id,
@@ -102,27 +107,11 @@ export const CloseDealPage: React.FC<CloseDealPageProps> = ({ propertyId, onBack
       priority: 'High' as const,
       brokerName: dealer ? (dealer.fullName || dealer.companyName) : 'NEXOPP Advisor',
       date: visitDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-      preferredTime: visitDate ? '10:00 AM' : ''
-    };
+      preferredTime: visitDate ? '10:00 AM' : '',
+      preferredMoveInDate: visitDate || ''
+    });
 
-    try {
-      await fetch(`${API_BASE_URL}/api/enquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(newEnquiry)
-      });
-    } catch (err) {
-      console.warn('API sync warning:', err);
-    } finally {
-      enquiriesDb.unshift({
-        id: `ENQ-OFFER-${Date.now()}`,
-        ...newEnquiry,
-        status: 'New' as const
-      });
-      notifyDataChanged();
-      setSubmitted(true);
-    }
+    setSubmitted(true);
   };
 
   const handleReturnHome = () => {
