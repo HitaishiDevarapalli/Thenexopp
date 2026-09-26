@@ -473,7 +473,7 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
                 if (_areaSuggestions.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Container(
-                    maxHeight: 200,
+                    constraints: const BoxConstraints(maxHeight: 200),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -564,7 +564,7 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
                     InkWell(
                       onTap: _isDetectingLocation ? null : _detectLiveLocation,
                       child: const Row(
-                        mainAxisSize: MinAxisSize.min,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.my_location_rounded, size: 13, color: AppColors.primaryEmerald),
                           SizedBox(width: 4),
