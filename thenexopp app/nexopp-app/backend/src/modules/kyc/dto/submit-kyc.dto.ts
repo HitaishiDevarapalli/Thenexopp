@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class SubmitKycDto {
@@ -26,4 +26,15 @@ export class SubmitKycDto {
   @IsNotEmpty()
   @IsString()
   panDocKey: string;
+
+  @ApiPropertyOptional({ example: 'Madhapur' })
+  @IsOptional()
+  @IsString()
+  area?: string;
+
+  @ApiPropertyOptional({ example: 'Plot 45, Street 2' })
+  @IsOptional()
+  @IsString()
+  addressDetails?: string;
 }
+
