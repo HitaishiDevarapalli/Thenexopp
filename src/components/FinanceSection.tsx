@@ -75,7 +75,6 @@ export const FinanceSection: React.FC<FinanceSectionProps> = ({ onCategorySelect
       setFormSubmitted(false);
       setFormData({ name: '', phone: '', email: '', requirements: '' });
     }, 3000);
-    }
   };
 
   const handleToggleCategory = (cat: 'loans' | 'insurance') => {
