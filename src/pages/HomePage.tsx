@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive, showcaseVideosDb, showcaseSettingsDb, defaultMainPageStats } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, selectedCity, setSelectedCity, siteSettingsDb, franchiseDb, businessDb, getDistance, demandRegionsDb, isModuleActive, showcaseVideosDb, showcaseSettingsDb, defaultMainPageStats, isDraftListing } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 import { useWishlist } from '../context/WishlistContext';
 const ShowcaseVideoCarousel = React.lazy(() =>
@@ -165,9 +165,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     );
   };
 
-  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !isPropertySold(p) && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb, forceUpdate]);
-  const activeFranchises = React.useMemo(() => franchiseDb.filter(f => (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb, forceUpdate]);
-  const activeBusinesses = React.useMemo(() => businessDb.filter(b => b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb, forceUpdate]);
+  const activeProperties = React.useMemo(() => propertiesDb.filter(p => !isPropertySold(p) && !isDraftListing(p) && (p.approvalStatus || 'Published') === 'Published'), [propertiesDb, forceUpdate]);
+  const activeFranchises = React.useMemo(() => franchiseDb.filter(f => !isDraftListing(f) && (f.approvalStatus || 'Published') === 'Published' && (f.status === undefined || f.status === 'Active')), [franchiseDb, forceUpdate]);
+  const activeBusinesses = React.useMemo(() => businessDb.filter(b => !isDraftListing(b) && b.published !== false && !(b as any).sold && b.status !== 'Sold'), [businessDb, forceUpdate]);
 
   // Recently Sold properties and businesses (ordered by soldDate descending)
   const recentlySoldListings = React.useMemo(() => {
@@ -180,7 +180,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
         image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
         location: `${p.area ? p.area + ', ' : ''}${p.city || 'Hyderabad'}`,
         bhk: `${p.bedrooms || 3} BHK`,
-        area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
+        area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : (p.areaSqFt ? (String(p.areaSqFt).toLowerCase().includes('sq') ? String(p.areaSqFt) : `${p.areaSqFt} Sq.ft`) : (p.superBuiltUpArea ? (String(p.superBuiltUpArea).toLowerCase().includes('sq') ? String(p.superBuiltUpArea) : `${p.superBuiltUpArea} Sq.ft`) : ''))),
         soldDate: p.soldDate,
         itemType: 'property' as const
       }));
@@ -272,7 +272,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
       image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
       location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
       bhk: `${p.bedrooms || 3} BHK`,
-      area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : '1500 Sq.ft'),
+      area: p.sqft ? `${p.sqft} Sq.ft` : (p.builtUpArea ? `${p.builtUpArea} Sq.ft` : (p.areaSqFt ? (String(p.areaSqFt).toLowerCase().includes('sq') ? String(p.areaSqFt) : `${p.areaSqFt} Sq.ft`) : (p.superBuiltUpArea ? (String(p.superBuiltUpArea).toLowerCase().includes('sq') ? String(p.superBuiltUpArea) : `${p.superBuiltUpArea} Sq.ft`) : ''))),
       brokerName,
       brokerImg,
       approvalStatus: p.approvalStatus,

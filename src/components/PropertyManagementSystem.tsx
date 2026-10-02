@@ -2074,7 +2074,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </td>
                     <td style={{ padding: '16px' }}>
                       <div style={{ fontWeight: 800, color: '#0F172A' }}>{prop.priceDisplay || `₹${prop.price || 100} Lakh`}</div>
-                      <div style={{ color: '#64748B', fontSize: '0.85rem' }}>{prop.areaSqFt || '2500 Sq.ft'}</div>
+                      <div style={{ color: '#64748B', fontSize: '0.85rem' }}>{prop.areaSqFt || prop.superBuiltUpArea || ''}</div>
                     </td>
                     <td style={{ padding: '16px' }}>
                       <span style={{ padding: '5px 12px', backgroundColor: '#FEF2F2', color: '#DC2626', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 800, border: '1px solid #FECACA', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -2921,7 +2921,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                               <div>
                                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>SUPER BUILT-UP AREA</label>
-                                <input type="text" value={formData.superBuiltUpArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                                <input type="text" value={formData.superBuiltUpArea || formData.areaSqFt || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                               </div>
                               <div>
                                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>CARPET AREA</label>
@@ -2971,7 +2971,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                               <div>
                                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>SUPER BUILT-UP AREA</label>
-                                <input type="text" value={formData.superBuiltUpArea || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
+                                <input type="text" value={formData.superBuiltUpArea || formData.areaSqFt || ''} onChange={e => setFormData({ ...formData, superBuiltUpArea: e.target.value, areaSqFt: e.target.value })} placeholder="e.g. 2,500 Sq.Ft" style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600 }} />
                               </div>
                               <div>
                                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>CARPET AREA</label>

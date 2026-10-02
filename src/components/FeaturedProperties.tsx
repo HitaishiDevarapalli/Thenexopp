@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaHeart, FaRegHeart, FaShoppingCart, FaEye } from 'react-icons/fa';
 import { useWishlist } from '../context/WishlistContext';
-import { propertiesDb, getDistance } from '../db/marketplaceDb';
+import { propertiesDb, getDistance, isDraftListing } from '../db/marketplaceDb';
 import { useLocationStore } from '../context/LocationContext';
 
 interface FeaturedPropertiesProps {
@@ -25,6 +25,9 @@ export const FeaturedProperties: React.FC<FeaturedPropertiesProps> = ({ onProper
   tick;
 
   const filteredProperties = propertiesDb.filter(prop => {
+    if (isDraftListing(prop)) {
+      return false;
+    }
     if (prop.sold || prop.approvalStatus === 'Sold' || prop.listingStatus === 'Sold' || prop.status === 'Sold' || prop.recentlySold || prop.badge === 'RECENTLY SOLD') {
       return false;
     }

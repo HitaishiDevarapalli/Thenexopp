@@ -7,7 +7,7 @@ import {
 import { 
   propertiesDb, franchiseDb, businessDb, demandRegionsDb, 
   dealersDb, siteSettingsDb, getDistance, isModuleActive,
-  enquiriesDb, addEnquiry, notifyDataChanged, API_BASE_URL
+  enquiriesDb, addEnquiry, notifyDataChanged, API_BASE_URL, isDraftListing
 } from '../db/marketplaceDb';
 import type { PropertyListing } from '../db/marketplaceDb';
 import { useWishlist } from '../context/WishlistContext';
@@ -263,6 +263,9 @@ export const NexOppAiAssistant: React.FC<NexOppAiAssistantProps> = ({ onNavigate
       const isSoldRequested = lower.includes('sold') || lower.includes('recently sold');
 
       let matches = propertiesDb.filter(p => {
+        if (isDraftListing(p)) {
+          return false;
+        }
         if (!isSoldRequested && (p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold')) {
           return false;
         }

@@ -201,7 +201,14 @@ export const App: React.FC = () => {
   const activeFranchiseId = routeData.franchiseId || selectedFranchiseId;
   const activeBusinessIndustry = routeData.industry || selectedBusinessIndustry;
 
-  const publicPages: PageType[] = ['home', 'aboutUsPage', 'adminPortal', 'standaloneAgentAdmin'];
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    page: PageType;
+    data?: { propertyId?: string; buyPropertyId?: string; franchiseId?: string; industry?: string };
+  } | null>(null);
+
+  const isPublicPage = (page: PageType): boolean => {
+    return page === 'home' || page === 'aboutUsPage' || page === 'contactUsPage' || page === 'adminPortal' || page === 'standaloneAgentAdmin';
+  };
 
   const navigateToUrl = (url: string) => {
     window.history.pushState({}, '', url);
@@ -217,6 +224,13 @@ export const App: React.FC = () => {
   };
 
   const navigateTo = (page: PageType, data?: { propertyId?: string; buyPropertyId?: string; franchiseId?: string; industry?: string }) => {
+    // Auth guard: If user is not logged in and target page is not public, require login first
+    if (!user && !isPublicPage(page)) {
+      setPendingNavigation({ page, data });
+      openLoginModal();
+      return;
+    }
+
     if (page === 'adminPortal') {
       navigateToUrl('/secure-control-x7k9p2');
       return;
@@ -242,6 +256,32 @@ export const App: React.FC = () => {
       navigateToUrl(path);
     }
   };
+
+  // Automatically resume pending navigation once user logs in
+  useEffect(() => {
+    if (user && pendingNavigation) {
+      const { page, data } = pendingNavigation;
+      setPendingNavigation(null);
+      navigateTo(page, data);
+    }
+  }, [user, pendingNavigation]);
+
+  // Auth guard for direct URL visits
+  useEffect(() => {
+    const routeInfo = parseUrl(currentPath);
+    if (!user && !isPublicPage(routeInfo.page)) {
+      setPendingNavigation({
+        page: routeInfo.page,
+        data: {
+          propertyId: routeInfo.propertyId,
+          buyPropertyId: routeInfo.buyPropertyId,
+          franchiseId: routeInfo.franchiseId,
+          industry: routeInfo.industry
+        }
+      });
+      openLoginModal();
+    }
+  }, [currentPath, user]);
 
   const navigateBack = () => {
     if (window.history.length > 1) {
@@ -316,7 +356,7 @@ export const App: React.FC = () => {
         />
       )}
       
-      {currentPage !== 'home' ? (
+      {(currentPage !== 'home' && (!!user || isPublicPage(currentPage))) ? (
         <ErrorBoundary>
           <Suspense fallback={<LoadingScreen message="Loading page..." />}>
             {currentPage === 'standaloneAgentAdmin' ? (

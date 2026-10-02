@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb, isDemandRegionsEnabled, syncWithBackend } from '../db/marketplaceDb';
+import { propertiesDb, selectedCity, dealersDb, demandRegionsDb, getDistance, masterLocationsDb, masterPropertyTypesDb, masterPropertyStatusesDb, masterPropertyOwnershipsDb, masterLocalitiesDb, masterAreasDb, isDemandRegionsEnabled, syncWithBackend, isDraftListing } from '../db/marketplaceDb';
 import { parseIndiaLocation } from '../utils/locationIntelligence';
 import { useWishlist } from '../context/WishlistContext';
 import {
@@ -620,6 +620,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
     const activeListings = propertiesDb.filter(
       (p) => !p.sold && 
+             !isDraftListing(p) &&
              String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
              String(p.listingStatus || '').toLowerCase() !== 'sold' && 
              String(p.status || '').toLowerCase() !== 'sold' && 
@@ -627,8 +628,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
                String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
                String(p.approvalStatus || '').toLowerCase() === 'approved' ||
-               String(p.listingStatus || '').toLowerCase() === 'approved' ||
-               p.published !== false
+               String(p.listingStatus || '').toLowerCase() === 'approved'
              )
     );
 
@@ -659,6 +659,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
     const activeListings = propertiesDb.filter(
       (p) => !p.sold && 
+             !isDraftListing(p) &&
              String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
              String(p.listingStatus || '').toLowerCase() !== 'sold' && 
              String(p.status || '').toLowerCase() !== 'sold' && 
@@ -666,8 +667,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
                String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
                String(p.approvalStatus || '').toLowerCase() === 'approved' ||
-               String(p.listingStatus || '').toLowerCase() === 'approved' ||
-               p.published !== false
+               String(p.listingStatus || '').toLowerCase() === 'approved'
              )
     );
 
@@ -762,6 +762,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const displayProperties = useMemo(() => {
     const activeListings = propertiesDb.filter(
       (p) => !p.sold && 
+             !isDraftListing(p) &&
              String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
              String(p.listingStatus || '').toLowerCase() !== 'sold' && 
              String(p.status || '').toLowerCase() !== 'sold' &&
@@ -802,7 +803,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
         area: (() => {
           const val = p.areaSqFt || p.superBuiltUpArea || p.carpetArea || p.plotArea || p.sqft || p.builtUpArea;
-          if (!val) return '1500 sq ft';
+          if (!val) return '';
           const valStr = String(val).toLowerCase();
           if (valStr.includes('sq') || valStr.includes('yard') || valStr.includes('cent') || valStr.includes('guntas') || valStr.includes('acre') || valStr.includes('ft')) {
             return String(val);

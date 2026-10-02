@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addEnquiry, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL, isDemandRegionsEnabled } from '../db/marketplaceDb';
+import { propertiesDb, dealersDb, franchiseDb, businessDb, enquiriesDb, addEnquiry, addBusinessEnquiry, notifyDataChanged, demandRegionsDb, getDistance, incrementPropertyViewCount, API_BASE_URL, isDemandRegionsEnabled, isDraftListing } from '../db/marketplaceDb';
 import type { Dealer } from '../db/marketplaceDb';
 import { 
   FaArrowLeft, FaHeart, FaRegHeart, FaShareAlt, 
@@ -364,7 +364,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) {
-        metaDesc.setAttribute('content', `${property.title} in ${property.area}, ${property.city}. Price: ${property.priceDisplay}. Bedrooms: ${property.bedrooms || 3}, Area: ${property.areaSqFt || '1500 Sq.Ft'}. Verified Listing.`);
+        metaDesc.setAttribute('content', `${property.title} in ${property.area}, ${property.city}. Price: ${property.priceDisplay}.${property.bedrooms ? ` Bedrooms: ${property.bedrooms},` : ''} Area: ${property.areaSqFt || property.superBuiltUpArea || 'N/A'}. Verified Listing.`);
       }
 
       // Dynamic OpenGraph Image & Title
@@ -595,7 +595,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   // Fetch other properties of the same dealer
   const otherProperties = useMemo(() => {
     if (!property) return [];
-    return propertiesDb.filter(p => p.dealerId === property.dealerId && p.id !== property.id);
+    return propertiesDb.filter(p => !isDraftListing(p) && p.dealerId === property.dealerId && p.id !== property.id);
   }, [property]);
 
 
@@ -605,7 +605,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     const propLat = property.latitude || 17.4326;
     const propLng = property.longitude || 78.4071;
     return propertiesDb
-      .filter(p => p.id !== property.id)
+      .filter(p => !isDraftListing(p) && p.id !== property.id)
       .map(p => {
         const dist = calculateDistance(propLat, propLng, p.latitude || 17.4326, p.longitude || 78.4071);
         return { ...p, distanceKm: dist };
@@ -710,7 +710,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
   };
 
   // Derive specs fields
-  const superArea = property.areaSqFt || '1500';
+  const superArea = property.areaSqFt || property.superBuiltUpArea || '';
   const catLower = (property.category || '').toLowerCase();
   const titleLower = (property.title || '').toLowerCase();
   const isPlot = catLower.includes('plot') || catLower.includes('land') || titleLower.includes('plot') || titleLower.includes('land') || titleLower.includes('farm');
@@ -723,7 +723,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     return `${str} sqft`;
   };
 
-  const carpetArea = isPlot ? 'N/A' : `${Math.round(parseInt(superArea) * 0.85) || 1200} sqft`;
+  const carpetArea = isPlot ? 'N/A' : (superArea && parseInt(superArea) ? `${Math.round(parseInt(superArea) * 0.85)} sqft` : (property.carpetArea || 'N/A'));
   const typeDisplay = isPlot ? 'Plots & Land' : isCommercial ? 'Commercial Property' : (catLower.includes('villa') || catLower.includes('house')) ? 'House & Villa' : 'Flats & Apartments';
 
   return (
@@ -1078,12 +1078,12 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
               </div>
               <h4 className="price-specs-subtitle">
                 {property.specs
-                  ? property.specs.Type || property.areaSqFt
+                  ? property.specs.Type || property.areaSqFt || property.superBuiltUpArea
                   : isPlot
-                  ? `${property.plotArea || property.areaSqFt || `${superArea} Sq. Yds`} • Clear Title Plot`
+                  ? `${property.plotArea || property.areaSqFt || superArea || ''} ${property.plotArea || property.areaSqFt || superArea ? '• ' : ''}Clear Title Plot`
                   : isCommercial
-                  ? `${property.superBuiltUpArea || `${superArea} sqft`} • Commercial Property`
-                  : `${property.bedrooms ? `${property.bedrooms} BHK` : '3 BHK'} - ${property.bathrooms ? `${property.bathrooms} Bathroom` : '2 Bathroom'} • ${superArea} sqft`}
+                  ? `${property.superBuiltUpArea || property.areaSqFt || superArea || ''} ${property.superBuiltUpArea || property.areaSqFt || superArea ? '• ' : ''}Commercial Property`
+                  : `${property.bedrooms ? `${property.bedrooms} BHK` : 'Property'} ${property.bathrooms ? `- ${property.bathrooms} Bathroom` : ''} ${superArea ? `• ${superArea}${superArea.toLowerCase().includes('sq') ? '' : ' sqft'}` : ''}`}
               </h4>
               <p className="price-title-sub" style={{ marginBottom: (property.sold || property.approvalStatus === 'Sold' || property.listingStatus === 'Sold') ? '6px' : undefined }}>{property.title}</p>
               

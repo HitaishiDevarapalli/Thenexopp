@@ -1302,6 +1302,20 @@ export const addAdminModule = (label: string, category: AdminModuleItem['categor
   }).catch(err => console.error('API Sync Error:', err));
 };
 
+export const isDraftListing = (item: any): boolean => {
+  if (!item) return false;
+  const appStatus = String(item.approvalStatus || '').toLowerCase().trim();
+  const listStatus = String(item.listingStatus || '').toLowerCase().trim();
+  const mainStatus = String(item.status || '').toLowerCase().trim();
+  return (
+    appStatus === 'draft' ||
+    listStatus === 'draft' ||
+    mainStatus === 'draft' ||
+    item.published === false ||
+    item.isDraft === true
+  );
+};
+
 export const persistAllToStorage = () => {
   saveToStorage('nexopp_properties_db', propertiesDb);
   saveToStorage('nexopp_franchise_db', franchiseDb);
