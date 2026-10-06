@@ -565,7 +565,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     setMapMarkerPos({ lat: 16.3067, lng: 80.4365 });
     setModalMode('add');
     setEditingId(null);
-    setModalSubTab('basic');
+    setModalSubTab('location');
     setIsModalOpen(true);
   };
 
@@ -593,7 +593,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     setMapMarkerPos({ lat: prop.latitude || 16.3067, lng: prop.longitude || 80.4365 });
     setModalMode('edit');
     setEditingId(prop.id);
-    setModalSubTab('basic');
+    setModalSubTab('location');
     setIsModalOpen(true);
   };
 
@@ -610,7 +610,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
     setMapMarkerPos({ lat: prop.latitude || 16.3067, lng: prop.longitude || 80.4365 });
     setModalMode('duplicate');
     setEditingId(null);
-    setModalSubTab('basic');
+    setModalSubTab('location');
     setIsModalOpen(true);
   };
 
