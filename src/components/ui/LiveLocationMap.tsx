@@ -314,10 +314,16 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       <div ref={mapContainerRef} data-lenis-prevent="true" style={{ width: '100%', height: '100%', backgroundColor: '#E2E8F0' }} />
 
       {/* Top Floating Bar: Location Indicator & Live GPS Button */}
-      <div style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', maxWidth: 'calc(100% - 32px)', zIndex: 500, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '8px 16px', borderRadius: '14px', border: '1px solid #CBD5E1', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <FaMapMarkerAlt style={{ color: '#2563EB', fontSize: '16px' }} />
-          <div>
+      <div className="map-top-bar" style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', maxWidth: 'calc(100% - 32px)', zIndex: 500, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '4px', scrollBehavior: 'smooth' }}>
+        <style>
+          {`
+            .map-top-bar::-webkit-scrollbar { display: none; }
+            .map-top-bar { -ms-overflow-style: none; scrollbar-width: none; }
+          `}
+        </style>
+        <div style={{ flexShrink: 0, backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '8px 16px', borderRadius: '14px', border: '1px solid #CBD5E1', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaMapMarkerAlt style={{ color: '#2563EB', fontSize: '16px', flexShrink: 0 }} />
+          <div style={{ flexShrink: 0 }}>
             <span style={{ fontSize: '11px', color: '#64748B', fontWeight: 700, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Map Center</span>
             <span style={{ fontSize: '13px', color: '#0F172A', fontWeight: 800 }}>{mapCenter.label}</span>
           </div>
@@ -327,6 +333,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
           onClick={handleDetectLiveGps}
           disabled={detectingGps}
           style={{
+            flexShrink: 0,
             backgroundColor: '#2563EB',
             color: '#FFFFFF',
             border: 'none',
@@ -348,7 +355,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
 
         {/* Demand Filter Pill Chips */}
         {isDemandRegionsEnabled() && (
-          <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '4px 6px', borderRadius: '14px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ flexShrink: 0, backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)', padding: '4px 6px', borderRadius: '14px', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ fontSize: '10px', color: '#64748B', fontWeight: 800, paddingLeft: '6px', textTransform: 'uppercase' }}>Demand:</span>
             {(['All', 'High', 'Medium', 'Low'] as const).map(lvl => (
               <button
@@ -404,7 +411,7 @@ export const LiveLocationMap: React.FC<LiveLocationMapProps> = ({
       )}
 
       {/* Right Controls: Recenter, Zoom */}
-      <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 500, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="map-right-controls" style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 500, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button
           onClick={handleResetView}
           title="Recenter Map"

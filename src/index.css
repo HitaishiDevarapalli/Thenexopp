@@ -6968,6 +6968,7 @@ body.mobile-drawer-open {
 
 /* AI Chat FAB Mobile Repositioning */
 @media (max-width: 767px) {
+  .map-right-controls { bottom: 160px !important; }
   .ai-chat-fab-wrap {
     bottom: 96px !important;
     right: 16px !important;
