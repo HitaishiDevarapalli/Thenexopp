@@ -606,11 +606,9 @@ app.post('/api/upload', async (req, res, next) => {
     const targetDir = path.join(uploadDir, subDirs.includes(folder) ? folder : 'property-images');
     const { webpFileName, thumbFileName } = await optimizeAndSaveImage(fileData, fileName, targetDir);
 
-    const protocol = req.protocol;
-    const host = req.headers.host;
     const relFolder = subDirs.includes(folder) ? folder : 'property-images';
-    const fileUrl = `${protocol}://${host}/uploads/${relFolder}/${webpFileName}`;
-    const thumbUrl = `${protocol}://${host}/uploads/${relFolder}/${thumbFileName}`;
+    const fileUrl = `/uploads/${relFolder}/${webpFileName}`;
+    const thumbUrl = `/uploads/${relFolder}/${thumbFileName}`;
 
     logger.info({ webpFileName, thumbFileName, relFolder }, 'Image optimized and saved via Sharp WebP');
 
@@ -658,7 +656,7 @@ app.post('/api/upload-lead-photo', async (req, res, next) => {
     fs.writeFileSync(targetPath, buffer);
 
     const protocol = req.protocol;
-    const host = req.headers.host;
+    const host = req.get('host') || req.headers.host;
     const fileUrl = `/uploads/lead-photos/${savedFileName}`;
     const fullUrl = `${protocol}://${host}${fileUrl}`;
 
@@ -3347,6 +3345,13 @@ const isDemoUnsplashUrl = (url) =>
   );
 
 const sanitizePropertyPhotos = (p) => {
+  const sanitizeUrl = (url) => {
+    if (typeof url === 'string' && url.includes('/uploads/')) {
+      return url.substring(url.indexOf('/uploads/'));
+    }
+    return url;
+  };
+
   const rawList = [
     p.image,
     p.image2,
@@ -3355,7 +3360,7 @@ const sanitizePropertyPhotos = (p) => {
     p.image5,
     p.image6,
     ...(Array.isArray(p.images) ? p.images : [])
-  ].filter(Boolean);
+  ].filter(Boolean).map(sanitizeUrl);
 
   const deduped = Array.from(new Set(rawList));
   const realPhotos = deduped.filter(u => !isDemoUnsplashUrl(u));
