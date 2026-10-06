@@ -5425,6 +5425,47 @@ if (fs.existsSync(agentAdminDistDir)) {
   });
 }
 
+// 🟢 DYNAMIC SITEMAP GENERATION 🟢
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const baseUrl = 'https://thenexopp.com';
+    const staticRoutes = [
+      '', '/properties', '/properties/rent', '/properties/flats', '/properties/villas',
+      '/properties/houses', '/properties/lands', '/properties/sell', '/franchise',
+      '/franchise/existing', '/franchise/new', '/business', '/business/sell',
+      '/finance', '/finance/loans', '/finance/insurance', '/finance/advisory',
+      '/about', '/contact'
+    ];
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+    // Static Pages
+    for (const route of staticRoutes) {
+      xml += `  <url>\n    <loc>${baseUrl}${route}</loc>\n    <changefreq>daily</changefreq>\n    <priority>${route === '' ? '1.0' : '0.8'}</priority>\n  </url>\n`;
+    }
+
+    // Dynamic Properties
+    const properties = await prisma.property.findMany({ select: { urlSlug: true, id: true, createdAt: true } }).catch(() => []);
+    for (const p of properties) {
+      const slug = p.urlSlug || p.id;
+      const lastMod = p.createdAt ? p.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      xml += `  <url>\n    <loc>${baseUrl}/properties/${slug}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+    }
+
+    // Dynamic Businesses
+    const businesses = await prisma.business.findMany({ select: { id: true } }).catch(() => []);
+    for (const b of businesses) {
+      xml += `  <url>\n    <loc>${baseUrl}/business/${b.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    }
+
+    xml += `</urlset>`;
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+  } catch (err) {
+    logger.error('Failed to generate dynamic sitemap:', err);
+    res.status(500).end();
+  }
+});
 // ── FRONTEND STATIC ASSET SERVING & ROUTE-SPECIFIC SEO FALLBACK ──────────────
 const distDir = path.join(__dirname, '../dist');
 if (fs.existsSync(distDir)) {

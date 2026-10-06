@@ -624,4 +624,29 @@ if (fs.existsSync(agentAdminDistDir)) {
   }
 }
 
-console.log(`\n✅ Successfully generated static SEO HTML pages and Standalone Admin bundles!`);
+// Generate sitemap.xml
+const sitemapPath = path.join(distDir, 'sitemap.xml');
+const sitemapUrls = routes.map(route => `  <url>
+    <loc>${route.canonicalUrl}</loc>
+    <changefreq>daily</changefreq>
+    <priority>${route.path === '/' ? '1.0' : '0.8'}</priority>
+  </url>`).join('\n');
+
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemapUrls}
+</urlset>`;
+
+fs.writeFileSync(sitemapPath, sitemapXml, 'utf-8');
+console.log('[SEO Generator] Created /sitemap.xml for Google Search Console indexing');
+
+// Generate robots.txt
+const robotsPath = path.join(distDir, 'robots.txt');
+const robotsTxt = `User-agent: *
+Allow: /
+
+Sitemap: https://thenexopp.com/sitemap.xml`;
+fs.writeFileSync(robotsPath, robotsTxt, 'utf-8');
+console.log('[SEO Generator] Created /robots.txt');
+
+console.log(`\n✅ Successfully generated static SEO HTML pages, Sitemap, and Standalone Admin bundles!`);
