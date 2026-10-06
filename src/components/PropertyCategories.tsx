@@ -68,6 +68,71 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'warangal': { lat: 17.9689, lng: 79.5941 }
 };
 
+export const isCommercialProperty = (item: any): boolean => {
+  if (!item) return false;
+  const lowerType = String(item.type || '').toLowerCase();
+  const lowerTitle = String(item.title || '').toLowerCase();
+  const lowerCat = String(item.category || '').toLowerCase();
+  const lowerPropType = String(item.propertyType || '').toLowerCase();
+  const lowerSubtype = String(item.propertySubtype || '').toLowerCase();
+  const lowerDesc = String(item.description || '').toLowerCase();
+
+  const commercialKeywords = [
+    'commercial',
+    'office',
+    'shop',
+    'retail',
+    'showroom',
+    'warehouse',
+    'godown',
+    'industrial',
+    'workspace',
+    'commercial space',
+    'business center',
+    'co-working',
+    'coworking'
+  ];
+
+  if (commercialKeywords.some(kw => 
+    lowerType.includes(kw) ||
+    lowerTitle.includes(kw) ||
+    lowerCat.includes(kw) ||
+    lowerPropType.includes(kw) ||
+    lowerSubtype.includes(kw) ||
+    lowerDesc.includes(kw)
+  )) {
+    return true;
+  }
+
+  // Check if 'space' is present in non-parking context
+  if ((lowerType.includes('space') || lowerCat.includes('space') || lowerTitle.includes('space')) && !lowerType.includes('parking') && !lowerTitle.includes('parking')) {
+    return true;
+  }
+
+  return false;
+};
+
+export const isSoldListing = (p: any): boolean => {
+  if (!p) return false;
+  const statusLower = String(p.status || '').toLowerCase().trim();
+  const listingLower = String(p.listingStatus || '').toLowerCase().trim();
+  const approvalLower = String(p.approvalStatus || '').toLowerCase().trim();
+  const badgeLower = String(p.badge || '').toLowerCase().trim();
+
+  return (
+    p.sold === true ||
+    String(p.sold).toLowerCase() === 'true' ||
+    p.recentlySold === true ||
+    String(p.recentlySold).toLowerCase() === 'true' ||
+    statusLower === 'sold' ||
+    listingLower === 'sold' ||
+    approvalLower === 'sold' ||
+    badgeLower === 'sold' ||
+    badgeLower === 'recently sold' ||
+    badgeLower.includes('sold')
+  );
+};
+
 export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   onPropertyClick,
   onBuyProperty,
@@ -92,7 +157,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   const [areaDropdownOpen, setAreaDropdownOpen] = useState<boolean>(false);
   const [localityDropdownOpen, setLocalityDropdownOpen] = useState<boolean>(false);
 
-  const [activeTab, setActiveTab] = useState<'Buy' | 'Rent' | 'Commercial' | 'Plots' | 'New Projects'>('Buy');
+  const [activeTab, setActiveTab] = useState<'All' | 'Buy' | 'Rent' | 'Commercial' | 'Plots' | 'New Projects'>('All');
   const [locationText, setLocationText] = useState('');
   const [propertyType, setPropertyType] = useState('All Types');
   const [budget, setBudget] = useState('₹ 1K - 1Cr+');
@@ -170,10 +235,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setAreaDropdownOpen(false);
     setLocalityDropdownOpen(false);
 
-    if (!_initialCategory) {
+    if (!_initialCategory || _initialCategory === 'All') {
       setSelectedTypes([]);
       setPropertyType('All Types');
-      setActiveTab('Buy');
+      setActiveTab('All');
       // Do not return here, allow the search params effect below to run
     } else {
       if (_initialCategory === 'BuyApartment') {
@@ -192,6 +257,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         setSelectedTypes(['Plot / Land']);
         setPropertyType('Plot / Land');
         setActiveTab('Plots');
+      } else if (_initialCategory === 'Buy') {
+        setSelectedTypes([]);
+        setPropertyType('All Types');
+        setActiveTab('Buy');
       } else if (_initialCategory === 'Commercial') {
         setSelectedTypes(['Commercial Property']);
         setPropertyType('Commercial Property');
@@ -372,10 +441,43 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   const handleBhkSelectChange = (val: string) => {
     setBhkFilter(val);
+    const lower = val.toLowerCase();
+    const isCommercialChoice = lower.includes('commercial') || lower.includes('space') || lower.includes('office') || lower.includes('shop') || lower.includes('warehouse');
+
     if (val.startsWith('Any ') || val === 'All') {
       setSelectedBhks([]);
     } else {
       setSelectedBhks([val]);
+    }
+
+    if (isCommercialChoice) {
+      if (activeTab === 'Rent') {
+        setPropertyType('Commercial Space');
+        setSelectedTypes(['Commercial Space']);
+      } else {
+        setPropertyType('Commercial Property');
+        setSelectedTypes(['Commercial Property']);
+      }
+      setSelectedPropertyTypesFilter(['Commercial']);
+      setRentCategoryFilter(activeTab === 'Rent' ? 'Commercial' : 'All');
+    } else if (val.includes('BHK')) {
+      if (propertyType.toLowerCase().includes('commercial') || propertyType === 'Commercial Space') {
+        setPropertyType('All Types');
+        setSelectedTypes([]);
+      }
+      if (selectedPropertyTypesFilter.includes('Commercial') && selectedPropertyTypesFilter.length === 1) {
+        setSelectedPropertyTypesFilter(['Residential']);
+      }
+      if (rentCategoryFilter === 'Commercial') {
+        setRentCategoryFilter('Residential');
+      }
+    } else {
+      if (propertyType.toLowerCase().includes('commercial') || propertyType === 'Commercial Space') {
+        setPropertyType('All Types');
+        setSelectedTypes([]);
+      }
+      setSelectedPropertyTypesFilter([]);
+      setRentCategoryFilter('All');
     }
   };
 
@@ -383,9 +485,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setPropertyType(val);
     if (val === 'All Types' || val === 'All Plots' || val === 'All Commercial' || val === 'All Projects') {
       setSelectedTypes([]);
-      setBhkFilter('Any BHK');
+      setBhkFilter(activeTab === 'Commercial' ? 'Any Usage' : activeTab === 'Plots' ? 'Any Size' : activeTab === 'New Projects' ? 'Any Stage' : 'Any BHK');
       setSelectedBhks([]);
       setSelectedPropertyTypesFilter([]);
+      setRentCategoryFilter('All');
     } else {
       setSelectedTypes([val]);
       const lower = val.toLowerCase();
@@ -393,17 +496,25 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       // Auto-tick matching categories in sidebar
       if (lower.includes('apartment') || lower.includes('villa') || lower.includes('house') || lower.includes('flat') || lower.includes('pg') || lower.includes('living')) {
         setSelectedPropertyTypesFilter(['Residential']);
+        setRentCategoryFilter('Residential');
+        setBhkFilter('Any BHK');
+        setSelectedBhks([]);
       } else if (lower.includes('commercial') || lower.includes('office') || lower.includes('shop') || lower.includes('showroom') || lower.includes('warehouse') || lower.includes('space')) {
         setSelectedPropertyTypesFilter(['Commercial']);
+        setRentCategoryFilter('Commercial');
+        if (activeTab === 'Rent') {
+          setBhkFilter('Commercial Space');
+          setSelectedBhks(['Commercial Space']);
+        } else if (activeTab === 'Commercial') {
+          setBhkFilter('Any Usage');
+          setSelectedBhks([]);
+        } else {
+          setBhkFilter('Commercial Space');
+          setSelectedBhks(['Commercial Space']);
+        }
       } else if (lower.includes('plot') || lower.includes('land')) {
         setSelectedPropertyTypesFilter(['Agricultural']);
-      }
-
-      if (lower.includes('plot') || lower.includes('land')) {
         setBhkFilter('Any Size');
-        setSelectedBhks([]);
-      } else if (lower.includes('commercial') || lower.includes('office') || lower.includes('shop') || lower.includes('showroom') || lower.includes('warehouse')) {
-        setBhkFilter('Any Usage');
         setSelectedBhks([]);
       } else {
         setBhkFilter('Any BHK');
@@ -414,27 +525,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
   // Dynamic Tab & Property Type Configurations for Context-Aware Filters
   const tabConfigs = useMemo(() => {
-    const isPlot = activeTab === 'Plots' || propertyType === 'Plot / Land' || propertyType.toLowerCase().includes('plot') || propertyType.toLowerCase().includes('land');
-    if (isPlot) {
+    if (activeTab === 'Rent') {
       return {
-        typeLabel: 'Plot / Land Type',
-        types: activeTab === 'Plots' 
-          ? ['All Plots', 'Residential Plot', 'Commercial Plot', 'Agricultural Land / Farm Land', 'Industrial Plot']
-          : ['Plot / Land', 'All Types', 'Apartment', 'Villa', 'Independent House', 'Commercial Property'],
-        specLabel: 'Plot Area / Land Size',
-        specs: ['Any Size', 'Up to 150 Sq.Yd', '150 - 300 Sq.Yd', '300 - 500 Sq.Yd', '500+ Sq.Yd', '1 - 5 Acres', '5+ Acres', 'RERA / DTCP Approved', 'Corner Plot'],
-      };
-    }
-
-    const isCommercial = activeTab === 'Commercial' || propertyType === 'Commercial Property' || propertyType.toLowerCase().includes('commercial') || propertyType.toLowerCase().includes('office') || propertyType.toLowerCase().includes('shop');
-    if (isCommercial) {
-      return {
-        typeLabel: 'Commercial Type',
-        types: activeTab === 'Commercial'
-          ? ['All Commercial', 'Office Space', 'Retail Shop', 'Commercial Showroom', 'Warehouse / Godown', 'Industrial Building', 'Commercial Land']
-          : ['Commercial Property', 'All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land'],
-        specLabel: 'Commercial Usage / Type',
-        specs: ['Any Usage', 'Corporate Office Space', 'Retail Shop / Showroom', 'Commercial Building', 'Warehouse / Godown', 'Commercial Plot', 'Industrial Facility'],
+        typeLabel: 'Property Type',
+        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'PG / Co-Living', 'Furnished Flat', 'Commercial Space'],
+        specLabel: 'BHK / Category',
+        specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'PG / Co-Living', 'Commercial Space'],
       };
     }
 
@@ -447,22 +543,35 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       };
     }
 
-
-
-    if (activeTab === 'Rent') {
+    const isPlot = activeTab === 'Plots' || propertyType === 'Plot / Land' || propertyType.toLowerCase().includes('plot') || propertyType.toLowerCase().includes('land');
+    if (isPlot) {
       return {
-        typeLabel: 'Property Type',
-        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'PG / Co-Living', 'Furnished Flat', 'Commercial Space'],
-        specLabel: 'BHK / Category',
-        specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'Commercial Space'],
+        typeLabel: 'Plot / Land Type',
+        types: activeTab === 'Plots' 
+          ? ['All Plots', 'Residential Plot', 'Commercial Plot', 'Agricultural Land / Farm Land', 'Industrial Plot']
+          : ['Plot / Land', 'All Types', 'Apartment', 'Villa', 'Independent House', 'Commercial Property'],
+        specLabel: 'Plot Area / Land Size',
+        specs: ['Any Size', 'Up to 150 Sq.Yd', '150 - 300 Sq.Yd', '300 - 500 Sq.Yd', '500+ Sq.Yd', '1 - 5 Acres', '5+ Acres', 'RERA / DTCP Approved', 'Corner Plot'],
+      };
+    }
+
+    const isCommercial = activeTab === 'Commercial' || propertyType === 'Commercial Property' || propertyType === 'Commercial Space' || propertyType === 'All Commercial' || propertyType.toLowerCase().includes('commercial') || propertyType.toLowerCase().includes('office') || propertyType.toLowerCase().includes('shop');
+    if (isCommercial) {
+      return {
+        typeLabel: 'Commercial Type',
+        types: activeTab === 'Commercial'
+          ? ['All Commercial', 'Office Space', 'Retail Shop', 'Commercial Showroom', 'Warehouse / Godown', 'Industrial Building', 'Commercial Land']
+          : ['Commercial Property', 'All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land'],
+        specLabel: 'Commercial Usage / Type',
+        specs: ['Any Usage', 'Commercial Space', 'Corporate Office Space', 'Retail Shop / Showroom', 'Commercial Building', 'Warehouse / Godown', 'Commercial Plot', 'Industrial Facility'],
       };
     }
 
     return {
       typeLabel: 'Property Type',
-      types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'Commercial Property'],
+      types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'Plot / Land', 'PG / Co-Living', 'Commercial Property'],
       specLabel: 'BHK / Configuration',
-      specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK'],
+      specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'PG / Co-Living', 'Commercial Space'],
     };
   }, [activeTab, propertyType]);
 
@@ -472,6 +581,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setMinBudget(0.01);
     setMaxBudget(isRentTab ? 10 : 100);
     setBudget(isRentTab ? '₹ 1K - 10L+' : '₹ 1K - 1Cr+');
+    setRentCategoryFilter('All');
+    setSelectedPropertyTypesFilter([]);
 
     if (activeTab === 'Commercial') {
       setPropertyType('All Commercial');
@@ -619,17 +730,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const cityName = selectedCityObj ? selectedCityObj.name.toLowerCase().trim() : '';
 
     const activeListings = propertiesDb.filter(
-      (p) => !p.sold && 
+      (p) => !isSoldListing(p) && 
              !isDraftListing(p) &&
-             String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
-             String(p.listingStatus || '').toLowerCase() !== 'sold' && 
-             String(p.status || '').toLowerCase() !== 'sold' && 
-             (
-               String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
-               String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
-               String(p.approvalStatus || '').toLowerCase() === 'approved' ||
-               String(p.listingStatus || '').toLowerCase() === 'approved'
-             )
+             String(p.approvalStatus || '').toLowerCase() !== 'draft' && 
+             String(p.listingStatus || '').toLowerCase() !== 'draft' && 
+             String(p.approvalStatus || '').toLowerCase() !== 'hidden' && 
+             String(p.listingStatus || '').toLowerCase() !== 'hidden'
     );
 
     const areaSet = new Set<string>();
@@ -658,17 +764,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const areaName = selectedAreaObj ? selectedAreaObj.name.toLowerCase().trim() : '';
 
     const activeListings = propertiesDb.filter(
-      (p) => !p.sold && 
+      (p) => !isSoldListing(p) && 
              !isDraftListing(p) &&
-             String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
-             String(p.listingStatus || '').toLowerCase() !== 'sold' && 
-             String(p.status || '').toLowerCase() !== 'sold' && 
-             (
-               String(p.approvalStatus || 'Published').toLowerCase() === 'published' || 
-               String(p.listingStatus || 'Published').toLowerCase() === 'published' ||
-               String(p.approvalStatus || '').toLowerCase() === 'approved' ||
-               String(p.listingStatus || '').toLowerCase() === 'approved'
-             )
+             String(p.approvalStatus || '').toLowerCase() !== 'draft' && 
+             String(p.listingStatus || '').toLowerCase() !== 'draft' && 
+             String(p.approvalStatus || '').toLowerCase() !== 'hidden' && 
+             String(p.listingStatus || '').toLowerCase() !== 'hidden'
     );
 
     const locSet = new Set<string>();
@@ -700,12 +801,39 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
 
   const togglePropertyTypeFilter = (val: string) => {
-    setSelectedPropertyTypesFilter((prev) =>
-      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val]
-    );
+    setSelectedPropertyTypesFilter((prev) => {
+      const next = prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val];
+      if (next.includes('Commercial') && !next.includes('Residential')) {
+        if (activeTab === 'Rent') {
+          setPropertyType('Commercial Space');
+          setBhkFilter('Commercial Space');
+          setSelectedBhks(['Commercial Space']);
+          setSelectedTypes(['Commercial Space']);
+          setRentCategoryFilter('Commercial');
+        } else {
+          setPropertyType('Commercial Property');
+          setSelectedTypes(['Commercial Property']);
+        }
+      } else if (!next.includes('Commercial') && next.includes('Residential')) {
+        if (propertyType.toLowerCase().includes('commercial') || propertyType === 'Commercial Space') {
+          setPropertyType('All Types');
+          setSelectedTypes([]);
+          setBhkFilter('Any BHK');
+          setSelectedBhks([]);
+          setRentCategoryFilter('Residential');
+        }
+      } else {
+        if (propertyType.toLowerCase().includes('commercial') || propertyType === 'Commercial Space') {
+          setPropertyType('All Types');
+          setSelectedTypes([]);
+          setBhkFilter('Any BHK');
+          setSelectedBhks([]);
+          setRentCategoryFilter('All');
+        }
+      }
+      return next;
+    });
   };
-
-
 
   const toggleBhk = (val: string) => {
     setSelectedBhks((prev) =>
@@ -746,9 +874,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     setMinBudget(0.01);
     setMaxBudget(isRent ? 10 : 100);
     setActiveQuickFilter(null);
-    setPropertyType('All Types');
+    setPropertyType(activeTab === 'Commercial' ? 'All Commercial' : activeTab === 'Plots' ? 'All Plots' : activeTab === 'New Projects' ? 'All Projects' : 'All Types');
     setBudget(isRent ? '₹ 1K - 10L+' : '₹ 1K - 1Cr+');
-    setBhkFilter('Any BHK');
+    setBhkFilter(activeTab === 'Commercial' ? 'Any Usage' : activeTab === 'Plots' ? 'Any Size' : activeTab === 'New Projects' ? 'Any Stage' : 'Any BHK');
+    setRentCategoryFilter('All');
     setSortBy('Newest First');
     setSelectedCityId('');
     setSelectedAreaId('');
@@ -761,11 +890,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   // Rich screenshot-matching properties list
   const displayProperties = useMemo(() => {
     const activeListings = propertiesDb.filter(
-      (p) => !p.sold && 
-             !isDraftListing(p) &&
-             String(p.approvalStatus || '').toLowerCase() !== 'sold' && 
-             String(p.listingStatus || '').toLowerCase() !== 'sold' && 
-             String(p.status || '').toLowerCase() !== 'sold' &&
+      (p) => !isDraftListing(p) &&
              String(p.approvalStatus || '').toLowerCase() !== 'draft' &&
              String(p.listingStatus || '').toLowerCase() !== 'draft' &&
              String(p.approvalStatus || '').toLowerCase() !== 'hidden' &&
@@ -837,6 +962,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         brokerImg,
         dealerId: assignedBroker?.id || p.dealerId,
         type: p.category || 'Apartment',
+        category: p.category || '',
+        propertyType: (p as any).propertyType || '',
+        propertySubtype: (p as any).propertySubtype || '',
+        description: (p as any).description || '',
         facing: p.facing || 'East',
         furnishing: p.furnishing || (p as any).furnishingStatus || 'Unfurnished',
         latitude: p.latitude,
@@ -883,9 +1012,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         trending: p.trending || false,
         approvalStatus: p.approvalStatus,
         listingStatus: p.listingStatus,
-        sold: p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || false,
+        sold: isSoldListing(p),
         soldDate: p.soldDate,
-        recentlySold: p.recentlySold || p.badge === 'RECENTLY SOLD' || false,
+        recentlySold: Boolean(p.recentlySold || String(p.badge || '').toLowerCase().includes('recently sold') || isSoldListing(p)),
         viewsCount: p.viewsCount || 0,
         cityId: resolvedCityId,
         areaId: resolvedAreaId,
@@ -972,8 +1101,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
 
       // Availability Filter: By default, sold properties disappear from main feed and display in Recently Sold section down below
-      if (availabilityFilter !== 'Sold' && item.sold) return false;
-      if (availabilityFilter === 'Sold' && !item.sold) return false;
+      const itemIsSold = Boolean(item.sold || isSoldListing(item));
+      if (availabilityFilter === 'Sold') {
+        if (!itemIsSold) return false;
+      } else {
+        if (itemIsSold) return false;
+      }
 
       // 0.5 Demand Region Filter
       if (demandFilter !== 'All') {
@@ -994,8 +1127,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         const q = searchQuery.toLowerCase();
         const match =
           item.title.toLowerCase().includes(q) ||
-          item.location.toLowerCase().includes(q) ||
-          item.type.toLowerCase().includes(q);
+          (item.location || '').toLowerCase().includes(q) ||
+          (item.type || '').toLowerCase().includes(q) ||
+          (item.category || '').toLowerCase().includes(q);
         if (!match) return false;
       }
       
@@ -1019,6 +1153,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         String((item as any).propertyPurpose || '').toLowerCase() === 'rent' ||
         String((item as any).propertyPurpose || '').toLowerCase() === 'lease' ||
         String((item as any).category || '').toLowerCase().includes('rent') ||
+        String((item as any).category || '').toLowerCase().includes('pg') ||
+        String((item as any).category || '').toLowerCase().includes('co-living') ||
         String((item as any).propertySubtype || '').toLowerCase().includes('rent') ||
         String(item.title || '').toLowerCase().includes('for rent') ||
         String(item.title || '').toLowerCase().includes('for lease') ||
@@ -1029,22 +1165,18 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         String(item.priceDisplay || '').toLowerCase().includes('/year')
       );
 
+      const isCommercial = isCommercialProperty(item);
+
       if (activeTab === 'Buy') {
         if (isItemRent) return false;
       } else if (activeTab === 'Rent') {
         if (!isItemRent) return false;
         if (rentCategoryFilter !== 'All') {
-          const itemType = (item.type || '').toLowerCase();
-          const itemTitle = (item.title || '').toLowerCase();
-          const isComm = itemType.includes('commercial') || itemType.includes('office') || itemType.includes('shop') || itemType.includes('showroom') || itemType.includes('warehouse') || itemType.includes('industrial') || itemTitle.includes('commercial') || itemTitle.includes('office') || itemTitle.includes('shop');
-          if (rentCategoryFilter === 'Commercial' && !isComm) return false;
-          if (rentCategoryFilter === 'Residential' && isComm) return false;
+          if (rentCategoryFilter === 'Commercial' && !isCommercial) return false;
+          if (rentCategoryFilter === 'Residential' && isCommercial) return false;
         }
       } else if (activeTab === 'Commercial') {
-        const itemType = (item.type || '').toLowerCase();
-        const itemTitle = (item.title || '').toLowerCase();
-        const isComm = itemType.includes('commercial') || itemType.includes('office') || itemType.includes('shop') || itemType.includes('showroom') || itemType.includes('warehouse') || itemType.includes('godown') || itemType.includes('industrial') || itemTitle.includes('commercial') || itemTitle.includes('office') || itemTitle.includes('shop') || itemTitle.includes('showroom');
-        if (!isComm) return false;
+        if (!isCommercial) return false;
       } else if (activeTab === 'Plots') {
         const itemType = (item.type || '').toLowerCase();
         const itemTitle = (item.title || '').toLowerCase();
@@ -1057,13 +1189,33 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       // 4. BHK / Spec / Plot Area / Commercial Usage Filter
       if (selectedBhks.length > 0 && !selectedBhks.includes('Any BHK') && !selectedBhks.includes('Any Usage') && !selectedBhks.includes('Any Zone') && !selectedBhks.includes('Any Stage') && !selectedBhks.includes('Any Size') && !selectedBhks.includes('Any Configuration')) {
         const matchBhk = selectedBhks.some((val) => {
-          if (val === '4+ BHK' && parseInt(item.bhk) >= 4) return true;
-          if (val.includes('BHK')) return `${item.bhk} BHK` === val || (item.title || '').toLowerCase().includes(val.toLowerCase());
           const normVal = val.toLowerCase();
+
+          // Commercial Space / Commercial filter in BHK dropdown
+          if (
+            normVal === 'commercial space' ||
+            normVal === 'commercial' ||
+            normVal.includes('commercial') ||
+            normVal.includes('corporate office') ||
+            normVal.includes('retail shop') ||
+            normVal.includes('warehouse') ||
+            normVal.includes('industrial')
+          ) {
+            return isCommercial;
+          }
+
+          if (val === '4+ BHK' && parseInt(item.bhk) >= 4) return true;
+          if (val.includes('BHK')) {
+            // Residential BHK filter: commercial non-residential properties must NOT match
+            if (isCommercial) return false;
+            return `${item.bhk} BHK` === val || (item.title || '').toLowerCase().includes(val.toLowerCase());
+          }
+
           const normTitle = (item.title || '').toLowerCase();
           const normType = (item.type || '').toLowerCase();
           const normArea = (item.area || '').toLowerCase();
-          return normTitle.includes(normVal) || normType.includes(normVal) || normArea.includes(normVal);
+          const normCat = (item.category || '').toLowerCase();
+          return normTitle.includes(normVal) || normType.includes(normVal) || normArea.includes(normVal) || normCat.includes(normVal);
         });
         if (!matchBhk) return false;
       }
@@ -1072,21 +1224,30 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       if (selectedTypes.length > 0 && !selectedTypes.includes('All Types') && !selectedTypes.includes('All Commercial') && !selectedTypes.includes('All Plots') && !selectedTypes.includes('All Projects')) {
         const typeMatch = selectedTypes.some((selectedLabel) => {
           const normLabel = selectedLabel.toLowerCase();
-          const normItemType = item.type.toLowerCase();
-          const normItemTitle = item.title.toLowerCase();
+          const normItemType = (item.type || '').toLowerCase();
+          const normItemTitle = (item.title || '').toLowerCase();
 
-          if (normLabel.includes('apartment') && (normItemType.includes('apartment') || normItemType.includes('flat'))) return true;
-          if (normLabel.includes('villa') && normItemType.includes('villa')) return true;
-          if (normLabel.includes('house') && (normItemType.includes('house') || normItemType.includes('independent'))) return true;
-          if (normLabel.includes('office') && (normItemType.includes('office') || normItemType.includes('commercial'))) return true;
-          if (normLabel.includes('shop') && (normItemType.includes('shop') || normItemType.includes('retail') || normItemType.includes('commercial'))) return true;
-          if (normLabel.includes('showroom') && (normItemType.includes('showroom') || normItemType.includes('commercial'))) return true;
-          if ((normLabel.includes('warehouse') || normLabel.includes('godown')) && (normItemType.includes('warehouse') || normItemType.includes('godown'))) return true;
-          if (normLabel.includes('industrial') && normItemType.includes('industrial')) return true;
-          if ((normLabel.includes('plot') || normLabel.includes('land')) && (normItemType.includes('plot') || normItemType.includes('land'))) return true;
-          if (normLabel.includes('commercial') && (normItemType.includes('commercial') || normItemType.includes('office') || normItemType.includes('shop') || normItemType.includes('showroom'))) return true;
+          // Commercial Space / Commercial filter in Property Type
+          if (
+            normLabel.includes('commercial') ||
+            normLabel.includes('office') ||
+            normLabel.includes('shop') ||
+            normLabel.includes('showroom') ||
+            normLabel.includes('warehouse') ||
+            normLabel.includes('godown') ||
+            normLabel.includes('industrial') ||
+            normLabel === 'commercial space'
+          ) {
+            return isCommercial;
+          }
 
-          return normItemType === normLabel;
+          if (normLabel.includes('apartment') && (normItemType.includes('apartment') || normItemType.includes('flat') || normItemTitle.includes('apartment') || normItemTitle.includes('flat'))) return true;
+          if (normLabel.includes('villa') && (normItemType.includes('villa') || normItemTitle.includes('villa'))) return true;
+          if (normLabel.includes('house') && (normItemType.includes('house') || normItemType.includes('independent') || normItemTitle.includes('house'))) return true;
+          if ((normLabel.includes('plot') || normLabel.includes('land')) && (normItemType.includes('plot') || normItemType.includes('land') || normItemTitle.includes('plot') || normItemTitle.includes('land'))) return true;
+
+          const normItemCategory = (item.category || '').toLowerCase();
+          return normItemType === normLabel || normItemCategory === normLabel;
         });
         if (!typeMatch) return false;
       }
@@ -1123,8 +1284,14 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         const itemTitle = (item.title || '').toLowerCase();
         const matchPropType = selectedPropertyTypesFilter.some((pt) => {
           const norm = pt.toLowerCase();
-          if (norm === 'residential') return itemType.includes('apartment') || itemType.includes('villa') || itemType.includes('house') || itemType.includes('flat') || itemTitle.includes('residential') || itemTitle.includes('apartment') || itemTitle.includes('villa');
-          if (norm === 'commercial') return itemType.includes('commercial') || itemType.includes('office') || itemType.includes('shop') || itemType.includes('showroom') || itemTitle.includes('commercial');
+          if (norm === 'residential') {
+            if (isCommercial) return false;
+            const itemCat = (item.category || '').toLowerCase();
+            return itemType.includes('apartment') || itemType.includes('villa') || itemType.includes('house') || itemType.includes('flat') || itemType.includes('pg') || itemCat.includes('pg') || itemTitle.includes('residential') || itemTitle.includes('apartment') || itemTitle.includes('villa') || itemTitle.includes('pg');
+          }
+          if (norm === 'commercial') {
+            return isCommercial;
+          }
           if (norm === 'agricultural') return itemType.includes('agricultural') || itemType.includes('land') || itemType.includes('farm') || itemType.includes('plot') || itemTitle.includes('farm') || itemTitle.includes('land');
           if (norm === 'luxury properties') return itemType.includes('luxury') || itemType.includes('villa') || itemTitle.includes('luxury') || (item as any).badgeType === 'premium';
           if (norm === 'new projects') return itemType.includes('project') || itemTitle.includes('project') || (item as any).badgeType === 'new' || (item as any).trending;
@@ -1170,7 +1337,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       }
 
       // Hide sold properties from main active grid unless Availability filter is set to "Sold"
-      if (item.sold && availabilityFilter !== 'Sold') {
+      if (itemIsSold && availabilityFilter !== 'Sold') {
         return false;
       }
 
@@ -1213,7 +1380,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   }, [displayProperties, validPage, itemsPerPage]);
 
   const recentlySoldList = useMemo(() => {
-    return propertiesDb.filter((p: any) => p.sold || p.approvalStatus === 'Sold' || p.listingStatus === 'Sold' || p.status === 'Sold' || p.recentlySold || p.badge === 'RECENTLY SOLD');
+    return propertiesDb.filter((p: any) => isSoldListing(p));
   }, [propertiesDb, tick]);
 
   const tabs = [
@@ -1266,10 +1433,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             )}
             <div>
               <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
-                {title || 'Verified Properties for Sale & Rent in India'}
+                {title || (activeTab === 'All' ? 'All Properties' : activeTab === 'Rent' ? 'Properties for Rent' : 'Properties for Sale')}
               </h1>
               <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0 0', fontWeight: 500 }}>
-                {subtitle || 'Explore verified residential, commercial, plots and new projects across India.'}
+                {subtitle || (activeTab === 'All' ? 'Explore all verified properties available for buy, sell and rent across India.' : 'Explore verified residential, commercial, plots and new projects across India.')}
               </p>
             </div>
           </div>
@@ -1291,37 +1458,74 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             marginBottom: '32px',
           }}
         >
-          {/* Active Context Tab Badge - Only keeps active tab (Buy / Rent) */}
+          {/* Active Context Category Tabs */}
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               borderBottom: '1px solid #F1F5F9',
               paddingBottom: '16px',
               marginBottom: '20px',
+              flexWrap: 'wrap',
+              gap: '12px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <button
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 22px',
-                  borderRadius: '9999px',
-                  border: 'none',
-                  backgroundColor: '#DCFCE7',
-                  color: '#16A34A',
-                  fontWeight: 800,
-                  fontSize: '14px',
-                  cursor: 'default',
-                }}
-              >
-                <FaHome style={{ fontSize: '15px' }} />
-                <span>{isRent ? 'Rent Property' : (_initialCategory === 'Sell' ? 'Sell Property' : 'Buy Property')}</span>
-              </button>
-
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              {[
+                { id: 'All', label: 'All Properties', icon: FaLayerGroup },
+                { id: 'Buy', label: 'Buy Property', icon: FaHome },
+                { id: 'Rent', label: 'Rent Property', icon: FaBuilding },
+                { id: 'Commercial', label: 'Commercial', icon: FaBriefcase },
+                { id: 'Plots', label: 'Plots / Lands', icon: FaMapMarkerAlt },
+              ].map((tabItem) => {
+                const TabIcon = tabItem.icon;
+                const isSelected = activeTab === tabItem.id;
+                return (
+                  <button
+                    key={tabItem.id}
+                    type="button"
+                    onClick={() => setActiveTab(tabItem.id as any)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 18px',
+                      borderRadius: '9999px',
+                      border: isSelected ? '1.5px solid #16A34A' : '1.5px solid #E2E8F0',
+                      backgroundColor: isSelected ? '#DCFCE7' : '#FFFFFF',
+                      color: isSelected ? '#16A34A' : '#64748B',
+                      fontWeight: 800,
+                      fontSize: '13.5px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: isSelected ? '0 2px 6px rgba(22, 163, 74, 0.15)' : 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = '#F8FAFC';
+                        e.currentTarget.style.borderColor = '#CBD5E1';
+                        e.currentTarget.style.color = '#0F172A';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = '#FFFFFF';
+                        e.currentTarget.style.borderColor = '#E2E8F0';
+                        e.currentTarget.style.color = '#64748B';
+                      }
+                    }}
+                  >
+                    <TabIcon style={{ fontSize: '13px' }} />
+                    <span>{tabItem.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#64748B' }}>
+                Showing <strong style={{ color: '#0F172A' }}>{displayProperties.length}</strong> {activeTab === 'All' ? 'mixed' : activeTab.toLowerCase()} listings
+              </span>
             </div>
           </div>
           <div className="top-search-filter-bar">
@@ -2091,6 +2295,49 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         </div>
                       )}
 
+                      {/* Bottom-left Category Status Badge */}
+                      {(() => {
+                        const isCardRent = (
+                          String(prop.status || '').toLowerCase().includes('rent') ||
+                          String(prop.status || '').toLowerCase().includes('lease') ||
+                          String((prop as any).propertyPurpose || '').toLowerCase().includes('rent') ||
+                          String((prop as any).propertyPurpose || '').toLowerCase().includes('lease') ||
+                          String(prop.title || '').toLowerCase().includes('for rent') ||
+                          String(prop.title || '').toLowerCase().includes('for lease') ||
+                          String(prop.priceDisplay || '').toLowerCase().includes('/mo') ||
+                          String(prop.priceDisplay || '').toLowerCase().includes('/month')
+                        );
+                        const isCardSell = String(prop.status || '').toLowerCase() === 'sell';
+                        const isCardComm = isCommercialProperty(prop);
+                        const badgeText = isCardComm
+                          ? (isCardRent ? 'COMMERCIAL • RENT' : (isCardSell ? 'COMMERCIAL • SELL' : 'COMMERCIAL • BUY'))
+                          : (isCardRent ? 'PROPERTY • RENT' : (isCardSell ? 'PROPERTY • SELL' : 'PROPERTY • BUY'));
+                        const bgClr = isCardComm ? '#EFF6FF' : (isCardRent ? '#F0F9FF' : '#ECFDF5');
+                        const txtClr = isCardComm ? '#1D4ED8' : (isCardRent ? '#0284C7' : '#059669');
+
+                        return (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: '10px',
+                              left: '12px',
+                              backgroundColor: bgClr,
+                              color: txtClr,
+                              padding: '3px 8px',
+                              borderRadius: '6px',
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.18)',
+                              zIndex: 4,
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            {badgeText}
+                          </div>
+                        );
+                      })()}
+
                       {/* Top Right Heart Button */}
                       <button
                         onClick={(e) => toggleWishlist(prop.id, e)}
@@ -2134,7 +2381,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         {/* Category-Relevant Specs Row */}
                         {(() => {
                           const isPlot = (prop.type || '').toLowerCase().includes('plot') || (prop.type || '').toLowerCase().includes('land') || (prop.title || '').toLowerCase().includes('plot') || (prop.title || '').toLowerCase().includes('land') || (prop.title || '').toLowerCase().includes('farm');
-                          const isComm = (prop.type || '').toLowerCase().includes('commercial') || (prop.type || '').toLowerCase().includes('office') || (prop.type || '').toLowerCase().includes('shop') || (prop.type || '').toLowerCase().includes('showroom') || (prop.type || '').toLowerCase().includes('warehouse') || (prop.title || '').toLowerCase().includes('commercial') || (prop.title || '').toLowerCase().includes('office') || (prop.title || '').toLowerCase().includes('shop');
+                          const isComm = isCommercialProperty(prop);
 
                           if (isPlot) {
                             return (
@@ -2322,7 +2569,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                       >
                         <div style={{ position: 'relative', height: '180px', backgroundColor: '#0F172A' }}>
                           <img
-                            src={prop.image}
+                            src={prop.image || prop.imageUrl || '/assets/luxury_apartment.png'}
                             alt={prop.title}
                             loading="lazy"
                             decoding="async"
@@ -2374,11 +2621,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                               {prop.title}
                             </h3>
                             <div style={{ fontSize: '12.5px', color: '#64748B', fontWeight: 600, marginBottom: '12px' }}>
-                              {prop.location}
+                              {prop.location || [prop.locality, prop.area, prop.city].filter(Boolean).join(', ') || 'Prime Location'}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '12px' }}>
                               <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#DC2626' }}>
-                                {prop.price}
+                                {prop.priceDisplay || (typeof prop.price === 'number' ? '₹' + prop.price + ' L' : prop.price) || 'Price on Request'}
                               </span>
                               <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#DC2626', backgroundColor: '#FEF2F2', padding: '3px 8px', borderRadius: '6px' }}>
                                 Deal Closed

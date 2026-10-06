@@ -545,8 +545,20 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
       return matchId || matchName || matchComp;
     }) : [];
 
-    const activeProps = allProps.filter(p => !p.sold && p.listingStatus !== 'Sold' && p.status !== 'Sold' && p.approvalStatus !== 'Sold').map(p => ({ ...p, itemType: 'Property', isSold: false }));
-    const soldProps = allProps.filter(p => p.sold || p.listingStatus === 'Sold' || p.status === 'Sold' || p.approvalStatus === 'Sold').map(p => ({ ...p, itemType: 'Property', isSold: true }));
+    const isPropSold = (p: any) => Boolean(
+      p.sold ||
+      String(p.sold).toLowerCase() === 'true' ||
+      p.recentlySold ||
+      String(p.recentlySold).toLowerCase() === 'true' ||
+      p.listingStatus === 'Sold' ||
+      p.status === 'Sold' ||
+      p.approvalStatus === 'Sold' ||
+      p.badge === 'RECENTLY SOLD' ||
+      p.badge === 'SOLD'
+    );
+
+    const activeProps = allProps.filter(p => !isPropSold(p)).map(p => ({ ...p, itemType: 'Property', isSold: false }));
+    const soldProps = allProps.filter(p => isPropSold(p)).map(p => ({ ...p, itemType: 'Property', isSold: true }));
 
     const activeBiz = allBiz.filter((b: any) => !(b as any).sold && b.status !== 'Sold' && (b as any).listingStatus !== 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name || b.title, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: false }));
     const soldBiz = allBiz.filter((b: any) => (b as any).sold || b.status === 'Sold' || (b as any).listingStatus === 'Sold').map((b: any) => ({ ...b, itemType: 'Business', title: b.name || b.title, priceDisplay: b.priceDisplay || `₹${b.price || 50} Lac`, isSold: true }));
@@ -723,7 +735,7 @@ export const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({
     return `${str} sqft`;
   };
 
-  const carpetArea = isPlot ? 'N/A' : (superArea && parseInt(superArea) ? `${Math.round(parseInt(superArea) * 0.85)} sqft` : (property.carpetArea || 'N/A'));
+  const carpetArea = isPlot ? 'N/A' : (property.carpetArea && String(property.carpetArea).trim() !== '' ? String(property.carpetArea) : 'N/A');
   const typeDisplay = isPlot ? 'Plots & Land' : isCommercial ? 'Commercial Property' : (catLower.includes('villa') || catLower.includes('house')) ? 'House & Villa' : 'Flats & Apartments';
 
   return (

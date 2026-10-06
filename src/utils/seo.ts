@@ -24,13 +24,23 @@ export const SEO_CONFIG: Record<string, PageSEO> = {
     ]
   },
   propertiesPage: {
-    title: "Verified Properties for Sale & Rent in India | TheNexopp",
-    description: "Explore 100% verified residential and commercial properties for buy and rent across India. Verified legal titles, verified broker connections, transparent pricing.",
+    title: "All Properties — Buy, Sell & Rent in India | TheNexopp",
+    description: "Explore 100% verified residential and commercial properties for buy, sell and rent across India. Verified legal titles, verified broker connections, transparent pricing.",
     canonicalPath: '/properties',
     robots: 'index, follow',
     breadcrumbs: [
       { name: 'Home', path: '/' },
-      { name: 'Properties', path: '/properties' }
+      { name: 'All Properties', path: '/properties' }
+    ]
+  },
+  buyPage: {
+    title: "Properties for Sale & Buy in India | TheNexopp",
+    description: "Explore verified residential and commercial properties for purchase across India.",
+    canonicalPath: '/properties/buy',
+    robots: 'index, follow',
+    breadcrumbs: [
+      { name: 'Home', path: '/' },
+      { name: 'Buy Properties', path: '/properties/buy' }
     ]
   },
   rentPage: {

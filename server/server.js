@@ -3373,6 +3373,28 @@ const sanitizePropertyPhotos = (p) => {
   };
 };
 
+// Legacy placeholder that older create/upsert code wrote when no area was supplied.
+const LEGACY_DEFAULT_AREA = '1000 sq.ft';
+const isLegacyDefaultArea = (val) =>
+  String(val || '').trim().toLowerCase().replace(/\s+/g, ' ') === LEGACY_DEFAULT_AREA;
+
+// Returns exactly what the user entered as the property area (no invented defaults).
+// Priority: super built-up / plot / explicit areaSqFt / built-up / sqft (carpet is kept separate).
+const resolveEnteredArea = (p) => {
+  if (!p) return '';
+  const clean = (v) => (v === undefined || v === null ? '' : String(v).trim());
+  // superBuiltUpArea / plotArea were never defaulted, so they always reflect user input.
+  const superArea = clean(p.superBuiltUpArea);
+  if (superArea) return superArea;
+  const plot = clean(p.plotArea);
+  if (plot) return plot;
+  // areaSqFt is the only column that may hold the old '1000 Sq.ft' placeholder.
+  const areaSqFt = clean(p.areaSqFt);
+  if (areaSqFt && !isLegacyDefaultArea(areaSqFt)) return areaSqFt;
+  // Carpet area is intentionally NOT promoted here; it is displayed separately.
+  return clean(p.builtUpArea) || clean(p.sqft) || '';
+};
+
 app.get('/api/properties', async (req, res) => {
   try {
     let props = await prisma.property.findMany({ 
@@ -3401,8 +3423,8 @@ app.get('/api/properties', async (req, res) => {
         soldDate: p.soldDate || undefined,
         propertyPurpose: p.propertyPurpose || (String(p.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
         priceDisplay: p.priceDisplay || (p.price ? `₹${p.price}` : ''),
-        areaSqFt: p.areaSqFt || p.superBuiltUpArea || '',
-        superBuiltUpArea: p.superBuiltUpArea || p.areaSqFt || '',
+        areaSqFt: resolveEnteredArea(p),
+        superBuiltUpArea: resolveEnteredArea({ ...p, plotArea: null }),
         carpetArea: p.carpetArea || undefined,
         plotArea: p.plotArea || undefined,
         ownershipType: p.ownershipType || undefined,
@@ -3453,8 +3475,8 @@ app.get('/api/properties/:id', async (req, res) => {
       soldDate: prop.soldDate || undefined,
       propertyPurpose: prop.propertyPurpose || (String(prop.status).toLowerCase().includes('rent') ? 'Rent' : 'Sale'),
       priceDisplay: prop.priceDisplay || (prop.price ? `₹${prop.price}` : ''),
-      areaSqFt: prop.areaSqFt || prop.superBuiltUpArea || '',
-      superBuiltUpArea: prop.superBuiltUpArea || prop.areaSqFt || '',
+      areaSqFt: resolveEnteredArea(prop),
+      superBuiltUpArea: resolveEnteredArea({ ...prop, plotArea: null }),
       carpetArea: prop.carpetArea || undefined,
       plotArea: prop.plotArea || undefined,
       ownershipType: prop.ownershipType || undefined,
@@ -3544,7 +3566,7 @@ app.post('/api/properties', async (req, res, next) => {
       listingStatus: listingStatus,
       published: newProp.published !== false,
       featured: Boolean(newProp.featured),
-      areaSqFt: newProp.areaSqFt || newProp.superBuiltUpArea || '1000 Sq.ft',
+      areaSqFt: resolveEnteredArea(newProp),
       superBuiltUpArea: newProp.superBuiltUpArea ? String(newProp.superBuiltUpArea) : null,
       carpetArea: newProp.carpetArea ? String(newProp.carpetArea) : null,
       plotArea: newProp.plotArea ? String(newProp.plotArea) : null,
@@ -3653,6 +3675,10 @@ app.put('/api/properties/:id', async (req, res, next) => {
     if (d.superBuiltUpArea !== undefined) updateData.superBuiltUpArea = d.superBuiltUpArea ? String(d.superBuiltUpArea) : null;
     if (d.carpetArea !== undefined) updateData.carpetArea = d.carpetArea ? String(d.carpetArea) : null;
     if (d.plotArea !== undefined) updateData.plotArea = d.plotArea ? String(d.plotArea) : null;
+    // Keep the primary areaSqFt column in sync with the area the user actually entered
+    if (d.areaSqFt === undefined && (d.superBuiltUpArea || d.plotArea)) {
+      updateData.areaSqFt = resolveEnteredArea(d);
+    }
     if (d.facing !== undefined) updateData.facing = d.facing ? String(d.facing) : null;
     if (d.parkingSlots !== undefined) updateData.parkingSlots = d.parkingSlots !== null && d.parkingSlots !== '' ? Number(d.parkingSlots) : null;
     if (d.balconies !== undefined) updateData.balconies = d.balconies !== null && d.balconies !== '' ? Number(d.balconies) : null;
@@ -3703,7 +3729,7 @@ app.put('/api/properties/:id', async (req, res, next) => {
           description: d.description || '',
           image: d.image || '',
           area: d.area || '',
-          areaSqFt: d.areaSqFt || '1000 Sq.ft',
+          areaSqFt: resolveEnteredArea(d),
           price: Number(d.price) || 0,
           priceDisplay: d.priceDisplay || `₹${d.price || 0}`,
           category: d.category || 'Flats',
@@ -3727,7 +3753,7 @@ app.put('/api/properties/:id', async (req, res, next) => {
           description: d.description || '',
           image: d.image || '',
           area: d.area || '',
-          areaSqFt: d.areaSqFt || '1000 Sq.ft',
+          areaSqFt: resolveEnteredArea(d),
           price: Number(d.price) || 0,
           priceDisplay: d.priceDisplay || `₹${d.price || 0}`,
           category: d.category || 'Flats',

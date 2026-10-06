@@ -1358,10 +1358,12 @@ export const togglePropertyRecentlySold = (id: string) => {
     const isRecentlySold = !item.recentlySold;
     updateProperty(id, {
       recentlySold: isRecentlySold,
-      sold: true,
-      approvalStatus: 'Sold',
-      listingStatus: 'Sold',
-      badge: isRecentlySold ? 'RECENTLY SOLD' : 'SOLD'
+      sold: isRecentlySold,
+      approvalStatus: isRecentlySold ? 'Sold' : 'Published',
+      listingStatus: isRecentlySold ? 'Sold' : 'Published',
+      status: isRecentlySold ? 'Sold' : (item.status === 'Sold' ? 'Buy' : item.status),
+      badge: isRecentlySold ? 'RECENTLY SOLD' : undefined,
+      soldDate: isRecentlySold ? (item.soldDate || new Date().toISOString().slice(0, 10)) : undefined
     });
   }
 };

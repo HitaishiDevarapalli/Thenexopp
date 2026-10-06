@@ -1155,6 +1155,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                 <option value="Villa">Villas</option>
                 <option value="Apartment">Apartments</option>
                 <option value="House">Individual Houses</option>
+                <option value="PG / Co-Living">PG / Co-Living</option>
                 <option value="Plot">Plots & Land</option>
                 <option value="Commercial">Commercial</option>
               </select>
@@ -1416,6 +1417,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               updateProperty(prop.id, {
                                 approvalStatus: val as any,
                                 listingStatus: val as any,
+                                status: isSold ? 'Sold' : (prop.status === 'Sold' ? 'Buy' : prop.status),
                                 sold: isSold,
                                 soldDate: isSold ? new Date().toISOString().slice(0, 10) : undefined,
                                 recentlySold: isSold,
@@ -2129,7 +2131,9 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                                 sold: true,
                                 approvalStatus: 'Sold',
                                 listingStatus: 'Sold',
-                                badge: nextState ? 'RECENTLY SOLD' : undefined
+                                status: 'Sold',
+                                badge: nextState ? 'RECENTLY SOLD' : 'SOLD',
+                                soldDate: prop.soldDate || new Date().toISOString().slice(0, 10)
                               });
                               showNotification?.(
                                 nextState
@@ -2801,10 +2805,24 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </div>
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>MAJOR CATEGORY *</label>
-                      <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value as any })} style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}>
+                      <select
+                        value={formData.category}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const isPg = val === 'PG / Co-Living';
+                          setFormData({
+                            ...formData,
+                            category: val as any,
+                            // PG / Co-Living is always a rental listing
+                            ...(isPg ? { propertyPurpose: 'Rent' as any, status: 'Rent' } : {})
+                          });
+                        }}
+                        style={{ width: '100%', padding: '14px', border: '1.5px solid #CBD5E1', borderRadius: '12px', fontWeight: 600, backgroundColor: '#FFFFFF' }}
+                      >
                         <option value="Villa">Villa</option>
                         <option value="Apartment">Apartment</option>
                         <option value="House">Individual House</option>
+                        <option value="PG / Co-Living">PG / Co-Living</option>
                         <option value="Plot">Land / Plot</option>
                         <option value="Commercial">Commercial</option>
                       </select>

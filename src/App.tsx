@@ -35,7 +35,7 @@ const SellPropertyPage = lazy(() => import('./components/forms/SellPropertyPage'
 const NotFoundPage = lazy(() => import('./components/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const NexOppAiAssistant = lazy(() => import('./components/NexOppAiAssistant'));
 
-type PageType = 'home' | 'propertiesPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'standaloneAgentAdmin' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
+type PageType = 'home' | 'propertiesPage' | 'buyPage' | 'rentPage' | 'sellPropertyPage' | 'flatsPage' | 'villasPage' | 'housesPage' | 'landPage' | 'franchisePage' | 'businessPage' | 'sellBusinessPage' | 'financePage' | 'loansPage' | 'financeServicePage' | 'insurancePage' | 'franchiseResales' | 'wishlist' | 'franchiseDetails' | 'newFranchise' | 'businessListings' | 'propertyDetails' | 'closeDeal' | 'adminPortal' | 'standaloneAgentAdmin' | 'aboutUsPage' | 'contactUsPage' | 'enquiryPage' | 'bookSlotPage' | 'notFound';
 
 // Subpage header with back button
 const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?: string; onBack: () => void }) => (
@@ -55,6 +55,9 @@ const SubpageHeader = ({ title, leftTitle, onBack }: { title: string; leftTitle?
 const routeMap: Record<string, PageType> = {
   '/': 'home',
   '/properties': 'propertiesPage',
+  '/all-properties': 'propertiesPage',
+  '/properties/all': 'propertiesPage',
+  '/properties/buy': 'buyPage',
   '/properties/rent': 'rentPage',
   '/properties/sell': 'sellPropertyPage',
   '/properties/flats': 'flatsPage',
@@ -469,8 +472,33 @@ export const App: React.FC = () => {
                 </div>
               ) : (
                 <PropertyCategories 
-                  title="Verified Properties for Sale & Rent in India"
-                  subtitle="Explore verified residential, commercial, plots and new projects across India."
+                  title="All Properties"
+                  subtitle="Explore all verified properties available for buy, sell and rent across India."
+                  initialCategory="All"
+                  onBack={navigateBack}
+                  searchQuery={globalSearchQuery}
+                  onClearSearch={() => setGlobalSearchQuery('')}
+                  onPropertyClick={(id) => {
+                    setSelectedPropertyId(id);
+                    navigateTo('propertyDetails', { propertyId: id });
+                  }} 
+                  onBuyProperty={(id) => {
+                    setSelectedBuyPropertyId(id);
+                    navigateTo('closeDeal', { propertyId: id });
+                  }}
+                  onCategorySelect={(cat) => {
+                    if (cat === 'BuyApartment') navigateTo('flatsPage');
+                    else if (cat === 'BuyVilla') navigateTo('villasPage');
+                    else if (cat === 'BuyHouse') navigateTo('housesPage');
+                    else if (cat === 'BuyLand') navigateTo('landPage');
+                  }}
+                />
+              )
+            ) : currentPage === 'buyPage' ? (
+              <PropertyCategories 
+                title="Properties for Sale"
+                subtitle="Explore verified residential, commercial, plots and new projects for purchase across India."
+                initialCategory="Buy"
                 onBack={navigateBack}
                 searchQuery={globalSearchQuery}
                 onClearSearch={() => setGlobalSearchQuery('')}
@@ -489,7 +517,6 @@ export const App: React.FC = () => {
                   else if (cat === 'BuyLand') navigateTo('landPage');
                 }}
               />
-              )
             ) : currentPage === 'rentPage' ? (
               <PropertyCategories 
                 title="Properties for Rent"

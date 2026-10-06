@@ -156,12 +156,15 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     const badgeUpper = String(p.badge || '').toUpperCase();
     return (
       p.sold === true ||
+      String(p.sold).toLowerCase() === 'true' ||
       p.recentlySold === true ||
+      String(p.recentlySold).toLowerCase() === 'true' ||
       statusUpper === 'SOLD' ||
       listingUpper === 'SOLD' ||
       approvalUpper === 'SOLD' ||
       badgeUpper === 'RECENTLY SOLD' ||
-      badgeUpper === 'SOLD'
+      badgeUpper === 'SOLD' ||
+      badgeUpper.includes('SOLD')
     );
   };
 
