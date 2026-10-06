@@ -458,22 +458,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                               borderRadius: '10px',
                               textDecoration: 'none',
                               transition: 'all 0.15s ease',
-                              backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
-                              border: sub.isCta ? '1px dashed #86EFAC' : 'none',
+                              backgroundColor: 'transparent',
+                              border: 'none',
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = sub.isCta ? '#DCFCE7' : '#F8FAFC';
+                              e.currentTarget.style.backgroundColor = '#F8FAFC';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = sub.isCta ? '#F0FDF4' : 'transparent';
+                              e.currentTarget.style.backgroundColor = 'transparent';
                             }}
                           >
                             <div style={{
                               width: '28px',
                               height: '28px',
                               borderRadius: '8px',
-                              backgroundColor: sub.isCta ? '#059669' : `${sub.color}14`,
-                              color: sub.isCta ? '#FFFFFF' : sub.color,
+                              backgroundColor: `${sub.color}14`,
+                              color: sub.color,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -484,8 +484,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                             </div>
                             <div style={{
                               fontSize: '13.5px',
-                              fontWeight: sub.isCta ? 700 : 600,
-                              color: sub.isCta ? '#059669' : '#0F172A',
+                              fontWeight: 600,
+                              color: '#0F172A',
                               whiteSpace: 'nowrap',
                             }}>
                               {sub.name}
@@ -1159,12 +1159,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                             alignItems: 'center',
                             gap: '8px',
                             padding: '8px 10px',
-                            color: sub.isCta ? '#059669' : '#334155',
+                            color: '#334155',
                             textDecoration: 'none',
                             fontSize: '13.5px',
-                            fontWeight: sub.isCta ? 800 : 600,
+                            fontWeight: 600,
                             borderRadius: '8px',
-                            backgroundColor: sub.isCta ? '#F0FDF4' : 'transparent',
+                            backgroundColor: 'transparent',
                           }}
                         >
                           <span style={{ color: sub.color || '#059669', fontSize: '13px' }}>{sub.subIcon}</span>
