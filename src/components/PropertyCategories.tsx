@@ -189,16 +189,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       const matchedCity = availableCities.find(c => c.is_active && (currentGlobalCity.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(currentGlobalCity.toLowerCase())));
       if (lastSyncedGlobalCityRef.current !== currentGlobalCity) {
         if (matchedCity) {
-          const hasPropsInCity = propertiesDb.some(p => {
-            const pCity = (p.city || '').toLowerCase();
-            const mName = matchedCity.name.toLowerCase();
-            return pCity.includes(mName) || mName.includes(pCity);
-          });
-          if (hasPropsInCity) {
-            setSelectedCityId(matchedCity.id);
-          } else {
-            setSelectedCityId('');
-          }
+          setSelectedCityId(matchedCity.id);
         }
         lastSyncedGlobalCityRef.current = currentGlobalCity;
       }
@@ -2438,13 +2429,15 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         })()}
 
                         {/* Price & Distance Row */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0px', flexWrap: 'nowrap', gap: '8px' }}>
-                          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0px', flexWrap: 'wrap', gap: '8px' }}>
+                          <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {prop.price}
                           </span>
-                          <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#16A34A', backgroundColor: '#DCFCE7', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                            {prop.dist}
-                          </span>
+                          {!(prop as any).exactLocationMatch && (prop as any).distanceKm > 0 && (
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#16A34A', backgroundColor: '#DCFCE7', padding: '4px 8px', borderRadius: '8px', whiteSpace: 'nowrap' }}>
+                              {(prop as any).distanceKm < 1 ? 'Under 1 KM' : `${(prop as any).distanceKm.toFixed(1)} KM away`}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
