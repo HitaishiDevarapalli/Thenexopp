@@ -195,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         { name: 'All Properties', desc: 'Browse all verified properties for buy, sell & rent', link: 'propertiesPage', subIcon: <FaLayerGroup />, color: '#059669' },
         { name: 'Buy Property', desc: 'Browse verified real estate & property listings for sale', link: 'buyPage', subIcon: <FaBuilding />, color: '#059669' },
         { name: 'Rent Property', desc: 'Explore verified residential & commercial rentals', link: 'rentPage', subIcon: <FaKey />, color: '#2563EB' },
-        { name: 'Post Property', desc: 'List your property to thousands of verified buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#059669', isCta: true },
+        { name: 'Post Property', desc: 'List your property to thousands of verified buyers', link: 'sellPropertyPage', subIcon: <FaHandHoldingUsd />, color: '#059669', },
       ]
     },
     { 
@@ -214,7 +214,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       icon: <FaBriefcase />, 
       dropdown: [
         { name: 'Buy Operational Business', desc: 'Verified companies across retail, tech & F&B', link: 'businessPage', subIcon: <FaShoppingBag />, color: '#059669' },
-        { name: 'Sell a Business', desc: 'Confidential valuation & buyer matchmaking', link: 'sellBusinessPage', subIcon: <FaHandHoldingUsd />, color: '#D97706', isCta: true },
+        { name: 'Sell a Business', desc: 'Confidential valuation & buyer matchmaking', link: 'sellBusinessPage', subIcon: <FaHandHoldingUsd />, color: '#D97706', },
       ]
     },
     { 
