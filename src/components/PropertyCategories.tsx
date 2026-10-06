@@ -916,6 +916,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         location: `${p.area ? p.area + ', ' : ''}${p.city || ''}`,
         badge: p.verified ? 'Verified' : (p.premium ? 'Premium' : 'New'),
         badgeType: p.verified ? 'verified' : (p.premium ? 'premium' : 'new'),
+        createdAt: (p as any).createdAt || (p as any).createdDate || new Date().toISOString(),
         image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
         area: (() => {
           const val = p.areaSqFt || p.superBuiltUpArea || p.carpetArea || p.plotArea || p.sqft || p.builtUpArea;
