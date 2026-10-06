@@ -562,7 +562,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       urlSlug: ''
     });
     setAddressSearchQuery('');
-    setMapMarkerPos({ lat: 17.4326, lng: 78.4071 });
+    setMapMarkerPos({ lat: 16.3067, lng: 80.4365 });
     setModalMode('add');
     setEditingId(null);
     setModalSubTab('basic');
@@ -589,8 +589,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       status: rawPurpose === 'Rent' ? 'Rent' : 'Buy',
       assignedBrokerIds: (prop.assignedBrokerIds && prop.assignedBrokerIds.length > 0) ? prop.assignedBrokerIds : (prop.dealerId ? [prop.dealerId] : [])
     });
-    setAddressSearchQuery(prop.formatted_address || prop.fullAddress || `${prop.area || 'Jubilee Hills'}, ${prop.city || 'Hyderabad'}`);
-    setMapMarkerPos({ lat: prop.latitude || 17.4326, lng: prop.longitude || 78.4071 });
+    setAddressSearchQuery(prop.formatted_address || prop.fullAddress || `${prop.area || 'SVN Colony'}, ${prop.city || 'Guntur'}`);
+    setMapMarkerPos({ lat: prop.latitude || 16.3067, lng: prop.longitude || 80.4365 });
     setModalMode('edit');
     setEditingId(prop.id);
     setModalSubTab('basic');
@@ -607,7 +607,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       listingStatus: 'Draft'
     });
     setAddressSearchQuery(prop.formatted_address || prop.fullAddress || '');
-    setMapMarkerPos({ lat: prop.latitude || 17.4326, lng: prop.longitude || 78.4071 });
+    setMapMarkerPos({ lat: prop.latitude || 16.3067, lng: prop.longitude || 80.4365 });
     setModalMode('duplicate');
     setEditingId(null);
     setModalSubTab('basic');

@@ -1079,17 +1079,14 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           const isAreaMatch = (item.areaId && item.areaId === selectedAreaId) || (selAreaName && (itemArea.includes(selAreaName) || itemLoc.includes(selAreaName) || selAreaName.includes(itemArea)));
           if (!isAreaMatch) return false;
           (item as any).exactLocationMatch = true;
-          (item as any).distanceKm = 0;
         } else if (isCityMatch) {
           (item as any).exactLocationMatch = true;
-          (item as any).distanceKm = 0;
         } else {
           return false;
         }
       } else {
         // Bypass location filtering entirely when All Cities is selected!
         (item as any).exactLocationMatch = true;
-        (item as any).distanceKm = 0;
       }
 
       if (selectedLocalityId) {

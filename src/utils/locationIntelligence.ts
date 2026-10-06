@@ -1202,7 +1202,7 @@ export const searchLivePlaces = async (query: string): Promise<LocationIntellige
 // 4. Instant Online Geocode for Custom Addresses
 export const geocodeLocationOnline = async (query: string): Promise<LocationIntelligenceResult> => {
   if (!query || !query.trim()) {
-    return parseIndiaLocation('Hyderabad');
+    return parseIndiaLocation('Guntur');
   }
 
   // Check if query is GPS coordinates (e.g. "17.4483, 78.3741")
