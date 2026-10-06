@@ -6696,9 +6696,9 @@ table {
     height: 130px !important;
     object-fit: cover !important;
   }
-  .responsive-property-grid div[style*="height: '180px'"],
-  .wishlist-grid div[style*="height: '180px'"],
-  .business-listings-grid div[style*="height: '180px'"] {
+  .responsive-property-grid div[style*="height: 180px"],
+  .wishlist-grid div[style*="height: 180px"],
+  .business-listings-grid div[style*="height: 180px"] {
     height: 130px !important;
   }
 
@@ -6837,7 +6837,7 @@ table {
   }
   .responsive-property-grid img,
   .wishlist-grid img {
-    height: 120px !important;
+    height: 130px !important;
   }
 }
 
@@ -6936,7 +6936,7 @@ body.mobile-drawer-open {
   .business-listings-grid .landscape-card .feed-card-image-wrap,
   .business-listings-grid .landscape-card .property-image-container {
     width: 100% !important;
-    height: 120px !important;
+    height: 130px !important;
   }
 
   .responsive-property-grid .landscape-card .feed-card-body,
