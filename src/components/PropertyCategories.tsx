@@ -1339,7 +1339,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
       const aTier = (a as any).distanceTier || 0;
       const bTier = (b as any).distanceTier || 0;
-      if (aTier !== bTier) {
+      
+      // If user explicitly chose a sort order other than the default, bypass distance tier sorting
+      const isDefaultSort = !sortBy || sortBy === 'Relevance' || sortBy === 'Newest First' || sortBy === 'Newest';
+
+      if (isDefaultSort && aTier !== bTier) {
          return aTier - bTier;
       }
 
@@ -1351,7 +1355,16 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (a.badgeType === 'premium' && b.badgeType !== 'premium') return -1;
         if (a.badgeType !== 'premium' && b.badgeType === 'premium') return 1;
         return b.viewsCount - a.viewsCount;
-      } else if (sortBy === 'Newest First' || sortBy === 'Newest' || !sortBy || sortBy === 'Relevance') {
+      } else if (sortBy === 'Oldest First') {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        if (timeA !== timeB) return timeA - timeB;
+        return a.id.localeCompare(b.id);
+      } else {
+        // Default: Newest First
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        if (timeA !== timeB) return timeB - timeA;
         return b.id.localeCompare(a.id);
       }
       return 0;
@@ -2057,6 +2070,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                     style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '12px', fontWeight: 800, color: '#0F172A', cursor: 'pointer' }}
                   >
                     <option value="Newest First">Newest First</option>
+                    <option value="Oldest First">Oldest First</option>
                     <option value="Featured">Featured</option>
                     <option value="Price: Low to High">Price: Low to High</option>
                     <option value="Price: High to Low">Price: High to Low</option>
@@ -2151,7 +2165,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 const currentTier = (prop as any).distanceTier || 0;
                 const prevTier = index === 0 ? 0 : ((paginatedProperties[index - 1] as any).distanceTier || 0);
                 
-                const showSeparator = currentTier > 0 && currentTier > prevTier;
+                const isDefaultSort = !sortBy || sortBy === 'Relevance' || sortBy === 'Newest First' || sortBy === 'Newest';
+                const showSeparator = isDefaultSort && currentTier > 0 && currentTier > prevTier;
 
                 const isFav = isWishlisted(prop.id);
                 let badgeBg = '#DCFCE7';
