@@ -217,13 +217,8 @@ export const App: React.FC = () => {
     window.history.pushState({}, '', url);
     setCurrentPath(url);
     
-    // Scroll to top immediately, taking Lenis into account
-    const lenis = (window as any).lenis;
-    if (lenis) {
-      lenis.scrollTo(0, { immediate: true });
-    } else {
-      window.scrollTo(0, 0);
-    }
+    // Scroll to top immediately on route change
+    window.scrollTo(0, 0);
   };
 
   const navigateTo = (page: PageType, data?: { propertyId?: string; buyPropertyId?: string; franchiseId?: string; industry?: string }) => {
@@ -299,36 +294,10 @@ export const App: React.FC = () => {
     updateSEO(currentPage);
   }, [currentPage]);
 
-  // Lenis smooth scroll initialization
+  // Native Smooth Scrolling Behavior
   useEffect(() => {
-    if (currentPage === 'adminPortal' || currentPage === 'standaloneAgentAdmin') {
-      return;
-    }
-
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 2,
-    });
-
-    (window as any).lenis = lenis;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    const animationFrameId = requestAnimationFrame(raf);
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-      lenis.destroy();
-      (window as any).lenis = null;
-    };
+    // We removed Lenis to allow native loose momentum scrolling on all devices.
+    // CSS handles scroll-behavior: smooth natively.
   }, [currentPage]);
 
   if (isInitialLoading) {

@@ -64,7 +64,7 @@ img, picture, svg, video, .property-card-img, .listing-card-img, .wishlist-card-
 
 /* Mobile Layout & Viewport Alignment Hardening */
 html, body {
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   max-width: 100vw;
   -webkit-font-smoothing: antialiased;
@@ -75,7 +75,7 @@ html, body {
 #root {
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -175,8 +175,8 @@ html, body {
 }
 
 html {
-  scroll-behavior: initial; /* Lenis handles smooth scrolling */
-  overflow-x: hidden;
+  scroll-behavior: smooth;
+  overflow-x: clip;
   font-size: 16px;
 }
 
@@ -210,7 +210,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 a {
@@ -242,7 +242,7 @@ input[type=number] {
   padding: 0;
   text-align: left;
   border: none;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Container limits & iOS/Android Safe Area Support */
@@ -264,7 +264,7 @@ input[type=number] {
   /* Force all sections & pages to stay within viewport with smooth iOS touch momentum */
   section, .prop-details-page, #root > div {
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-overflow-scrolling: touch;
   }
   
@@ -276,7 +276,7 @@ input[type=number] {
 
   /* Universal Mobile Safety Rules - Prevent all clipping and horizontal overflow */
   body, #root {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     width: 100vw !important;
   }
   div, section, form, input, select, button {
@@ -6310,7 +6310,7 @@ body.modal-open {
 /* ── COMPREHENSIVE MOBILE & ADMIN PANEL RESPONSIVENESS OVERHAUL ── */
 html, body, #root {
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
   box-sizing: border-box;
 }
 
