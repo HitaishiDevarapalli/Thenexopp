@@ -103,6 +103,8 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('All');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
 
   // Bulk Actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -356,6 +358,15 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
       return matchesSearch && matchesPurpose && matchesStatus && matchesCategory && matchesCity;
     });
   }, [propertiesDb, activeModuleTab, searchQuery, selectedPurposeFilter, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter, dataUpdated]);
+
+  const paginatedProperties = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    return filteredProperties.slice(start, start + rowsPerPage);
+  }, [filteredProperties, currentPage, rowsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedPurposeFilter, selectedStatusFilter, selectedCategoryFilter, selectedCityFilter, activeModuleTab]);
 
   // Analytics KPIs
   const stats = useMemo(() => {
@@ -1250,7 +1261,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     </td>
                   </tr>
                 ) : (
-                  filteredProperties.map(prop => {
+                  paginatedProperties.map(prop => {
                     const assignedBroker = dealersDb.find(d => d.id === prop.dealerId);
                     const isSelected = selectedIds.includes(prop.id);
                     const isRent = prop.propertyPurpose === 'Rent' || prop.propertyPurpose === 'Lease' || prop.status === 'Rent';
@@ -1567,18 +1578,18 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
             {filteredProperties.length > 0 && (
               <div style={{ padding: '16px 20px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
                 <div style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 500 }}>
-                  Showing {Math.min(1, filteredProperties.length)} to {filteredProperties.length} of {propertiesDb.length} properties
+                  Showing {Math.min(1, filteredProperties.length === 0 ? 0 : ((currentPage - 1) * rowsPerPage) + 1)} to {Math.min(filteredProperties.length, currentPage * rowsPerPage)} of {filteredProperties.length} properties
                 </div>
-                {Math.ceil(filteredProperties.length / 10) > 1 && (
+                {Math.ceil(filteredProperties.length / rowsPerPage) > 1 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    {Array.from({ length: Math.ceil(filteredProperties.length / 10) }, (_, i) => (
-                      <button key={i} style={{ width: '32px', height: '32px', borderRadius: '8px', border: i === 0 ? 'none' : '1px solid #E2E8F0', backgroundColor: i === 0 ? '#ECFDF5' : 'transparent', color: i === 0 ? '#059669' : '#64748B', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>{i + 1}</button>
+                    {Array.from({ length: Math.ceil(filteredProperties.length / rowsPerPage) }, (_, i) => (
+                      <button key={i} onClick={() => setCurrentPage(i + 1)} style={{ width: '32px', height: '32px', borderRadius: '8px', border: i + 1 === currentPage ? 'none' : '1px solid #E2E8F0', backgroundColor: i + 1 === currentPage ? '#ECFDF5' : 'transparent', color: i + 1 === currentPage ? '#059669' : '#64748B', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>{i + 1}</button>
                     ))}
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: '#64748B' }}>
                   Rows per page:
-                  <select style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', fontSize: '0.82rem', fontWeight: 600, color: '#0F172A', outline: 'none' }}>
+                  <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }} style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', fontSize: '0.82rem', fontWeight: 600, color: '#0F172A', outline: 'none' }}>
                     <option>10</option>
                     <option>25</option>
                     <option>50</option>
