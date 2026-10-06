@@ -2560,9 +2560,14 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                           </div>
                           <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <FaCity style={{ fontSize: '1.1rem', color: '#64748B', marginTop: '2px', flexShrink: 0 }} />
-                            <div>
-                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City</div>
-                              <div style={{ fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px' }}>{formData.city || '-'}</div>
+                            <div style={{ width: '100%' }}>
+                              <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>City (Editable)</div>
+                              <input 
+                                type="text"
+                                value={formData.city || ''}
+                                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                style={{ width: '100%', fontSize: '0.92rem', color: '#0F172A', fontWeight: 800, marginTop: '2px', border: 'none', background: 'transparent', borderBottom: '1px solid #CBD5E1', outline: 'none', padding: '2px 0' }}
+                              />
                             </div>
                           </div>
                           <div style={{ backgroundColor: '#ECFDF5', border: '1.5px solid #A7F3D0', borderRadius: '14px', padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -2584,14 +2589,16 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                               <label style={{ fontSize: '0.72rem', color: '#047857', fontWeight: 800, display: 'block', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Full Address / Landmark * (Mandatory)</label>
                               <input 
                                 type="text" 
-                                value={formData.subLocation || formData.sub_location || ''} 
+                                value={formData.fullAddress || formData.formatted_address || formData.subLocation || formData.sub_location || ''} 
                                 onChange={e => {
-                                  const subLoc = e.target.value;
+                                  const addr = e.target.value;
                                   setFormData({ 
                                     ...formData, 
-                                    subLocation: subLoc,
-                                    sub_location: subLoc,
-                                    landmark: subLoc
+                                    fullAddress: addr,
+                                    formatted_address: addr,
+                                    subLocation: addr,
+                                    sub_location: addr,
+                                    landmark: addr
                                   });
                                 }} 
                                 placeholder="e.g. Door 4-12, Phase 2, Near Mindspace" 
