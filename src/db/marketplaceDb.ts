@@ -168,6 +168,7 @@ export interface PropertyListing {
 
   // Property Management System Extensions
   propertyPurpose?: 'Sale' | 'Rent' | 'Lease';
+  propertyType?: 'Residential' | 'Commercial' | 'Agricultural' | 'Luxury Properties' | 'New Projects' | string;
   propertySubtype?: string;
   negotiable?: boolean;
   superBuiltUpArea?: string;

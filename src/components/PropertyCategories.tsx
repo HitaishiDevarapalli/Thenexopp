@@ -68,7 +68,7 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'warangal': { lat: 17.9689, lng: 79.5941 }
 };
 
-export const isCommercialProperty = (item: any): boolean => {
+export const isPgProperty = (item: any): boolean => {
   if (!item) return false;
   const lowerType = String(item.type || '').toLowerCase();
   const lowerTitle = String(item.title || '').toLowerCase();
@@ -76,6 +76,31 @@ export const isCommercialProperty = (item: any): boolean => {
   const lowerPropType = String(item.propertyType || '').toLowerCase();
   const lowerSubtype = String(item.propertySubtype || '').toLowerCase();
   const lowerDesc = String(item.description || '').toLowerCase();
+  const text = [lowerType, lowerTitle, lowerCat, lowerPropType, lowerSubtype, lowerDesc].join(' ');
+
+  return (
+    text.includes('pg') ||
+    text.includes('co-living') ||
+    text.includes('coliving') ||
+    text.includes('co living') ||
+    text.includes('paying guest')
+  );
+};
+
+export const isCommercialProperty = (item: any): boolean => {
+  if (!item) return false;
+  if (isPgProperty(item)) return false;
+
+  const lowerType = String(item.type || '').toLowerCase();
+  const lowerTitle = String(item.title || '').toLowerCase();
+  const lowerCat = String(item.category || '').toLowerCase();
+  const lowerPropType = String(item.propertyType || '').toLowerCase();
+  const lowerSubtype = String(item.propertySubtype || '').toLowerCase();
+  const lowerDesc = String(item.description || '').toLowerCase();
+  const lowerPurpose = String(item.propertyPurpose || '').toLowerCase();
+
+  const identityText = [lowerType, lowerCat, lowerPropType, lowerSubtype, lowerPurpose].join(' ');
+  const categoryIdentityText = [lowerType, lowerCat, lowerSubtype].join(' ');
 
   const commercialKeywords = [
     'commercial',
@@ -93,19 +118,49 @@ export const isCommercialProperty = (item: any): boolean => {
     'coworking'
   ];
 
-  if (commercialKeywords.some(kw => 
-    lowerType.includes(kw) ||
-    lowerTitle.includes(kw) ||
-    lowerCat.includes(kw) ||
-    lowerPropType.includes(kw) ||
-    lowerSubtype.includes(kw) ||
-    lowerDesc.includes(kw)
-  )) {
+  const residentialKeywords = [
+    'residential',
+    'apartment',
+    'flat',
+    'bhk',
+    '1 rk',
+    '1rk',
+    'villa',
+    'house',
+    'pg',
+    'co-living',
+    'coliving'
+  ];
+
+  const hasResidentialCategory = residentialKeywords.some(kw => categoryIdentityText.includes(kw));
+  const hasCommercialCategory = commercialKeywords.some(kw => categoryIdentityText.includes(kw));
+
+  if (hasResidentialCategory && !hasCommercialCategory) {
+    return false;
+  }
+
+  if (hasCommercialCategory) {
     return true;
   }
 
-  // Check if 'space' is present in non-parking context
-  if ((lowerType.includes('space') || lowerCat.includes('space') || lowerTitle.includes('space')) && !lowerType.includes('parking') && !lowerTitle.includes('parking')) {
+  if (lowerPropType.includes('commercial') && !hasResidentialCategory) {
+    return true;
+  }
+
+  if (residentialKeywords.some(kw => identityText.includes(kw))) {
+    return false;
+  }
+
+  const searchableText = [lowerTitle, lowerDesc].join(' ');
+  const hasCommercialText = commercialKeywords.some(kw => searchableText.includes(kw));
+  const hasResidentialText = residentialKeywords.some(kw => searchableText.includes(kw));
+
+  if (hasCommercialText && !hasResidentialText) {
+    return true;
+  }
+
+  // Check if 'space' is present in non-parking category/type context
+  if (categoryIdentityText.includes('space') && !categoryIdentityText.includes('parking')) {
     return true;
   }
 
@@ -1155,6 +1210,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       );
 
       const isCommercial = isCommercialProperty(item);
+      const isPg = isPgProperty(item);
 
       if (activeTab === 'Buy') {
         if (isItemRent) return false;
@@ -1193,6 +1249,10 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
             return isCommercial;
           }
 
+          if (normVal.includes('pg') || normVal.includes('co-living') || normVal.includes('coliving') || normVal.includes('paying guest')) {
+            return isPg;
+          }
+
           if (val === '4+ BHK' && parseInt(item.bhk) >= 4) return true;
           if (val.includes('BHK')) {
             // Residential BHK filter: commercial non-residential properties must NOT match
@@ -1215,6 +1275,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           const normLabel = selectedLabel.toLowerCase();
           const normItemType = (item.type || '').toLowerCase();
           const normItemTitle = (item.title || '').toLowerCase();
+          const normItemSubtype = String((item as any).propertySubtype || '').toLowerCase();
+          const normItemDescription = String((item as any).description || '').toLowerCase();
+
+          if (normLabel.includes('pg') || normLabel.includes('co-living') || normLabel.includes('coliving') || normLabel.includes('paying guest')) {
+            return isPg;
+          }
 
           // Commercial Space / Commercial filter in Property Type
           if (
@@ -1236,7 +1302,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           if ((normLabel.includes('plot') || normLabel.includes('land')) && (normItemType.includes('plot') || normItemType.includes('land') || normItemTitle.includes('plot') || normItemTitle.includes('land'))) return true;
 
           const normItemCategory = (item.category || '').toLowerCase();
-          return normItemType === normLabel || normItemCategory === normLabel;
+          return normItemType === normLabel || normItemCategory === normLabel || normItemSubtype === normLabel || normItemDescription.includes(normLabel);
         });
         if (!typeMatch) return false;
       }
@@ -1276,7 +1342,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
           if (norm === 'residential') {
             if (isCommercial) return false;
             const itemCat = (item.category || '').toLowerCase();
-            return itemType.includes('apartment') || itemType.includes('villa') || itemType.includes('house') || itemType.includes('flat') || itemType.includes('pg') || itemCat.includes('pg') || itemTitle.includes('residential') || itemTitle.includes('apartment') || itemTitle.includes('villa') || itemTitle.includes('pg');
+            return isPg || itemType.includes('apartment') || itemType.includes('villa') || itemType.includes('house') || itemType.includes('flat') || itemType.includes('pg') || itemCat.includes('pg') || itemTitle.includes('residential') || itemTitle.includes('apartment') || itemTitle.includes('villa') || itemTitle.includes('pg');
           }
           if (norm === 'commercial') {
             return isCommercial;
@@ -1294,11 +1360,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       // SPECIFIED FILTER 6: Furnishing Status (Furnished, Semi-Furnished, Unfurnished)
       if (selectedFurnishingsFilter.length > 0) {
         const itemFurn = ((item as any).furnishing || (item as any).furnishingStatus || '').toLowerCase();
+        const isSemiFurnished = itemFurn.includes('semi');
+        const isUnfurnished = itemFurn.includes('unfurnished') || itemFurn.includes('un-furnished') || itemFurn.includes('bare shell');
         const matchFurn = selectedFurnishingsFilter.some((f) => {
           const norm = f.toLowerCase();
-          if (norm === 'furnished') return itemFurn.includes('furnished') && !itemFurn.includes('semi');
-          if (norm === 'semi-furnished') return itemFurn.includes('semi');
-          if (norm === 'unfurnished') return itemFurn.includes('unfurnished') || (!itemFurn.includes('furnished') && !itemFurn.includes('semi'));
+          if (norm === 'furnished') return itemFurn.includes('furnished') && !isSemiFurnished && !isUnfurnished;
+          if (norm === 'semi-furnished') return isSemiFurnished;
+          if (norm === 'unfurnished') return isUnfurnished || (!itemFurn.includes('furnished') && !isSemiFurnished);
           return itemFurn.includes(norm);
         });
         if (!matchFurn) return false;
@@ -2301,7 +2369,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
                       {/* Bottom-left Category Status Badge */}
                       {(() => {
+                        const isCardPg = isPgProperty(prop);
                         const isCardRent = (
+                          isCardPg ||
                           String(prop.status || '').toLowerCase().includes('rent') ||
                           String(prop.status || '').toLowerCase().includes('lease') ||
                           String((prop as any).propertyPurpose || '').toLowerCase().includes('rent') ||
@@ -2313,11 +2383,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                         );
                         const isCardSell = String(prop.status || '').toLowerCase() === 'sell';
                         const isCardComm = isCommercialProperty(prop);
-                        const badgeText = isCardComm
+                        const badgeText = isCardPg
+                          ? 'PG / CO-LIVING • RENT'
+                          : isCardComm
                           ? (isCardRent ? 'COMMERCIAL • RENT' : (isCardSell ? 'COMMERCIAL • SELL' : 'COMMERCIAL • BUY'))
                           : (isCardRent ? 'PROPERTY • RENT' : (isCardSell ? 'PROPERTY • SELL' : 'PROPERTY • BUY'));
-                        const bgClr = isCardComm ? '#EFF6FF' : (isCardRent ? '#F0F9FF' : '#ECFDF5');
-                        const txtClr = isCardComm ? '#1D4ED8' : (isCardRent ? '#0284C7' : '#059669');
+                        const bgClr = isCardPg ? '#F0FDF4' : isCardComm ? '#EFF6FF' : (isCardRent ? '#F0F9FF' : '#ECFDF5');
+                        const txtClr = isCardPg ? '#15803D' : isCardComm ? '#1D4ED8' : (isCardRent ? '#0284C7' : '#059669');
 
                         return (
                           <div
@@ -2404,13 +2476,24 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                           }
 
                           if (isComm) {
+                            const commercialTypeText = (() => {
+                              const residentialLabels = ['apartment', 'flat', 'bhk', 'villa', 'house', 'pg', 'co-living', 'coliving'];
+                              const candidates = [prop.propertySubtype, prop.propertyType, prop.type].filter(Boolean).map(String);
+                              const commercialCandidate = candidates.find((label) => {
+                                const lower = label.toLowerCase();
+                                return lower.includes('commercial') || lower.includes('office') || lower.includes('shop') || lower.includes('showroom') || lower.includes('warehouse') || lower.includes('godown') || lower.includes('industrial') || lower.includes('space');
+                              });
+                              if (commercialCandidate) return commercialCandidate;
+                              return candidates.find((label) => !residentialLabels.some((kw) => label.toLowerCase().includes(kw))) || 'Commercial Space';
+                            })();
+
                             return (
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', fontWeight: 600, color: '#1E40AF', backgroundColor: '#EFF6FF', padding: '8px 10px', borderRadius: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <FaRulerCombined style={{ color: '#2563EB' }} /> {prop.area}
                                 </span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <FaBriefcase style={{ color: '#2563EB' }} /> {prop.type || 'Commercial Space'}
+                                  <FaBriefcase style={{ color: '#2563EB' }} /> {commercialTypeText}
                                 </span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <FaCar style={{ color: '#2563EB' }} /> {prop.parking ? `${prop.parking} Parking` : 'Ample Parking'}
