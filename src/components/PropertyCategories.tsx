@@ -211,6 +211,49 @@ export const isCommercialProperty = (item: any): boolean => {
   return false;
 };
 
+const isPlotOrLandProperty = (item: any): boolean => {
+  if (!item) return false;
+  const text = [
+    item.type,
+    item.title,
+    item.category,
+    item.propertyType,
+    item.propertySubtype,
+    item.description
+  ].map((value) => String(value || '').toLowerCase()).join(' ');
+
+  return (
+    text.includes('plot') ||
+    text.includes('land') ||
+    text.includes('farm') ||
+    text.includes('acre') ||
+    text.includes('sq.yard') ||
+    text.includes('sq yard')
+  );
+};
+
+const isBhkResidentialProperty = (item: any): boolean => {
+  if (!item) return false;
+  if (isPgProperty(item) || isCommercialProperty(item) || isPlotOrLandProperty(item)) return false;
+
+  const text = [
+    item.type,
+    item.title,
+    item.category,
+    item.propertyType,
+    item.propertySubtype
+  ].map((value) => String(value || '').toLowerCase()).join(' ');
+
+  return (
+    text.includes('apartment') ||
+    text.includes('flat') ||
+    text.includes('villa') ||
+    text.includes('house') ||
+    text.includes('bhk') ||
+    Number(item.bhk) > 0
+  );
+};
+
 export const isSoldListing = (p: any): boolean => {
   if (!p) return false;
   const statusLower = String(p.status || '').toLowerCase().trim();
@@ -1276,6 +1319,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
       const isCommercial = isCommercialProperty(item);
       const isPg = isPgProperty(item);
+      const isPlotOrLand = isPlotOrLandProperty(item);
 
       if (activeTab === 'Buy') {
         if (isItemRent) return false;
@@ -1288,10 +1332,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       } else if (activeTab === 'Commercial') {
         if (!isCommercial) return false;
       } else if (activeTab === 'Plots') {
-        const itemType = (item.type || '').toLowerCase();
-        const itemTitle = (item.title || '').toLowerCase();
-        const isPlot = itemType.includes('plot') || itemType.includes('land') || itemTitle.includes('plot') || itemTitle.includes('land') || itemTitle.includes('farm');
-        if (!isPlot) return false;
+        if (!isPlotOrLand) return false;
       } else if (activeTab === 'New Projects') {
         if (!item.trending && item.badgeType !== 'new') return false;
       }
@@ -1320,8 +1361,8 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
           if (val === '4+ BHK' && parseInt(item.bhk) >= 4) return true;
           if (val.includes('BHK')) {
-            // Residential BHK filter: commercial non-residential properties must NOT match
-            if (isCommercial) return false;
+            // Specific BHK filters should only match residential homes, not PG, plots/land, or commercial spaces.
+            if (!isBhkResidentialProperty(item)) return false;
             return `${item.bhk} BHK` === val || (item.title || '').toLowerCase().includes(val.toLowerCase());
           }
 
