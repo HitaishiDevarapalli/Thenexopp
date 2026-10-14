@@ -2824,7 +2824,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                     <div>
                       <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '8px' }}>MAJOR CATEGORY *</label>
                       <select
-                        value={formData.category}
+                        value={formData.category === 'Plot' ? 'Land / Plot' : formData.category}
                         onChange={e => {
                           const val = e.target.value;
                           const isPg = val === 'PG / Co-Living';
@@ -2841,7 +2841,7 @@ export const PropertyManagementSystem: React.FC<PropertyManagementSystemProps> =
                         <option value="Apartment">Apartment</option>
                         <option value="House">Individual House</option>
                         <option value="PG / Co-Living">PG / Co-Living</option>
-                        <option value="Plot">Land / Plot</option>
+                        <option value="Land / Plot">Land / Plot</option>
                         <option value="Commercial">Commercial</option>
                       </select>
                     </div>

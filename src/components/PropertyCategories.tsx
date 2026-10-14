@@ -530,6 +530,17 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
   };
 
   const handleBhkSelectChange = (val: string) => {
+    if (propertyType === 'PG / Co-Living') {
+      setBhkFilter('PG / Co-Living');
+      setSelectedBhks(['PG / Co-Living']);
+      return;
+    }
+    if (propertyType === 'Commercial Space') {
+      setBhkFilter('Commercial Space');
+      setSelectedBhks(['Commercial Space']);
+      return;
+    }
+
     setBhkFilter(val);
     const lower = val.toLowerCase();
     const isCommercialChoice = lower.includes('commercial') || lower.includes('space') || lower.includes('office') || lower.includes('shop') || lower.includes('warehouse');
@@ -584,7 +595,12 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
       const lower = val.toLowerCase();
       
       // Auto-tick matching categories in sidebar
-      if (lower.includes('apartment') || lower.includes('villa') || lower.includes('house') || lower.includes('flat') || lower.includes('pg') || lower.includes('living')) {
+      if (lower.includes('pg') || lower.includes('co-living') || lower.includes('coliving') || lower.includes('paying guest')) {
+        setSelectedPropertyTypesFilter(['Residential']);
+        setRentCategoryFilter('Residential');
+        setBhkFilter('PG / Co-Living');
+        setSelectedBhks(['PG / Co-Living']);
+      } else if (lower.includes('apartment') || lower.includes('villa') || lower.includes('house') || lower.includes('flat')) {
         setSelectedPropertyTypesFilter(['Residential']);
         setRentCategoryFilter('Residential');
         setBhkFilter('Any BHK');
@@ -618,7 +634,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     if (activeTab === 'Rent') {
       return {
         typeLabel: 'Property Type',
-        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'PG / Co-Living', 'Furnished Flat', 'Commercial Space'],
+        types: ['All Types', 'Apartment', 'Villa', 'Independent House', 'PG / Co-Living', 'Land / Plot', 'Commercial Space'],
         specLabel: 'BHK / Category',
         specs: ['Any BHK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'PG / Co-Living', 'Commercial Space'],
       };
@@ -1510,6 +1526,13 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     { id: 'New Projects' as const, label: 'New Projects', icon: FaFire },
   ];
 
+  const lockedBhkFilterValue = propertyType === 'PG / Co-Living'
+    ? 'PG / Co-Living'
+    : propertyType === 'Commercial Space'
+      ? 'Commercial Space'
+      : '';
+  const isBhkFilterLocked = lockedBhkFilterValue !== '';
+
   return (
     <section
       style={{
@@ -1708,17 +1731,19 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
                 }}
               >
                 <select
-                  value={bhkFilter}
+                  value={isBhkFilterLocked ? lockedBhkFilterValue : bhkFilter}
                   onChange={(e) => handleBhkSelectChange(e.target.value)}
+                  disabled={isBhkFilterLocked}
                   style={{
                     border: 'none',
                     background: 'transparent',
                     outline: 'none',
                     fontSize: '13px',
                     fontWeight: 600,
-                    color: '#0F172A',
-                    cursor: 'pointer',
+                    color: isBhkFilterLocked ? '#475569' : '#0F172A',
+                    cursor: isBhkFilterLocked ? 'not-allowed' : 'pointer',
                     width: '100%',
+                    opacity: isBhkFilterLocked ? 0.85 : 1,
                   }}
                 >
                   {tabConfigs.specs.map((specOpt) => (
