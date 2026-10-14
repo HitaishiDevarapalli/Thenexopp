@@ -307,8 +307,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
     price: p.priceDisplay || (listingType === 'Rent' ? `₹${p.price || 0}/month` : `₹${p.price || 75} Lakh`),
     image: p.image || p.imageUrl || '/assets/luxury_apartment.png',
     location: `${p.area ? p.area + ', ' : ''}${p.city || 'Guntur'}`,
-    rating: p.rating || 0,
-    reviewCount: p.reviewCount || 0,
     verified: p.verified || false,
     premium: p.premium || false,
     badge: listingType,
@@ -438,30 +436,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onPropertyClick 
                   onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
                 />
-                
-                {item.rating > 0 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '8px',
-                    left: '8px',
-                    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                    backdropFilter: 'blur(4px)',
-                    color: '#FFFFFF',
-                    padding: '3px 8px',
-                    borderRadius: '20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    zIndex: 2,
-                  }}>
-                    <FaStar style={{ color: '#F59E0B', fontSize: '9.5px' }} />
-                    <span>{item.rating.toFixed(1)}</span>
-                    {item.reviewCount > 0 && <span style={{ color: '#94A3B8', fontWeight: 600 }}>({item.reviewCount})</span>}
-                  </div>
-                )}
-
                 <div style={{
                   position: 'absolute',
                   bottom: '8px',
