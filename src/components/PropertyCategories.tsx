@@ -68,6 +68,43 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'warangal': { lat: 17.9689, lng: 79.5941 }
 };
 
+const cleanLocationSegment = (value: string): string => {
+  return value
+    .replace(/\b(telangana|andhra pradesh|india)\b/gi, '')
+    .replace(/\b\d{5,6}\b/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s,.-]+|[\s,.-]+$/g, '')
+    .trim();
+};
+
+const getPropertyLocationArea = (item: any): string => {
+  const rawArea = String(item?.area || '').trim();
+  const rawLocality = String(item?.locality || '').trim();
+  const rawCity = String(item?.city || '').trim();
+
+  const cleanedLocality = cleanLocationSegment(rawLocality);
+  if (cleanedLocality && !/^\d/.test(cleanedLocality)) return cleanedLocality;
+
+  const areaParts = rawArea
+    .split(',')
+    .map(cleanLocationSegment)
+    .filter(Boolean);
+
+  if (areaParts.length === 0) return '';
+
+  const cityIndex = rawCity
+    ? areaParts.findIndex(part => part.toLowerCase() === rawCity.toLowerCase() || part.toLowerCase().includes(rawCity.toLowerCase()))
+    : -1;
+
+  const candidateParts = cityIndex > 0 ? areaParts.slice(0, cityIndex) : areaParts;
+  const usefulParts = candidateParts.filter(part => (
+    !/^\d/.test(part) &&
+    !/^(road|rd\.?|floor|plot|flat|door|h\.?\s*no|house|near|opp\.?|opposite)\b/i.test(part)
+  ));
+
+  return usefulParts[usefulParts.length - 1] || areaParts[areaParts.length - 1] || rawArea;
+};
+
 export const isPgProperty = (item: any): boolean => {
   if (!item) return false;
   const lowerType = String(item.type || '').toLowerCase();
@@ -134,6 +171,13 @@ export const isCommercialProperty = (item: any): boolean => {
 
   const hasResidentialCategory = residentialKeywords.some(kw => categoryIdentityText.includes(kw));
   const hasCommercialCategory = commercialKeywords.some(kw => categoryIdentityText.includes(kw));
+  const usageText = [lowerTitle, lowerSubtype].join(' ');
+  const hasResidentialUsage = residentialKeywords.some(kw => usageText.includes(kw));
+  const hasCommercialUsage = commercialKeywords.some(kw => usageText.includes(kw));
+
+  if (hasResidentialUsage && !hasCommercialUsage) {
+    return false;
+  }
 
   if (hasResidentialCategory && !hasCommercialCategory) {
     return false;
@@ -789,8 +833,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     activeListings.forEach(p => {
       const pCity = (p.city || '').toLowerCase().trim();
       if ((cityName && (pCity.includes(cityName) || cityName.includes(pCity))) || !cityName) {
-        if (p.area && p.area.trim()) {
-          areaSet.add(p.area.trim());
+        const areaName = getPropertyLocationArea(p);
+        if (areaName) {
+          areaSet.add(areaName);
         }
       }
     });
@@ -821,10 +866,11 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
     const locSet = new Set<string>();
 
     activeListings.forEach(p => {
-      const pArea = (p.area || '').toLowerCase().trim();
+      const pArea = getPropertyLocationArea(p).toLowerCase().trim();
       if ((areaName && (pArea.includes(areaName) || areaName.includes(pArea))) || !areaName) {
-        if (p.locality && p.locality.trim()) {
-          locSet.add(p.locality.trim());
+        const locName = cleanLocationSegment(String(p.locality || ''));
+        if (locName) {
+          locSet.add(locName);
         }
       }
     });
@@ -1013,6 +1059,9 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         propertyType: (p as any).propertyType || '',
         propertySubtype: (p as any).propertySubtype || '',
         description: (p as any).description || '',
+        locationArea: getPropertyLocationArea(p),
+        locality: (p as any).locality || '',
+        fullAddress: (p as any).fullAddress || (p as any).formatted_address || p.area || '',
         facing: p.facing || 'East',
         furnishing: p.furnishing || (p as any).furnishingStatus || 'Unfurnished',
         latitude: p.latitude,
@@ -1122,7 +1171,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
         if (selectedAreaId) {
           const selArea = availableAreas.find(a => a.id === selectedAreaId);
           const selAreaName = selArea ? selArea.name.toLowerCase().trim() : '';
-          const itemArea = (item.area || '').toLowerCase().trim();
+          const itemArea = ((item as any).locationArea || '').toLowerCase().trim();
           const isAreaMatch = (item.areaId && item.areaId === selectedAreaId) || (selAreaName && (itemArea.includes(selAreaName) || itemLoc.includes(selAreaName) || selAreaName.includes(itemArea)));
           if (!isAreaMatch) return false;
           (item as any).exactLocationMatch = true;
@@ -1262,7 +1311,7 @@ export const PropertyCategories: React.FC<PropertyCategoriesProps> = ({
 
           const normTitle = (item.title || '').toLowerCase();
           const normType = (item.type || '').toLowerCase();
-          const normArea = (item.area || '').toLowerCase();
+          const normArea = String((item as any).locationArea || '').toLowerCase();
           const normCat = (item.category || '').toLowerCase();
           return normTitle.includes(normVal) || normType.includes(normVal) || normArea.includes(normVal) || normCat.includes(normVal);
         });
