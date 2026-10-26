@@ -39,6 +39,18 @@ export class CreatePropertyDto {
   @IsString()
   location: string;
 
+  // Compatibility with installed mobile clients that send address fields at
+  // the top level. New clients store them inside specifications instead.
+  @ApiProperty({ example: 'SVN Colony', required: false })
+  @IsOptional()
+  @IsString()
+  area?: string;
+
+  @ApiProperty({ example: 'SVN Colony, Guntur, Andhra Pradesh', required: false })
+  @IsOptional()
+  @IsString()
+  addressDetails?: string;
+
   @ApiProperty({ example: ['property-image-1.jpg', 'property-image-2.jpg'] })
   @IsArray()
   @IsString({ each: true })

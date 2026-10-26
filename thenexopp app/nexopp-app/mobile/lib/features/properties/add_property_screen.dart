@@ -313,9 +313,13 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
         'description': _descController.text.trim(),
         'price': double.parse(_priceController.text.trim()),
         'category': _category,
-        'area': _areaController.text.trim(),
-        'addressDetails': _addressDetailsController.text.trim(),
-        'specifications': specifications,
+        // Keep address metadata in the supported specifications object so this
+        // request also works with servers running the original property DTO.
+        'specifications': {
+          ...specifications,
+          'area': _areaController.text.trim(),
+          'addressDetails': _addressDetailsController.text.trim(),
+        },
         'location': _locationController.text.trim(),
         'imageKeys': uploadedKeys,
         'isDraft': isDraft,

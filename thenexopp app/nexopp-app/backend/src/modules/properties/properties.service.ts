@@ -137,7 +137,11 @@ export class PropertiesService {
       price: dto.price,
       commissionAmount: dto.commissionAmount || 0,
       category: dto.category,
-      specifications: dto.specifications || {},
+      specifications: {
+        ...dto.specifications,
+        ...(dto.area !== undefined ? { area: dto.area } : {}),
+        ...(dto.addressDetails !== undefined ? { addressDetails: dto.addressDetails } : {}),
+      },
       location: dto.location,
       status: initialStatus,
       submittedAt,
