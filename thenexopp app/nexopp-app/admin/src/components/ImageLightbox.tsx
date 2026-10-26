@@ -12,7 +12,7 @@ import {
   ZoomOut,
   RefreshCcw,
 } from 'lucide-react';
-import JSZip from 'jszip';
+import { createPhotoZip, fetchPhoto, photoFilename, saveDownload } from '../utils/photo_downloads';
 
 interface ImageLightboxProps {
   images: string[];
@@ -88,46 +88,13 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
 
   const currentUrl = images[currentIndex];
 
-  const getCleanExtension = (url: string, blob?: Blob) => {
-    const keyMatch = url.match(/key=([^&]+)/i);
-    if (keyMatch && keyMatch[1] && keyMatch[1].includes('.')) {
-      const ext = keyMatch[1].split('.').pop()?.toLowerCase();
-      if (ext && ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'].includes(ext)) {
-        return ext === 'jpeg' ? 'jpg' : ext;
-      }
-    }
-    const dotMatch = url.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
-    if (dotMatch && dotMatch[1] && ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'].includes(dotMatch[1].toLowerCase())) {
-      return dotMatch[1].toLowerCase() === 'jpeg' ? 'jpg' : dotMatch[1].toLowerCase();
-    }
-    if (blob && blob.type) {
-      if (blob.type.includes('png')) return 'png';
-      if (blob.type.includes('webp')) return 'webp';
-      if (blob.type.includes('avif')) return 'avif';
-      if (blob.type.includes('gif')) return 'gif';
-    }
-    return 'jpg';
-  };
-
   const handleDownloadSingle = async () => {
     if (!currentUrl) return;
     try {
-      const res = await fetch(currentUrl);
-      if (!res.ok) throw new Error('Download failed');
-      const blob = await res.blob();
-      const ext = getCleanExtension(currentUrl, blob);
-      const cleanTitle = (title || 'Photo').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
-      const filename = `${cleanTitle}_Photo_${currentIndex + 1}.${ext}`;
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (_) {
-      window.open(currentUrl, '_blank');
+      const { blob, extension } = await fetchPhoto({ url: currentUrl });
+      saveDownload(blob, photoFilename(`${title || 'Photo'}_Photo_${currentIndex + 1}`, extension));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not download this photo. Refresh the listing and try again.');
     }
   };
 
@@ -136,56 +103,18 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({
       await onDownloadZip();
       return;
     }
-    if (images.length === 0) return;
     setInternalDownloadingZip(true);
-    setInternalZipProgress(`Packing 0/${images.length}...`);
+    setInternalZipProgress('Preparing photos...');
     try {
-      const zip = new JSZip();
-      const cleanTitle = (title || 'Photos').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
-      let addedCount = 0;
-      for (let i = 0; i < images.length; i++) {
-        const u = images[i];
-        setInternalZipProgress(`Downloading photo ${i + 1}/${images.length}...`);
-        try {
-          const res = await fetch(u);
-          if (!res.ok) continue;
-          const blob = await res.blob();
-          if (blob.size > 0 && !blob.type.includes('text') && !blob.type.includes('html')) {
-            const ext = getCleanExtension(u, blob);
-            zip.file(`Photo_${i + 1}.${ext}`, blob, { binary: true });
-            addedCount++;
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      if (addedCount === 0) {
-        alert('Could not download image files.');
-        return;
-      }
-      setInternalZipProgress('Generating ZIP archive...');
-      const content = await zip.generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: { level: 6 },
-      });
-      const zipUrl = window.URL.createObjectURL(content);
-      const link = document.createElement('a');
-      link.href = zipUrl;
-      link.download = `${cleanTitle}_Photos.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(zipUrl);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to generate ZIP archive.');
+      const archive = await createPhotoZip(images.map((url) => ({ url })), undefined, setInternalZipProgress);
+      saveDownload(archive, photoFilename(`${title || 'Photos'}_Photos`, 'zip'));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not download all photos. Refresh the listing and try again.');
     } finally {
       setInternalDownloadingZip(false);
       setInternalZipProgress('');
     }
   };
-
   const isZipLoading = isDownloadingZip || internalDownloadingZip;
   const currentZipMsg = zipProgress || internalZipProgress;
 

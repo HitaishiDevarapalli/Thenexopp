@@ -37,7 +37,8 @@ import {
   ArrowDown,
   ArrowUpDown,
 } from 'lucide-react';
-import JSZip from 'jszip';
+import { createPhotoZip, fetchPhoto, photoFilename, saveDownload } from '../utils/photo_downloads';
+import type { DownloadablePhoto } from '../utils/photo_downloads';
 import { Modal } from '../components/Modal';
 
 export const Properties: React.FC = () => {
@@ -111,177 +112,30 @@ export const Properties: React.FC = () => {
   const [downloadingPropertyId, setDownloadingPropertyId] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState<string>('');
 
-  const getCleanExtension = (img: { imageKey?: string; url?: string | null }, blob?: Blob) => {
-    if (img.imageKey && img.imageKey.includes('.')) {
-      const ext = img.imageKey.split('.').pop()?.toLowerCase();
-      if (ext && ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'].includes(ext)) {
-        return ext === 'jpeg' ? 'jpg' : ext;
-      }
-    }
-    if (img.url) {
-      const keyMatch = img.url.match(/key=([^&]+)/i);
-      if (keyMatch && keyMatch[1] && keyMatch[1].includes('.')) {
-        const ext = keyMatch[1].split('.').pop()?.toLowerCase();
-        if (ext && ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'].includes(ext)) {
-          return ext === 'jpeg' ? 'jpg' : ext;
-        }
-      }
-      const dotMatch = img.url.split('?')[0].match(/\.([a-zA-Z0-9]+)$/);
-      if (dotMatch && dotMatch[1] && ['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'].includes(dotMatch[1].toLowerCase())) {
-        return dotMatch[1].toLowerCase() === 'jpeg' ? 'jpg' : dotMatch[1].toLowerCase();
-      }
-    }
-    if (blob && blob.type) {
-      if (blob.type.includes('png')) return 'png';
-      if (blob.type.includes('webp')) return 'webp';
-      if (blob.type.includes('avif')) return 'avif';
-      if (blob.type.includes('gif')) return 'gif';
-    }
-    return 'jpg';
-  };
+  const resolvePropertyPhoto = (source: string) => resolveImageUrl(source, 'property-images');
 
-  const downloadSinglePhoto = async (url: string, defaultFilename?: string) => {
+  const downloadSinglePhoto = async (photo: DownloadablePhoto, defaultFilename = 'Photo') => {
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Fetch failed');
-      const blob = await res.blob();
-      const ext = getCleanExtension({ url }, blob);
-      const cleanName = defaultFilename ? (defaultFilename.includes('.') ? defaultFilename : `${defaultFilename}.${ext}`) : `Photo_${Date.now()}.${ext}`;
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = cleanName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (_) {
-      window.open(url, '_blank');
+      const { blob, extension } = await fetchPhoto(photo, resolvePropertyPhoto);
+      saveDownload(blob, photoFilename(defaultFilename, extension));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not download this photo. Refresh the listing and try again.');
     }
   };
 
   const downloadAllPropertyPhotosZip = async (prop: PropertyListing) => {
-    const images = prop.images?.filter((img) => !!img.url) || [];
-    if (images.length === 0) {
-      alert('No photos available for this property.');
-      return;
-    }
-
     setDownloadingPropertyId(prop.id);
-    setDownloadProgress(`Packing 0/${images.length}...`);
-
+    setDownloadProgress('Preparing photos...');
     try {
-      const zip = new JSZip();
-      const cleanTitle = (prop.title || 'Property')
-        .replace(/[^a-zA-Z0-9_-]/g, '_')
-        .substring(0, 30);
-
-      let addedCount = 0;
-      for (let i = 0; i < images.length; i++) {
-        const img = images[i];
-        setDownloadProgress(`Downloading photo ${i + 1}/${images.length}...`);
-        try {
-          const res = await fetch(img.url!);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const blob = await res.blob();
-          if (blob.size > 0 && !blob.type.includes('text') && !blob.type.includes('html')) {
-            const ext = getCleanExtension(img, blob);
-            const fileName = `Photo_${i + 1}${img.isPrimary ? '_PRIMARY' : ''}.${ext}`;
-            zip.file(fileName, blob, { binary: true });
-            addedCount++;
-          }
-        } catch (err) {
-          console.error('Failed to fetch image for zip', err);
-        }
-      }
-
-      if (addedCount === 0) {
-        alert('Could not download image files for this property.');
-        return;
-      }
-
-      setDownloadProgress('Generating ZIP archive...');
-      const content = await zip.generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: { level: 6 },
-      });
-      const zipUrl = window.URL.createObjectURL(content);
-      const link = document.createElement('a');
-      link.href = zipUrl;
-      link.download = `${cleanTitle}_Photos.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(zipUrl);
-    } catch (err) {
-      console.error('Zip generation error', err);
-      alert('Failed to generate ZIP archive. Initiating direct photo downloads.');
-      for (let i = 0; i < images.length; i++) {
-        await downloadSinglePhoto(images[i].url!, `Photo_${i + 1}.jpg`);
-        await new Promise((r) => setTimeout(r, 250));
-      }
+      const archive = await createPhotoZip(prop.images || [], resolvePropertyPhoto, setDownloadProgress);
+      saveDownload(archive, photoFilename(`${prop.title || 'Property'}_Photos`, 'zip'));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not download all photos. Refresh the listing and try again.');
     } finally {
       setDownloadingPropertyId(null);
       setDownloadProgress('');
     }
   };
-
-  const downloadLightboxPhotosZip = async () => {
-    if (lightboxProperty) {
-      await downloadAllPropertyPhotosZip(lightboxProperty);
-      return;
-    }
-    if (lightboxImages.length === 0) return;
-    setDownloadingPropertyId('lightbox');
-    setDownloadProgress(`Packing 0/${lightboxImages.length}...`);
-    try {
-      const zip = new JSZip();
-      const cleanTitle = (lightboxTitle || 'Property').replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
-      let addedCount = 0;
-      for (let i = 0; i < lightboxImages.length; i++) {
-        const url = lightboxImages[i];
-        setDownloadProgress(`Downloading photo ${i + 1}/${lightboxImages.length}...`);
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const blob = await res.blob();
-          if (blob.size > 0 && !blob.type.includes('text') && !blob.type.includes('html')) {
-            const ext = getCleanExtension({ url }, blob);
-            zip.file(`Photo_${i + 1}.${ext}`, blob, { binary: true });
-            addedCount++;
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      if (addedCount === 0) {
-        alert('Could not download image files.');
-        return;
-      }
-      setDownloadProgress('Generating ZIP archive...');
-      const content = await zip.generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: { level: 6 },
-      });
-      const zipUrl = window.URL.createObjectURL(content);
-      const link = document.createElement('a');
-      link.href = zipUrl;
-      link.download = `${cleanTitle}_Photos.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(zipUrl);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to generate ZIP archive.');
-    } finally {
-      setDownloadingPropertyId(null);
-      setDownloadProgress('');
-    }
-  };
-
   useEffect(() => {
     fetchAgents();
   }, []);
@@ -1289,7 +1143,7 @@ export const Properties: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          downloadSinglePhoto(img.url!, `${inspectProperty.title}_Photo_${idx + 1}.jpg`);
+                          downloadSinglePhoto(img, `${inspectProperty.title}_Photo_${idx + 1}`);
                         }}
                         className="absolute top-1 right-1 p-1 bg-slate-900/70 hover:bg-slate-900 text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
                         title="Download this photo"
@@ -1714,4 +1568,3 @@ export const Properties: React.FC = () => {
     </div>
   );
 };
-

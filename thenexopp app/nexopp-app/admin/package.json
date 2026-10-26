@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "tsc src/utils/photo_downloads.ts --outDir .test-build --module esnext --target es2020 --moduleResolution node --allowSyntheticDefaultImports --skipLibCheck && node --test tests/*.test.mjs",
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
