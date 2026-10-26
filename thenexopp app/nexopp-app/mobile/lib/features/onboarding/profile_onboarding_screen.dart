@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/partner_ui.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/services/location_service.dart';
 import '../../core/services/permission_service.dart';
@@ -15,10 +16,12 @@ class ProfileOnboardingScreen extends ConsumerStatefulWidget {
   const ProfileOnboardingScreen({super.key});
 
   @override
-  ConsumerState<ProfileOnboardingScreen> createState() => _ProfileOnboardingScreenState();
+  ConsumerState<ProfileOnboardingScreen> createState() =>
+      _ProfileOnboardingScreenState();
 }
 
-class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScreen> {
+class _ProfileOnboardingScreenState
+    extends ConsumerState<ProfileOnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _areaController = TextEditingController();
@@ -45,7 +48,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -55,7 +59,10 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
             children: [
               const Text(
                 'Upload Profile Photo / Selfie',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
@@ -71,7 +78,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         Navigator.pop(ctx);
-                        final hasPerm = await PermissionService.checkAndRequestCameraPermission(context);
+                        final hasPerm = await PermissionService
+                            .checkAndRequestCameraPermission(context);
                         if (!hasPerm && mounted) return;
                         final XFile? photo = await _picker.pickImage(
                           source: ImageSource.camera,
@@ -88,11 +96,14 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                           });
                         }
                       },
-                      icon: const Icon(Icons.camera_alt_rounded, color: AppColors.primaryEmerald),
-                      label: const Text('Take Selfie', style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.camera_alt_rounded,
+                          color: AppColors.primaryEmerald),
+                      label: const Text('Take Selfie',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                     ),
                   ),
@@ -101,7 +112,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         Navigator.pop(ctx);
-                        final hasPerm = await PermissionService.checkAndRequestStoragePermission(context);
+                        final hasPerm = await PermissionService
+                            .checkAndRequestStoragePermission(context);
                         if (!hasPerm && mounted) return;
                         final XFile? photo = await _picker.pickImage(
                           source: ImageSource.gallery,
@@ -117,11 +129,14 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                           });
                         }
                       },
-                      icon: const Icon(Icons.photo_library_rounded, color: AppColors.primaryEmerald),
-                      label: const Text('From Gallery', style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.photo_library_rounded,
+                          color: AppColors.primaryEmerald),
+                      label: const Text('From Gallery',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                     ),
                   ),
@@ -139,9 +154,15 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
       final dio = ref.read(dioClientProvider).dio;
       final bytes = await file.readAsBytes();
       final rawName = file.name.trim();
-      final ext = rawName.contains('.') ? rawName.split('.').last.toLowerCase() : 'jpg';
-      final safeExt = ['jpg', 'jpeg', 'png', 'webp'].contains(ext) ? ext : 'jpg';
-      final mimeType = safeExt == 'png' ? 'image/png' : safeExt == 'webp' ? 'image/webp' : 'image/jpeg';
+      final ext =
+          rawName.contains('.') ? rawName.split('.').last.toLowerCase() : 'jpg';
+      final safeExt =
+          ['jpg', 'jpeg', 'png', 'webp'].contains(ext) ? ext : 'jpg';
+      final mimeType = safeExt == 'png'
+          ? 'image/png'
+          : safeExt == 'webp'
+              ? 'image/webp'
+              : 'image/jpeg';
       final base64String = 'data:$mimeType;base64,${base64Encode(bytes)}';
 
       final res = await dio.post(ApiConstants.directUpload, data: {
@@ -160,11 +181,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
   }
 
   Future<void> _detectLiveLocation() async {
-    final hasPermission = await PermissionService.checkAndRequestLocationPermission(context);
+    final hasPermission =
+        await PermissionService.checkAndRequestLocationPermission(context);
     if (!hasPermission && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Location permission is required to detect your operating area.'),
+          content: Text(
+              'Location permission is required to detect your operating area.'),
           backgroundColor: AppColors.statusError,
         ),
       );
@@ -179,13 +202,16 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
       _areaController.text = loc;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Detected Area: $loc'), backgroundColor: AppColors.primaryEmerald),
+          SnackBar(
+              content: Text('Detected Area: $loc'),
+              backgroundColor: AppColors.primaryEmerald),
         );
       }
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not determine exact location. Please verify GPS is enabled or enter area manually.'),
+          content: Text(
+              'Could not determine exact location. Please verify GPS is enabled or enter area manually.'),
           backgroundColor: AppColors.statusError,
         ),
       );
@@ -197,7 +223,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
     if (_profilePhotoBytes == null && _profilePhotoFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please take a selfie or upload your profile photo to continue.'),
+          content: Text(
+              'Please take a selfie or upload your profile photo to continue.'),
           backgroundColor: AppColors.statusError,
         ),
       );
@@ -213,7 +240,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
         photoKey = await _uploadPhoto(_profilePhotoFile!);
       }
       if (photoKey == null && _profilePhotoBytes != null) {
-        photoKey = 'data:image/jpeg;base64,${base64Encode(_profilePhotoBytes!)}';
+        photoKey =
+            'data:image/jpeg;base64,${base64Encode(_profilePhotoBytes!)}';
       }
       photoKey ??= 'kyc-profile-${DateTime.now().millisecondsSinceEpoch}.jpg';
 
@@ -235,10 +263,12 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
           ref.read(authProvider.notifier).updateAgentState('KYC_INCOMPLETE');
         }
       } else {
-        final msg = response.data?['message']?.toString() ?? 'Failed to save profile details.';
+        final msg = response.data?['message']?.toString() ??
+            'Failed to save profile details.';
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(msg), backgroundColor: AppColors.statusError),
+            SnackBar(
+                content: Text(msg), backgroundColor: AppColors.statusError),
           );
         }
       }
@@ -249,7 +279,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
         if (e.type == DioExceptionType.connectionTimeout ||
             e.type == DioExceptionType.sendTimeout ||
             e.type == DioExceptionType.receiveTimeout) {
-          errorMsg = 'Request timed out. Please check your network connection and try again.';
+          errorMsg =
+              'Request timed out. Please check your network connection and try again.';
         } else if (e.response?.statusCode == 413) {
           errorMsg = 'Photo size is too large. Please choose a smaller photo.';
         } else if (e.response?.data is Map) {
@@ -263,7 +294,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMsg), backgroundColor: AppColors.statusError),
+          SnackBar(
+              content: Text(errorMsg), backgroundColor: AppColors.statusError),
         );
       }
     } finally {
@@ -275,21 +307,30 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('Agent Profile (Step 1 of 3)')),
+      appBar: AppBar(title: const Text('Your partner profile')),
       body: SafeArea(
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics()),
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const LinearProgressIndicator(value: 0.33, backgroundColor: AppColors.borderLight, color: AppColors.primaryEmerald),
+                const PartnerOnboardingProgress(step: 1),
                 const SizedBox(height: 24),
-                const Text('Personal & Work Details', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark, letterSpacing: -0.4)),
+                const Text('Personal & Work Details',
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                        letterSpacing: -0.4)),
                 const SizedBox(height: 6),
-                const Text('Upload your clear face photo and enter details to register your agent account.', style: TextStyle(fontSize: 13, color: AppColors.textMedium)),
+                const Text(
+                    'Upload your clear face photo and enter details to register your agent account.',
+                    style:
+                        TextStyle(fontSize: 13, color: AppColors.textMedium)),
                 const SizedBox(height: 24),
 
                 // Agent Photo Picker
@@ -304,9 +345,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppColors.emeraldSurface,
-                            border: Border.all(color: AppColors.emeraldBorder, width: 2),
+                            border: Border.all(
+                                color: AppColors.emeraldBorder, width: 2),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 16, offset: const Offset(0, 4)),
+                              BoxShadow(
+                                  color: Colors.black.withAlpha(8),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4)),
                             ],
                           ),
                           child: ClipOval(
@@ -320,9 +365,16 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                                 : const Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.person_add_alt_1_rounded, size: 36, color: AppColors.primaryEmerald),
+                                      Icon(Icons.person_add_alt_1_rounded,
+                                          size: 36,
+                                          color: AppColors.primaryEmerald),
                                       SizedBox(height: 4),
-                                      Text('Add Photo', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primaryEmeraldDark)),
+                                      Text('Add Photo',
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors
+                                                  .primaryEmeraldDark)),
                                     ],
                                   ),
                           ),
@@ -340,10 +392,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                               boxShadow: [
-                                BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 6),
+                                BoxShadow(
+                                    color: Colors.black.withAlpha(20),
+                                    blurRadius: 6),
                               ],
                             ),
-                            child: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
+                            child: const Icon(Icons.camera_alt_rounded,
+                                size: 16, color: Colors.white),
                           ),
                         ),
                       ),
@@ -353,11 +408,15 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    _profilePhotoFile != null ? 'Photo Selected (Tap to Change)' : 'Take Selfie or Upload Photo *',
+                    _profilePhotoFile != null
+                        ? 'Photo Selected (Tap to Change)'
+                        : 'Take Selfie or Upload Photo *',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: _profilePhotoFile != null ? AppColors.primaryEmerald : AppColors.textLight,
+                      color: _profilePhotoFile != null
+                          ? AppColors.primaryEmerald
+                          : AppColors.textLight,
                     ),
                   ),
                 ),
@@ -365,8 +424,12 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
 
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person_rounded)),
-                  validator: (val) => val == null || val.trim().isEmpty ? 'Enter full name' : null,
+                  decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                      prefixIcon: Icon(Icons.person_rounded)),
+                  validator: (val) => val == null || val.trim().isEmpty
+                      ? 'Enter full name'
+                      : null,
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -377,15 +440,22 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                     suffixIcon: _isDetectingLocation
                         ? const Padding(
                             padding: EdgeInsets.all(12),
-                            child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                            child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2)),
                           )
                         : IconButton(
-                            icon: const Icon(Icons.my_location_rounded, color: AppColors.primaryEmerald),
+                            icon: const Icon(Icons.my_location_rounded,
+                                color: AppColors.primaryEmerald),
                             tooltip: 'Use Live OpenStreetMap Location',
                             onPressed: _detectLiveLocation,
                           ),
                   ),
-                  validator: (val) => val == null || val.trim().isEmpty ? 'Enter operating location or use live GPS' : null,
+                  validator: (val) => val == null || val.trim().isEmpty
+                      ? 'Enter operating location or use live GPS'
+                      : null,
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -393,7 +463,8 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                     const Expanded(
                       child: Text(
                         'Type location or use live GPS',
-                        style: TextStyle(fontSize: 11, color: AppColors.textMedium),
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textMedium),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -404,11 +475,15 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.my_location_rounded, size: 13, color: AppColors.primaryEmerald),
+                          Icon(Icons.my_location_rounded,
+                              size: 13, color: AppColors.primaryEmerald),
                           SizedBox(width: 4),
                           Text(
                             'Live OpenStreetMap',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryEmeraldDark),
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryEmeraldDark),
                           ),
                         ],
                       ),
@@ -419,11 +494,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                 TextFormField(
                   controller: _ageController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Age', prefixIcon: Icon(Icons.cake_rounded)),
+                  decoration: const InputDecoration(
+                      labelText: 'Age', prefixIcon: Icon(Icons.cake_rounded)),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) return 'Enter age';
                     final age = int.tryParse(val);
-                    if (age == null || age < 18 || age > 80) return 'Age must be between 18 and 80';
+                    if (age == null || age < 18 || age > 80)
+                      return 'Age must be between 18 and 80';
                     return null;
                   },
                 ),
@@ -431,9 +508,13 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: _gender,
-                  decoration: const InputDecoration(labelText: 'Gender', prefixIcon: Icon(Icons.wc_rounded)),
+                  decoration: const InputDecoration(
+                      labelText: 'Gender', prefixIcon: Icon(Icons.wc_rounded)),
                   items: ['Male', 'Female', 'Other']
-                      .map((g) => DropdownMenuItem(value: g, child: Text(g, overflow: TextOverflow.ellipsis, maxLines: 1)))
+                      .map((g) => DropdownMenuItem(
+                          value: g,
+                          child: Text(g,
+                              overflow: TextOverflow.ellipsis, maxLines: 1)))
                       .toList(),
                   onChanged: (val) => setState(() => _gender = val!),
                 ),
@@ -442,14 +523,21 @@ class _ProfileOnboardingScreenState extends ConsumerState<ProfileOnboardingScree
                   controller: _workController,
                   decoration: const InputDecoration(
                     labelText: 'Current Work / Occupation (Optional)',
-                    hintText: 'e.g. Real Estate Agent, Delivery, Business, Freelancer',
+                    hintText:
+                        'e.g. Real Estate Agent, Delivery, Business, Freelancer',
                     prefixIcon: Icon(Icons.work_outline_rounded),
                   ),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _submitProfile,
-                  child: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)) : const Text('Continue to KYC'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2.5))
+                      : const Text('Continue to KYC'),
                 ),
               ],
             ),

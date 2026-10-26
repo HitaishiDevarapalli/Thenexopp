@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:ui';
+import '../../core/widgets/partner_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 import '../../core/theme/app_colors.dart';
@@ -13,10 +13,12 @@ class OtpVerificationScreen extends ConsumerStatefulWidget {
   const OtpVerificationScreen({super.key});
 
   @override
-  ConsumerState<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+  ConsumerState<OtpVerificationScreen> createState() =>
+      _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> with CodeAutoFill {
+class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
+    with CodeAutoFill {
   final _otpController = TextEditingController();
   bool _isLoading = false;
   int _cooldownSeconds = 60;
@@ -70,21 +72,26 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> w
     if (_isLoading) return;
     if (_otpController.text.trim().length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter 6-digit OTP'), backgroundColor: AppColors.statusError),
+        const SnackBar(
+            content: Text('Please enter 6-digit OTP'),
+            backgroundColor: AppColors.statusError),
       );
       return;
     }
 
     setState(() => _isLoading = true);
     final mobileNumber = ref.read(authProvider).mobileNumber ?? '';
-    final success = await ref.read(authProvider.notifier).verifyOtp(mobileNumber, _otpController.text.trim());
-    
+    final success = await ref
+        .read(authProvider.notifier)
+        .verifyOtp(mobileNumber, _otpController.text.trim());
+
     if (mounted) {
       setState(() => _isLoading = false);
     }
 
     if (!success && mounted) {
-      final error = ref.read(authProvider).errorMessage ?? 'Verification failed';
+      final error =
+          ref.read(authProvider).errorMessage ?? 'Verification failed';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: AppColors.statusError),
       );
@@ -94,210 +101,111 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> w
   @override
   Widget build(BuildContext context) {
     final mobileNumber = ref.watch(authProvider).mobileNumber ?? '';
-
     return Scaffold(
-      backgroundColor: AppColors.primaryBg,
-      body: Stack(
-        children: [
-          // Background subtle warm tint
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.warmBeige,
-                    AppColors.primaryBg,
-                  ],
-                  stops: [0.0, 0.4],
-                ),
-              ),
-            ),
-          ),
-
-          // Main Content
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Top Bar: Back Button & Centered Logo
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.cardSurface,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.subtleBorder),
-                              boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.charcoal, size: 20),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-                        ),
-                        Image.asset(
-                          'assets/images/app_logo.png',
-                          height: 52,
-                          fit: BoxFit.contain,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Headline: Verification Code (Clean Editorial Typography)
-                    Text(
-                      'Verification Code',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.charcoal,
-                        letterSpacing: -0.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Subtitle with Mobile Number
-                    RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          color: AppColors.secondaryText,
-                          height: 1.5,
-                        ),
-                        children: [
-                          const TextSpan(text: 'Enter the 6-digit code sent to\n'),
-                          TextSpan(
-                            text: '+91 $mobileNumber',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.charcoal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Card Container
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardSurface,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.subtleBorder),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 20,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          PinCodeTextField(
-                            appContext: context,
-                            length: 6,
-                            controller: _otpController,
-                            keyboardType: TextInputType.number,
-                            animationType: AnimationType.fade,
-                            enablePinAutofill: true,
-                            autoFocus: true,
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            textStyle: GoogleFonts.plusJakartaSans(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.charcoal,
-                            ),
-                            pinTheme: PinTheme(
+      appBar:
+          AppBar(leading: BackButton(onPressed: () => Navigator.pop(context))),
+      body: SafeArea(
+          child: Center(
+              child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                            color: AppColors.lightSage,
+                            borderRadius: BorderRadius.circular(24)),
+                        child: const Icon(Icons.mark_chat_read_outlined,
+                            size: 32, color: AppColors.primaryDark))),
+                const SizedBox(height: 32),
+                const PartnerEyebrow('One small step'),
+                const SizedBox(height: 12),
+                Text('Let’s make it you.',
+                    style: Theme.of(context).textTheme.displayMedium),
+                const SizedBox(height: 12),
+                Text('Enter the 6-digit verification code sent to',
+                    style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 4),
+                Text('+91 $mobileNumber',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 32),
+                LayoutBuilder(
+                    builder: (context, constraints) => PinCodeTextField(
+                          appContext: context,
+                          length: 6,
+                          controller: _otpController,
+                          autoDisposeControllers: false,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          animationType: AnimationType.fade,
+                          enablePinAutofill: true,
+                          autoFocus: true,
+                          textStyle: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryDark),
+                          pinTheme: PinTheme(
                               shape: PinCodeFieldShape.box,
                               borderRadius: BorderRadius.circular(12),
-                              fieldHeight: 50,
-                              fieldWidth: 42,
-                              activeColor: AppColors.charcoal,
-                              selectedColor: AppColors.sageGreen,
+                              fieldHeight: 58,
+                              fieldWidth: ((constraints.maxWidth - 40) / 6)
+                                  .clamp(28.0, 56.0),
+                              activeColor: AppColors.mutedSage,
+                              selectedColor: AppColors.primaryDark,
                               inactiveColor: AppColors.subtleBorder,
-                              activeFillColor: AppColors.secondaryBg,
+                              activeFillColor: AppColors.lightSage,
                               selectedFillColor: Colors.white,
-                              inactiveFillColor: AppColors.secondaryBg,
-                              borderWidth: 1.5,
-                            ),
-                            enableActiveFill: true,
-                            onChanged: (val) {},
-                            onCompleted: (val) {
-                              _handleVerify();
-                            },
-                          ),
-                          const SizedBox(height: 26),
-
-                          // Dark Charcoal Pill Button
-                          AnimatedSpringButton(
-                            text: 'Verify & Continue',
-                            onPressed: _isLoading ? null : _handleVerify,
-                            isLoading: _isLoading,
-                            height: 52,
-                            borderRadius: 26,
-                            backgroundColor: AppColors.charcoal,
-                            textColor: Colors.white,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Resend Timer Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _cooldownSeconds > 0 ? 'Resend code in ${_cooldownSeconds}s' : "Didn't receive the code? ",
-                          style: GoogleFonts.plusJakartaSans(
-                            color: AppColors.secondaryText,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        if (_cooldownSeconds == 0)
-                          TextButton(
-                            onPressed: () {
-                              ref.read(authProvider.notifier).sendOtp(mobileNumber);
-                              _startTimer();
-                              _listenForOtpSms();
-                            },
-                            child: Text(
-                              'Resend OTP',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.charcoal,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+                              inactiveFillColor: Colors.white,
+                              borderWidth: 1),
+                          enableActiveFill: true,
+                          onChanged: (_) {},
+                          onCompleted: (_) => _handleVerify(),
+                        )),
+                const SizedBox(height: 24),
+                AnimatedSpringButton(
+                    text: 'Verify & continue',
+                    onPressed: _isLoading ? null : _handleVerify,
+                    isLoading: _isLoading,
+                    borderRadius: 16),
+                const SizedBox(height: 20),
+                if (_cooldownSeconds > 0)
+                  Text('You can request a new code in ${_cooldownSeconds}s',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall)
+                else
+                  TextButton(
+                      onPressed: _resendCode,
+                      child: const Text('Send a new code')),
+                const SizedBox(height: 24),
+                const Center(
+                    child: PartnerEyebrow('Secure access. Simple beginnings.')),
+              ],
+            )),
+      ))),
     );
+  }
+
+  Future<void> _resendCode() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    final success = await ref
+        .read(authProvider.notifier)
+        .sendOtp(ref.read(authProvider).mobileNumber ?? '');
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    if (success) {
+      _startTimer();
+      _listenForOtpSms();
+    } else
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(ref.read(authProvider).errorMessage ??
+              'Couldn’t resend your code. Please try again.')));
   }
 }

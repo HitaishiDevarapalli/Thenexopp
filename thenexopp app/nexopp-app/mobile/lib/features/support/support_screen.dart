@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/partner_ui.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/widgets/state_widgets.dart';
 import '../../core/widgets/animated_spring_button.dart';
@@ -109,7 +110,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
   }
 
   Future<void> _openWhatsAppSupport() async {
-    final uri = Uri.parse('https://wa.me/$_whatsappNumber?text=${Uri.encodeComponent("Hello TheNexopp Agent Support Team, I am registered partner agent and I need assistance.")}');
+    final uri = Uri.parse(
+        'https://wa.me/$_whatsappNumber?text=${Uri.encodeComponent("Hello TheNexopp Agent Support Team, I am registered partner agent and I need assistance.")}');
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -136,7 +138,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
       if (response.data['success'] == true && mounted) {
         final ticketData = response.data['data'];
-        final ticketNum = ticketData?['ticketNumber'] ?? 'TKT-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+        final ticketNum = ticketData?['ticketNumber'] ??
+            'TKT-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
         final newTicket = {
           'ticketNumber': ticketNum,
@@ -159,17 +162,24 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: AppColors.cardSurface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.sageGreen, size: 28),
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.sageGreen, size: 28),
                 const SizedBox(width: 10),
-                Text('Ticket Raised', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppColors.charcoal)),
+                Text('Ticket Raised',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        color: AppColors.charcoal)),
               ],
             ),
             content: Text(
               'Your support request $ticketNum has been submitted directly to the executive administration desk. Our team will review and resolve it promptly.',
-              style: GoogleFonts.plusJakartaSans(fontSize: 14, color: AppColors.secondaryText, height: 1.4),
+              style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14, color: AppColors.secondaryText, height: 1.4),
             ),
             actions: [
               ElevatedButton(
@@ -186,7 +196,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     } catch (e) {
       if (mounted) {
         // Optimistic offline ticket creation
-        final ticketNum = 'TKT-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+        final ticketNum =
+            'TKT-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
         final newTicket = {
           'ticketNumber': ticketNum,
           'category': _selectedCategory,
@@ -208,17 +219,24 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           context: context,
           builder: (ctx) => AlertDialog(
             backgroundColor: AppColors.cardSurface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.sageGreen, size: 28),
+                const Icon(Icons.check_circle_rounded,
+                    color: AppColors.sageGreen, size: 28),
                 const SizedBox(width: 10),
-                Text('Ticket Submitted', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 18, color: AppColors.charcoal)),
+                Text('Ticket Submitted',
+                    style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        color: AppColors.charcoal)),
               ],
             ),
             content: Text(
               'Your support request $ticketNum has been recorded and submitted to the administration desk.',
-              style: GoogleFonts.plusJakartaSans(fontSize: 14, color: AppColors.secondaryText, height: 1.4),
+              style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14, color: AppColors.secondaryText, height: 1.4),
             ),
             actions: [
               ElevatedButton(
@@ -238,118 +256,48 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primaryBg,
-      appBar: AppBar(
-        title: Text(
-          'Agent Help & Support',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-            color: AppColors.charcoal,
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Segmented Tab Switcher Bar
-          Container(
-            color: AppColors.primaryBg,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryBg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.subtleBorder),
-              ),
-              child: Row(
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Partner support')),
+        body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = 0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _selectedTab == 0 ? AppColors.charcoal : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Raise Ticket & Call',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: _selectedTab == 0 ? Colors.white : AppColors.secondaryText,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTab = 1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _selectedTab == 1 ? AppColors.charcoal : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'My Tickets',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _selectedTab == 1 ? Colors.white : AppColors.secondaryText,
-                              ),
-                            ),
-                            if (_myTickets.isNotEmpty) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                decoration: BoxDecoration(
-                                  color: _selectedTab == 1 ? Colors.white : AppColors.charcoal,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${_myTickets.length}',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    color: _selectedTab == 1 ? AppColors.charcoal : Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  const PartnerEyebrow('A partner at every step'),
+                  const SizedBox(height: 10),
+                  Text('How can we help?',
+                      style: Theme.of(context).textTheme.headlineMedium),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<int>(
+                        showSelectedIcon: false,
+                        segments: [
+                          const ButtonSegment(
+                              value: 0, label: Text('Get help')),
+                          ButtonSegment(
+                              value: 1,
+                              label: Text(
+                                  'My tickets${_myTickets.isEmpty ? '' : ' (${_myTickets.length})'}'))
+                        ],
+                        selected: {_selectedTab},
+                        onSelectionChanged: (selection) =>
+                            setState(() => _selectedTab = selection.first),
+                      )),
                 ],
-              ),
-            ),
-          ),
-
-          // Active Tab Content
+              )),
           Expanded(
-            child: _selectedTab == 0 ? _buildRaiseTicketTab() : _buildMyTicketsTab(),
-          ),
-        ],
-      ),
-    );
-  }
-
+              child: _selectedTab == 0
+                  ? _buildRaiseTicketTab()
+                  : _buildMyTicketsTab()),
+        ]),
+      );
   Widget _buildRaiseTicketTab() {
     return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+      physics:
+          const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -362,7 +310,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               border: Border.all(color: AppColors.subtleBorder),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 18,
                   offset: const Offset(0, 5),
                 ),
@@ -379,7 +327,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                         color: AppColors.lightSage,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.support_agent_rounded, color: AppColors.sageGreen, size: 28),
+                      child: const Icon(Icons.support_agent_rounded,
+                          color: AppColors.sageGreen, size: 28),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -388,17 +337,25 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                         children: [
                           Text(
                             'TheNexopp Agent Helpline',
-                            style: GoogleFonts.plusJakartaSans(color: AppColors.secondaryText, fontWeight: FontWeight.w600, fontSize: 13),
+                            style: GoogleFonts.plusJakartaSans(
+                                color: AppColors.secondaryText,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             _displayHelpline,
-                            style: GoogleFonts.plusJakartaSans(color: AppColors.charcoal, fontWeight: FontWeight.w800, fontSize: 16, letterSpacing: 0.3),
+                            style: GoogleFonts.plusJakartaSans(
+                                color: AppColors.charcoal,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                                letterSpacing: 0.3),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'Direct Executive Partner Support Desk',
-                            style: GoogleFonts.plusJakartaSans(color: AppColors.secondaryText, fontSize: 11),
+                            style: GoogleFonts.plusJakartaSans(
+                                color: AppColors.secondaryText, fontSize: 11),
                           ),
                         ],
                       ),
@@ -411,12 +368,18 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: _callSupportHelpline,
-                        icon: const Icon(Icons.phone_in_talk_rounded, size: 16, color: Colors.white),
-                        label: Text('Call Now', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
+                        icon: const Icon(Icons.phone_in_talk_rounded,
+                            size: 16, color: Colors.white),
+                        label: Text('Call Now',
+                            style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: Colors.white)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.charcoal,
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24)),
                         ),
                       ),
                     ),
@@ -424,12 +387,19 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: _openWhatsAppSupport,
-                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: AppColors.sageGreen),
-                        label: Text('WhatsApp', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.sageGreen)),
+                        icon: const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 16, color: AppColors.sageGreen),
+                        label: Text('WhatsApp',
+                            style: GoogleFonts.plusJakartaSans(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: AppColors.sageGreen)),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.sageGreen, width: 1.5),
+                          side: const BorderSide(
+                              color: AppColors.sageGreen, width: 1.5),
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24)),
                         ),
                       ),
                     ),
@@ -448,7 +418,10 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.subtleBorder),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 12, offset: const Offset(0, 4)),
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4)),
               ],
             ),
             child: Form(
@@ -458,21 +431,32 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.edit_note_rounded, color: AppColors.charcoal, size: 22),
+                      const Icon(Icons.edit_note_rounded,
+                          color: AppColors.charcoal, size: 22),
                       const SizedBox(width: 8),
-                      Text('Raise an Issue Ticket', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.charcoal)),
+                      Text('Raise an Issue Ticket',
+                          style: GoogleFonts.plusJakartaSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.charcoal)),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('File an issue or inquiry. It will be sent immediately to the administration ticket hub.', style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.secondaryText)),
+                  Text(
+                      'File an issue or inquiry. It will be sent immediately to the administration ticket hub.',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13, color: AppColors.secondaryText)),
                   const SizedBox(height: 22),
 
                   // Category Selector
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: _selectedCategory,
-                    style: GoogleFonts.plusJakartaSans(color: AppColors.charcoal, fontSize: 14),
-                    decoration: const InputDecoration(labelText: 'Issue Category', prefixIcon: Icon(Icons.category_rounded)),
+                    style: GoogleFonts.plusJakartaSans(
+                        color: AppColors.charcoal, fontSize: 14),
+                    decoration: const InputDecoration(
+                        labelText: 'Issue Category',
+                        prefixIcon: Icon(Icons.category_rounded)),
                     items: _categories
                         .map(
                           (c) => DropdownMenuItem(
@@ -481,12 +465,14 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                               c['label']!,
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
-                              style: GoogleFonts.plusJakartaSans(color: AppColors.charcoal),
+                              style: GoogleFonts.plusJakartaSans(
+                                  color: AppColors.charcoal),
                             ),
                           ),
                         )
                         .toList(),
-                    onChanged: (val) => setState(() => _selectedCategory = val!),
+                    onChanged: (val) =>
+                        setState(() => _selectedCategory = val!),
                   ),
                   const SizedBox(height: 18),
 
@@ -494,28 +480,47 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                   DropdownButtonFormField<String>(
                     isExpanded: true,
                     initialValue: _selectedPriority,
-                    style: GoogleFonts.plusJakartaSans(color: AppColors.charcoal, fontSize: 14),
-                    decoration: const InputDecoration(labelText: 'Priority Level', prefixIcon: Icon(Icons.flag_rounded)),
+                    style: GoogleFonts.plusJakartaSans(
+                        color: AppColors.charcoal, fontSize: 14),
+                    decoration: const InputDecoration(
+                        labelText: 'Priority Level',
+                        prefixIcon: Icon(Icons.flag_rounded)),
                     items: [
-                      DropdownMenuItem(value: 'LOW', child: Text('Low Priority', style: GoogleFonts.plusJakartaSans())),
-                      DropdownMenuItem(value: 'MEDIUM', child: Text('Medium / Normal', style: GoogleFonts.plusJakartaSans())),
-                      DropdownMenuItem(value: 'HIGH', child: Text('High Priority', style: GoogleFonts.plusJakartaSans())),
-                      DropdownMenuItem(value: 'URGENT', child: Text('Urgent (Immediate Help)', style: GoogleFonts.plusJakartaSans())),
+                      DropdownMenuItem(
+                          value: 'LOW',
+                          child: Text('Low Priority',
+                              style: GoogleFonts.plusJakartaSans())),
+                      DropdownMenuItem(
+                          value: 'MEDIUM',
+                          child: Text('Medium / Normal',
+                              style: GoogleFonts.plusJakartaSans())),
+                      DropdownMenuItem(
+                          value: 'HIGH',
+                          child: Text('High Priority',
+                              style: GoogleFonts.plusJakartaSans())),
+                      DropdownMenuItem(
+                          value: 'URGENT',
+                          child: Text('Urgent (Immediate Help)',
+                              style: GoogleFonts.plusJakartaSans())),
                     ],
-                    onChanged: (val) => setState(() => _selectedPriority = val!),
+                    onChanged: (val) =>
+                        setState(() => _selectedPriority = val!),
                   ),
                   const SizedBox(height: 18),
 
                   // Subject
                   TextFormField(
                     controller: _subjectController,
-                    style: GoogleFonts.plusJakartaSans(color: AppColors.charcoal, fontSize: 14),
+                    style: GoogleFonts.plusJakartaSans(
+                        color: AppColors.charcoal, fontSize: 14),
                     decoration: const InputDecoration(
                       labelText: 'Subject / Short Title',
                       prefixIcon: Icon(Icons.title_rounded),
                       hintText: 'e.g. KYC document re-verification request',
                     ),
-                    validator: (val) => val == null || val.trim().isEmpty ? 'Please enter issue subject' : null,
+                    validator: (val) => val == null || val.trim().isEmpty
+                        ? 'Please enter issue subject'
+                        : null,
                   ),
                   const SizedBox(height: 18),
 
@@ -523,18 +528,24 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                   TextFormField(
                     controller: _descController,
                     maxLines: 4,
-                    style: GoogleFonts.plusJakartaSans(color: AppColors.charcoal, fontSize: 14),
+                    style: GoogleFonts.plusJakartaSans(
+                        color: AppColors.charcoal, fontSize: 14),
                     decoration: const InputDecoration(
                       labelText: 'Describe Your Issue in Detail',
                       alignLabelWithHint: true,
-                      hintText: 'Please describe the problem or question with as much detail as possible...',
+                      hintText:
+                          'Please describe the problem or question with as much detail as possible...',
                     ),
-                    validator: (val) => val == null || val.trim().length < 5 ? 'Please enter at least 5 characters' : null,
+                    validator: (val) => val == null || val.trim().length < 5
+                        ? 'Please enter at least 5 characters'
+                        : null,
                   ),
                   const SizedBox(height: 26),
 
                   AnimatedSpringButton(
-                    text: _isSubmitting ? 'Submitting...' : 'Submit Support Ticket',
+                    text: _isSubmitting
+                        ? 'Submitting...'
+                        : 'Submit Support Ticket',
                     isLoading: _isSubmitting,
                     onPressed: _isSubmitting ? null : _submitTicket,
                     height: 50,
@@ -557,13 +568,15 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     }
 
     if (_errorMessage != null) {
-      return ErrorStateWidget(message: _errorMessage!, onRetry: _fetchMyTickets);
+      return ErrorStateWidget(
+          message: _errorMessage!, onRetry: _fetchMyTickets);
     }
 
     if (_myTickets.isEmpty) {
       return EmptyStateWidget(
         title: 'No Support Tickets',
-        message: 'You have not submitted any issue tickets yet. If you face any problem, raise a ticket from the first tab.',
+        message:
+            'You have not submitted any issue tickets yet. If you face any problem, raise a ticket from the first tab.',
         buttonText: 'Raise New Ticket',
         onAction: () => setState(() => _selectedTab = 0),
       );
@@ -573,8 +586,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
       color: AppColors.charcoal,
       onRefresh: _fetchMyTickets,
       child: ListView.builder(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         itemCount: _myTickets.length,
         itemBuilder: (context, index) {
           final t = _myTickets[index];
@@ -589,7 +603,10 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.subtleBorder),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4)),
               ],
             ),
             child: Column(
@@ -601,7 +618,10 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                   children: [
                     Text(
                       t['ticketNumber'] ?? 'TKT',
-                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.charcoal),
+                      style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: AppColors.charcoal),
                     ),
                     _buildTicketStatusBadge(status),
                   ],
@@ -612,20 +632,27 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: AppColors.secondaryBg,
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         t['category'] ?? '',
-                        style: GoogleFonts.plusJakartaSans(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.secondaryText),
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.secondaryText),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      t['createdAt'] != null ? t['createdAt'].toString().substring(0, 10) : '',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.secondaryText),
+                      t['createdAt'] != null
+                          ? t['createdAt'].toString().substring(0, 10)
+                          : '',
+                      style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12, color: AppColors.secondaryText),
                     ),
                   ],
                 ),
@@ -634,14 +661,20 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                 // Subject
                 Text(
                   t['subject'] ?? '',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 15, color: AppColors.charcoal),
+                  style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppColors.charcoal),
                 ),
                 const SizedBox(height: 6),
 
                 // Description
                 Text(
                   t['description'] ?? '',
-                  style: GoogleFonts.plusJakartaSans(fontSize: 13, color: AppColors.secondaryText, height: 1.4),
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: AppColors.secondaryText,
+                      height: 1.4),
                 ),
 
                 // Resolution Box
@@ -659,15 +692,21 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.verified_rounded, color: AppColors.sageGreen, size: 16),
+                            const Icon(Icons.verified_rounded,
+                                color: AppColors.sageGreen, size: 16),
                             const SizedBox(width: 6),
-                            Text('Admin Resolution Remark:', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.sageGreen)),
+                            Text('Admin Resolution Remark:',
+                                style: GoogleFonts.plusJakartaSans(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    color: AppColors.sageGreen)),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           resolution,
-                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.charcoal),
+                          style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12, color: AppColors.charcoal),
                         ),
                       ],
                     ),
@@ -704,7 +743,8 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
       ),
       child: Text(
         status.replaceAll('_', ' '),
-        style: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.w800, color: text),
+        style: GoogleFonts.plusJakartaSans(
+            fontSize: 10, fontWeight: FontWeight.w800, color: text),
       ),
     );
   }

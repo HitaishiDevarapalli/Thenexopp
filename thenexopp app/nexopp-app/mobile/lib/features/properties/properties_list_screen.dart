@@ -1,22 +1,21 @@
-import 'dart:convert';
+import '../../core/widgets/partner_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/theme/app_colors.dart';
+
+
 import '../../core/constants/api_constants.dart';
 import '../../core/widgets/animated_spring_button.dart';
 import '../../core/widgets/state_widgets.dart';
 import '../../shared/providers/dio_provider.dart';
 
-import '../../core/widgets/app_network_image.dart';
-
 class PropertiesListScreen extends ConsumerStatefulWidget {
   const PropertiesListScreen({super.key});
 
   @override
-  ConsumerState<PropertiesListScreen> createState() => _PropertiesListScreenState();
+  ConsumerState<PropertiesListScreen> createState() =>
+      _PropertiesListScreenState();
 }
 
 class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
@@ -26,7 +25,13 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
   String _selectedStatus = 'ALL';
   String _searchQuery = '';
 
-  final List<String> _statuses = ['ALL', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
+  final List<String> _statuses = [
+    'ALL',
+    'DRAFT',
+    'SUBMITTED',
+    'APPROVED',
+    'REJECTED'
+  ];
 
   @override
   void initState() {
@@ -42,7 +47,8 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
 
     try {
       final dio = ref.read(dioClientProvider).dio;
-      final statusParam = _selectedStatus == 'ALL' ? '' : '?status=$_selectedStatus';
+      final statusParam =
+          _selectedStatus == 'ALL' ? '' : '?status=$_selectedStatus';
       final response = await dio.get('${ApiConstants.properties}$statusParam');
 
       if (mounted) {
@@ -75,303 +81,110 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryBg,
       body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Top Header: Title + Add Button
+          bottom: false,
+          child: Column(children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'My Listings',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaryDark,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      context.push('/properties/add');
-                    },
-                    child: Container(
-                      height: 42,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryDark,
-                        borderRadius: BorderRadius.circular(21),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryDark.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.add_rounded, color: Colors.white, size: 18),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Add',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Search Bar
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                child: Row(children: [
+                  Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        const PartnerEyebrow('Your portfolio'),
+                        const SizedBox(height: 8),
+                        Text('My listings',
+                            style: Theme.of(context).textTheme.headlineMedium),
+                        const SizedBox(height: 6),
+                        Text('Every opportunity, in one place.',
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ])),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                      tooltip: 'Add a listing',
+                      icon: const Icon(Icons.add_rounded),
+                      onPressed: () async {
+                        await context.push('/properties/add');
+                        if (mounted) _fetchProperties();
+                      }),
+                ])),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              child: PremiumSearchBar(
-                hintText: 'Search my listings...',
-                onChanged: (val) => setState(() => _searchQuery = val),
-              ),
-            ),
-
-            // Status Filter Chips
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: PremiumSearchBar(
+                    hintText: 'Search by property or location',
+                    onChanged: (val) => setState(() => _searchQuery = val))),
             SizedBox(
-              height: 56,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                itemCount: _statuses.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final st = _statuses[index];
-                  final label = st == 'ALL'
-                      ? 'All'
-                      : st == 'SUBMITTED'
-                          ? 'Under Review'
-                          : st[0] + st.substring(1).toLowerCase();
-                  final isSelected = _selectedStatus == st;
-                  return CategoryChipPill(
-                    label: label,
-                    isSelected: isSelected,
-                    onTap: () {
-                      setState(() => _selectedStatus = st);
-                      _fetchProperties();
-                    },
-                  );
-                },
-              ),
-            ),
-
-            // Listings Content
+                height: 64,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  itemCount: _statuses.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final status = _statuses[index];
+                    final label = status == 'ALL'
+                        ? 'All listings'
+                        : status == 'SUBMITTED'
+                            ? 'In review'
+                            : status[0] + status.substring(1).toLowerCase();
+                    return CategoryChipPill(
+                        label: label,
+                        isSelected: _selectedStatus == status,
+                        onTap: () {
+                          setState(() => _selectedStatus = status);
+                          _fetchProperties();
+                        });
+                  },
+                )),
             Expanded(
-              child: RefreshIndicator(
-                color: AppColors.primaryDark,
-                backgroundColor: AppColors.cardSurface,
-                onRefresh: _fetchProperties,
-                child: _isLoading
-                    ? const LoadingSkeletonList()
-                    : _errorMessage != null
-                        ? ErrorStateWidget(message: _errorMessage!, onRetry: _fetchProperties)
-                        : _filteredList.isEmpty
-                            ? EmptyStateWidget(
-                                title: 'No Properties Found',
-                                message: 'You have no listings under the $_selectedStatus filter.',
-                                buttonText: '+ Add New Property',
-                                onAction: () => context.push('/properties/add'),
-                              )
-                            : ListView.builder(
-                                physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                                padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
-                                itemCount: _filteredList.length,
-                                itemBuilder: (context, index) {
-                                  final prop = _filteredList[index];
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: AnimatedCard(
-                                      index: index,
-                                      child: _buildPropertyCard(prop),
-                                    ),
-                                  );
-                                },
-                              ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPropertyCard(dynamic prop) {
-    final images = prop['images'] as List? ?? [];
-
-    Map<String, dynamic> specs = {};
-    if (prop['specifications'] != null) {
-      if (prop['specifications'] is Map) {
-        specs = Map<String, dynamic>.from(prop['specifications']);
-      } else if (prop['specifications'] is String) {
-        try {
-          specs = jsonDecode(prop['specifications']);
-        } catch (_) {}
-      }
-    }
-
-    final bhk = specs['bhk'] ?? specs['commercialType'];
-    final area = specs['areaSqFt'];
-
-    return GestureDetector(
-      onTap: () => context.push('/properties/${prop['id']}'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardSurface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.subtleBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Property Thumbnail with Radius
-              AppNetworkImage(
-                imageSource: images.isNotEmpty ? images.first : null,
-                width: 96,
-                height: 96,
-                borderRadius: BorderRadius.circular(16),
-                fallbackIconSize: 32,
-              ),
-              const SizedBox(width: 14),
-
-              // Property Information
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            prop['title'] ?? 'Listing',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: AppColors.primaryDark,
-                              letterSpacing: -0.2,
+                child: RefreshIndicator(
+              onRefresh: _fetchProperties,
+              child: _isLoading
+                  ? const LoadingSkeletonList()
+                  : _errorMessage != null
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                              ErrorStateWidget(
+                                  message: _errorMessage!,
+                                  onRetry: _fetchProperties)
+                            ])
+                      : _filteredList.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                  EmptyStateWidget(
+                                      title: _searchQuery.isNotEmpty
+                                          ? 'No matching listings'
+                                          : 'Make room for opportunity',
+                                      message: _searchQuery.isNotEmpty
+                                          ? 'Try another property name or location.'
+                                          : 'Your ${_selectedStatus == 'ALL' ? '' : _selectedStatus.toLowerCase()} listings will appear here.',
+                                      icon: Icons.domain_outlined,
+                                      buttonText: _searchQuery.isNotEmpty
+                                          ? null
+                                          : 'Create a listing',
+                                      onAction: () =>
+                                          context.push('/properties/add'))
+                                ])
+                          : ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                              itemCount: _filteredList.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 18),
+                              itemBuilder: (context, index) {
+                                final property = _filteredList[index];
+                                return PartnerListingCard(
+                                    property:
+                                        Map<String, dynamic>.from(property),
+                                    onTap: () => context
+                                        .push('/properties/${property['id']}'));
+                              },
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        _buildStatusBadge(prop['status'] ?? 'DRAFT'),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on_outlined, size: 12, color: AppColors.secondaryText),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            prop['location'] ?? 'India',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              color: AppColors.secondaryText,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (bhk != null || area != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        bhk != null ? '$bhk' : '${area} sq ft',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.mutedSage,
-                          height: 1.25,
-                        ),
-                        maxLines: 2,
-                        softWrap: true,
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    Text(
-                      '₹${prop['price']}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryDark,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    Color bg = AppColors.secondaryBg;
-    Color text = AppColors.secondaryText;
-    Color border = AppColors.subtleBorder;
-
-    if (status == 'APPROVED') {
-      bg = AppColors.lightSage.withOpacity(0.5);
-      text = AppColors.mutedSage;
-      border = AppColors.lightSage;
-    } else if (status == 'SUBMITTED') {
-      bg = const Color(0xFFFDF6EC);
-      text = const Color(0xFFC4883A);
-      border = const Color(0xFFF3E2C7);
-    } else if (status == 'REJECTED') {
-      bg = const Color(0xFFFDF2F2);
-      text = AppColors.statusError;
-      border = const Color(0xFFF8D7DA);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
-      ),
-      child: Text(
-        status == 'SUBMITTED' ? 'REVIEW' : status,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-          color: text,
-          letterSpacing: 0.3,
-        ),
-      ),
+            )),
+          ])),
     );
   }
 }

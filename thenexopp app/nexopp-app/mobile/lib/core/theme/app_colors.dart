@@ -3,25 +3,25 @@ import 'package:flutter/material.dart';
 class AppColors {
   // --- New Premium Color System (Inspired by Reference Design) ---
   // Primary Background (Warm Off-White / Linen)
-  static const Color primaryBg = Color(0xFFF7F6F2);
+  static const Color primaryBg = Color(0xFFF6F5F0);
   // Secondary Background (Warm Surface / Pill Inactive)
-  static const Color secondaryBg = Color(0xFFEFEDE7);
+  static const Color secondaryBg = Color(0xFFECEFE8);
   // Primary Dark (Charcoal / Active Buttons / Primary Text)
-  static const Color primaryDark = Color(0xFF1F211F);
+  static const Color primaryDark = Color(0xFF172F28);
   static const Color charcoal = primaryDark;
   // Secondary Text (Muted Gray-Green)
-  static const Color secondaryText = Color(0xFF73756F);
+  static const Color secondaryText = Color(0xFF66736B);
   // Premium Muted Sage (Accent Highlights / Selected State)
-  static const Color mutedSage = Color(0xFF687762);
+  static const Color mutedSage = Color(0xFF446B55);
   static const Color sageGreen = mutedSage;
   // Light Sage (Pill Highlights / Subtle Badges)
-  static const Color lightSage = Color(0xFFDDE3DA);
+  static const Color lightSage = Color(0xFFE2EBDD);
   // Warm Beige (Borders / Warm Chips / Neutral Dividers)
   static const Color warmBeige = Color(0xFFE8E2D8);
   // Card Surface (Pure White Elevated Components)
   static const Color cardSurface = Color(0xFFFFFFFF);
   // Subtle Border (Hairline Outlines)
-  static const Color subtleBorder = Color(0xFFE3E1DA);
+  static const Color subtleBorder = Color(0xFFE3E6DD);
 
   // --- Aliases for Seamless Codebase Compatibility ---
   static const Color backgroundLight = primaryBg;
@@ -84,4 +84,3 @@ class AppColors {
   static const Color glassBorder = Color(0x66FFFFFF);
   static const Color glassBorderDark = Color(0x26FFFFFF);
 }
-

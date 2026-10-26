@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../core/widgets/partner_ui.dart';
+import '../../core/widgets/app_network_image.dart';
+import '../../core/widgets/state_widgets.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/api_constants.dart';
 import '../../shared/providers/dio_provider.dart';
@@ -16,6 +18,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isLoading = true;
+  String? _error;
   Map<String, dynamic>? _agentData;
 
   @override
@@ -25,227 +28,173 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _fetchProfile() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.get(ApiConstants.getProfile);
-      if (mounted && res.data['success'] == true) {
+      if (res.data['success'] != true) throw StateError('Profile unavailable');
+      if (mounted) {
         setState(() {
           _agentData = res.data['data'];
           _isLoading = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+          _error = 'Couldn’t load your profile. Please try again.';
+        });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final profile = _agentData?['profile'];
-
     return Scaffold(
-      backgroundColor: AppColors.primaryBg,
-      appBar: AppBar(
-        title: Text(
-          'Agent Profile',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-            color: AppColors.charcoal,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.statusError, size: 22),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-          ),
-          const SizedBox(width: 8),
-        ],
+      appBar: AppBar(title: const Text('Your profile')),
+      body: RefreshIndicator(
+        onRefresh: _fetchProfile,
+        child: _isLoading
+            ? const LoadingSkeletonList()
+            : _error != null
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                        ErrorStateWidget(
+                            message: _error!, onRetry: _fetchProfile)
+                      ])
+                : ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                    children: [
+                        PartnerSurface(
+                            child: Column(children: [
+                          AppNetworkImage(
+                              imageSource: profile?['profilePhotoUrl'],
+                              bucket: 'profile-photos',
+                              width: 88,
+                              height: 88,
+                              borderRadius: BorderRadius.circular(28),
+                              fallbackIcon: Icons.person_outline_rounded),
+                          const SizedBox(height: 18),
+                          const PartnerEyebrow('TheNexopp partner'),
+                          const SizedBox(height: 10),
+                          Text('${profile?['fullName'] ?? 'Agent Partner'}',
+                              textAlign: TextAlign.center,
+                              style:
+                                  Theme.of(context).textTheme.headlineMedium),
+                          const SizedBox(height: 8),
+                          Text('+91 ${_agentData?['mobileNumber'] ?? ''}',
+                              style: Theme.of(context).textTheme.bodyMedium),
+                          const SizedBox(height: 16),
+                          PartnerStatus(
+                              '${_agentData?['status'] ?? 'PENDING'}'),
+                        ])),
+                        const PartnerSection('The essentials'),
+                        PartnerSurface(
+                            child: Column(children: [
+                          _detail(
+                              Icons.location_on_outlined,
+                              'Operating location',
+                              '${profile?['areaLocation'] ?? 'Not provided'}'),
+                          const Divider(height: 32),
+                          _detail(Icons.work_outline_rounded, 'Occupation',
+                              '${profile?['workPlatform'] ?? 'Not provided'}'),
+                        ])),
+                        const PartnerSection('Account verification'),
+                        PartnerSurface(
+                            child: Column(children: [
+                          _verification(
+                              'Identity & KYC',
+                              Icons.verified_user_outlined,
+                              '${_agentData?['kycStatus'] ?? 'NOT_SUBMITTED'}'),
+                          const Divider(height: 32),
+                          _verification(
+                              'Bank account',
+                              Icons.account_balance_outlined,
+                              '${_agentData?['bankStatus'] ?? 'NOT_SUBMITTED'}'),
+                        ])),
+                        const SizedBox(height: 24),
+                        Material(
+                            color: AppColors.lightSage,
+                            borderRadius: BorderRadius.circular(20),
+                            child: ListTile(
+                                contentPadding: const EdgeInsets.all(16),
+                                leading: const Icon(Icons.support_agent_rounded,
+                                    color: AppColors.mutedSage),
+                                title: const Text('We’re here for you',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w600)),
+                                subtitle: const Text(
+                                    'Contact your partner desk',
+                                    style: TextStyle(fontSize: 12)),
+                                trailing: const Icon(
+                                    Icons.arrow_forward_rounded,
+                                    size: 20),
+                                onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) =>
+                                            const SupportScreen())))),
+                        const SizedBox(height: 24),
+                        OutlinedButton.icon(
+                            onPressed: _confirmLogout,
+                            icon: const Icon(Icons.logout_rounded, size: 18),
+                            label: const Text('Sign out'),
+                            style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.statusError)),
+                        const SizedBox(height: 28),
+                        const Center(
+                            child: PartnerEyebrow('Where next happens')),
+                      ]),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.charcoal))
-          : SingleChildScrollView(
-              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8),
-
-                  // Avatar & Verified Badge Header (Card Surface)
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardSurface,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.subtleBorder),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 18, offset: const Offset(0, 5)),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 46,
-                          backgroundColor: AppColors.warmBeige,
-                          backgroundImage: profile?['profilePhotoUrl'] != null && profile!['profilePhotoUrl'].toString().startsWith('http')
-                              ? NetworkImage(profile!['profilePhotoUrl'])
-                              : null,
-                          child: profile?['profilePhotoUrl'] == null || !profile!['profilePhotoUrl'].toString().startsWith('http')
-                              ? Text(
-                                  profile?['fullName']?.substring(0, 1).toUpperCase() ?? 'A',
-                                  style: GoogleFonts.plusJakartaSans(fontSize: 36, fontWeight: FontWeight.w800, color: AppColors.charcoal),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(height: 14),
-                        Text(
-                          profile?['fullName'] ?? 'Agent Partner',
-                          style: GoogleFonts.plusJakartaSans(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.charcoal, letterSpacing: -0.3),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '+91 ${_agentData?['mobileNumber'] ?? ''}',
-                          style: GoogleFonts.plusJakartaSans(color: AppColors.secondaryText, fontSize: 14, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _buildStatusPill('KYC: ${_agentData?['kycStatus'] ?? 'APPROVED'}', AppColors.sageGreen, AppColors.lightSage),
-                            const SizedBox(width: 10),
-                            _buildStatusPill('Bank: ${_agentData?['bankStatus'] ?? 'VERIFIED'}', AppColors.charcoal, AppColors.secondaryBg),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Profile Info Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardSurface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.subtleBorder),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        _buildDetailRow(Icons.location_on_rounded, 'Operating Location', profile?['areaLocation'] ?? 'N/A'),
-                        const Divider(color: AppColors.subtleBorder, height: 24),
-                        _buildDetailRow(Icons.work_outline_rounded, 'Occupation / Work', profile?['workPlatform'] ?? 'Partner Agent'),
-                        const Divider(color: AppColors.subtleBorder, height: 24),
-                        _buildDetailRow(Icons.cake_rounded, 'Age & Gender', '${profile?['age'] ?? 'N/A'} yrs • ${profile?['gender'] ?? ''}'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Actions & Security Section
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.cardSurface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.subtleBorder),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.shield_rounded, color: AppColors.charcoal),
-                          title: Text('Masked KYC Documents', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.charcoal)),
-                          subtitle: Text('Aadhaar: XXXX XXXX 1234 • PAN: XXXXX1234X', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.secondaryText)),
-                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.secondaryText),
-                          onTap: () {},
-                        ),
-                        const Divider(color: AppColors.subtleBorder, height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.account_balance_rounded, color: AppColors.charcoal),
-                          title: Text('Masked Bank & Payout Details', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.charcoal)),
-                          subtitle: Text('Account: XXXX XXXX 4521 • Verified', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.secondaryText)),
-                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.secondaryText),
-                          onTap: () {},
-                        ),
-                        const Divider(color: AppColors.subtleBorder, height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.help_outline_rounded, color: AppColors.charcoal),
-                          title: Text('Agent Help & Support', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.charcoal)),
-                          subtitle: Text('Raise issues or call partner desk', style: GoogleFonts.plusJakartaSans(fontSize: 12, color: AppColors.secondaryText)),
-                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.secondaryText),
-                          onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportScreen()));
-                          },
-                        ),
-                        const Divider(color: AppColors.subtleBorder, height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.description_outlined, color: AppColors.charcoal),
-                          title: Text('Terms & Privacy Policy', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.charcoal)),
-                          trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.secondaryText),
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  OutlinedButton.icon(
-                    onPressed: () => ref.read(authProvider.notifier).logout(),
-                    icon: const Icon(Icons.logout_rounded, color: AppColors.statusError),
-                    label: Text('Logout Securely', style: GoogleFonts.plusJakartaSans(color: AppColors.statusError, fontWeight: FontWeight.w700)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.statusError, width: 1.5),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
     );
   }
 
-  Widget _buildStatusPill(String label, Color color, Color bg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20), border: Border.all(color: color.withOpacity(0.3))),
-      child: Text(label, style: GoogleFonts.plusJakartaSans(fontSize: 12, fontWeight: FontWeight.w700, color: color)),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, size: 18, color: AppColors.charcoal),
-        const SizedBox(width: 10),
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(
-            color: AppColors.secondaryText,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(width: 12),
+  Widget _detail(IconData icon, String label, String value) => Row(children: [
+        Icon(icon, color: AppColors.mutedSage, size: 22),
+        const SizedBox(width: 14),
         Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: AppColors.charcoal,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 6),
+          Text(value, style: Theme.of(context).textTheme.titleSmall),
+        ])),
+      ]);
+
+  Widget _verification(String label, IconData icon, String status) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, color: AppColors.mutedSage, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Text(label, style: Theme.of(context).textTheme.titleSmall))
+        ]),
+        const SizedBox(height: 12),
+        PartnerStatus(status),
+      ]);
+
+  Future<void> _confirmLogout() async {
+    final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text('Sign out?'),
+              content: const Text(
+                  'You can sign back in with your mobile number whenever you’re ready.'),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Stay here')),
+                TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('Sign out'))
+              ],
+            ));
+    if (confirmed == true && mounted) ref.read(authProvider.notifier).logout();
   }
 }

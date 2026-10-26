@@ -13,6 +13,7 @@ final wsEventStreamProvider = StreamProvider<Map<String, dynamic>>((ref) {
 });
 
 class WebSocketService {
+  bool _disposed = false;
   io.Socket? _socket;
   final Ref _ref;
   final _eventController = StreamController<Map<String, dynamic>>.broadcast();
@@ -25,6 +26,7 @@ class WebSocketService {
   Future<void> connect() async {
     final storage = _ref.read(secureStorageProvider);
     final token = await storage.getAccessToken();
+    if (_disposed) return;
     if (token == null || token.isEmpty) return;
 
     if (_socket != null && _socket!.connected) return;
@@ -59,8 +61,12 @@ class WebSocketService {
           final incomingAgentId = data['agentId']?.toString();
           final currentAgentId = await storage.getAgentId();
 
-          if (incomingAgentId == null || currentAgentId == null || incomingAgentId == currentAgentId) {
-            _ref.read(authProvider.notifier).updateAgentState(status, rejectionReason: reason);
+          if (incomingAgentId == null ||
+              currentAgentId == null ||
+              incomingAgentId == currentAgentId) {
+            _ref
+                .read(authProvider.notifier)
+                .updateAgentState(status, rejectionReason: reason);
           }
         }
         _eventController.add({'event': 'agent.status.updated', 'data': data});
@@ -74,7 +80,9 @@ class WebSocketService {
           if (status == 'APPROVED') {
             _ref.read(authProvider.notifier).updateAgentState('APPROVED');
           } else if (status == 'REJECTED') {
-            _ref.read(authProvider.notifier).updateAgentState('REJECTED', rejectionReason: reason);
+            _ref
+                .read(authProvider.notifier)
+                .updateAgentState('REJECTED', rejectionReason: reason);
           }
         }
         _eventController.add({'event': 'kyc.status.updated', 'data': data});
@@ -102,7 +110,8 @@ class WebSocketService {
 
       _socket?.on('property.status.updated', (data) {
         debugPrint('[Socket.io] 🏠 Received property.status.updated: $data');
-        _eventController.add({'event': 'property.status.updated', 'data': data});
+        _eventController
+            .add({'event': 'property.status.updated', 'data': data});
       });
 
       _socket?.on('notification', (data) {
@@ -112,7 +121,7 @@ class WebSocketService {
 
       _socket?.onDisconnect((_) {
         debugPrint('[Socket.io] ⚠️ Disconnected from server');
-        _ref.read(wsConnectedProvider.notifier).state = false;
+        if (!_disposed) _ref.read(wsConnectedProvider.notifier).state = false;
       });
 
       _socket?.onError((err) {
@@ -128,12 +137,19 @@ class WebSocketService {
     _socket = null;
     _ref.read(wsConnectedProvider.notifier).state = false;
   }
+
+  void dispose() {
+    _disposed = true;
+    _socket?.dispose();
+    _socket = null;
+    _eventController.close();
+  }
 }
 
 final webSocketProvider = Provider<WebSocketService>((ref) {
   final service = WebSocketService(ref);
   ref.onDispose(() {
-    service.disconnect();
+    service.dispose();
   });
   return service;
 });
