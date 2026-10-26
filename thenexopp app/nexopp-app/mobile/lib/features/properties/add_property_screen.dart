@@ -186,10 +186,9 @@ class _AddPropertyScreenState extends ConsumerState<AddPropertyScreen> {
   }
 
   Future<void> _pickImages() async {
-    final hasPermission = await PermissionService.checkAndRequestStoragePermission(context);
-    if (!hasPermission && mounted) return;
-
+    // System pickers grant access to selected files without library permission.
     final List<XFile> images = await _picker.pickMultiImage(
+      requestFullMetadata: false,
       imageQuality: 70,
       maxWidth: 1280,
       maxHeight: 1280,

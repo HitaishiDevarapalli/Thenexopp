@@ -97,12 +97,9 @@ class _KycOnboardingScreenState extends ConsumerState<KycOnboardingScreen> {
                   style: TextStyle(fontWeight: FontWeight.w500)),
               onTap: () async {
                 Navigator.pop(ctx);
-                final hasPerm =
-                    await PermissionService.checkAndRequestStoragePermission(
-                        context);
-                if (!hasPerm && mounted) return;
                 final XFile? image = await _picker.pickImage(
                   source: ImageSource.gallery,
+                  requestFullMetadata: false,
                   imageQuality: 70,
                   maxWidth: 1280,
                   maxHeight: 1280,

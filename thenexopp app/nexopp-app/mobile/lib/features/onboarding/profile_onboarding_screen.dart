@@ -112,11 +112,9 @@ class _ProfileOnboardingScreenState
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         Navigator.pop(ctx);
-                        final hasPerm = await PermissionService
-                            .checkAndRequestStoragePermission(context);
-                        if (!hasPerm && mounted) return;
                         final XFile? photo = await _picker.pickImage(
                           source: ImageSource.gallery,
+                          requestFullMetadata: false,
                           imageQuality: 70,
                           maxWidth: 1024,
                           maxHeight: 1024,

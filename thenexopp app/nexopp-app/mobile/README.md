@@ -28,3 +28,9 @@ The tests cover phone validation, API-backed dashboard values, error feedback, l
 The Android preview is built at `build/app/outputs/flutter-apk/app-debug.apk`. This debug build is for review; production release signing remains configured in `android/app/build.gradle.kts`.
 
 Font files and their SIL Open Font License are included in `assets/fonts/`.
+
+## Android photo access
+
+Gallery uploads use `image_picker` system pickers and access only selected files. No broad photo, video or shared-storage permissions are requested. Manifest merger removal rules prevent dependencies from adding these permissions back. Camera and location permissions remain available for their separate features.
+
+Before a Play upload, inspect the merged release manifest and the packaged AAB/APK permissions. Version 1.0.2 (code 3) replaces the affected version codes 1 and 2; update every affected active release or testing track in Play Console rather than retaining an older noncompliant bundle in the submission.

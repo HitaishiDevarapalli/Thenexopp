@@ -120,7 +120,7 @@ class TermsPrivacyScreen extends StatelessWidget {
     (
       title: '5. Device permissions and services',
       body:
-          'The app requests camera and photo access for uploads, and location access for address detection. You can enter location information manually if location access is unavailable. Sign-in, hosting, file storage, and mapping services may process the information needed to provide their functions. Opening WhatsApp, phone, or other external services is subject to those services’ own policies.'
+          'The app uses the camera for new photos and a system picker to access the photos you select for upload. It does not request broad photo-library or shared-storage access. Location access supports address detection; you can also enter location information manually. Sign-in, hosting, file storage, and mapping services may process information needed to provide their functions. External services such as WhatsApp are subject to their own policies.'
     ),
     (
       title: '6. Administration and support',
