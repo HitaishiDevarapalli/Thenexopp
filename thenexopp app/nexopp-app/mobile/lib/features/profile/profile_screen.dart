@@ -8,6 +8,8 @@ import '../../core/constants/api_constants.dart';
 import '../../shared/providers/dio_provider.dart';
 import '../../shared/providers/auth_provider.dart';
 import '../support/support_screen.dart';
+import 'verification_details_screen.dart';
+import 'terms_privacy_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -55,7 +57,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final profile = _agentData?['profile'];
     return Scaffold(
-      appBar: AppBar(title: const Text('Your profile')),
+      appBar: AppBar(title: const Text('Your profile'), actions: [
+        IconButton(
+            tooltip: 'Sign out',
+            onPressed: _confirmLogout,
+            icon:
+                const Icon(Icons.logout_rounded, color: AppColors.statusError)),
+        const SizedBox(width: 8),
+      ]),
       body: RefreshIndicator(
         onRefresh: _fetchProfile,
         child: _isLoading
@@ -111,12 +120,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           _verification(
                               'Identity & KYC',
                               Icons.verified_user_outlined,
-                              '${_agentData?['kycStatus'] ?? 'NOT_SUBMITTED'}'),
+                              '${_agentData?['kycStatus'] ?? 'NOT_SUBMITTED'}',
+                              () => _openDetails(VerificationDetailsKind.kyc)),
                           const Divider(height: 32),
                           _verification(
                               'Bank account',
                               Icons.account_balance_outlined,
-                              '${_agentData?['bankStatus'] ?? 'NOT_SUBMITTED'}'),
+                              '${_agentData?['bankStatus'] ?? 'NOT_SUBMITTED'}',
+                              () => _openDetails(VerificationDetailsKind.bank)),
                         ])),
                         const SizedBox(height: 24),
                         Material(
@@ -126,7 +137,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 contentPadding: const EdgeInsets.all(16),
                                 leading: const Icon(Icons.support_agent_rounded,
                                     color: AppColors.mutedSage),
-                                title: const Text('We’re here for you',
+                                title: const Text('Agent help & support',
                                     style:
                                         TextStyle(fontWeight: FontWeight.w600)),
                                 subtitle: const Text(
@@ -140,6 +151,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     MaterialPageRoute(
                                         builder: (_) =>
                                             const SupportScreen())))),
+                        const SizedBox(height: 16),
+                        Card(
+                            child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          leading: const Icon(Icons.description_outlined,
+                              color: AppColors.mutedSage),
+                          title: const Text('Terms & privacy'),
+                          subtitle: const Text('Read the app policies',
+                              style: TextStyle(fontSize: 12)),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const TermsPrivacyScreen())),
+                        )),
                         const SizedBox(height: 24),
                         OutlinedButton.icon(
                             onPressed: _confirmLogout,
@@ -167,17 +194,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ])),
       ]);
 
-  Widget _verification(String label, IconData icon, String status) =>
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Icon(icon, color: AppColors.mutedSage, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-              child: Text(label, style: Theme.of(context).textTheme.titleSmall))
-        ]),
-        const SizedBox(height: 12),
-        PartnerStatus(status),
-      ]);
+  void _openDetails(VerificationDetailsKind kind) => Navigator.push(context,
+      MaterialPageRoute(builder: (_) => VerificationDetailsScreen(kind: kind)));
+
+  Widget _verification(
+          String label, IconData icon, String status, VoidCallback onTap) =>
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(icon, color: AppColors.mutedSage, size: 22),
+        title: Text(label, style: Theme.of(context).textTheme.titleSmall),
+        subtitle: Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Align(
+                alignment: Alignment.centerLeft, child: PartnerStatus(status))),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
+      );
 
   Future<void> _confirmLogout() async {
     final confirmed = await showDialog<bool>(

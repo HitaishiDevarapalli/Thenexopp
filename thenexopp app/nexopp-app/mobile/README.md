@@ -6,6 +6,8 @@ The interface uses an ivory and forest-green palette, bundled Plus Jakarta Sans 
 
 Existing API endpoints, authentication routing, listing submissions, payout receipts and live event subscriptions are retained. Profile verification labels use the server response; failed dashboard requests show a retry state instead of a misleading empty balance.
 
+Profile menu actions open read-only KYC and bank details from the existing agent APIs, partner support, and in-app Terms & Privacy documents. Account identifiers remain masked. The policy text is a project-based draft that needs business and legal review before publication.
+
 ## Run
 
 ```powershell

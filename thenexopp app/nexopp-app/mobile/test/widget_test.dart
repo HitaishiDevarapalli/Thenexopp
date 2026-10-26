@@ -17,6 +17,8 @@ import 'package:thenexopp_agent/features/auth/otp_verification_screen.dart';
 import 'package:thenexopp_agent/features/earnings/earnings_screen.dart';
 import 'package:thenexopp_agent/features/home/home_dashboard_screen.dart';
 import 'package:thenexopp_agent/features/profile/profile_screen.dart';
+import 'package:thenexopp_agent/features/profile/verification_details_screen.dart';
+import 'package:thenexopp_agent/features/profile/terms_privacy_screen.dart';
 import 'package:thenexopp_agent/features/onboarding/profile_onboarding_screen.dart';
 import 'package:thenexopp_agent/features/onboarding/kyc_onboarding_screen.dart';
 import 'package:thenexopp_agent/features/onboarding/bank_onboarding_screen.dart';
@@ -41,7 +43,10 @@ const listing = {
   'images': <String>[],
 };
 
-DioClient fixtureClient({bool fail = false, List<String>? requests}) {
+DioClient fixtureClient(
+    {bool fail = false,
+    List<String>? requests,
+    bool emptyVerification = false}) {
   final client = DioClient(secureStorage: MemoryStorage());
   client.dio.interceptors.clear();
   client.dio.interceptors
@@ -65,6 +70,24 @@ DioClient fixtureClient({bool fail = false, List<String>? requests}) {
         'kycStatus': 'APPROVED',
         'bankStatus': 'VERIFIED'
       };
+    } else if (options.path == ApiConstants.kycDetails) {
+      data = emptyVerification
+          ? {'status': 'NOT_SUBMITTED'}
+          : {
+              'status': 'APPROVED',
+              'aadhaarMasked': 'XXXX XXXX 6728',
+              'panMasked': 'XXXXX4567Q',
+            };
+    } else if (options.path == ApiConstants.bankDetails) {
+      data = emptyVerification
+          ? null
+          : {
+              'accountLast4': 'XXXX XXXX 7654',
+              'ifscCode': 'SBIN0004321',
+              'upiId': 'partner@example',
+              'phonepeNumber': '9876500000',
+              'isVerified': true,
+            };
     } else if (options.path == ApiConstants.earnings) {
       data = {
         'summary': {
@@ -102,6 +125,7 @@ Future<void> renderScreen(
   double width = 390,
   double textScale = 1,
   bool fail = false,
+  bool emptyVerification = false,
   List<String>? requests,
   int? tab,
 }) async {
@@ -111,8 +135,10 @@ Future<void> renderScreen(
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(ProviderScope(
       overrides: [
-        dioClientProvider
-            .overrideWithValue(fixtureClient(fail: fail, requests: requests)),
+        dioClientProvider.overrideWithValue(fixtureClient(
+            fail: fail,
+            requests: requests,
+            emptyVerification: emptyVerification)),
         secureStorageProvider.overrideWithValue(MemoryStorage()),
       ],
       child: MaterialApp(
@@ -267,6 +293,139 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+      'Profile KYC arrow opens saved masked details and returns with back',
+      (tester) async {
+    final requests = <String>[];
+    await renderScreen(tester, const ProfileScreen(), requests: requests);
+    await tester.scrollUntilVisible(find.text('Identity & KYC'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Identity & KYC'));
+    await tester.pumpAndSettle();
+    expect(find.byType(VerificationDetailsScreen), findsOneWidget);
+    expect(
+        requests.any((url) => url.contains(ApiConstants.kycDetails)), isTrue);
+    expect(find.text('XXXX XXXX 6728'), findsOneWidget);
+    expect(find.text('XXXXX4567Q'), findsOneWidget);
+    expect(find.textContaining('1234'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
+  });
+
+  testWidgets('Profile bank arrow opens the current payout account',
+      (tester) async {
+    final requests = <String>[];
+    await renderScreen(tester, const ProfileScreen(), requests: requests);
+    await tester.scrollUntilVisible(find.text('Bank account'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Bank account'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bank & payout details'), findsOneWidget);
+    expect(
+        requests.any((url) => url.contains(ApiConstants.bankDetails)), isTrue);
+    expect(find.text('XXXX XXXX 7654'), findsOneWidget);
+    expect(find.text('SBIN0004321'), findsOneWidget);
+    expect(find.text('partner@example'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
+  });
+
+  testWidgets('Profile support arrow opens the support screen', (tester) async {
+    await renderScreen(tester, const ProfileScreen());
+    await tester.scrollUntilVisible(find.text('Agent help & support'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Agent help & support'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SupportScreen), findsOneWidget);
+    expect(find.text('How can we help?'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'Profile terms arrow opens readable in-app terms and privacy documents',
+      (tester) async {
+    await renderScreen(tester, const ProfileScreen());
+    await tester.scrollUntilVisible(find.text('Terms & privacy'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Terms & privacy'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TermsPrivacyScreen), findsOneWidget);
+    await tester.tap(find.text('Terms & conditions'));
+    await tester.pumpAndSettle();
+    expect(find.text('1. About the service'), findsOneWidget);
+    expect(find.text('Draft for review'.toUpperCase()), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Privacy policy'));
+    await tester.pumpAndSettle();
+    expect(
+        find.text('1. Registration and account information'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'A failed verification request shows retry and sends another request',
+      (tester) async {
+    final requests = <String>[];
+    await renderScreen(tester,
+        const VerificationDetailsScreen(kind: VerificationDetailsKind.kyc),
+        fail: true, requests: requests);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('XXXX XXXX 1234'), findsNothing);
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(requests.length, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final kind in VerificationDetailsKind.values) {
+    testWidgets(
+        '${kind.name} details handle missing records and narrow screens',
+        (tester) async {
+      await renderScreen(tester, VerificationDetailsScreen(kind: kind),
+          emptyVerification: true, width: 320, textScale: 1.3);
+      expect(
+          find.text(kind == VerificationDetailsKind.kyc
+              ? 'No KYC details submitted'
+              : 'No bank details submitted'),
+          findsOneWidget);
+      expect(find.text('Contact partner support'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+      'Profile sign out opens confirmation and cancellation keeps the profile open',
+      (tester) async {
+    await renderScreen(tester, const ProfileScreen());
+    await tester.scrollUntilVisible(find.text('Sign out'), 250,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign out?'), findsOneWidget);
+    await tester.tap(find.text('Stay here'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign out?'), findsNothing);
+    await tester.tap(find.byTooltip('Sign out'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign out?'), findsOneWidget);
+    await tester.tap(find.text('Stay here'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   for (final screen in <Widget>[
     const ProfileOnboardingScreen(),
     const KycOnboardingScreen(),
