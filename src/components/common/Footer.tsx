@@ -201,7 +201,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onScrollToSection })
           <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Help Center</a>
           <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>FAQs</a>
           <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Terms &amp; Conditions</a>
-          <a href="#" onClick={(e) => handleScrollClick(e, 'contact')} style={linkStyle}>Privacy Policy</a>
+          <a href="/privacy-policy/" style={linkStyle}>Privacy Policy</a>
         </div>
 
         {/* Column 5 - FOLLOW US */}

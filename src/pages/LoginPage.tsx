@@ -825,7 +825,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onClose, isModal = false }
               By continuing, you agree to our&nbsp;
               <span style={{ color: '#059669', fontWeight: 700, cursor: 'pointer' }}>Terms of Service</span>
               &nbsp;&amp;&nbsp;
-              <span style={{ color: '#059669', fontWeight: 700, cursor: 'pointer' }}>Privacy Policy</span>
+              <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer" style={{ color: '#059669', fontWeight: 700 }}>Privacy Policy</a>
             </p>
           </form>
         )}

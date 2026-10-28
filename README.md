@@ -80,6 +80,40 @@ npm run server
 
 ## 🌐 Production VPS Deployment (Hostinger / Nginx / PM2)
 
+### Public app privacy policy
+
+The standalone policy for TheNexopp Agent is saved in `public/privacy-policy/index.html`.
+Vite copies it to `dist/privacy-policy/index.html` during `npm run build`; the existing
+Express static-file handler and Nginx static hosting can serve it without signing in,
+JavaScript, API access or a mobile-app rebuild.
+
+After deploying the website, open `https://thenexopp.com/privacy-policy/` in a signed-out
+browser and confirm the title is **Privacy Policy | TheNexopp Agent**, with the full policy
+visible. Use that URL in Play Console's **App content → Privacy policy** declaration,
+then save and submit the change for review. Do not use the API documentation or
+WebSocket endpoint in the privacy-policy field.
+
+For an existing deployment whose web root is this checkout's `dist` directory, the page
+can also be published without rebuilding the rest of the website:
+
+```bash
+(
+set -eu
+cd /opt/Thenexopp
+git pull --ff-only origin main
+mkdir -p dist/privacy-policy
+cp public/privacy-policy/index.html dist/privacy-policy/index.html
+curl --fail --location https://thenexopp.com/privacy-policy/
+)
+```
+
+Run the full website build to deploy the updated footer and login-page links too.
+This page documents the existing support-assisted privacy/deletion request channels;
+it does not add automated account deletion. The business must handle those requests
+and keep the policy and Play Console Data safety declaration consistent with actual
+operations, providers and retention requirements. Publishing this page does not
+guarantee Google Play approval.
+
 ### 1. Build Frontend Bundle
 ```bash
 npm run build
