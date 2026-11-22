@@ -210,7 +210,11 @@ export const App: React.FC = () => {
   } | null>(null);
 
   const isPublicPage = (page: PageType): boolean => {
-    return page === 'home' || page === 'aboutUsPage' || page === 'contactUsPage' || page === 'adminPortal' || page === 'standaloneAgentAdmin';
+    return page === 'home' || page === 'aboutUsPage' || page === 'contactUsPage' ||
+      page === 'propertiesPage' || page === 'buyPage' || page === 'rentPage' ||
+      page === 'flatsPage' || page === 'villasPage' || page === 'housesPage' ||
+      page === 'landPage' || page === 'propertyDetails' || page === 'adminPortal' ||
+      page === 'standaloneAgentAdmin';
   };
 
   const navigateToUrl = (url: string) => {

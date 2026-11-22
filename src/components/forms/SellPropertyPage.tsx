@@ -66,7 +66,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
     description: '',
   });
 
-  // ── Photos State (Mandatory Min 6) ────────────────────────────────────────
+  // ── Photos State (at least 6 photos; no fixed maximum) ────────────────────
   const [uploadedPhotos, setUploadedPhotos] = useState<SellPropertyPhoto[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [uploadProgressText, setUploadProgressText] = useState('');
@@ -966,10 +966,10 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   </div>
                   <div>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                      Property Photos <span style={{ color: '#EF4444' }}>* (Minimum 6 Mandatory)</span>
+                      Property Photos <span style={{ color: '#EF4444' }}>* (Minimum 6; no maximum)</span>
                     </h3>
                     <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '2px 0 0 0' }}>
-                      100% original lossless clarity guaranteed. No compression or downscaling.
+                      Add as many property photos as you need. Original image quality is preserved.
                     </p>
                   </div>
                 </div>
@@ -991,7 +991,7 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                 >
                   <FaImage />
                   <span>
-                    {uploadedPhotos.length} / 6 Photos Uploaded {uploadedPhotos.length >= 6 ? '✓' : ''}
+                    {uploadedPhotos.length} Photos Uploaded {uploadedPhotos.length >= 6 ? '✓' : ''}
                   </span>
                 </div>
               </div>
@@ -1042,10 +1042,10 @@ export const SellPropertyPage: React.FC<SellPropertyPageProps> = ({ onBack }) =>
                   Click to select photos from your device
                 </h4>
                 <p style={{ margin: 0, fontSize: '13px', color: '#64748B' }}>
-                  Upload at least <strong>6 photos</strong> of your property (Entrance, Surroundings, Views, Details).
+                  Select any number of photos. At least <strong>6 photos</strong> are required to submit (Entrance, Surroundings, Views, Details).
                 </p>
                 <div style={{ marginTop: '10px', fontSize: '12px', color: '#059669', fontWeight: 700 }}>
-                  ✓ Exact original pixel dimensions &amp; uncompressed clarity preserved
+                  ✓ Selected photos retain their original dimensions and quality
                 </div>
               </div>
 
